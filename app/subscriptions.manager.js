@@ -22,6 +22,11 @@ window.SubscriptionsManager = (function () {
   let quickRunMsgEl = null;
   let resetContentBtn = null;
   let resetContentMsgEl = null;
+  let adminDailyTabBtn = null;
+  let adminConferenceTabBtn = null;
+  let adminDailyPanel = null;
+  let adminConferencePanel = null;
+  let activeAdminPanelTab = 'daily';
 
   let draftConfig = null;
   let hasUnsavedChanges = false;
@@ -415,6 +420,35 @@ window.SubscriptionsManager = (function () {
     }
   };
 
+  const syncAdminPanelTabs = () => {
+    const active = activeAdminPanelTab === 'conference' ? 'conference' : 'daily';
+    [
+      [adminDailyTabBtn, active === 'daily'],
+      [adminConferenceTabBtn, active === 'conference'],
+    ].forEach(([btn, isActive]) => {
+      if (!btn) return;
+      btn.classList.toggle('is-active', !!isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+
+    if (adminDailyPanel) {
+      adminDailyPanel.hidden = active !== 'daily';
+    }
+    if (adminConferencePanel) {
+      adminConferencePanel.hidden = active !== 'conference';
+    }
+  };
+
+  const switchAdminPanelTab = (tab) => {
+    const nextTab = tab === 'conference' ? 'conference' : 'daily';
+    if (activeAdminPanelTab === nextTab) {
+      syncAdminPanelTabs();
+      return;
+    }
+    activeAdminPanelTab = nextTab;
+    syncAdminPanelTabs();
+  };
+
   const runQuickFetch = (days, msgEl, tipText, runOptions) => {
     if (hasUnsavedChanges) {
       const text = '检测到未保存修改，请先点击“保存”后再发起快速抓取。';
@@ -689,7 +723,31 @@ window.SubscriptionsManager = (function () {
     overlay.innerHTML = `
       <div id="arxiv-search-panel">
         <div id="arxiv-search-panel-header">
-          <div style="font-weight:600;">后台管理</div>
+          <div class="dpr-admin-header-left">
+            <div style="font-weight:600;">后台管理</div>
+            <div class="dpr-admin-tabs" role="tablist" aria-label="后台管理面板切换">
+              <button
+                id="dpr-admin-tab-daily"
+                class="dpr-admin-tab is-active"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="arxiv-search-panel-body"
+              >
+                日常管理
+              </button>
+              <button
+                id="dpr-admin-tab-conference"
+                class="dpr-admin-tab"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="arxiv-conference-panel-body"
+              >
+                会议论文
+              </button>
+            </div>
+          </div>
           <div style="display:flex; gap:8px; align-items:center;">
             <button id="arxiv-config-save-btn" class="arxiv-tool-btn" style="padding:2px 10px; background:#2e7d32; color:white;">保存</button>
             <button id="arxiv-open-secret-setup-btn" class="arxiv-tool-btn" style="padding:2px 10px;">密钥配置</button>
@@ -697,7 +755,7 @@ window.SubscriptionsManager = (function () {
           </div>
         </div>
 
-        <div id="arxiv-search-panel-body">
+        <div id="arxiv-search-panel-body" class="dpr-admin-panel-body" role="tabpanel" aria-labelledby="dpr-admin-tab-daily">
           <div id="arxiv-search-panel-main">
             <div id="dpr-smart-query-section" class="arxiv-pane dpr-smart-pane">
               <div class="dpr-display-card">
@@ -724,28 +782,6 @@ window.SubscriptionsManager = (function () {
             <button id="arxiv-admin-quick-run-10d-btn" class="chat-quick-run-item" type="button">立即搜寻十天内论文</button>
             <button id="arxiv-admin-quick-run-30d-btn" class="chat-quick-run-item" type="button">立即搜寻三十天内论文（全速览，约 0.76）</button>
             <button id="arxiv-admin-quick-run-30d-standard-btn" class="chat-quick-run-item" type="button">立即搜寻三十天内论文（全标准 / 精读，约 1.22）</button>
-            <div class="chat-quick-run-divider" aria-hidden="true"></div>
-            <div class="chat-quick-run-title">会议论文（暂未接入）</div>
-            <div class="chat-quick-run-row">
-              <label for="arxiv-admin-quick-run-year-select">年份</label>
-              <select id="arxiv-admin-quick-run-year-select" disabled>
-                <option value="">选择年份</option>
-              </select>
-            </div>
-            <div class="chat-quick-run-row">
-              <label for="arxiv-admin-quick-run-conference-select">会议名</label>
-              <select id="arxiv-admin-quick-run-conference-select" disabled>
-                <option value="">选择会议名</option>
-              </select>
-            </div>
-            <button
-              id="arxiv-admin-quick-run-conference-run-btn"
-              class="chat-quick-run-run-btn chat-quick-run-item--disabled"
-              type="button"
-              disabled
-            >
-              运行
-            </button>
             <div id="arxiv-admin-quick-run-msg" class="chat-quick-run-msg"></div>
 
             <div class="chat-quick-run-divider" aria-hidden="true"></div>
@@ -761,6 +797,65 @@ window.SubscriptionsManager = (function () {
             <div id="arxiv-admin-reset-content-msg" class="chat-quick-run-msg"></div>
           </div>
         </div>
+
+        <div id="arxiv-conference-panel-body" class="dpr-admin-panel-body" role="tabpanel" aria-labelledby="dpr-admin-tab-conference" hidden>
+          <div id="arxiv-conference-panel-main">
+            <div class="arxiv-pane dpr-conference-pane">
+              <div class="dpr-conference-head">
+                <div>
+                  <div class="dpr-conference-title">会议论文拉取</div>
+                  <div class="dpr-conference-subtitle">独立维护会议论文数据源，不参与每日论文抓取。</div>
+                </div>
+              </div>
+
+              <div class="dpr-conference-card">
+                <div class="dpr-conference-card-title">
+                  <span>ICML</span>
+                  <span class="dpr-conference-chip">OpenReview</span>
+                </div>
+                <div class="dpr-conference-card-meta">
+                  默认写入 <code>icml_openreview_papers</code>，使用已有 Supabase 表和检索 RPC。
+                </div>
+              </div>
+
+              <div class="dpr-conference-note">
+                会议论文任务暂未接入前端触发；当前页先作为独立入口和状态区，后续可在这里接入公开状态检查与上传。
+              </div>
+            </div>
+            <div id="dpr-conference-msg" style="font-size:12px; color:#666; margin-top:10px;">
+              提示：保存、密钥配置和关闭仍与日常管理共享。
+            </div>
+          </div>
+
+          <div id="arxiv-conference-panel-divider" aria-hidden="true"></div>
+
+          <div id="arxiv-conference-control-side">
+            <div class="chat-quick-run-title" style="margin:0 0 8px;">会议论文</div>
+            <div class="chat-quick-run-row">
+              <label for="arxiv-admin-quick-run-year-select">年份</label>
+              <select id="arxiv-admin-quick-run-year-select">
+                <option value="">选择年份</option>
+              </select>
+            </div>
+            <div class="chat-quick-run-row">
+              <label for="arxiv-admin-quick-run-conference-select">会议名</label>
+              <select id="arxiv-admin-quick-run-conference-select">
+                <option value="">选择会议名</option>
+              </select>
+            </div>
+            <button
+              id="arxiv-admin-quick-run-conference-run-btn"
+              class="chat-quick-run-run-btn chat-quick-run-item--disabled"
+              type="button"
+              disabled
+            >
+              暂未接入
+            </button>
+            <div id="arxiv-admin-conference-run-msg" class="chat-quick-run-msg">
+              后续这里会接入会议公开状态检查和上传任务。
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
@@ -770,6 +865,10 @@ window.SubscriptionsManager = (function () {
     saveBtn = document.getElementById('arxiv-config-save-btn');
     closeBtn = document.getElementById('arxiv-search-close-btn');
     msgEl = document.getElementById('dpr-smart-msg');
+    adminDailyTabBtn = document.getElementById('dpr-admin-tab-daily');
+    adminConferenceTabBtn = document.getElementById('dpr-admin-tab-conference');
+    adminDailyPanel = document.getElementById('arxiv-search-panel-body');
+    adminConferencePanel = document.getElementById('arxiv-conference-panel-body');
 
     const reloadAll = () => {
       renderFromDraft();
@@ -785,6 +884,7 @@ window.SubscriptionsManager = (function () {
     }
 
     bindBaseEvents();
+    syncAdminPanelTabs();
   };
 
   const renderFromDraft = () => {
@@ -940,6 +1040,20 @@ window.SubscriptionsManager = (function () {
       });
     }
 
+    if (adminDailyTabBtn && !adminDailyTabBtn._bound) {
+      adminDailyTabBtn._bound = true;
+      adminDailyTabBtn.addEventListener('click', () => {
+        switchAdminPanelTab('daily');
+      });
+    }
+
+    if (adminConferenceTabBtn && !adminConferenceTabBtn._bound) {
+      adminConferenceTabBtn._bound = true;
+      adminConferenceTabBtn.addEventListener('click', () => {
+        switchAdminPanelTab('conference');
+      });
+    }
+
     quickRun10dBtn = document.getElementById('arxiv-admin-quick-run-10d-btn');
     quickRun30dBtn = document.getElementById('arxiv-admin-quick-run-30d-btn');
     quickRun30dStandardBtn = document.getElementById('arxiv-admin-quick-run-30d-standard-btn');
@@ -954,18 +1068,18 @@ window.SubscriptionsManager = (function () {
     quickRunMsgEl = document.getElementById('arxiv-admin-quick-run-msg');
     resetContentBtn = document.getElementById('arxiv-admin-reset-content-btn');
     resetContentMsgEl = document.getElementById('arxiv-admin-reset-content-msg');
-    if (quickRunYearSelect) {
-      quickRunYearSelect.disabled = true;
-    }
-    if (quickRunConferenceSelect) {
-      quickRunConferenceSelect.disabled = true;
-    }
     if (quickRunConferenceBtn) {
       quickRunConferenceBtn.disabled = true;
       quickRunConferenceBtn.classList.add('chat-quick-run-item--disabled');
       quickRunConferenceBtn.title = '会议论文抓取功能暂未接入';
     }
     fillQuickRunOptions(quickRunYearSelect, quickRunConferenceSelect);
+    if (quickRunYearSelect && !quickRunYearSelect.value) {
+      quickRunYearSelect.value = String(new Date().getFullYear());
+    }
+    if (quickRunConferenceSelect && !quickRunConferenceSelect.value) {
+      quickRunConferenceSelect.value = 'ICML';
+    }
     [quickRun10dBtn, quickRun30dBtn, quickRun30dStandardBtn].forEach((btn) => {
       if (!btn) return;
       if (!btn.dataset.defaultTitle) {

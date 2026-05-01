@@ -3037,6 +3037,17 @@ article.markdown-section {
   min-height: 0;
 }
 
+.dpr-admin-panel-body {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+}
+
+.dpr-admin-panel-body[hidden] {
+  display: none;
+}
+
 #arxiv-search-panel-main {
   flex: 1 1 auto;
   min-width: 0;
@@ -3059,21 +3070,52 @@ article.markdown-section {
   gap: 8px;
 }
 
+#arxiv-conference-panel-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#arxiv-conference-panel-divider {
+  width: 1px;
+  margin: 0 12px;
+  background: #eceff5;
+  flex-shrink: 0;
+}
+
+#arxiv-conference-control-side {
+  width: 270px;
+  flex: 0 0 270px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 #arxiv-search-quick-run-side .chat-quick-run-item,
 #arxiv-search-quick-run-side .chat-quick-run-run-btn,
 #arxiv-search-quick-run-side .chat-quick-run-row label,
 #arxiv-search-quick-run-side .chat-quick-run-row select,
-#arxiv-search-quick-run-side .chat-quick-run-title {
+#arxiv-search-quick-run-side .chat-quick-run-title,
+#arxiv-conference-control-side .chat-quick-run-item,
+#arxiv-conference-control-side .chat-quick-run-run-btn,
+#arxiv-conference-control-side .chat-quick-run-row label,
+#arxiv-conference-control-side .chat-quick-run-row select,
+#arxiv-conference-control-side .chat-quick-run-title {
   box-sizing: border-box;
 }
 
 #arxiv-search-quick-run-side .chat-quick-run-row select,
 #arxiv-search-quick-run-side .chat-quick-run-run-btn,
-#arxiv-search-quick-run-side .chat-quick-run-item {
+#arxiv-search-quick-run-side .chat-quick-run-item,
+#arxiv-conference-control-side .chat-quick-run-row select,
+#arxiv-conference-control-side .chat-quick-run-run-btn,
+#arxiv-conference-control-side .chat-quick-run-item {
   width: 100%;
 }
 
-#arxiv-search-quick-run-side .chat-quick-run-item {
+#arxiv-search-quick-run-side .chat-quick-run-item,
+#arxiv-conference-control-side .chat-quick-run-item {
   margin-bottom: 0;
 }
 
@@ -3091,13 +3133,28 @@ article.markdown-section {
     flex-direction: column;
   }
 
+  .dpr-admin-panel-body {
+    flex-direction: column;
+  }
+
   #arxiv-search-quick-run-divider {
     width: 100%;
     height: 1px;
     margin: 12px 0;
   }
 
+  #arxiv-conference-panel-divider {
+    width: 100%;
+    height: 1px;
+    margin: 12px 0;
+  }
+
   #arxiv-search-quick-run-side {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  #arxiv-conference-control-side {
     width: 100%;
     flex-basis: auto;
   }
@@ -3112,6 +3169,119 @@ article.markdown-section {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+}
+
+.dpr-admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dpr-admin-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.dpr-admin-tab {
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.dpr-admin-tab:hover {
+  background: rgba(46, 125, 50, 0.08);
+  color: #2e7d32;
+}
+
+.dpr-admin-tab.is-active {
+  background: #fff;
+  color: #1b5e20;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  font-weight: 600;
+}
+
+.dpr-admin-tab:focus-visible {
+  outline: 2px solid rgba(46, 125, 50, 0.28);
+  outline-offset: 2px;
+}
+
+.dpr-conference-pane {
+  min-height: 360px;
+}
+
+.dpr-conference-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dpr-conference-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.dpr-conference-subtitle {
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.dpr-conference-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.dpr-conference-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dpr-conference-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 8px;
+  background: rgba(21, 101, 192, 0.08);
+  color: #1565c0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dpr-conference-card-meta {
+  margin-top: 8px;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dpr-conference-note {
+  margin-top: 12px;
+  border: 1px solid #f1e2b8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff9e8;
+  color: #7a5200;
+  font-size: 12px;
+  line-height: 1.6;
 }
 #arxiv-search-input {
   width: 100%;
