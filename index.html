@@ -98,10 +98,27 @@
     };
     window.DPRPrefetchDocsifyShell = function () {
       try {
-        fetch('docs/_sidebar.md', {
-          method: 'GET',
-          cache: 'force-cache',
-        }).catch(function () {});
+        var hash = String((window.location && window.location.hash) || '');
+        var route = hash.replace(/^#/, '').split('?')[0] || '/';
+        route = decodeURIComponent(route).replace(/^\/+/, '');
+        var pagePath = route && route !== '/'
+          ? route
+          : 'README';
+        if (!/\.(md|html)$/i.test(pagePath)) {
+          pagePath = pagePath.replace(/\/$/, '/README') + '.md';
+        }
+        var requests = [
+          'docs/_sidebar.md',
+          'docs/' + pagePath.replace(/^\/+/, ''),
+        ].filter(function (url, index, list) {
+          return url && list.indexOf(url) === index;
+        });
+        Promise.all(requests.map(function (url) {
+          return fetch(url, {
+            method: 'GET',
+            cache: 'force-cache',
+          }).catch(function () {});
+        })).catch(function () {});
       } catch {
         // ignore
       }
