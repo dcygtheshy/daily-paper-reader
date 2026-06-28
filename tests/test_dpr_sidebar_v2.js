@@ -86,6 +86,27 @@ const sampleSidebar = `
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/23/paper-d" data-sidebar-item="{&quot;title&quot;:&quot;Paper D&quot;,&quot;score&quot;:&quot;9.0&quot;,&quot;tags&quot;:[{&quot;kind&quot;:&quot;query&quot;,&quot;label&quot;:&quot;rl&quot;}]}">Fallback D</a>
 `;
 
+const unorderedSidebar = `
+* <a class="dpr-sidebar-root-link" href="#/">首页</a>
+
+* Conference Papers
+  * NEURIPS 2024 <!--dpr-conference:neurips-2024-->
+    * rl
+      * <a class="dpr-sidebar-item-link" href="#/conference/neurips-2024/conf-old" data-sidebar-item="{&quot;title&quot;:&quot;Conf Old&quot;,&quot;published&quot;:&quot;2024-04-01&quot;}">Conf Old</a>
+      * <a class="dpr-sidebar-item-link" href="#/conference/neurips-2024/conf-new" data-sidebar-item="{&quot;title&quot;:&quot;Conf New&quot;,&quot;published&quot;:&quot;2024-09-01&quot;}">Conf New</a>
+  * ICLR 2025 <!--dpr-conference:iclr-2025-->
+    * rl
+      * <a class="dpr-sidebar-item-link" href="#/conference/iclr-2025/conf-2025" data-sidebar-item="{&quot;title&quot;:&quot;Conf 2025&quot;}">Conf 2025</a>
+
+* Daily Papers
+  * 2026-06-23 <!--dpr-date:20260623-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link" href="#/202606/23/old" data-sidebar-item="{&quot;title&quot;:&quot;Old Daily&quot;,&quot;published&quot;:&quot;2026-06-23T02:00:00Z&quot;}">Old Daily</a>
+  * 2026-06-25 <!--dpr-date:20260625-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link" href="#/202606/25/new" data-sidebar-item="{&quot;title&quot;:&quot;New Daily&quot;,&quot;published&quot;:&quot;2026-06-25T02:00:00Z&quot;}">New Daily</a>
+`;
+
 function testSidebarNavigationContract() {
   const sidebar = loadSidebarForTest('#/202606/24/paper-b?from=test');
   const tools = sidebar.__test;
@@ -97,8 +118,8 @@ function testSidebarNavigationContract() {
     '#/202606/24/paper-a',
     '#/202606/24/paper-b',
     '#/202606/23/paper-d',
-    '#/conference/neurips-2024/paper-c',
     '#/conference/iclr-2025/paper-e',
+    '#/conference/neurips-2024/paper-c',
   ]);
   assert.deepEqual(tools.collectReportHrefsFromModel(model), [
     '#/202606/24/README',
@@ -139,13 +160,13 @@ function testAxisViewsForDailyAndConference() {
   ]);
 
   const confView = tools.buildConferenceConfView(model, 'iclr-2025');
-  assert.deepEqual(confView.tabs.map((tab) => tab.label), ['NEURIPS 2024', 'ICLR 2025']);
+  assert.deepEqual(confView.tabs.map((tab) => tab.label), ['ICLR 2025', 'NEURIPS 2024']);
   assert.equal(confView.activeKey, 'iclr-2025');
   assert.deepEqual(confView.groups.map((group) => group.label), ['symbolic']);
   assert.deepEqual(confView.groups[0].papers.map((paper) => paper.title), ['Paper E']);
 
   const confTagView = tools.buildConferenceTagView(model, 'rl');
-  assert.deepEqual(confTagView.tabs.map((tab) => tab.label), ['rl', 'symbolic']);
+  assert.deepEqual(confTagView.tabs.map((tab) => tab.label), ['symbolic', 'rl']);
   assert.equal(confTagView.activeKey, 'rl');
   assert.deepEqual(confTagView.groups.map((group) => group.label), ['NEURIPS 2024 / rl']);
   assert.deepEqual(confTagView.groups[0].papers.map((paper) => paper.title), ['Paper C']);
@@ -195,6 +216,43 @@ function testPaperEvidenceAndActionButtonsRender() {
   assert.ok(html.includes('data-paper-status="bad"'));
 }
 
+function testPaperMetaOrderKeepsEvidenceBetweenTitleAndStars() {
+  const sidebar = loadSidebarForTest('#/202606/24/paper-a');
+  const tools = sidebar.__test;
+  const model = tools.parseSidebar(sampleSidebar);
+  const html = tools.renderBodyHtml(model, {
+    expandedGroups: { conference: true, daily: true },
+    conferenceViewMode: 'conf',
+    dailyViewMode: 'date',
+    activeConference: 'neurips-2024',
+    activeDailyDate: '20260624',
+  });
+  const titleIndex = html.indexOf('<span class="dpr-sidebar-paper-title">Paper A</span>');
+  const evidenceIndex = html.indexOf('<div class="dpr-sidebar-paper-evidence">中文解释 A</div>');
+  const starsIndex = html.indexOf('<span class="dpr-sidebar-paper-stars" data-score="10.0">★★★★★</span>');
+  const tagsIndex = html.indexOf('<span class="dpr-sidebar-paper-tags">', starsIndex);
+
+  assert.ok(titleIndex >= 0, 'title should render');
+  assert.ok(evidenceIndex > titleIndex, 'Chinese evidence should render after title');
+  assert.ok(starsIndex > evidenceIndex, 'stars should render after Chinese evidence');
+  assert.ok(tagsIndex > starsIndex, 'tags should stay on the same metadata line after stars');
+}
+
+function testSidebarSortsByNewestTimeFirst() {
+  const sidebar = loadSidebarForTest('#/202606/25/new');
+  const tools = sidebar.__test;
+  const model = tools.parseSidebar(unorderedSidebar);
+
+  const dailyView = tools.buildDailyDateView(model, '');
+  assert.deepEqual(dailyView.tabs.map((tab) => tab.key), ['20260625', '20260623']);
+
+  const confView = tools.buildConferenceConfView(model, '');
+  assert.deepEqual(confView.tabs.map((tab) => tab.key), ['iclr-2025', 'neurips-2024']);
+
+  const neuripsView = tools.buildConferenceConfView(model, 'neurips-2024');
+  assert.deepEqual(neuripsView.groups[0].papers.map((paper) => paper.title), ['Conf New', 'Conf Old']);
+}
+
 function testSidebarUtilityHelpers() {
   const sidebar = loadSidebarForTest('#/202606/24/paper-a');
   const tools = sidebar.__test;
@@ -216,12 +274,37 @@ function testSidebarUtilityHelpers() {
   assert.equal(tools.clampSidebarWidth(180), 240);
   assert.equal(tools.clampSidebarWidth(360), 360);
   assert.equal(tools.clampSidebarWidth(720), 520);
+
+  assert.equal(typeof tools.rerenderOptionsForReadStateEvent, 'function');
+  assert.deepEqual(tools.rerenderOptionsForReadStateEvent(), {
+    syncActive: true,
+    centerActive: false,
+    autoMark: false,
+    preserveScroll: true,
+  });
+  assert.equal(typeof tools.rerenderOptionsForStatusClick, 'function');
+  assert.deepEqual(tools.rerenderOptionsForStatusClick(), {
+    syncActive: true,
+    centerActive: false,
+    autoMark: false,
+    preserveScroll: true,
+  });
+  assert.equal(typeof tools.rerenderOptionsForAxisInteraction, 'function');
+  assert.deepEqual(tools.rerenderOptionsForAxisInteraction('daily'), {
+    syncActive: false,
+    scrollPanel: 'daily',
+  });
 }
 
 function testEvidenceCssIsPersistent() {
   const css = fs.readFileSync('app/app.css', 'utf8');
   assert.ok(!/\\.dpr-sidebar-paper-evidence\\s*{[^}]*display:\\s*none/i.test(css));
   assert.ok(!css.includes('.dpr-sidebar-paper:hover .dpr-sidebar-paper-evidence'));
+  assert.ok(/\.dpr-sidebar-paper-actions\s*{[^}]*opacity:\s*0/i.test(css));
+  assert.ok(css.includes('.dpr-sidebar-paper:hover .dpr-sidebar-paper-actions'));
+  assert.ok(/\.dpr-sidebar-paper-evidence\s*{[^}]*background:\s*transparent/i.test(css));
+  assert.ok(css.includes('.dpr-sidebar-paper[data-read-status="read"]'));
+  assert.ok(/\.dpr-sidebar-paper\.dpr-sidebar-paper-conference\s*{[^}]*border-left-color:\s*#93c5fd/i.test(css));
 }
 
 function testRenderBodyPutsConferenceAboveDaily() {
@@ -395,6 +478,8 @@ testSidebarNavigationContract();
 testAxisViewsForDailyAndConference();
 testAxisTabsRenderUnreadCounts();
 testPaperEvidenceAndActionButtonsRender();
+testPaperMetaOrderKeepsEvidenceBetweenTitleAndStars();
+testSidebarSortsByNewestTimeFirst();
 testSidebarUtilityHelpers();
 testEvidenceCssIsPersistent();
 testRenderBodyPutsConferenceAboveDaily();

@@ -182,6 +182,89 @@
     if (!isFinite(n)) n = DEFAULT_SIDEBAR_WIDTH;
     return Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, n));
   }
+  function timestampFromDateLike(value) {
+    if (typeof value === 'number' && isFinite(value)) return value;
+    var s = String(value == null ? '' : value).trim();
+    if (!s) return 0;
+    var compact = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (compact) return Date.UTC(Number(compact[1]), Number(compact[2]) - 1, Number(compact[3]));
+    var yearOnly = s.match(/^(\d{4})$/);
+    if (yearOnly) return Date.UTC(Number(yearOnly[1]), 11, 31, 23, 59, 59);
+    var parsed = Date.parse(s);
+    return isFinite(parsed) ? parsed : 0;
+  }
+  function timestampFromRoute(href) {
+    var s = String(href || '');
+    var daily = s.match(/#?\/(\d{6})\/(\d{2})\//);
+    if (daily) return timestampFromDateLike(daily[1] + daily[2]);
+    return 0;
+  }
+  function timestampFromYearText(value) {
+    var years = String(value || '').match(/\b(19|20)\d{2}\b/g);
+    if (!years || !years.length) return 0;
+    var newest = Math.max.apply(null, years.map(function (year) { return Number(year); }));
+    return timestampFromDateLike(String(newest));
+  }
+  function conferenceSortTimestamp(conf) {
+    if (!conf) return 0;
+    return timestampFromYearText([conf.years, conf.label, conf.name].join(' '));
+  }
+  function paperSortTimestamp(paper, fallback) {
+    var p = paper || {};
+    var fields = [
+      p.published,
+      p.publishedAt,
+      p.published_at,
+      p.date,
+      p.updated,
+      p.updatedAt,
+      p.submitted,
+      p.created_at,
+      fallback,
+    ];
+    for (var i = 0; i < fields.length; i++) {
+      var ts = timestampFromDateLike(fields[i]);
+      if (ts) return ts;
+    }
+    return timestampFromRoute(p.href);
+  }
+  function sortByTimestampDesc(items, getTimestamp) {
+    return (items || []).map(function (item, index) {
+      return { item: item, index: index, timestamp: getTimestamp(item) || 0 };
+    }).sort(function (a, b) {
+      if (b.timestamp !== a.timestamp) return b.timestamp - a.timestamp;
+      return a.index - b.index;
+    }).map(function (record) {
+      return record.item;
+    });
+  }
+  function sortPapersByTimeDesc(papers, fallback) {
+    return sortByTimestampDesc(papers, function (paper) {
+      return paperSortTimestamp(paper, fallback);
+    });
+  }
+  function rerenderOptionsForReadStateEvent() {
+    return {
+      syncActive: true,
+      centerActive: false,
+      autoMark: false,
+      preserveScroll: true,
+    };
+  }
+  function rerenderOptionsForAxisInteraction(panelKey) {
+    return {
+      syncActive: false,
+      scrollPanel: panelKey || '',
+    };
+  }
+  function rerenderOptionsForStatusClick() {
+    return {
+      syncActive: true,
+      centerActive: false,
+      autoMark: false,
+      preserveScroll: true,
+    };
+  }
 
   // ---------- 阅读状态（包一层，方便切换 Supabase / localStorage） ----------
   var ReadState = {
@@ -318,6 +401,7 @@
         link: (payload && payload.link) || '',
         score: payload && payload.score,
         evidence: (payload && payload.evidence) || '',
+        published: payload && (payload.published || payload.published_at || payload.publishedAt || payload.date || payload.updated || payload.updated_at || payload.submitted || payload.created_at) || '',
         tags: (payload && Array.isArray(payload.tags) ? payload.tags : []),
         selectionSource: payload && payload.selection_source,
       };
@@ -474,6 +558,15 @@
       i += 1;
     }
 
+    model.daily.forEach(function (day) {
+      day.papers = sortPapersByTimeDesc(day.papers || [], day.dateKey);
+    });
+    model.conferences.forEach(function (conf) {
+      (conf.topics || []).forEach(function (topic) {
+        topic.papers = sortPapersByTimeDesc(topic.papers || [], conferenceSortTimestamp(conf));
+      });
+    });
+    model.conferences = sortByTimestampDesc(model.conferences, conferenceSortTimestamp);
     // 日报按日期倒序
     model.daily.sort(function (a, b) {
       return String(b.dateKey).localeCompare(String(a.dateKey));
@@ -1207,11 +1300,11 @@
       '  <div class="dpr-sidebar-paper-main">' +
       '    <a class="dpr-sidebar-paper-link" href="' + safeAttr(p.href) + '">' +
       '      <span class="dpr-sidebar-paper-title">' + safeText(p.title) + '</span>' +
+      evidence +
       '      <span class="dpr-sidebar-paper-meta">' + stars + (tagBits ? '<span class="dpr-sidebar-paper-tags">' + tagBits + '</span>' : '') + '</span>' +
       '    </a>' +
       '    <div class="dpr-sidebar-paper-actions" aria-label="论文标记">' + actions + '</div>' +
       '  </div>' +
-      evidence +
       '</li>'
     );
   }
@@ -1281,7 +1374,10 @@
     state.rootEl.classList.toggle('is-filter-unread', state.filter === 'unread');
   }
 
-  function syncActive() {
+  function syncActive(options) {
+    var opts = options || {};
+    var shouldCenter = opts.center !== false;
+    var shouldAutoMark = opts.autoMark !== false;
     if (!state.bodyEl) return;
     stripAppNav(state.bodyEl); // docsify 可能再次注入 .app-nav（每次路由）
     var href = findActivePaper();
@@ -1305,12 +1401,13 @@
     var currentPaperHref = findCurrentPaperHrefFromModel(state.model, href);
     var currentPaperId = currentPaperHref ? paperIdFromHref(currentPaperHref) : '';
     var readMap = ReadState.getAll();
-    if (currentPaperId && shouldAutoMarkRead(readMap[currentPaperId])) {
-      markPaperStatus(currentPaperId, 'read');
+    if (shouldAutoMark && currentPaperId && shouldAutoMarkRead(readMap[currentPaperId])) {
+      markPaperStatus(currentPaperId, 'read', { notify: false });
+      rerenderSidebarBody({ syncActive: true, centerActive: shouldCenter, autoMark: false });
       return;
     }
     // 居中滚动
-    centerOn(li);
+    if (shouldCenter) centerOn(li);
   }
 
   function cssEscape(s) {
@@ -1325,6 +1422,20 @@
     var current = state.bodyEl.scrollTop;
     var targetTop = current + (liRect.top - bodyRect.top) - bodyRect.height / 2 + liRect.height / 2;
     state.bodyEl.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+  }
+
+  function scrollPanelIntoView(panelKey) {
+    if (!state.bodyEl || !panelKey) return;
+    var panel = state.bodyEl.querySelector(
+      '.dpr-sidebar-panel[data-panel="' + cssEscape(panelKey) + '"]'
+    );
+    if (!panel || !panel.getBoundingClientRect) return;
+    var bodyRect = state.bodyEl.getBoundingClientRect();
+    var panelRect = panel.getBoundingClientRect();
+    if (panelRect.top < bodyRect.top || panelRect.top > bodyRect.bottom - 40) {
+      var target = state.bodyEl.scrollTop + (panelRect.top - bodyRect.top) - 6;
+      state.bodyEl.scrollTop = Math.max(0, target);
+    }
   }
 
   function dispatchSidebarUpdated() {
@@ -1349,10 +1460,21 @@
   function rerenderSidebarBody(options) {
     if (!state.bodyEl) return;
     var opts = options || {};
+    var previousScrollTop = state.bodyEl.scrollTop || 0;
     renderBody();
     updateReadStateMarks();
     applyFilterAndSearch();
-    if (opts.syncActive) syncActive();
+    if (opts.syncActive) {
+      syncActive({
+        center: opts.centerActive !== false,
+        autoMark: opts.autoMark !== false,
+      });
+    }
+    if (opts.preserveScroll) {
+      state.bodyEl.scrollTop = previousScrollTop;
+    } else if (opts.scrollPanel) {
+      scrollPanelIntoView(opts.scrollPanel);
+    }
     dispatchSidebarUpdated();
   }
 
@@ -1394,7 +1516,7 @@
         if (!state.expandedGroups) state.expandedGroups = { conference: true, daily: true };
         state.expandedGroups[panel] = !state.expandedGroups[panel];
         persistCollapse();
-        rerenderSidebarBody({ syncActive: false });
+        rerenderSidebarBody(rerenderOptionsForAxisInteraction(panel));
         return;
       }
       var axisToggle = e.target.closest('.dpr-sidebar-axis-toggle');
@@ -1405,7 +1527,7 @@
         } else if (axisGroup === 'conference') {
           state.conferenceViewMode = state.conferenceViewMode === 'tag' ? 'conf' : 'tag';
         }
-        rerenderSidebarBody({ syncActive: false });
+        rerenderSidebarBody(rerenderOptionsForAxisInteraction(axisGroup));
         return;
       }
       var axisTab = e.target.closest('.dpr-sidebar-axis-tab');
@@ -1419,7 +1541,7 @@
           if (state.conferenceViewMode === 'tag') state.activeConferenceTag = tabKey;
           else state.activeConference = tabKey;
         }
-        rerenderSidebarBody({ syncActive: false });
+        rerenderSidebarBody(rerenderOptionsForAxisInteraction(tabGroup));
         return;
       }
       var statusButton = e.target.closest('.dpr-sidebar-paper-status-btn');
@@ -1431,7 +1553,8 @@
         if (statusPaperId && nextStatus) {
           var readMap = ReadState.getAll();
           var currentStatus = normalizeReadStatus(readMap[statusPaperId]);
-          markPaperStatus(statusPaperId, currentStatus === nextStatus ? 'read' : nextStatus);
+          markPaperStatus(statusPaperId, currentStatus === nextStatus ? 'read' : nextStatus, { notify: false });
+          rerenderSidebarBody(rerenderOptionsForStatusClick());
         }
         if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
         return;
@@ -1509,7 +1632,7 @@
 
     window.addEventListener('hashchange', function () { syncActive(); });
     document.addEventListener('dpr-paper-read-state-changed', function () {
-      rerenderSidebarBody({ syncActive: true });
+      rerenderSidebarBody(rerenderOptionsForReadStateEvent());
     });
 
     document.addEventListener('visibilitychange', function () {
@@ -1591,7 +1714,7 @@
   var DPRSidebarApi = {
     refresh: function () { return loadAndRender(); },
     syncActive: syncActive,
-    notifyReadStateChanged: function () { rerenderSidebarBody({ syncActive: true }); },
+    notifyReadStateChanged: function () { rerenderSidebarBody(rerenderOptionsForReadStateEvent()); },
     getReadState: function () { return ReadState.getAll(); },
     getPaperHrefs: function () { return collectPaperHrefsFromModel(state.model); },
     getReportHrefs: function () { return collectReportHrefsFromModel(state.model); },
@@ -1628,6 +1751,9 @@
         statusForMarkIndex: statusForMarkIndex,
         shouldAutoMarkRead: shouldAutoMarkRead,
         clampSidebarWidth: clampSidebarWidth,
+        rerenderOptionsForReadStateEvent: rerenderOptionsForReadStateEvent,
+        rerenderOptionsForAxisInteraction: rerenderOptionsForAxisInteraction,
+        rerenderOptionsForStatusClick: rerenderOptionsForStatusClick,
       },
     };
   }
