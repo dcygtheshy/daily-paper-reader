@@ -410,6 +410,36 @@ function testDailyCalendarPlacementToggleKeepsControlRowFixedAboveLayers() {
   assert.ok(dailyHeader.includes('data-axis-toggle="daily"'));
   assert.ok(!topHtml.includes('dpr-sidebar-daily-control-row'));
   assert.ok(!bottomHtml.includes('dpr-sidebar-daily-control-row'));
+  assert.equal((topHtml.match(/data-axis-toggle="daily"/g) || []).length, 1);
+}
+
+function testConferenceAndDailyAxisTogglesRenderBesidePanelTitles() {
+  const sidebar = loadSidebarForTest('#/conference/neurips-2024/paper-c');
+  const tools = sidebar.__test;
+  const model = tools.parseSidebar(sampleSidebar);
+
+  const html = tools.renderBodyHtml(model, {
+    expandedGroups: { conference: true, daily: true },
+    conferenceViewMode: 'conf',
+    dailyViewMode: 'date',
+    activeConference: 'neurips-2024',
+    activeDailyDate: '20260624',
+  });
+  const confHeaderStart = html.indexOf('dpr-sidebar-panel-header-conference');
+  const confHeaderEnd = html.indexOf('<div class="dpr-sidebar-panel-content">', confHeaderStart);
+  const confHeader = html.slice(confHeaderStart, confHeaderEnd);
+  const dailyHeaderStart = html.indexOf('dpr-sidebar-panel-header-daily');
+  const dailyHeaderEnd = html.indexOf('<div class="dpr-sidebar-panel-content">', dailyHeaderStart);
+  const dailyHeader = html.slice(dailyHeaderStart, dailyHeaderEnd);
+
+  assert.ok(confHeader.includes('data-panel-toggle="conference"'));
+  assert.ok(confHeader.includes('data-axis-toggle="conference"'));
+  assert.ok(confHeader.indexOf('dpr-sidebar-panel-title') < confHeader.indexOf('data-axis-toggle="conference"'));
+  assert.ok(confHeader.indexOf('data-axis-toggle="conference"') < confHeader.indexOf('dpr-sidebar-day-counts'));
+  assert.ok(dailyHeader.indexOf('dpr-sidebar-panel-title') < dailyHeader.indexOf('data-axis-toggle="daily"'));
+  assert.ok(dailyHeader.indexOf('data-axis-toggle="daily"') < dailyHeader.indexOf('dpr-sidebar-day-counts'));
+  assert.equal((html.match(/data-axis-toggle="conference"/g) || []).length, 1);
+  assert.equal((html.match(/data-axis-toggle="daily"/g) || []).length, 1);
 }
 
 function testDailyCalendarInPlaceRefreshUsesActiveDailyTag() {
@@ -1410,6 +1440,7 @@ testAxisTabsRenderUnreadCounts();
 testDailyCalendarViewUsesMonthGridAndActiveDateOnly();
 testDailyCalendarTagViewFiltersActiveDateByKeyword();
 testDailyCalendarPlacementToggleKeepsControlRowFixedAboveLayers();
+testConferenceAndDailyAxisTogglesRenderBesidePanelTitles();
 testDailyCalendarInPlaceRefreshUsesActiveDailyTag();
 testDailyAxisSectionKeyFollowsActiveDateAndTag();
 testDailyDateAndTagClicksExpandCurrentSectionOnlyForDaily();

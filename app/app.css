@@ -7207,7 +7207,7 @@ body.dpr-sidebar-resizing {
 }
 .dpr-sidebar-panel-toggle {
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -7219,12 +7219,17 @@ body.dpr-sidebar-resizing {
   font: inherit;
   text-align: left;
 }
-.dpr-sidebar-panel-header-daily {
+.dpr-sidebar-panel-header-has-axis {
   gap: 8px;
 }
-.dpr-sidebar-daily-header-axis-toggle {
+.dpr-sidebar-panel-header-has-axis .dpr-sidebar-panel-title {
+  flex: 0 1 auto;
+}
+.dpr-sidebar-header-axis-toggle {
+  margin-left: 0;
+}
+.dpr-sidebar-panel-header-has-axis > .dpr-sidebar-day-counts {
   margin-left: auto;
-  margin-right: -4px;
 }
 .dpr-sidebar-panel-header:hover {
   background: #f1f5f9;

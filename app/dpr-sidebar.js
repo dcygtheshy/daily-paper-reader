@@ -1737,18 +1737,19 @@
     var resultClass = opts.view && opts.view.resultMode ? ' is-result-mode' : '';
     var axisMode = opts.view && opts.view.resultMode ? 'results' : opts.mode;
     var isDailyNormal = opts.group === 'daily' && !(opts.view && opts.view.resultMode);
+    var hasHeaderAxisToggle = !(opts.view && opts.view.resultMode) && (opts.group === 'daily' || opts.group === 'conference');
     var calendarPlacement = opts.dailyCalendarPlacement === 'bottom' ? 'bottom' : 'top';
     var totalCount = typeof opts.totalCount === 'number' ? opts.totalCount : countPapersInView(opts.view);
     var unreadCount = typeof opts.unreadCount === 'number' ? opts.unreadCount : 0;
     html.push('<section class="dpr-sidebar-group dpr-sidebar-panel ' + groupClass + expandedClass + resultClass + '" data-panel="' + safeAttr(opts.group) + '">');
-    if (isDailyNormal) {
-      html.push('  <div class="dpr-sidebar-panel-header dpr-sidebar-panel-header-daily">');
+    if (hasHeaderAxisToggle) {
+      html.push('  <div class="dpr-sidebar-panel-header dpr-sidebar-panel-header-has-axis dpr-sidebar-panel-header-' + safeAttr(opts.group) + '">');
       html.push('    <button type="button" class="dpr-sidebar-panel-toggle" data-panel-toggle="' + safeAttr(opts.group) + '" aria-expanded="' + (opts.expanded ? 'true' : 'false') + '">');
       html.push('      <span class="dpr-sidebar-day-arrow" aria-hidden="true">▸</span>');
       html.push('      <span class="dpr-sidebar-panel-title">' + safeText(opts.icon + ' ' + opts.title) + '</span>');
-      html.push('      <span class="dpr-sidebar-day-counts"><span class="dpr-sidebar-day-unread">' + unreadCount + '</span>/<span class="dpr-sidebar-day-total">' + totalCount + '</span></span>');
       html.push('    </button>');
-      html.push('    <button type="button" class="dpr-sidebar-axis-toggle dpr-sidebar-daily-header-axis-toggle" data-axis-toggle="daily" title="' + safeAttr(opts.toggleLabel) + '">⇄</button>');
+      html.push('    <button type="button" class="dpr-sidebar-axis-toggle dpr-sidebar-header-axis-toggle" data-axis-toggle="' + safeAttr(opts.group) + '" title="' + safeAttr(opts.toggleLabel) + '">⇄</button>');
+      html.push('    <span class="dpr-sidebar-day-counts"><span class="dpr-sidebar-day-unread">' + unreadCount + '</span>/<span class="dpr-sidebar-day-total">' + totalCount + '</span></span>');
       html.push('  </div>');
     } else {
       html.push('  <button type="button" class="dpr-sidebar-panel-header" data-panel-toggle="' + safeAttr(opts.group) + '" aria-expanded="' + (opts.expanded ? 'true' : 'false') + '">');
@@ -1766,6 +1767,8 @@
         html.push(renderAxisTabs('daily', 'tag', opts.view, opts.toggleLabel, { hideToggle: true, rowClass: 'dpr-sidebar-daily-tabs-row' }));
         html.push(renderDailyCalendar(opts.view && opts.view.calendar, calendarPlacement));
       }
+    } else if (hasHeaderAxisToggle) {
+      html.push(renderAxisTabs(opts.group, opts.mode, opts.view, opts.toggleLabel, { hideToggle: true }));
     } else {
       html.push(renderAxisTabs(opts.group, opts.mode, opts.view, opts.toggleLabel));
     }
