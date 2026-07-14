@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-07-14T07:44:09.728689+00:00",
-  "updated_date": "20260705-20260714",
+  "generated_at": "2026-07-14T21:08:35.971740+00:00",
+  "updated_date": "20260714",
   "carryover_days": 9,
   "tag_states": {
     "watermarking": {
-      "updated_date": "20260705-20260714",
+      "updated_date": "20260714",
       "carryover_days": 9,
       "items": []
     }

@@ -1,0 +1,130 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-14T21:08:35.970636+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2607.10252v1",
+      "source": "arxiv",
+      "title": "One Token Is Enough: Fingerprinting and Verifying Large Language Models from Single-Token Output Distributions",
+      "abstract": "Large language models (LLMs) are increasingly consumed through opaque serving chains - API aggregators, resellers, and inference providers - in which the client has no technical means to confirm that the model answering is the model advertised, and recent audits show that a substantial fraction of commercial endpoints deviate from the vendor's reference weights. Existing identification techniques require long generated texts, token-level log-probabilities, adversarially crafted prompts, or the model owner's cooperation. We show that far weaker evidence suffices. We define a behavioral fingerprint of an LLM as the empirical distribution of its answers to trivial one-word prompts - \"name a random number between 1 and 100\" - collected across four languages at a cost of one output token per query. Measuring 165 models served via a large commercial aggregator (OpenRouter), we find that (i) these distributions are highly non-uniform (median cell entropy 1.0 bit) and model-specific: split halves of the same model's samples lie an order of magnitude closer than samples of different models; (ii) Jensen-Shannon divergence between fingerprints recovers model lineage, assigning a model to its documented family with 59.5% leave-one-out accuracy against an 18.4% chance rate; and (iii) a biometric-style verification protocol achieves a 7.3% equal error rate with the full 40-cell battery, and below 11% with eight probe cells - roughly a hundred single-token queries per audit. We further report ecosystem anomalies, including a proprietary-branded flagship endpoint distributionally indistinguishable from an open-weight Qwen model. The protocol, prompts, raw data, and analysis code are released for reproduction and operational use.",
+      "authors": [
+        "Tomas Bruckner"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-07-11T10:34:17+00:00",
+      "link": "https://arxiv.org/pdf/2607.10252v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Fingerprinting method for generative models (LLMs) using single-token output distributions",
+      "llm_evidence_cn": "使用单令牌输出分布对生成模型（LLM）进行指纹识别的方法",
+      "llm_evidence": "使用单令牌输出分布对生成模型（LLM）进行指纹识别的方法",
+      "canonical_evidence": "使用单令牌输出分布对生成模型（LLM）进行指纹识别的方法",
+      "llm_tldr_en": "Proposes a lightweight behavioral fingerprint for LLMs based on output distributions to trivial one-word prompts, enabling model verification without long generated texts or model cooperation.",
+      "llm_tldr_cn": "针对LLM服务透明性问题，本文提出一种基于单令牌输出分布的轻量级指纹识别方法。通过收集模型对简单单字提示的响应分布，能够有效区分不同模型实例，无需长文本或模型内部信息。实验表明该方法在模型识别和验证任务上准确率高，且对提示变化具有鲁棒性。",
+      "llm_tldr": "针对LLM服务透明性问题，本文提出一种基于单令牌输出分布的轻量级指纹识别方法。通过收集模型对简单单字提示的响应分布，能够有效区分不同模型实例，无需长文本或模型内部信息。实验表明该方法在模型识别和验证任务上准确率高，且对提示变化具有鲁棒性。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.07545v1",
+      "source": "arxiv",
+      "title": "Face-trace: Open-Set Attribution and Progressive Discovery of Synthetic Face Generators",
+      "abstract": "Recent advances in generative Artificial Intelligence have made synthetic face images increasingly realistic, creating new challenges for multimedia forensics. Source attribution methods should not only identify the generator of an image when the source is known, but also handle samples produced by previously unseen models. However, most existing approaches address synthetic face attribution in a closed-set setting, where all possible generators are available during training. This assumption does not hold in real-world scenarios, where new generators continuously appear and rejected samples should be organized rather than simply discarded. In this work we propose a pipeline for open-set synthetic face source attribution that combines known generator classification, energy-based OOD rejection, and unknown generator discovery. A classifier is trained on known generators using frozen I-JEPA embeddings, while rejected samples are represented by combining projected I-JEPA features with Forensic Self-Descriptors and then clustered to discover groups of unknown generators. We also extend the discovery stage to an incremental scenario, where rejected samples arrive over time. Experiments on the WILD dataset show that the proposed method achieves 96.73% closed-set attribution accuracy. In the open-set setting, energy-based rejection reaches 71.25% balanced accuracy, while rejected samples are clustered into meaningful unknown-generator groups, obtaining an ARI of 0.81, an NMI of 0.90, and an overall clustering purity of 87.74%. In the incremental setting, the discovered generator space is progressively extended while maintaining a final purity of 99.23%. Cross-dataset experiments suggest that the pipeline can operate beyond the original dataset distribution, although post-processing remains challenging.",
+      "authors": [
+        "Alessia Infantino",
+        "Claudio Schiavella",
+        "Irene Amerini"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-07-08T15:42:58+00:00",
+      "link": "https://arxiv.org/pdf/2607.07545v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "fingerprinting for synthetic face generators",
+      "llm_evidence_cn": "合成人脸生成器的指纹识别",
+      "llm_evidence": "合成人脸生成器的指纹识别",
+      "canonical_evidence": "合成人脸生成器的指纹识别",
+      "llm_tldr_en": "Proposes open-set attribution pipeline for synthetic face generators, combining k-NN and progressive discovery, enabling both known and unknown model identification.",
+      "llm_tldr_cn": "针对合成人脸图像溯源问题，现有方法局限于闭集设定，无法处理新出现的生成器。本文提出Face-trace流程，结合k近邻与渐进发现策略，实现开放集下的生成器归因与未知模型发现。实验表明该方法能有效识别已知模型并将未知样本组织为新簇，为生成模型指纹识别提供实用工具。",
+      "llm_tldr": "针对合成人脸图像溯源问题，现有方法局限于闭集设定，无法处理新出现的生成器。本文提出Face-trace流程，结合k近邻与渐进发现策略，实现开放集下的生成器归因与未知模型发现。实验表明该方法能有效识别已知模型并将未知样本组织为新簇，为生成模型指纹识别提供实用工具。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.10020v1",
+      "source": "arxiv",
+      "title": "Robust, Scalable Detection of Text Containment in Large Web-Crawled Corpora",
+      "abstract": "We present FindMyText, an open-source Python package designed to efficiently assess whether a given text appears, in part or in full, within a text corpus. The tool builds on prior techniques for document fingerprinting, but extends them with a novel mechanism to explicitly capture sequences of matching fingerprints. By identifying such chains, the tool can more reliably detect near-verbatim copies of a given text rather than mere textual similarities. This makes FindMyText particularly suited for verifying the presence of copyrighted material in a corpus. Leveraging a distributed, disk-based indexing framework, the system scales to large web-crawled datasets. Using a new benchmark for evaluating text containment methods, we show that FindMyText outperforms alternative approaches across three datasets (ArXiv papers, Wikipedia, and generic web content).",
+      "authors": [
+        "Lars Henry Berge Olsen",
+        "Pierre Lison",
+        "Martin Jullum",
+        "Mark Anderson"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-07-10T22:46:11+00:00",
+      "link": "https://arxiv.org/pdf/2607.10020v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "document fingerprinting technique for text containment",
+      "llm_evidence_cn": "文档指纹技术用于文本包含检测",
+      "llm_evidence": "文档指纹技术用于文本包含检测",
+      "canonical_evidence": "文档指纹技术用于文本包含检测",
+      "llm_tldr_en": "FindMyText uses fingerprinting chains to detect text containment in large corpora, relevant to fingerprinting techniques for generative models.",
+      "llm_tldr_cn": "本文提出FindMyText工具，基于文档指纹技术并引入指纹链机制，用于在大规模网页语料中高效检测文本是否存在抄袭或包含关系。方法通过捕获连续匹配指纹提升检测可靠性，特别适用于版权验证。该工作与生成模型指纹技术追求的可溯源目标一致。",
+      "llm_tldr": "本文提出FindMyText工具，基于文档指纹技术并引入指纹链机制，用于在大规模网页语料中高效检测文本是否存在抄袭或包含关系。方法通过捕获连续匹配指纹提升检测可靠性，特别适用于版权验证。该工作与生成模型指纹技术追求的可溯源目标一致。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
