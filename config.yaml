@@ -25,3 +25,73 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: watermarking
+      description: 关于扩散模型水印、潜在扩散水印、文本到图像水印等方面的论文检索。
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: model watermarking
+          keyword_cn: 模型水印
+          query: m
+        - keyword: diffusion model watermarking
+          keyword_cn: 扩散模型水印
+          query: Watermarking techniques for diffusion models
+        - keyword: text-to-image watermarking
+          keyword_cn: 文本到图像水印
+          query: Watermarking in text-to-image generation models
+        - keyword: generative model fingerprinting
+          keyword_cn: 生成模型指纹
+          query: Fingerprinting techniques for generative models
+        - keyword: robust watermarking
+          keyword_cn: 鲁棒水印
+          query: Robust watermarking algorithms against perturbations
+        - keyword: cryptographic watermarking
+          keyword_cn: 密码学水印
+          query: Cryptographic approaches to watermarking
+      intent_queries:
+        - query: Research on watermarking methods for diffusion models and their robustness
+          query_cn: 扩散模型水印方法及其鲁棒性研究
+          enabled: true
+          source: manual
+          note: ''
+        - query: Studies on latent space watermarking and inversion based detection
+          query_cn: 潜空间水印与基于反演检测的研究
+          enabled: true
+          source: manual
+          note: ''
+        - query: Papers on attacks and defenses in generative model watermarking
+          query_cn: 生成模型水印攻击与防御的论文
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-07-14T07:17:40.838Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
+  biorxiv:
+    papers_table: biorxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_biorxiv_papers_exact
+    vector_rpc_exact: match_biorxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_biorxiv_papers_bm25
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
