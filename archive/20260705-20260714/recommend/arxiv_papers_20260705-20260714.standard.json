@@ -1,0 +1,491 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-14T07:24:30.957958+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 4,
+    "deep_cap": 6,
+    "deep_selected": 4,
+    "quick_candidates": 8,
+    "quick_skim_target": 11,
+    "quick_selected": 8
+  },
+  "deep_dive": [
+    {
+      "id": "2607.05261v1",
+      "source": "arxiv",
+      "title": "FlowMark: Mask-Guided Video Watermarking",
+      "abstract": "We present FlowMark, a video watermarking framework guided by automatically predicted object masks. In contrast to prior region-based approaches that require user-supplied mask guidance, FlowMark learns to identify optimal regions for watermark embedding through a dedicated Mask Predictor network. Our end-to-end trainable architecture combines region-aware encoding with noise-augmented training to ensure robustness against compression, geometric transformations, and content variation, while preserving high perceptual quality. Our content-adaptive masking keeps watermark signals coherent with natural video dynamics, effectively eliminating perceptual flicker. Beyond compression robustness, FlowMark maintains reliable watermark recovery under video-native temporal edits (e.g., frame swap, insertion, deletion, resampling, and interpolation) and real-world social media distribution pipelines (e.g., YouTube and Facebook re-encoding). Experimental results on both image and video datasets show that FlowMark reliably embeds $128$-bit messages with up to $50.08$ dB PSNR, offering strong performance for content provenance, temporal authenticity verification, and video integrity protection.",
+      "authors": [
+        "Vishal Asnani",
+        "Shruti Agarwal",
+        "John Collomosse"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-07-06T16:08:50+00:00",
+      "link": "https://arxiv.org/pdf/2607.05261v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "video watermarking with mask guidance and robustness",
+      "llm_evidence_cn": "基于掩码引导的视频水印，具有鲁棒性",
+      "llm_evidence": "基于掩码引导的视频水印，具有鲁棒性",
+      "canonical_evidence": "基于掩码引导的视频水印，具有鲁棒性",
+      "llm_tldr_en": "FlowMark proposes a mask-guided video watermarking framework with automatic region selection and noise-augmented training for robustness.",
+      "llm_tldr_cn": "现有视频水印方法需要用户提供掩码引导，限制了实用性。FlowMark提出了一种端到端可训练的视频水印框架，通过专用的掩码预测网络自动识别最优嵌入区域，并采用噪声增强训练确保对压缩、几何变换和时间编辑的鲁棒性。实验表明，该方法在保持高感知质量的同时，有效消除了感知闪烁，并能在多种攻击下可靠恢复水印。这项工作为视频水印的自动化与鲁棒性提供了新思路。",
+      "llm_tldr": "现有视频水印方法需要用户提供掩码引导，限制了实用性。FlowMark提出了一种端到端可训练的视频水印框架，通过专用的掩码预测网络自动识别最优嵌入区域，并采用噪声增强训练确保对压缩、几何变换和时间编辑的鲁棒性。实验表明，该方法在保持高感知质量的同时，有效消除了感知闪烁，并能在多种攻击下可靠恢复水印。这项工作为视频水印的自动化与鲁棒性提供了新思路。",
+      "llm_tags": [
+        "query:watermarking:composite"
+      ],
+      "matched_query_tag": "query:watermarking:composite",
+      "matched_query_text": "Papers central to 关于扩散模型水印、潜在扩散水印、文本到图像水印等方面的论文检索。, especially work that connects or combines: m; Watermarking techniques for diffusion models; Watermarking in text-to-image generation models; Fingerprinting techniques for generative models; Robust watermarking algorithms against perturbations; Cryptographic approaches to watermarking; Research on watermarking methods for diffusion models and their robustness; Studies on latent space watermarking and inversion based detection; Papers on attacks and defenses in generative model watermarking.",
+      "matched_requirement_id": "req-composite-watermarking",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.09000v1",
+      "source": "arxiv",
+      "title": "RaMark: Radioactive Watermarking for Generated Tabular Data",
+      "abstract": "Recent advances in generative modeling have made generated tabular data a practical solution for privacy-sensitive data sharing, where watermarking enables ownership verification. However, existing watermarking methods fundamentally fail under retraining attacks, in which an adversary retrains a generative model on a watermarked dataset and regenerates high-utility data that no longer carries the watermark. We address this challenge by introducing radioactivity, the property that a watermark remains detectable after generative model retraining, and propose RaMark, a radioactive watermarking method that embeds a sinusoidal dependency as an intrinsic component of the data distribution. By coupling the watermark with the underlying distribution, RaMark ensures that any generative model preserving data utility also has to preserve the watermark. We theoretically show that with high probability removing watermark degrades utility and alters data distribution. Extensive experiments on two real-world tabular datasets, under a large-scale ownership verification setting with $10^5$ independent data owners, demonstrate that RaMark achieves substantially stronger radioactivity than seven state-of-the-art methods and consistently outperforms them against both retraining and data modification attacks.",
+      "authors": [
+        "Xin Che",
+        "Lingyang Chu",
+        "Qiqi Zhang",
+        "Xinyu Ma",
+        "Xuan Luo",
+        "Jian Pei"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-07-10T00:06:42+00:00",
+      "link": "https://arxiv.org/pdf/2607.09000v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "radioactive watermarking for generated data with retraining robustness",
+      "llm_evidence_cn": "针对生成数据的放射性水印，可抵抗重训练攻击",
+      "llm_evidence": "针对生成数据的放射性水印，可抵抗重训练攻击",
+      "canonical_evidence": "针对生成数据的放射性水印，可抵抗重训练攻击",
+      "llm_tldr_en": "RaMark introduces radioactivity for watermarking generated tabular data, ensuring watermark remains detectable after model retraining.",
+      "llm_tldr_cn": "现有生成模型水印在遭遇重训练攻击时失效，因为对抗者重训练模型后生成的水印会消失。RaMark提出放射性水印概念，通过将正弦依赖嵌入数据分布中，使水印在模型重训练后仍可检测。该方法在不降低数据实用性的前提下，有效抵御重训练攻击，为生成模型的版权保护提供了更可靠的方案。",
+      "llm_tldr": "现有生成模型水印在遭遇重训练攻击时失效，因为对抗者重训练模型后生成的水印会消失。RaMark提出放射性水印概念，通过将正弦依赖嵌入数据分布中，使水印在模型重训练后仍可检测。该方法在不降低数据实用性的前提下，有效抵御重训练攻击，为生成模型的版权保护提供了更可靠的方案。",
+      "llm_tags": [
+        "query:watermarking:composite"
+      ],
+      "matched_query_tag": "query:watermarking:composite",
+      "matched_query_text": "Papers central to 关于扩散模型水印、潜在扩散水印、文本到图像水印等方面的论文检索。, especially work that connects or combines: m; Watermarking techniques for diffusion models; Watermarking in text-to-image generation models; Fingerprinting techniques for generative models; Robust watermarking algorithms against perturbations; Cryptographic approaches to watermarking; Research on watermarking methods for diffusion models and their robustness; Studies on latent space watermarking and inversion based detection; Papers on attacks and defenses in generative model watermarking.",
+      "matched_requirement_id": "req-composite-watermarking",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.05353v1",
+      "source": "arxiv",
+      "title": "Selective Disclosure Watermarking for Large Language Models",
+      "abstract": "Watermarking methods embed imperceptible and verifiable signals into text generated by large language models (LLMs). Existing approaches include zero-bit schemes for distinguishing synthetic text from human writing and multi-bit schemes for embedding metadata. However, current multi-bit watermarking methods do not allow selective disclosure: verifying any part of the watermark requires revealing the entire embedded message. This lack of control leads to unnecessary information exposure and raises privacy concerns. We propose Hierarchical Vocabulary Routing (HeRo), a watermarking framework that enables selective disclosure of embedded metadata. The method recursively partitions the vocabulary and distributes watermark information across hierarchical layers, so that different verifiers can decode only the portions of the payload corresponding to their access level. We show that the proposed scheme preserves the unbiasedness of the underlying sampling process and thus maintains text quality. Experiments demonstrate that our framework supports fine-grained access control while achieving high detection accuracy and low latency. Code is available at https://github.com/xuyangc03/hero-watermark.",
+      "authors": [
+        "Xuyang Chen",
+        "Xiang Li",
+        "Yangxinyu Xie",
+        "Qi Long"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-07-06T17:32:01+00:00",
+      "link": "https://arxiv.org/pdf/2607.05353v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "watermarking for LLMs with selective disclosure",
+      "llm_evidence_cn": "面向大语言模型的选择性披露水印",
+      "llm_evidence": "面向大语言模型的选择性披露水印",
+      "canonical_evidence": "面向大语言模型的选择性披露水印",
+      "llm_tldr_en": "Proposes HeRo, a hierarchical vocabulary routing watermarking framework that enables selective disclosure of embedded metadata in LLM-generated text, addressing privacy concerns of multi-bit watermarking.",
+      "llm_tldr_cn": "针对现有大语言模型多比特水印无法选择性披露、导致信息泄露的问题，本文提出分层词汇路由（HeRo）框架。该方法递归划分词汇表，将水印信息分布于层级结构中，实现元数据的选择性验证。实验表明HeRo在保持高检测率的同时，有效控制了信息暴露范围，为隐私保护型生成文本水印提供了新途径。",
+      "llm_tldr": "针对现有大语言模型多比特水印无法选择性披露、导致信息泄露的问题，本文提出分层词汇路由（HeRo）框架。该方法递归划分词汇表，将水印信息分布于层级结构中，实现元数据的选择性验证。实验表明HeRo在保持高检测率的同时，有效控制了信息暴露范围，为隐私保护型生成文本水印提供了新途径。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.07527v1",
+      "source": "arxiv",
+      "title": "A Unified Detection Framework for AI-Related Content and Artifacts",
+      "abstract": "Artificial intelligence (AI) is a double-edged sword: while it has achieved remarkable success across a wide range of domains, its deployment also calls for effective oversight and regulation, for which the detection of AI-related content and artifacts is perhaps the most direct and cost-effective approach. To this end, we propose a unified detection framework based on Mahalanobis distance scores (MDS), applicable to several important settings, including the detection of large language model (LLM) generated text, hallucination, watermark, and adversarial examples. A key component of the proposed method is to accurately characterize the positive class--such as human-generated text, factual statements, unwatermarked text, or non-adversarial samples--which requires an efficient and robust estimator of the covariance matrix of deep representations of positive samples before computing the MDS. Since the positive samples typically consist of multiple classes, and these classes may exhibit both homogeneity and heterogeneity, we develop joint estimation methods for both the casewise and cellwise minimum covariance determinant (MCD) estimators. We provide efficient optimization algorithms for both estimators and prove their convergence. We provide a reasonable definition of the breakdown point for the joint estimators and prove their corresponding high breakdown point properties. Empirical evaluations confirm the effectiveness of the proposed detection framework.",
+      "authors": [
+        "Xifeng Zhang",
+        "Tao Hu",
+        "Yijie Peng",
+        "Wan Tian"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-07-08T15:21:07+00:00",
+      "link": "https://arxiv.org/pdf/2607.07527v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "unified detection framework including watermark detection",
+      "llm_evidence_cn": "包含水印检测的统一AI工件检测框架",
+      "llm_evidence": "包含水印检测的统一AI工件检测框架",
+      "canonical_evidence": "包含水印检测的统一AI工件检测框架",
+      "llm_tldr_en": "Proposes a Mahalanobis distance based unified detection framework for LLM text, hallucination, watermark, and adversarial examples.",
+      "llm_tldr_cn": "AI内容检测对监管至关重要，但现有方法针对不同任务各自设计。本文提出基于马氏距离的统一检测框架，可同时用于检测大语言模型生成文本、幻觉、水印和对抗样本。通过精确刻画正类（如人类文本、真实陈述、无水印文本）的特征分布，该方法实现了高效且通用的检测。实验表明，该框架在多个任务上均取得优异性能，为AI安全监管提供了统一的工具。",
+      "llm_tldr": "AI内容检测对监管至关重要，但现有方法针对不同任务各自设计。本文提出基于马氏距离的统一检测框架，可同时用于检测大语言模型生成文本、幻觉、水印和对抗样本。通过精确刻画正类（如人类文本、真实陈述、无水印文本）的特征分布，该方法实现了高效且通用的检测。实验表明，该框架在多个任务上均取得优异性能，为AI安全监管提供了统一的工具。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.05694v1",
+      "source": "arxiv",
+      "title": "Beyond Heuristic Tuning: Power-Calibrated LLM Watermarking",
+      "abstract": "Logit-based watermarking is a widely used mechanism for identifying LLM generated content, yet its effectiveness is governed by a fundamental trade-off between detectability and semantic distortion. Existing analyses provide limited guidance for principled hyperparameter selection, leaving practical deployments reliant on heuristic tuning. In this work, we develop a power-calibrated statistical framework that establishes explicit quantitative relationships between watermark hyperparameters, detection power, and distortion. This characterization transforms watermark design into a guided optimization problem. Building on these results, we derive practical parameter selection procedures that achieve optimal tradeoffs under constraints. Extensive experiments across multiple language models and datasets validate the theory and demonstrate that the proposed framework consistently identifies Pareto-optimal points.",
+      "authors": [
+        "Xiaopu Wang",
+        "Zelin He",
+        "Chengyuan Liu",
+        "Runze Li"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-07-06T23:23:14+00:00",
+      "link": "https://arxiv.org/pdf/2607.05694v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "power-calibrated robust LLM watermarking",
+      "llm_evidence_cn": "功率校准的鲁棒LLM水印",
+      "llm_evidence": "功率校准的鲁棒LLM水印",
+      "canonical_evidence": "功率校准的鲁棒LLM水印",
+      "llm_tldr_en": "Develops a statistical framework for logit-based LLM watermarking that optimizes detectability-distortion tradeoffs.",
+      "llm_tldr_cn": "针对LLM水印中检测力与语义失真之间的权衡缺乏理论指导的问题，提出功率校准统计框架。该框架建立了水印超参数、检测力和失真之间的显式量化关系，将水印设计转化为优化问题。实验验证了方法在多种模型和数据集上实现了最优权衡。",
+      "llm_tldr": "针对LLM水印中检测力与语义失真之间的权衡缺乏理论指导的问题，提出功率校准统计框架。该框架建立了水印超参数、检测力和失真之间的显式量化关系，将水印设计转化为优化问题。实验验证了方法在多种模型和数据集上实现了最优权衡。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.10103v1",
+      "source": "arxiv",
+      "title": "A Survey on LLM Watermarking: Theory and Deployment",
+      "abstract": "Large language models (LLMs) are increasingly embedded in high-impact workflows, yet their ability to generate fluent text at scale has amplified risks of provenance ambiguity, model misuse, and large-scale content laundering. LLM watermarking, embedding invisible signatures into model outputs, has emerged as a promising technical layer for attribution, auditing, and downstream trust decisions. However, the literature has grown rapidly and unevenly: existing categorizations often mix orthogonal design choices, making it difficult to compare methods, reason about guarantees, or translate research results into deployable systems. This survey provides a systematic, deployment-oriented review of LLM watermarking. We organize the space by the core questions practitioners must answer: where a watermark is embedded (generation-time vs. training-time, token vs. representation), who can detect it (public vs. private detection authority), what is assumed (access to logits, sampling control, secret keys, model ownership), and which threat models are targeted (paraphrasing, translation, summarization, style transfer, token manipulation, and adaptive removal). We synthesize the main families of techniques-including sampling biasing, code-based schemes, representation- and training-based approaches-and analyze their security-utility trade-offs through the lens of detectability, robustness, and distribution shift. We further review attack and evasion strategies, evaluation protocols and metrics (false positive control, calibration, robustness curves), and open challenges such as cross-model transfer, multi-modal pipelines, collusion, and governance constraints. Finally, we provide practical guidance for selecting watermark designs under real operational requirements and identify research directions needed for reliable, accountable LLM deployment.",
+      "authors": [
+        "Huy Phan",
+        "Kieu Dang",
+        "Ojaswi Dulal",
+        "Aiham AL Shukairi",
+        "Abby Shine",
+        "Chase Garner",
+        "Phung Lai"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL"
+      ],
+      "published": "2026-07-11T03:42:17+00:00",
+      "link": "https://arxiv.org/pdf/2607.10103v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Survey on LLM watermarking, covering theory and deployment",
+      "llm_evidence_cn": "LLM水印综述，涵盖理论与部署",
+      "llm_evidence": "LLM水印综述，涵盖理论与部署",
+      "canonical_evidence": "LLM水印综述，涵盖理论与部署",
+      "llm_tldr_en": "A systematic deployment-oriented survey of LLM watermarking, organizing design choices and evaluation criteria for practitioners.",
+      "llm_tldr_cn": "LLM水印文献快速增长但组织混乱。本综述以部署为导向，系统梳理水印技术的设计空间、理论保证和实际部署考量，帮助从业者比较方法并做出决策。",
+      "llm_tldr": "LLM水印文献快速增长但组织混乱。本综述以部署为导向，系统梳理水印技术的设计空间、理论保证和实际部署考量，帮助从业者比较方法并做出决策。",
+      "llm_tags": [
+        "query:watermarking:composite"
+      ],
+      "matched_query_tag": "query:watermarking:composite",
+      "matched_query_text": "Papers central to 关于扩散模型水印、潜在扩散水印、文本到图像水印等方面的论文检索。, especially work that connects or combines: m; Watermarking techniques for diffusion models; Watermarking in text-to-image generation models; Fingerprinting techniques for generative models; Robust watermarking algorithms against perturbations; Cryptographic approaches to watermarking; Research on watermarking methods for diffusion models and their robustness; Studies on latent space watermarking and inversion based detection; Papers on attacks and defenses in generative model watermarking.",
+      "matched_requirement_id": "req-composite-watermarking",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.06009v1",
+      "source": "arxiv",
+      "title": "Multi-Channel Spread-Spectrum Code Watermarking",
+      "abstract": "Attributing code to the large language model that produced it is essential for provenance, licensing, and misuse accountability, yet no deployed watermark meets this need. Generation-time schemes require access to the producing model and cannot be applied to third-party code, while post-hoc schemes work on any code but carry at most 4 bits of payload, far too few to distinguish the many deployed model configurations. We present multi-channel spread-spectrum watermarking, the first post-hoc, training-free code watermark with a 24-bit payload and formal robustness guarantees. The scheme encodes bits in variable naming conventions and in eight pairs of semantically equivalent code patterns, and a keyed pseudo-random permutation maps every site to a codeword bit so that each bit receives multiple independent votes. Majority voting absorbs distributed corruption, while an outer Reed-Solomon code recovers the identifier when concentrated channel attacks defeat the vote, yielding provable robustness bounds for formatting, syntactic, and structural attacks. Across 1,750 Python files from CodeNet and from GPT-4.1 and Llama-4 generations, the watermark achieves 100% clean-detection accuracy with zero false positives. Under 17 attack types, it recovers the identifier at 97.6% accuracy under 8 variable renames and 94.1% under 10% random per-site corruption, while the strongest post-hoc baseline collapses to 0% under any single-transform attack. Embedding and detection together take under 200 ms on CPU without training data or GPU.",
+      "authors": [
+        "Soohyeon Choi",
+        "Debin Gao",
+        "Yue Duan"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG",
+        "cs.SE"
+      ],
+      "published": "2026-07-07T08:50:19+00:00",
+      "link": "https://arxiv.org/pdf/2607.06009v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Spread-spectrum code watermarking with cryptographic-like guarantees",
+      "llm_evidence_cn": "基于扩频技术的代码水印，具有类似密码学的鲁棒性保证",
+      "llm_evidence": "基于扩频技术的代码水印，具有类似密码学的鲁棒性保证",
+      "canonical_evidence": "基于扩频技术的代码水印，具有类似密码学的鲁棒性保证",
+      "llm_tldr_en": "Multi-channel spread-spectrum watermarking for code attribution, achieving 24-bit payload and formal robustness guarantees via pseudo-random permutation.",
+      "llm_tldr_cn": "现有代码水印载荷小，无法区分众多模型。本文提出多通道扩频水印，利用变量命名和等价代码模式编码24位信息，结合密钥伪随机置换，提供形式化的鲁棒性保证，实现后处理、免训练的代码归属。",
+      "llm_tldr": "现有代码水印载荷小，无法区分众多模型。本文提出多通道扩频水印，利用变量命名和等价代码模式编码24位信息，结合密钥伪随机置换，提供形式化的鲁棒性保证，实现后处理、免训练的代码归属。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.08400v1",
+      "source": "arxiv",
+      "title": "TRACE: A Two-Channel Robust Attribution Watermark via Complementary Embeddings for LLM-Agent Trajectories",
+      "abstract": "LLM agents reach users through resellers, who may rebrand a developer's agent or substitute a cheaper model. When provenance is disputed, attribution rests on the trajectory log (the record of tool calls, observations, and executed actions, not the model's reasoning), which the reseller stores and processes to meter usage. A watermark must therefore survive an adversary with full read/write access to the very evidence it is detected from; existing agent watermarks do not, as their attribution is read straight off that log. We present TRACE, to our knowledge the first agent watermark that is distortion-free in its action choices, self-synchronizing under deletion, and unconditionally invariant under rewriting. Deletion desynchronizes a position-derived key and rewriting alters content, so a deletion-robust key must come from content and a rewrite-robust key from position, and no single key serves both. A trajectory, however, has room for two watermarks. TRACE superposes a selection channel that sets which action is chosen, keyed on local content with a distortion-free sampler, so the agent's distribution is provably unchanged and detection resynchronizes after deletions, and a tally channel that sets how many records each decision group holds, keyed on the log's skeleton alone, which no rewriting can touch. We prove this behavioral watermark's signal is bought with decision entropy, each decision paying at least half its entropy and deterministic decisions nothing, and that erasing both channels forces the reseller to corrupt the trajectories it resells. On ToolBench and ALFWorld, TRACE matches the unwatermarked agent's success rate while its selection channel reaches detection scores near z = 100 on long-horizon trajectories, stays detectable under 70% step deletion, and keeps a tally channel exactly unchanged under LLM rewriting of any strength.",
+      "authors": [
+        "Zheng Gao",
+        "Xiaoyu Li",
+        "Xiaoyan Feng",
+        "Jiaojiao Jiang",
+        "Yang Song",
+        "Yulei Sui",
+        "Zhenchang Xing",
+        "Liming Zhu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-07-09T12:25:22+00:00",
+      "link": "https://arxiv.org/pdf/2607.08400v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "robust watermark for LLM agent trajectories",
+      "llm_evidence_cn": "LLM智能体轨迹鲁棒水印",
+      "llm_evidence": "LLM智能体轨迹鲁棒水印",
+      "canonical_evidence": "LLM智能体轨迹鲁棒水印",
+      "llm_tldr_en": "TRACE is the first agent watermark that is distortion-free, self-synchronizing under deletion, and invariant under rewriting.",
+      "llm_tldr_cn": "针对LLM智能体轨迹被重写或删除后归属争议的问题，提出TRACE水印方法。它通过互补嵌入实现无失真、自同步且对重写不变的水印。实验表明TRACE在恶意篡改下仍能可靠归属，为智能体使用计量和版权保护提供了安全保障。",
+      "llm_tldr": "针对LLM智能体轨迹被重写或删除后归属争议的问题，提出TRACE水印方法。它通过互补嵌入实现无失真、自同步且对重写不变的水印。实验表明TRACE在恶意篡改下仍能可靠归属，为智能体使用计量和版权保护提供了安全保障。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.10210v1",
+      "source": "arxiv",
+      "title": "Toward Stronger Code Watermarking: A Grammar-Driven Approach to Optimizing the Trade-off Between Quality and Detectability",
+      "abstract": "With the rapid development of Large Language Models (LLMs), text watermarking has emerged as a crucial technique for identifying machine-generated content. However, directly applying existing logits-based watermarking methods to code generation remains challenging, since the low-entropy nature of code exacerbates the trade-off between code quality and watermark detectability. In this paper, we propose a novel code watermarking approach called Grammar-Driven Watermark (GDW) for LLMs. GDW preserves syntactic validity through a grammar-guided three-level masking mechanism and injects watermark signals via structural role-aware modulation, assigning a stronger bias to content-bearing tokens while applying a more conservative bias to syntax-critical tokens. Aligning with the generation process, we further design a role-aware weighted detection statistic to improve detectability. Experiments across multiple programming languages, models, and decoding strategies show that GDW establishes a stronger quality-detectability trade-off frontier than existing methods, while maintaining robustness against variable-renaming attacks.",
+      "authors": [
+        "Licheng Yu",
+        "Aiwei Liu",
+        "Songze Li"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL"
+      ],
+      "published": "2026-07-11T08:43:15+00:00",
+      "link": "https://arxiv.org/pdf/2607.10210v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "code watermarking with grammar guidance",
+      "llm_evidence_cn": "语法引导的代码水印",
+      "llm_evidence": "语法引导的代码水印",
+      "canonical_evidence": "语法引导的代码水印",
+      "llm_tldr_en": "Proposes GDW, a grammar-driven approach for LLM code watermarking that preserves syntax and optimizes quality-detectability tradeoffs.",
+      "llm_tldr_cn": "针对代码低熵特性导致水印质量与可检测性矛盾加剧的问题，提出语法驱动水印GDW。通过三层掩码机制保持语法正确，并基于结构角色调制注入水印。实验表明GDW在代码质量几乎无损的前提下实现了高检测率，为代码溯源提供了有效方案。",
+      "llm_tldr": "针对代码低熵特性导致水印质量与可检测性矛盾加剧的问题，提出语法驱动水印GDW。通过三层掩码机制保持语法正确，并基于结构角色调制注入水印。实验表明GDW在代码质量几乎无损的前提下实现了高检测率，为代码溯源提供了有效方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.10554v1",
+      "source": "arxiv",
+      "title": "Observation-Level Watermarking and Detection for Tabular Data",
+      "abstract": "With the development of generative AI, watermarking techniques have been widely used to detect the authenticity of AI-generated data and protect the rights of users and creators. While it is already well applied in data types including imaging and text data, watermarking tabular data is still under-explored. Existing methods primarily focus on numerical data, leaving discrete, categorical, and mixed data less studied. In this work, we propose STAMP (Single-observation Tabular Attribution and Marking Procedure), a novel framework for watermarking tabular data that can accommodate and preserve a wide range of distributions. We also develop a corresponding detection mechanism, which can reliably identify watermarks even when the sample size is as small as one. We establish theoretical guarantees for asymptotic consistency and detection accuracy. Finally, through extensive simulation studies and two real-data applications, we demonstrate that the proposed method is effective and robust to subsetting, while maintaining data fidelity and a high detection rate.",
+      "authors": [
+        "Dongyu Cui",
+        "Xuan Bi"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME",
+        "cs.LG"
+      ],
+      "published": "2026-07-12T04:03:55+00:00",
+      "link": "https://arxiv.org/pdf/2607.10554v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "watermarking framework for tabular data",
+      "llm_evidence_cn": "表格数据水印框架",
+      "llm_evidence": "表格数据水印框架",
+      "canonical_evidence": "表格数据水印框架",
+      "llm_tldr_en": "Proposes STAMP for watermarking tabular data at the observation level, with detection robust to small sample sizes.",
+      "llm_tldr_cn": "针对表格数据水印技术不足的问题，提出STAMP框架，可在单观测级别嵌入水印并保持数据分布。开发了对应检测机制，即使样本量极小也能可靠识别水印。该工作填补了表格数据水印的空白，为生成式AI数据溯源提供了新工具。",
+      "llm_tldr": "针对表格数据水印技术不足的问题，提出STAMP框架，可在单观测级别嵌入水印并保持数据分布。开发了对应检测机制，即使样本量极小也能可靠识别水印。该工作填补了表格数据水印的空白，为生成式AI数据溯源提供了新工具。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.10794v1",
+      "source": "arxiv",
+      "title": "Can Watermarking Techniques Help Prevent LLM Model Stealing?",
+      "abstract": "Model stealing attacks have recently been introduced, enabling the extraction of precise information from black-box commercial language models. In this work, we propose defense methods against a recent attack of \\cite{carlini2024stealing} and extensions for extracting the hidden layer dimension of production language models. Our methods are inspired by watermarking techniques that perturb the logits layer of these models to prevent such attacks. We provide empirical experiments demonstrating the effectiveness of the proposed defense versus model quality degradation across various configurations, and propose an effective defense against such attacks while preserving model utility.",
+      "authors": [
+        "Elette Boyle",
+        "MohammadTaghi Hajiaghayi",
+        "Keivan Rezaei",
+        "Suho Shin",
+        "Amos Stern"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-07-12T15:05:04+00:00",
+      "link": "https://arxiv.org/pdf/2607.10794v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Watermarking techniques for defending against LLM model stealing",
+      "llm_evidence_cn": "利用水印技术防御LLM模型窃取攻击",
+      "llm_evidence": "利用水印技术防御LLM模型窃取攻击",
+      "canonical_evidence": "利用水印技术防御LLM模型窃取攻击",
+      "llm_tldr_en": "Explores watermarking-inspired logits perturbation to defend against model stealing attacks on LLMs, preserving utility while preventing extraction.",
+      "llm_tldr_cn": "模型窃取攻击威胁商业语言模型。本文借鉴水印技术，通过扰动logits层防御此类攻击，在保持模型质量的同时有效阻止攻击者提取隐藏层维度等信息，实验验证防御有效性。",
+      "llm_tldr": "模型窃取攻击威胁商业语言模型。本文借鉴水印技术，通过扰动logits层防御此类攻击，在保持模型质量的同时有效阻止攻击者提取隐藏层维度等信息，实验验证防御有效性。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.11117v1",
+      "source": "arxiv",
+      "title": "MusicMark: A Robust Generative Watermarking Framework for Music Generation",
+      "abstract": "AI music generation has rapidly advanced alongside commercial platforms, raising the need for reliable watermarking for provenance and attribution. However, existing audio watermarking research has largely focused on speech, and applying speech-oriented methods to music is challenging due to music's complex structure and rich acoustic texture. Most existing methods are post-hoc, adding imperceptible perturbations after generation rather than embedding watermarks as part of the content. This makes them fragile under transformations and especially vulnerable to neural codec re-synthesis, which can discard imperceptible residual signals. Moreover, since generation and watermarking are decoupled, the watermarking step can be bypassed or omitted, weakening provenance guarantees. To address these issues, we propose MusicMark, which, to the best of our knowledge, is the first generative watermarking framework for music. Specifically, MusicMark embeds watermark messages into the semantic latent space during generation, incorporating the watermark as part of the musical content and ensuring robustness against diverse attacks, particularly neural codec re-synthesis. To this end, we introduce a watermark adapter into a diffusion-based generation model to embed watermark messages across denoising steps. The adapter and detector are trained with a joint objective that preserves fidelity by constraining watermarked latents close to their unwatermarked reference latents, while improving robustness through attack augmentations. Experiments demonstrate that MusicMark substantially outperforms post-hoc baselines across diverse attacks including neural codec re-synthesis, while maintaining comparable generation quality. We further introduce a cover-song attack, converting the singing voice while preserving musical content, and show that MusicMark remains more robust than post-hoc methods.",
+      "authors": [
+        "Seohwan Yun",
+        "Jeeyoung Yun",
+        "Yongjin Kim",
+        "Juyeon Lee",
+        "Sungwoong Kim"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.AI",
+        "cs.CR"
+      ],
+      "published": "2026-07-13T05:48:08+00:00",
+      "link": "https://arxiv.org/pdf/2607.11117v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Robust generative watermarking for music",
+      "llm_evidence_cn": "为音乐生成设计的鲁棒水印框架",
+      "llm_evidence": "为音乐生成设计的鲁棒水印框架",
+      "canonical_evidence": "为音乐生成设计的鲁棒水印框架",
+      "llm_tldr_en": "MusicMark proposes a robust generative watermarking framework for music, embedding watermarks during generation to resist neural codec attacks.",
+      "llm_tldr_cn": "AI音乐生成快速发展，现有后处理水印在神经编解码攻击下脆弱。MusicMark提出生成式水印框架，在音乐生成时嵌入水印，显著提升对各种变换的鲁棒性，保证来源可追溯。",
+      "llm_tldr": "AI音乐生成快速发展，现有后处理水印在神经编解码攻击下脆弱。MusicMark提出生成式水印框架，在音乐生成时嵌入水印，显著提升对各种变换的鲁棒性，保证来源可追溯。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
