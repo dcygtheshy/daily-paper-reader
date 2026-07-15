@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-15 <!--dpr-date:20260715-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/15/2607.13003v1-watermark-forensics-for-generative-models-an-information-theoretic-perspective" data-sidebar-item="{&quot;title&quot;: &quot;Watermark Forensics for Generative Models: An Information-Theoretic Perspective&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.13003v1-watermark-forensics-for-generative-models-an-information-theoretic-perspective&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;生成模型水印取证&quot;}">Watermark Forensics for Generative Models: An Information-Theoretic Perspective</a>
   * 2026-07-14 <!--dpr-date:20260714-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/14/2607.10252v1-one-token-is-enough-fingerprinting-and-verifying-large-language-models-from-single-token-output-distributions" data-sidebar-item="{&quot;title&quot;: &quot;One Token Is Enough: Fingerprinting and Verifying Large Language Models from Single-Token Output Distributions&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.10252v1-one-token-is-enough-fingerprinting-and-verifying-large-language-models-from-single-token-output-distributions&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;使用单令牌输出分布对生成模型（LLM）进行指纹识别的方法&quot;}">One Token Is Enough: Fingerprinting and Verifying Large Language Models from Single-Token Output Distributions</a>

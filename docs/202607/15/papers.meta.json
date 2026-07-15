@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-15",
+  "date": "2026-07-15",
+  "generated_at": "2026-07-15T20:38:45",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/15/2607.13003v1-watermark-forensics-for-generative-models-an-information-theoretic-perspective",
+      "section": "deep",
+      "title_en": "Watermark Forensics for Generative Models: An Information-Theoretic Perspective",
+      "authors": "Xiaoyu Li, Zheng Gao, Xiaoyan Feng, Jiaojiao Jiang, Yulei Sui, Jiankun Hu",
+      "date": "2026-07-14",
+      "pdf": "https://arxiv.org/pdf/2607.13003v1",
+      "score": "8.0",
+      "evidence": "生成模型水印取证",
+      "tldr": "生成模型水印传统上仅用于检测机器生成文本。本文提出法医阶梯概念，从信息论角度系统分析水印的归属、载荷提取和定位成本，核心是用信息剖面度量每token泄露的秘密量。主要定理表明，对统计无失真水印，将文本归属至N个用户之一需Θ(log N/h) tokens，提取ℓ比特载荷需Θ(ℓ/h)，并存在Θ(log N) token的归属间隙和足迹-分辨率不确定性原理。该方法通过解码器基于实际惊讶阈值实现归属，几乎不误伤无辜。实验在GPT-2、Pythia-410M和Qwen2.5上验证了理论常数，首次为多用户归属建立了紧熵率定律。",
+      "tags": "query:watermarking",
+      "abstract_en": "A watermark in a generative model's output is usually asked only whether a text is machine-made. The same mark can do more: attribute it to the user who produced it, extract a hidden payload, or localize the part that survives editing. These form a forensic ladder, and we ask what each rung costs in the sample length $n$.   One object organizes the answers. Let $S$ be the secret the mark carries (a user's identity or payload), and let the information profile $ν(t)=I(S;X_t\\mid X_{<t})$ record how much the $t$-th token reveals about $S$ given the earlier ones. Its total mass pays for attribution and extraction; how that mass is spread pays for localization; and detection alone is paid for not by information but by presence, the distance from the marked to the unmarked distribution. The literature's two quality models, a mark subtle on every token and one that stamps a few tokens loudly, are two incomparable ways of capping this profile.   Our main theorem settles the ladder's entropy column. For statistically distortion-free schemes, attributing a text to one of $N$ users costs $Θ(\\log N/h)$ tokens over every stationary-ergodic source of entropy rate $h$, sharp to a $(1+o(1))$ factor: to our knowledge the first tight entropy-rate law for multi-user attribution (via exact alignment). The natural collision-counting analysis overcharges without bound; only a decoder thresholding each candidate by its own realized surprisal attains the rate while almost never implicating an innocent user. A matching converse makes the law two-sided, and extraction of an $\\ell$-bit payload costs $Θ(\\ell/h)$. Two gaps are real, not modeling artifacts: a $Θ(\\log N)$-token window in which a text is provably machine-made yet unattributable, and a footprint-resolution uncertainty principle. Experiments on GPT-2, Pythia-410M, and Qwen2.5 recover the predicted constants.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
