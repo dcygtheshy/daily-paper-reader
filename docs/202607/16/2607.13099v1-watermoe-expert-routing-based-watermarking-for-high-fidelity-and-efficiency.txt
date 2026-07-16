@@ -1,0 +1,1029 @@
+Title: WaterMoE: Expert-Routing-based Watermarking for High Fidelity and Efficiency
+
+URL Source: https://arxiv.org/pdf/2607.13099v1
+
+Published Time: Thu, 16 Jul 2026 00:05:55 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# WaterMoE: Expert-Routing-based Watermarking for High Fidelity and Efficiency 
+
+Zewen Sun 
+
+Shanghai Jiao Tong University Shanghai Innovation Institute 
+
+zwsun@sjtu.edu.cn 
+
+Qian Jiang 
+
+Tianjin University 
+
+qianjiang@tju.edu.cn 
+
+Siyuan Sheng 
+
+Shanghai Jiao Tong University 
+
+sebestian_1@sjtu.edu.cn 
+
+Liyao Xiang ∗
+
+Shanghai Jiao Tong University Shanghai Innovation Institute 
+
+xiangliyao08@sjtu.edu.cn 
+
+Abstract 
+
+Large language models (LLMs) have achieved remarkable success but raise grow-ing concerns about content provenance and misuse, motivating the need for reliable watermarking techniques. However, these techniques have rarely been adopted in practice mainly for two reasons: i) severely degraded model performance, and ii) additional inference overhead. To confirm the problem, we construct a comprehen-sive benchmark spanning different generation tasks to systematically evaluate 9 representative watermarking methods. We found almost all existing methods are designed for text fluency, but not for restricted and complicated tasks, and their overhead prevents them from deployment in latency-critical systems. To address i) and ii), we propose an LLM watermarking scheme WaterMoE for the growingly popular Mixture-of-Experts (MoE) LLMs. WaterMoE embeds water-marking signals through controlled perturbation into the expert selection at each router, which accumulates to token selection shift at the final output. In contrast to watermarking as a post-processing token-sampling approach, WaterMoE em-beds watermark within the inference loop incurring negligible quality degradation and computational overhead. Extensive experiments demonstrate that our method achieves a fidelity performance close to the unwatermarked and consistently out-performs state-of-the-art watermarking methods on the benchmark, with up to 4×
+
+speedup, incurring merely 1% additional inference latency compared to native generation. The results demonstrate the capability of WaterMoE to be deployed in real-world tasks. 
+
+1 Introduction 
+
+In recent years, Large Language Models (LLMs) have achieved remarkable success across a wide range of applications, including medical consultation [ 1, 2], information retrieval [ 3, 4, 5 , 6], code generation [ 7, 8, 9, 10 ] and autonomous agents [ 11 , 12 , 13 , 14 ]. However, alongside their growing capabilities, the potential misuse of LLMs for generating misinformation, deceptive content, and malicious text has raised serious concerns about the integrity of the ecosystem [ 15 , 16 ]. This has led to an increasing demand for reliable techniques to distinguish machine-generated text from human-written content, among which LLM watermarking has emerged as a promising direction. 
+
+> ∗Corresponding author. Preprint. arXiv:2607.13099v1 [cs.CR] 14 Jul 2026
+
+Existing LLM watermarking techniques largely follow a common token-sampling-based paradigm where the model’s next-token distribution is subtly manipulated to encode identifiable patterns. For examples, KGW [ 17 ] partitions the vocabulary into disjoint subsets by random hashing and increases the logits of tokens in a designated subset; SynthID-text [ 18 ] adopts a tournament sampling strategy to inject watermark signals without introducing distributional distortion. While being effective for post-hoc detection, these methods inherently introduce overhead in the critical decoding path, as illustrated in Fig. 1(a). Modern LLM serving systems are optimized for high-throughput, low-latency generation, where even lightweight per-token operations—such as hash-based partitioning, probability reweighing, or additional sampling—accumulate linearly with sequence length, leading to increased latency and significantly reduced system efficiency. At the same time, these approaches rely on explicitly altering token distributions, which inevitably interferes with the model’s natural generation behavior. This interference is particularly detrimental in delicate real-world tasks such as summarization, instruction following, code generation, etc. In those restricted settings, valid outputs are sparse in the token space and thus token probability shifting caused by watermarking tends to drive the generated text to deviate from correct or optimal outputs. As shown in Fig. 1(b), we evaluate existing watermarking methods under different parameter settings on MultiNews for a summarization task. The results show a clear ‘impossible’ region at the top-right corner indicating high detection rates and high fidelity. KGW      
+
+> SynthID
+> MorphMark SIR
+> Ours
+> 1.0
+> 10 1
+> 10 2
+> Insert latency (%)
+> (a) Efficiency comparison
+> Insert latency (%)
+> Detect time (ms)
+> 20 25 30 35 40
+> ROUGE-L
+> 0%
+> 20%
+> 40%
+> 60%
+> 80%
+> 100%
+> TPR@1%
+> (b) Performance comparison
+> KGW
+> SynthID
+> SIR
+> Morphmark
+> Ours
+> Ideal
+> 1.0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> Detect time (ms)
+
+Figure 1: (a) Efficiency comparison on Mixtral-8x7B between WaterMoE and baseline watermarking algorithms (KGW, SynthID, SIR, and Morphmark). We report per-token insertion latency overhead (%) and average detection time per sample (ms). (b) Performance com-parison of WaterMoE across different methods. The x-axis denotes text gen-eration quality measured by ROUGE-L, while the y-axis represents watermark detectability (TPR@1%). The trade-offs are obtained by varying the watermark strength. WaterMoE achieves the opti-mal tradeoff between detection rate and text quality. Therefore, a fundamental question arises: can we design a watermarking mechanism that achieves high efficiency, fidelity and detection rate at the same time? 
+
+To answer the question, we propose WaterMoE , an expert-routing-based watermarking approach for Mixture-of-Experts (MoE) LLMs. MoE models have been increas-ingly adopted in modern high-performance language mod-els [ 19 , 20 ], where inference is carried out through sparse expert activation and routing decisions. We are motivated by the inherent redundancy in MoE models that allows different experts to be chosen so that each input token takes a flexible combination of model weights, leading to a varied output distribution [ 21 , 22 ]. Hence without alter-ing the model’s generation strategy, the expert selection brings in ‘controlled randomness’ in the output distribu-tion: at each routing gate, top-k experts are potentially chosen, allowing stable and detectable internal patterns to be expressed through subtle biases at the routing level, while maintaining generation capability. Building on this observation, we integrate watermark signals directly into the MoE routing logic, making the watermark an intrinsic component of the model’s inference process. Our contributions are summarized as follows. 1) Real-world evaluation of watermarking : we systematically reveal the limitations of existing watermarking methods under realistic workloads, and construct a comprehensive benchmark spanning summarization, question answering, code generation, reasoning tasks and instruction following to evaluate the watermark detection rate, efficiency, and task performance. 2) Structural watermarking via MoE routing : we propose WaterMoE , a watermarking ap-proach that embeds signals into expert routing. Extensive experiments show that WaterMoE improves detection un-der strict false positive constraints by 12.1% at TPR@1% over the strongest baseline, without degradation from un-watermarked task performance. Our method achieves up to 4 × speedup in watermark embedding compared to state-of-the-art methods, incurring merely 1% latency overhead compared to native generation, demonstrating strong practicality. 22 Preliminary and Related Work 
+
+In recent years, Mixture-of-Experts (MoE) has been increasingly adopted in production-level large language models for online services, such as DeepSeek-V3 [ 23 ] and Qwen3 [ 24 ]. Mixture-of-Experts (MoE) architectures introduce a routing mechanism that enables sparse activation of model parameters during inference [ 19 , 21 ]. In a typical MoE layer, the standard feed-forward network is replaced by multiple parallel expert networks, while a router dynamically selects a small subset of experts for each token based on routing scores. Only the top-k experts are activated, and their outputs are aggregated through a weighted sum gate [ 25 ]. This design allows MoE models to scale up model capacity while keeping inference computationally bounded, which has been widely adopted in modern large-scale language models. Formally, given the hidden representation hℓ at layer ℓ, the router produces routing scores sℓ ∈ RK ,where K denotes the number of experts in layer ℓ. The scores are converted into a routing distribution via a softmax, the top-k of which are selected as experts Eℓ(hℓ) to compute the output of the layer 
+
+MoE ℓ(hℓ):
+
+sℓ = Router ℓ(hℓ), pℓ(i | hℓ) = softmax( sℓ)i, MoE ℓ(hℓ) = X
+
+> i∈E ℓ(hℓ)
+
+pℓ(i | hℓ) fi(hℓ),
+
+where fi(·) denotes the i-th expert network and pℓ(i | hℓ) is the corresponding routing weight. More details of the MoE framework are provided in Appendix B. 
+
+LLM watermarking methods mostly embed watermark signals by modifying the token logits distribution in autoregressive decoding. KGW [ 17 ] partitions the vocabulary via N-gram hashing and biased generation toward a selected subset. EWD [ 26 ] improves detection rate by entropy-aware embedding, SynthID [ 18 ] proposes a non-distortionary watermarking methods through tournament sampling, and MorphMark [ 27 ] takes an adaptive watermarking approach. However, most token-sampling-based methods rely on post-hoc logit perturbations, causing text quality degradation and additional per-token generation overhead (e.g., hashing, dynamic reweighing, etc.) that are difficult to mitigate. The quality degradation is attributed to the conflict between the sampling constraints posed by watermarking and the harsh requirement in real-world generation including factual correctness, strict formatting, program executability, etc.: the former often asks for a deviation from the original output while the latter forbids that. Hence the current approach often has to sacrifice watermarking accuracy for text quality (as shown in Fig. 1). The additional overhead largely stems from the need for reproducible randomness, typically implemented via per-token hashing, which breaks the fully GPU-resident execution pipeline, leading to noticeable inference latency. While precomputing randomness on GPU could in principle remove this cost, it would require non-trivial GPU kernel engineering or introduce additional memory and implementation overhead. In contrast, our method embeds watermark signals into the expert routing mechanism of Mixture-of-Experts models. By introducing perturbation in the expert selection rather than the token choice, watermark embedding is seamlessly integrated into routing priors, making it an inherent part of inference thus incurring negligible latency overhead while preserving output quality to a large extent. 
+
+3 WaterMoE: Watermarking via Expert Routing 
+
+Our design is motivated by the flexibility in MoE models’ routing mechanism: experts with similar routing scores often possess comparable functional capabilities. Hence a small routing bias can shift expert selection which gradually amplifies through layers leading to subtle, but traceable variations in the final output distribution. Since experts with similar capabilities are selected, our framework preserves fidelity while being highly efficient. The proposed framework is shown in Fig. 2. 
+
+3.1 Watermark Embedding through Routing Bias 
+
+To enable efficient watermark embedding at scale, we introduce a Green Expert Map Mℓ that is randomly generated offline, and deterministically specifies the green experts for each MoE layer. The green experts refer to those experts perturbed by the injected biases. Let eℓ−1 ∈ { 1, . . . , K } denote the top-1 selected expert index from layer ℓ − 1. The green expert set at layer ℓ is then determined as: 
+
+Gℓ = Mℓ(eℓ−1), s.t. Gℓ ⊆ { 1, . . . , K }, |G ℓ| = K/ 2. (1) 3x                              
+
+> input embedding
+> Router 1 2 3 ... 7 8
+> 1 2 3 ... 7 8
+> 1 2 3 ... 7 8
+> Expert 1
+> Expert 2
+> Expert 3
+> Expert 8
+> Expert 7 ...
+> FFN Experts Top-k selection
+> Weighted Aggregation
+> output embedding N × MoE Layers token 1 t2 t3
+> 1234
+> 1234
+> 1234
+> 8
+> 8
+> 8
+> ... ... ...
+> query text tn-1 tn
+> bias text
+> pre fi ll with bias or without bias
+> token 1 t2 t3 tn-1 tn
+> token 1 t2 t3 tn-1 tnreference text Layer 1 Layer 2 Layer N
+> ...
+> LLR compare with query text
+> Top-1 index to next layer
+> Layer t
+> Expert Map
+> idx 1 256
+> 127
+> 345...
+> 7
+> 8
+> 6
+> idx x idx 8
+
+(a) (b) 
+
+> ...
+> 7
+> ...
+> ... ... ...
+
+Figure 2: Overview of the WaterMoE framework. (a) Watermark embedding via routing bias. A lightweight additive bias is applied to the routing scores of green experts, subtly steering top-k expert selection. (b) Watermark detection via likelihood test. The presence of watermark signals is identified by a token-level likelihood test between biased and reference models, where consistent shifts reveal statistically detectable watermark patterns. For the first MoE layer, we skip this procedure due to the absence of a preceding expert. We utilize a binary indicator vector gℓ ∈ { 0, 1}K to denote the selected green set: 
+
+gℓ,i =
+
+1, i ∈ G ℓ,
+
+0, otherwise . (2) The routing bias for layer ℓ is defined by δ gℓ, where δ > 0 signaling the watermark strength. Hence the biased routing logits are: 
+
+˜sℓ = sℓ + δ gℓ. (3) We further define the corresponding routing probabilities pℓ and ˜pℓ for sℓ and ˜sℓ, respectively, by passing them through a Softmax function. 
+
+Proposition 1 (First-order invariance of routing distribution) . Let pℓ,i and ˜pℓ,i denote the routing probabilities of the i-th expert in layer ℓ before and after bias injection. Then the expected routing probability over the random choice of i ∈ G ℓ satisfies 
+
+Ei
+
+˜pℓ,i 
+
+ = pℓ,i + O(δ2).
+
+A rigorous proof of this property is provided in Appendix C. The property indicates that with the first-order term vanishing, the routing distribution shifts by at most the second order of δ, which is almost negligible. In practice, the green expert map is precomputed offline and stored as a tensor aligned with MoE layers. During inference, the routing bias is applied via a single element-wise addition (Eq. (3) ), which is fully GPU-parallelizable and introduces negligible latency overhead. During autoregressive generation, the routing bias is consistently applied to every token across all MoE layers. As a result, the expert selection process is subtly biased toward green experts. Although the token logits are not explicitly modified, the perturbed routing alters the internal representations that ultimately induce subtle but consistent shifts in the output distribution, enabling statistical detection using standard hypothesis testing methods (e.g., Z-test). 
+
+3.2 Likelihood-Based Watermark Detection via Reference Calibration 
+
+For watermark detection, the key idea is to detect the distributional shift caused by routing biases. We use an unwatermarked model to estimate the intrinsic likelihood of each token as a reference. Then we calibrate token-level probabilities through disentangling routing-induced preference from the native generations, thereby isolating the watermark signals. Given a sequence x = ( x1, . . . , x T ), we evaluate it using a single model under two routing configu-rations: i) a biased mode with the watermarking enabled, and ii) a reference mode without routing 4bias. Importantly, both configurations share the same model parameters and differ only in the expert routing path, thus needing no two separate model deployments. For each token, we compute the log likelihood difference as: 
+
+∆t = ℓbias  
+
+> t
+
+− ℓbase  
+
+> t
+
+, ℓbias  
+
+> t
+
+= log Pbias (xt | x<t ), ℓbase  
+
+> t
+
+= log Pbase (xt | x<t ), (4) where Pbias and Pbase denote the conditional distributions of xt under configuration i) and ii). A higher ℓbase  
+
+> t
+
+indicates that the token is highly consistent with the context. ∆t measures the additional preference induced by the routing bias for the token. We aggregate token-level signals of which the log likelihood difference exceeds threshold τ :
+
+S(x; τ ) = 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+I(∆ t > τ ). (5) On the reference model, we estimate the expectation μ0(τ ) and standard deviation σ0(τ ) of S(x; τ ),and calibrate it by: 
+
+Z(x) = S(x; τ ) − μ0(τ )
+
+σ0(τ ) . (6) A sequence is flagged as watermarked if Z(x) exceeds a threshold. 
+
+Why works? WaterMoE achieves efficiency by significantly reducing the watermark embedding time at the cost of mildly increased detection overhead. Previous LLM watermarking methods contain inefficient hashing in both watermark embedding and detection for reproducible randomness given the context. However, embedding is far more frequent than detection in practice: every token generated is required to be watermarked but detection is upon request. Thus we choose to remove hashing but introduce perturbed expert mapping in the embedding. Such expert mapping is on one hand of small scale, compared with the perturbation at the logits; on the other, the perturbation gets progressively amplified through the model’s feed-forward dynamics, resulting in consistent and detectable statistical signals in the output distribution without relying on explicit hashing. WaterMoE also produces output of high quality. The reason is that the routing biases primarily influence the selection among functionally similar experts, ensuring that the model’s internal represen-tations are only mildly affected. This allows the model to retain sufficient flexibility to explore the full token space and to self-correct through subsequent forward passes, thereby preserving performance even in highly restricted scenarios. As these subtle routing shifts accumulate, they induce lightweight yet consistent deviations at the token level: the generated outputs remain valid and task-compliant, while exhibiting slight statistical differences from the original distribution, which can be reliably exploited for watermark detection. 
+
+4 Experimental Results 
+
+To comprehensively evaluate the effectiveness of WaterMoE, we organize our experiments around the following research questions. RQ1 Detection Performance: Can WaterMoE achieve reliable and highly accurate detection across different models and tasks? RQ2 Generation Quality: How does WaterMoE affect the generation quality? RQ3 Efficiency: What is the computational overhead of watermark embedding and detection compared to existing methods? RQ4 Robustness: How robust is WaterMoE under realistic adversarial attacks? RQ5 Stealthiness: Can WaterMoE remain statistically indistinguishable from unwatermarked text under black-box detection? 
+
+4.1 Setup 
+
+All experiments are implemented based on the MarkLLM [ 28 ] repository and conducted on NVIDIA H200 GPUs. We consider two representative MoE models: Mixtral-8 ×7B-Instruct-v0.1 [ 29 ]and Qwen3-30B-A3B-Instruct [ 24 ], both of which adopt sparse expert routing mechanisms. We compare WaterMoE against a set of representative watermarking baselines, as summarized in Table 2. For WaterMoE, we set as default δ = 0 .2 and τ = 0 across all experiments. The complete experimental setup and hyperparameter configurations are provided in Appendix F. We construct a benchmark suite spanning diverse LLM evaluation settings, organized into three tiers by task complexity, as illustrated in Table 1: Low-, Moderate-, and High-Complexity tasks. This 5tiered design enables a systematic assessment of watermark performance under varying difficulty and constraint levels. Notably, the low-complexity setting where δ = 0 .8 is included to ensure fair comparison with existing watermarking methods. Table 1: Overview of evaluated datasets grouped by task complexity.‘Len.(In/Ans)’ refer to the average length of input question and reference answer.                                                         
+
+> Complexity Source Data ID Task Metric Language Len. (In/Ans) Low
+> (Text Gen.)
+> C4 [30] 1-1 Language Modeling PPL English 22.14 / 151.01 Booksum [31] 1-2 Long-Context Generation PPL English 45.53 / 541.54
+> Moderate
+> (Sum. and QA)
+> Multinews [32] 2-1 Multi-Doc Sum. Rouge-L English 1464.55 / 220.50 ELI5 [33] 2-2 Long-Form QA Rouge-L English 38.98 / 261.31
+> High
+> (Code Gen.)
+> APPS [34] 3-1 Competitive Coding PASS@1 Python 313.52 / 108.80 CodeContests [7] 3-2 Competitive Coding PASS@1 Python/C#/Java 383.45 / 176.75
+> (CoT Reasoning)
+> GSM8K [35] 3-3 Math Word Problem Accuracy English 54.39 / 151.66 MMLU [36] 3-4 Multiple Choice QA Accuracy English 54.35 / 256.53
+> (Alignment)
+> IFEval [37] 3-5 Instruction Following Rule-based Judge English 37.42 / 1502.53 WritingBench [38] 3-6 Creative Generation LLM-based Score English 482.04 / 2512.34
+
+4.2 RQ1 & RQ2: Detection Performance and Generation Quality Performance on High-Complexity Tasks. Table 2 reports watermarking performance across highly constrained domains which impose rigid structural and logical requirements, making watermark injection particularly challenging. Under a strict false positive rate (TPR@1%), baseline methods (e.g., EWD, SynthID) exhibit notable degradation in detectability, often falling below 70% on reasoning and coding benchmarks such as GSM8K, MMLU, and CodeContests. EXPEdit performs poorly in such settings, as it operates at the sample level, where the space of valid edits is severely constrained in high-complexity tasks, making watermark injection difficult. In contrast, WaterMoE achieves consistently strong detection performance, exceeding 90% on challenging datasets like APPS and CodeContests, and reaching 100.0% on alignment benchmarks (IFEval, WritingBench). Importantly, this high detectability does not come at the cost of generation quality: while conventional methods (e.g., KGW, SynthID) incur substantial accuracy drops (over 15 points) on strict tasks, WaterMoE maintains performance closely aligned with the unwatermarked model across all datasets, effectively mitigating the detectability–quality trade-off under rigid constraints. The results for moderate-complexity tasks are provided in Appendix D. 
+
+Performance on Low-Complexity Tasks. Table 3 presents results on low-complexity, open-ended generation tasks (C4 and Booksum). While such tasks are generally friendly to watermarking, the detection performance varies across model architectures. On Mixtral, most methods achieve near-perfect detection, but noticeable degradation occurs on Qwen under strict false positive constraints (TPR@1%), where baselines such as MorphMark, SynthID, and KGW exhibit significant drops. In contrast, WaterMoE maintains consistent 100.0% detection rate across all models and datasets, demonstrating strong model-independent stability. Importantly, linguistic fluency is not sacrificed: while some baselines (e.g., EXPEdit, EWD) substantially raises perplexity, WaterMoE achieves highly competitive PPLs among watermarked models, closely aligning with the unwatermarked baseline. These results indicate that WaterMoE effectively preserves fluency while ensuring reliable detectability in unconstrained generation settings. 
+
+4.3 RQ3: Efficiency Analysis 
+
+As shown in Fig. 3a, WaterMoE introduces negligible computational overhead, with a clear advantage on the insertion side. WaterMoE achieves an insertion latency of only 1.1% , significantly lower than all baselines. This is enabled by the GPU-resident expert mapping design, which avoids extra data movement and integrates seamlessly into the inference pipeline. Our detection latency remains comparable to existing methods (around 150ms per sample), mostly due to the non-autoregressive scheme that performs a single prefill to obtain expert routing distributions for the entire sequence. In 6Table 2: Watermarking performance on high-complexity tasks. WaterMoE maintains near-native generation quality on these highly rigid tasks while consistently achieving state-of-the-art detectability. Here, Accuracy and PASS@1 denote the percentage (%) of correct answers. AUC indicates the area under the ROC curve for detection performance.                                                                                                                                                                                                                                                    
+
+> Category: Code Generation (Model: Qwen) Algorithm Dataset: APPS Dataset: CodeContests TPR@1% TPR@5% AUC PASS@1 TPR@1% TPR@5% AUC PASS@1
+> Unwatermarked ---65.4 ---42.0 EWD [26] 73.0 92.0 97.3 27.8 40.0 54.0 92.3 42.5 EXPEdit [39] 6.0 6.0 41.3 2.0 2.0 2.0 39.9 6.1 KGW [17] 63.0 72.0 94.0 42.2 38.0 42.0 79.4 34.4 MorphMark [27] 71.0 82.0 96.3 42.5 46.0 50.0 83.3 42.2 SynthID [18] 80.0 87.0 92.0 41.1 64.0 78.0 89.2 40.5 Unbiased [40] 53.0 63.0 86.5 58.9 41.0 56.0 82.2 41.4 UPV [41] 62.0 78.0 92.3 35.4 32.0 36.0 62.8 41.0
+> WaterMoE 90.0 98.0 99.6 61.9 92.0 98.0 99.6 44.2 Category: Strict Alignment (Model: Qwen) Algorithm Dataset: IFEval Dataset: WritingBench TPR@1% TPR@5% AUC Accuracy TPR@1% TPR@5% AUC Accuracy
+> Unwatermarked ---88.5 ---91.3 EWD 97.0 100.0 99.7 87.7 100.0 100.0 100.0 91.3 EXPEdit 61.0 61.0 83.5 60.1 30.0 30.0 69.4 57.0 KGW 60.0 80.0 93.0 87.7 88.0 98.0 98.7 90.8 MorphMark 50.0 77.0 91.6 88.3 51.0 88.0 96.3 91.1 SynthID 99.0 99.0 99.9 41.1 100.0 100.0 100.0 91.0 Unbiased 80.0 85.0 95.6 88.3 54.0 70.0 83.7 91.1 UPV 20.0 60.0 53.1 87.7 1.0 1.0 54.4 91.5
+> WaterMoE 100.0 100.0 100.0 88.3 100.0 100.0 100.0 91.6 Category: Chain-of-Thought Reasoning (Model: Qwen) Algorithm Dataset: GSM8K Dataset: MMLU TPR@1% TPR@5% AUC Accuracy TPR@1% TPR@5% AUC Accuracy
+> Unwatermarked ---72.0 ---61.0 EWD 79.0 83.0 94.8 53.0 85.0 93.0 98.9 54.0 EXPEdit 11.0 22.0 67.2 33.0 3.0 14.0 42.2 59.0 KGW 69.0 78.0 95.6 54.0 67.0 81.0 96.1 49.0 MorphMark 44.0 49.0 85.6 68.0 43.0 47.0 84.9 62.0 SynthID 70.0 82.0 93.9 68.0 82.0 86.0 94.8 47.0 Unbiased 58.0 62.0 83.9 66.0 69.0 80.0 89.3 56.0 UPV 58.0 72.0 93.2 38.0 61.0 80.0 95.3 47.0
+> WaterMoE 91.0 95.0 99.2 68.0 94.0 96.0 99.6 63.0
+
+practice, insertion efficiency is more crucial as online generation is latency-critical, while detection occurs sparsely upon requests. 
+
+4.4 RQ4: Robustness under Adversarial Attacks 
+
+As shown in Fig. 3b, WaterMoE’s robustness differ across attacks. It achieves competitive robustness under synonym substitution by wordnet, but shows a noticeable degradation under aggressive word deletion. This behavior stems from the design of WaterMoE, which relies on the preservation of local contextual coherence. When a large fraction of tokens is removed, the underlying linguistic structure is severely disrupted, weakening the statistical signal for detection. We note that such strong deletion-based perturbations, while commonly adopted in prior work, often lead to text that is syntactically unnatural or semantically degraded, reflected by a sharp increase in perplexity (PPL) from 7 to 45 in our setting. In many real-world scenarios, adversaries are more likely to apply semantics-preserving transformations rather than heavily destructive edits to maintain usability of the generated content. To better reflect this practical threat model, we use GLM-4.5 for full-text paraphrasing. The detection rate remains at 63% TPR@1% for WaterMoE, indicating moderate robustness under strong paraphrasing attacks. We additionally evaluate robustness under an API-assisted word-level 7Table 3: Watermarking performance on low-complexity tasks. Detectability metrics (TPR and AUC) are reported as percentages (higher is better), while text quality is evaluated by Perplexity (PPL, lower is better). The best results are highlighted in bold.                                                                                                                                                                                                       
+
+> Dataset: C4 Algorithm Mixtral-8x7B Qwen TPR@1% TPR@5% AUC PPL ↓TPR@1% TPR@5% AUC PPL ↓
+> Unwatermarked ---6.18 ---5.22 EWD [26] 100.0 100.0 100.0 8.16 94.0 100.0 99.7 6.76 EXPEdit [39] 93.5 96.0 98.7 8.49 98.0 98.5 99.4 8.79 KGW [17] 100.0 100.0 100.0 7.80 82.0 88.0 98.2 6.61 MorphMark [27] 100.0 100.0 100.0 6.85 87.0 95.5 98.4 6.51 SIR [42] 100.0 100.0 100.0 7.65 ----SynthID [18] 100.0 100.0 100.0 6.12 86.5 90.0 96.8 6.44 Unbiased [40] 100.0 100.0 100.0 6.72 96.0 99.0 99.9 6.39 UPV [41] 100.0 100.0 100.0 7.10 81.0 90.0 97.2 6.27 XSIR [43] 99.5 100.0 99.9 7.68 ----
+> WaterMoE 100.0 100.0 100.0 6.63 100.0 100.0 100.0 5.48 Dataset: Booksum Algorithm Mixtral-8x7B Qwen TPR@1% TPR@5% AUC PPL ↓TPR@1% TPR@5% AUC PPL ↓
+> Unwatermarked ---6.94 ---5.74 EWD 100.0 100.0 100.0 9.04 98.0 98.0 99.8 7.35 EXPEdit 99.0 99.0 99.9 10.50 100.0 100.0 99.9 11.31 KGW 100.0 100.0 100.0 8.45 84.5 92.0 98.0 7.42 MorphMark 100.0 100.0 100.0 7.86 89.0 95.5 98.6 7.30 SIR 100.0 100.0 100.0 8.08 ----SynthID 100.0 100.0 100.0 6.80 92.0 94.0 98.7 7.47 Unbiased 100.0 100.0 100.0 7.56 93.0 99.0 99.8 7.42 UPV 100.0 100.0 100.0 7.99 67.5 85.0 92.8 7.52 XSIR 100.0 100.0 100.0 8.59 ----
+> WaterMoE 100.0 100.0 100.0 7.50 100.0 100.0 100.0 6.37
+
+substitution with ∼ 30% token replacement. WaterMoE maintains a 98% TPR@1% detection rate under the perturbation. 
+
+4.5 RQ5: Stealthiness Analysis 
+
+Beyond detectability by authorized parties, a desirable watermark should remain statistically indistin-guishable from unwatermarked text under general-purpose analysis. We evaluate this property using two representative black-box statistical detectors [ 44 ], namely R-G detection and FIXED detection, which are designed to identify common watermarking artifacts, including distributional bias and diminished generation diversity. As shown in Table 4, existing methods are detectable under at least one setting, while WaterMoE consistently achieves high p-values across all cases. This indicates that its outputs remain statistically indistinguishable from the unwatermarked text, demonstrating strong stealthiness. 
+
+4.6 Sensitivity to Routing Bias 
+
+We analyze the sensitivity of the proposed watermarking method to the routing bias strength δ by varying it from 0.2 to 1.2. As shown in Table 5, the detection performance remains consistently high across a wide range of bias values. In particular, both TPR and ROC-AUC exhibit near-saturated performance, while the perplexity (PPL) increases only marginally as the bias grows. This demonstrates that our method is robust to the choice of routing bias and can be easily applied in a plug-and-play manner without careful hyperparameter tuning. 
+
+5 Limitation 
+
+8KGW 
+
+> EWD
+> EXPEdit
+> UPV
+> Unbiased
+> SynthID
+> MorphMark
+> SIR
+> XSIR
+> SEM
+> KSEM
+> Ours
+> 1.0
+> 10 1
+> 10 2
+> 2000
+> Insert latency (%)  Insert latency (%)
+> Detect time (ms)
+> 1.0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> Detect time (ms)
+
+(a) Efficiency comparison. Word-S/10%  
+
+> Word-S/30%
+> Word-S/50%
+> Word-D/10%
+> Word-D/30%
+> Word-D/50%
+> Para
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> TPR@1%  KGW
+> EWD
+> MorphMark
+> WaterMoE
+> SynthID
+> PPL
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> PPL
+
+(b) Robustness performance. 
+
+Figure 3: (a) We report per-token insertion latency overhead (%) and average detection time per sample (ms) on Mixtral-8x7B (C4) across different methods. (b) Robustness performance of different methods, along with the corresponding perplexity (PPL), under word substitution, word deletion, and paraphrasing attacks on the Mixtral-8x7B over the C4 dataset. Table 4: Stealthiness evaluation measured by p-values of statistical watermark detectors. A p-value below 0.05 indicates watermark detection. 
+
+Method Mixtral-8 ×7B Qwen R-G Detection FIXED Detection R-G Detection FIXED Detection Unwatermarked 1.00 0.94 1.00 0.869 KGW-series 0.00 0.94 0.00 0.94 SynthID 0.06 0.94 0.04 0.94 EXP 1.00 1.8 × 10 −6 1.00 1.5 × 10 −7
+
+WaterMoE 0.92 0.94 1.00 0.94 
+
+Table 5: Sensitivity to routing bias on Mixtral-8x7B eval-uated on the C4 dataset. We report detection performance (TPR@1, TPR@5, ROC-AUC) and generation quality (PPL).                             
+
+> δTPR@1 TPR@5 ROC-AUC PPL 0.2 0.96 0.98 0.99 6.59 0.4 0.98 0.99 0.99 6.62 0.6 0.98 0.99 0.99 6.62 0.8 1.00 1.00 1.00 6.63 1.0 1.00 1.00 1.00 6.70 1.2 1.00 1.00 1.00 6.72
+
+We acknowledge that our current de-sign is tailored to Mixture-of-Experts architectures. However, this choice is motivated by the increasing adoption of sparse activation paradigms in mod-ern LLM systems (e.g., DeepSeek, Qwen-MoE), where routing natu-rally provides a structured and low-overhead carrier for watermark sig-nals. For dense Transformer models, a promising direction is to emulate implicit expert partitioning through structured sparsification. Specifically, one could leverage techniques such as dynamic neuron activation or structured pruning (e.g., block-wise or head-wise sparsity) to create multiple functionally redundant subspaces within dense layers. 
+
+6 Conclusion 
+
+Watermarking for LLMs remains challenging due to performance degradation and inference overhead, particularly in complex and constrained tasks. In this work, we systematically identify these limita-tions through a comprehensive benchmark and propose WaterMoE, a watermarking scheme tailored for MoE-based LLMs. By integrating watermark signals into the routing process, WaterMoE achieves strong detectability while preserving model quality and efficiency. Extensive experiments demon-strate its consistent advantages over existing methods, highlighting its practicality for real-world deployment. 9References 
+
+[1] Wenxuan Wang, Zizhan Ma, Zheng Wang, Chenghan Wu, Jiaming Ji, Wenting Chen, Xiang Li, and Yixuan Yuan. A survey of llm-based agents in medicine: How far are we from baymax? 
+
+Findings of the Association for Computational Linguistics: ACL 2025 , pages 10345–10359, 2025. [2] Dong Yuan, Eti Rastogi, Gautam Naik, Sree Prasanna Rajagopal, Sagar Goyal, Fen Zhao, Bharath Chintagunta, and Jeffrey Ward. A continued pretrained llm approach for automatic medical note generation. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 2: Short Papers) , pages 565–571, 2024. [3] Tiziano Labruna, Jon Ander Campos, and Gorka Azkune. When to retrieve: Teaching llms to utilize information retrieval effectively. In Proceedings of the 15th International Conference on Recent Advances in Natural Language Processing-Natural Language Processing in the Generative AI Era , pages 623–632, 2025. [4] Yutao Zhu, Huaying Yuan, Shuting Wang, Jiongnan Liu, Wenhan Liu, Chenlong Deng, Haonan Chen, Zheng Liu, Zhicheng Dou, and Ji-Rong Wen. Large language models for information retrieval: A survey. ACM Transactions on Information Systems , 44(1):1–54, 2025. [5] Kai Zeng, Zhanqian Wu, Kaixin Xiong, Xiaobao Wei, Xiangyu Guo, Zhenxin Zhu, Kalok Ho, Lijun Zhou, Bohan Zeng, Ming Lu, et al. Rethinking driving world model as synthetic data generator for perception tasks. arXiv preprint arXiv:2510.19195 , 2025. [6] Samira Ghodratnama and Mehrdad Zakershahrak. Adapting llms for efficient, personalized information retrieval: Methods and implications. In International conference on service-oriented computing , pages 17–26. Springer, 2023. [7] Yujia Li, David Choi, Junyoung Chung, Nate Kushman, Julian Schrittwieser, Rémi Leblond, Tom Eccles, James Keeling, Felix Gimeno, Agustin Dal Lago, et al. Competition-level code generation with alphacode. Science , 378(6624):1092–1097, 2022. [8] Jianxun Wang and Yixiang Chen. A review on code generation with llms: Application and evaluation. In 2023 IEEE International Conference on Medical Artificial Intelligence (MedAI) ,pages 284–289. IEEE, 2023. [9] Zezhou Yang, Sirong Chen, Cuiyun Gao, Zhenhao Li, Xing Hu, Kui Liu, and Xin Xia. An empirical study of retrieval-augmented code generation: Challenges and opportunities. ACM Transactions on Software Engineering and Methodology , 34(7):1–28, 2025. [10] Juyong Jiang, Fan Wang, Jiasi Shen, Sungju Kim, and Sunghun Kim. A survey on large language models for code generation. ACM Transactions on Software Engineering and Methodology ,35(2):1–72, 2026. [11] Xu Huang, Weiwen Liu, Xiaolong Chen, Xingmei Wang, Hao Wang, Defu Lian, Yasheng Wang, Ruiming Tang, and Enhong Chen. Understanding the planning of llm agents: A survey. arXiv preprint arXiv:2402.02716 , 2024. [12] Zijun Liu, Yanzhe Zhang, Peng Li, Yang Liu, and Diyi Yang. Dynamic llm-agent net-work: An llm-agent collaboration framework with agent team optimization. arXiv preprint arXiv:2310.02170 , 2023. [13] Zhendong Chu, Shen Wang, Jian Xie, Tinghui Zhu, Yibo Yan, Jinheng Ye, Aoxiao Zhong, Xuming Hu, Jing Liang, Philip S Yu, et al. Llm agents for education: Advances and applications. 
+
+arXiv preprint arXiv:2503.11733 , 2, 2025. [14] Yu Li, Lehui Li, Zhihao Wu, Qingmin Liao, Jianye Hao, Kun Shao, and Fengli Xu. Agentswift: Efficient llm agent design via value-guided hierarchical search. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 40, pages 31843–31851, 2026. [15] Yuqing Liang, Jiancheng Xiao, Wensheng Gan, and Philip S Yu. Watermarking techniques for large language models: A survey. Artificial Intelligence Review , 59(2):74, 2026. 10 [16] Hanbo Huang, Xuan Gong, Yiran Zhang, Hao Zheng, and Shiyu Liang. Rlspoofer: A lightweight evaluator for llm watermark spoofing resilience. arXiv preprint arXiv:2604.11546 , 2026. [17] John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In International conference on machine learning ,pages 17061–17084. PMLR, 2023. [18] Sumanth Dathathri, Abigail See, Sumedh Ghaisas, Po-Sen Huang, Rob McAdam, Johannes Welbl, Vandana Bachani, Alex Kaskasoli, Robert Stanforth, Tatiana Matejovicova, et al. Scalable watermarking for identifying large language model outputs. Nature , 634(8035):818–823, 2024. [19] Weilin Cai, Juyong Jiang, Fan Wang, Jing Tang, Sunghun Kim, and Jiayi Huang. A survey on mixture of experts. Authorea Preprints , 2024. [20] Tong Zhu, Xiaoye Qu, Daize Dong, Jiacheng Ruan, Jingqi Tong, Conghui He, and Yu Cheng. Llama-moe: Building mixture-of-experts from llama with continual pre-training. In Proceedings of the 2024 conference on empirical methods in natural language processing , pages 15913– 15923, 2024. [21] Samyam Rajbhandari, Conglong Li, Zhewei Yao, Minjia Zhang, Reza Yazdani Aminabadi, Ammar Ahmad Awan, Jeff Rasley, and Yuxiong He. Deepspeed-moe: Advancing mixture-of-experts inference and training to power next-generation ai scale. In International conference on machine learning , pages 18332–18346. PMLR, 2022. [22] Andrii Skliar, Ties van Rozendaal, Romain Lepert, Todor Boinovski, Mart Van Baalen, Markus Nagel, Paul Whatmough, and Babak Ehteshami Bejnordi. Mixture of cache-conditional experts for efficient mobile device inference. arXiv preprint arXiv:2412.00099 , 2024. [23] Aixin Liu, Bei Feng, Bing Xue, Bingxuan Wang, Bochao Wu, Chengda Lu, Chenggang Zhao, Chengqi Deng, Chenyu Zhang, Chong Ruan, et al. Deepseek-v3 technical report. arXiv preprint arXiv:2412.19437 , 2024. [24] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. [25] Yunxin Li, Shenyuan Jiang, Baotian Hu, Longyue Wang, Wanqi Zhong, Wenhan Luo, Lin Ma, and Min Zhang. Uni-moe: Scaling unified multimodal llms with mixture of experts. IEEE Transactions on Pattern Analysis and Machine Intelligence , 2025. [26] Yijian Lu, Aiwei Liu, Dianzhi Yu, Jingjing Li, and Irwin King. An entropy-based text water-marking detection method. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 11724–11735, 2024. [27] Zongqi Wang, Tianle Gu, Baoyuan Wu, and Yujiu Yang. Morphmark: Flexible adaptive watermarking for large language models. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 4842–4860, 2025. [28] Leyi Pan, Aiwei Liu, Zhiwei He, Zitian Gao, Xuandong Zhao, Yijian Lu, Binglin Zhou, Shuliang Liu, Xuming Hu, Lijie Wen, et al. Markllm: An open-source toolkit for llm watermarking. In 
+
+Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , pages 61–71, 2024. [29] Albert Q Jiang, Alexandre Sablayrolles, Antoine Roux, Arthur Mensch, Blanche Savary, Chris Bamford, Devendra Singh Chaplot, Diego de las Casas, Emma Bou Hanna, Florian Bressand, et al. Mixtral of experts. arXiv preprint arXiv:2401.04088 , 2024. [30] Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu. Exploring the limits of transfer learning with a unified text-to-text transformer. Journal of machine learning research , 21(140):1–67, 2020. [31] Wojciech Kry´ sci´ nski, Nazneen Rajani, Divyansh Agarwal, Caiming Xiong, and Dragomir Radev. Booksum: A collection of datasets for long-form narrative summarization. In Findings of the association for computational linguistics: EMNLP 2022 , pages 6536–6558, 2022. 11 [32] Alexander Richard Fabbri, Irene Li, Tianwei She, Suyi Li, and Dragomir Radev. Multi-news: A large-scale multi-document summarization dataset and abstractive hierarchical model. In 
+
+Proceedings of the 57th annual meeting of the association for computational linguistics , pages 1074–1084, 2019. [33] Angela Fan, Yacine Jernite, Ethan Perez, David Grangier, Jason Weston, and Michael Auli. Eli5: Long form question answering. In Proceedings of the 57th annual meeting of the association for computational linguistics , pages 3558–3567, 2019. [34] Dan Hendrycks, Steven Basart, Saurav Kadavath, Mantas Mazeika, Akul Arora, Ethan Guo, Collin Burns, Samir Puranik, Horace He, Dawn Song, et al. Measuring coding challenge competence with apps. arXiv preprint arXiv:2105.09938 , 2021. [35] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, et al. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168 , 2021. [36] Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and Jacob Steinhardt. Measuring massive multitask language understanding. arXiv preprint arXiv:2009.03300 , 2020. [37] Jeffrey Zhou, Tianjian Lu, Swaroop Mishra, Siddhartha Brahma, Sujoy Basu, Yi Luan, Denny Zhou, and Le Hou. Instruction-following evaluation for large language models. arXiv preprint arXiv:2311.07911 , 2023. [38] Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, et al. Writingbench: A comprehensive benchmark for generative writing. arXiv preprint arXiv:2503.05244 , 2025. [39] Rohith Kuditipudi, John Thickstun, Tatsunori Hashimoto, and Percy Liang. Robust distortion-free watermarks for language models. arXiv preprint arXiv:2307.15593 , 2023. [40] Zhengmian Hu, Lichang Chen, Xidong Wu, Yihan Wu, Hongyang Zhang, and Heng Huang. Unbiased watermark for large language models. arXiv preprint arXiv:2310.10669 , 2023. [41] Aiwei Liu, Leyi Pan, Xuming Hu, Shu’ang Li, Lijie Wen, Irwin King, and Philip S Yu. An unforgeable publicly verifiable watermark for large language models. arXiv preprint arXiv:2307.16230 , 2023. [42] Aiwei Liu, Leyi Pan, Xuming Hu, Shiao Meng, and Lijie Wen. A semantic invariant robust watermark for large language models. arXiv preprint arXiv:2310.06356 , 2023. [43] Zhiwei He, Binglin Zhou, Hongkun Hao, Aiwei Liu, Xing Wang, Zhaopeng Tu, Zhuosheng Zhang, and Rui Wang. Can watermarks survive translation? on the cross-lingual consistency of text watermark for large language models. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 4115–4129, 2024. [44] Thibaud Gloaguen, Nikola Jovanovi´ c, Robin Staab, and Martin Vechev. Black-box detection of language model watermarks. arXiv preprint arXiv:2405.20777 , 2024. [45] Abe Hou, Jingyu Zhang, Tianxing He, Yichen Wang, Yung-Sung Chuang, Hongwei Wang, Lingfeng Shen, Benjamin Van Durme, Daniel Khashabi, and Yulia Tsvetkov. Semstamp: A semantic watermark with paraphrastic robustness for text generation. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pages 4067–4082, 2024. [46] Abe Hou, Jingyu Zhang, Yichen Wang, Daniel Khashabi, and Tianxing He. k-semstamp: A clustering-based semantic watermark for detection of machine-generated text. In Findings of the Association for Computational Linguistics: ACL 2024 , pages 1706–1715, 2024. 12 Layer Norm 
+
+MoE Layer                   
+
+> Attention Layer Norm Router
+> FFN 1
+> FFN 2
+> FFN N
+> Topk Sum
+> Weighted
+> Layer 1 Layer 2 Layer 3 Layer M
+> What is MoE ?
+> 123N
+> 123N
+> 123N
+> 123N
+> MoE is
+
+Figure 4: Detailed Framework of MoE. 
+
+A Related Work 
+
+Semantic-level watermarking. Recent approaches explore embedding watermark signals at the semantic level. SIR [ 42 ] employs learned encoders to map semantically similar inputs to similar watermark patterns, improving robustness to paraphrasing. However, this design introduces additional system complexity and incurs non-trivial latency due to sentence-level encoding. Moreover, by conditioning watermark signals on semantic representations, such methods implicitly constrain the feasible token space during generation, leading to similar limitations as token-level approaches in restricting the solution space. Subsequent methods such as SEMSTAMP [ 45 ] and KSEMSTAMP [ 46 ] adopt a different strategy by discretizing semantic representations via locality-sensitive hashing or clustering (e.g., k-means), and enforcing constraints on the semantic space of the next sentence. In practice, these methods rely on repeated resampling until a candidate satisfying the watermark constraint is found. While effective in controlled settings, this mechanism introduces substantial computational overhead, often requiring tens of resampling iterations per sentence, which leads to significant latency. More critically, the imposed semantic constraints further shrink the already limited feasible solution space in many real-world tasks, such as summarization and question answering, where correctness and coherence impose strict requirements. Empirical evidence shows that even with up to 50 resampling attempts, SEMSTAMP frequently fails to embed watermarks successfully on datasets such as MultiNews and ELI5 benchmarks. These limitations suggest that existing semantic-level watermarking methods are not well-suited for practical deployment in constraint-heavy generation scenarios. 
+
+B Detailed Background on Mixture-of-Experts (MoE) 
+
+B.1 Overview 
+
+Mixture-of-Experts (MoE) is a sparsely-activated neural architecture designed to scale model capacity without incurring proportional computational cost. Instead of using a single dense feed-forward network (FFN) in each Transformer layer, MoE replaces it with a set of K parallel expert networks and a routing mechanism that dynamically selects a subset of experts for each token. As illustrated in Fig. 4, an MoE layer consists of three key components: • Router (Gating Network): computes routing scores for each expert. • Experts: a set of independent feed-forward networks. • Aggregation: combines outputs from selected experts via weighted summation. This sparse activation enables MoE models to achieve extremely large parameter counts while keeping the per-token computation comparable to standard dense models. 13 B.2 Formulation 
+
+Given the hidden representation hℓ ∈ Rd at layer ℓ, the router produces a score vector: 
+
+sℓ = Router ℓ(hℓ), sℓ ∈ RK , (7) where K is the number of experts. These scores are transformed into a probability distribution via softmax: 
+
+pℓ(i | hℓ) = exp( sℓ,i )
+
+PKj=1 exp( sℓ,j ) . (8) Instead of using all experts, only the top-k experts are selected: 
+
+Eℓ(hℓ) = TopK( pℓ(· | hℓ), k ). (9) The final output of the MoE layer is: 
+
+MoE ℓ(hℓ) = X
+
+> i∈E ℓ(hℓ)
+
+pℓ(i | hℓ) · fi(hℓ), (10) where fi(·) denotes the i-th expert network. 
+
+B.3 Integration with Transformer 
+
+In modern large language models, MoE layers replace the standard FFN sub-layer in Transformer blocks. A typical Transformer layer with MoE can be written as: 
+
+h′ 
+
+> ℓ
+
+= hℓ + Attention(LN( hℓ)) , (11) 
+
+hℓ+1 = h′ 
+
+> ℓ
+
++ MoE ℓ(LN( h′
+
+> ℓ
+
+)) , (12) where LN( ·) denotes Layer Normalization. 
+
+B.4 Routing Strategies 
+
+Different routing strategies are used in practice: 
+
+Top-k Routing The most common strategy selects the top-k experts per token. Typical choices include: • k = 1 (Switch Transformer): maximum efficiency • k ≥ 2 (GShard, DeepSeek): better performance with modest overhead 
+
+B.5 Computational Efficiency 
+
+Although the total number of parameters grows linearly with K, the actual computation per token depends only on k:FLOPs ≈ O(k · d2), (13) which is comparable to a dense FFN when k ≪ K.Thus, MoE achieves: • High capacity (large parameter count) • Low compute cost (sparse activation) 
+
+C Theoretical Analysis of Routing Loss under Biased Routing 
+
+In this section, we mathematically prove that the expected routing probability deviation caused by the watermark bias is strictly bounded by O(δ2). Thus, the routing process remains unbiased in expectation at the first order. 14 C.1 Notations and Assumptions Model State. Let sℓ ∈ RK denote the original routing logits at the ℓ-th layer. The original routing probability for the i-th expert, obtained via the Softmax function, is defined as: 
+
+pi = esℓ,i 
+
+PKj=1 esℓ,j 
+
+. (14) 
+
+Permutation-Symmetric Expert Map. We define a binary indicator vector gℓ ∈ { 0, 1}K to represent the green expert assignment at the current layer. Based on the expert map, the assignment is determined by Gℓ = Mℓ(eℓ−1). This mapping satisfies two core constraints: (i) Fixed Green Proportion , which dictates that exactly half of the experts are activated as green experts per routing, i.e., PKi=1 gℓ,i = K/ 2; and (ii) Permutation-Symmetric Constraint , which ensures that in global expectation, every expert has an equal probability of being selected as a green expert: 
+
+Pr( gℓ,i = 1) = Pr( gℓ,i = 0) = 12 , ∀i ∈ { 1, . . . , K }. (15) 
+
+Bias Injection. The actual routing bias vector applied at the current layer is bℓ = δgℓ. Due to the binary nature of gℓ, each component of the bias vector is restricted to a discrete set bℓ,j ∈ { 0, δ }. We assume the bias magnitude δ is sufficiently small ( δ ≪ 1) so that the higher-order Taylor expansion terms O(∥bℓ∥3) can be reasonably truncated. The routing probability after bias injection is denoted as p(g) 
+
+> i
+
+.
+
+C.2 Proof of Zero First-Order Expectation 
+
+According to the multidimensional Taylor expansion, the perturbed probability p(g) 
+
+> i
+
+at sℓ can be expanded as: 
+
+p(g) 
+
+> i
+
+= pi(sℓ) + ∇pi(sℓ)⊤bℓ + 12 b⊤ 
+
+> ℓ
+
+H(i)(sℓ)bℓ + O(∥bℓ∥3). (16) The first-order probability deviation is defined as ∆p(1)  
+
+> i
+
+= ∇pi(sℓ)⊤bℓ. Expanding the inner product and taking the mathematical expectation Eg over the bias distribution yields: 
+
+Eg
+
+h
+
+∆p(1) 
+
+> i
+
+i
+
+= Eg
+
+
+
+> K
+
+X
+
+> j=1
+
+∂p i
+
+∂s ℓ,j 
+
+bℓ,j 
+
+ = δ
+
+> K
+
+X
+
+> j=1
+
+∂p i
+
+∂s ℓ,j 
+
+Eg[gℓ,j ]. (17) From the Permutation-Symmetric Constraint, we know Eg[gℓ,j ] = Pr( gℓ,j = 1) = 1 /2. Substituting this into the expectation gives: 
+
+Eg
+
+h
+
+∆p(1) 
+
+> i
+
+i
+
+= δ
+
+2
+
+> K
+
+X
+
+> j=1
+
+∂p i
+
+∂s ℓ,j 
+
+. (18) Using the partial derivative property of the Softmax function, we have: 
+
+> K
+
+X
+
+> j=1
+
+∂p i
+
+∂s ℓ,j 
+
+= pi(1 − pi) − X 
+
+> j̸=i
+
+pipj = pi − piKX
+
+> j=1
+
+pj . (19) Given the probability normalization property PKj=1 pj = 1 , this sum strictly evaluates to 0. Therefore, the expected first-order deviation is completely eliminated, yielding Eg[∆ p(1)  
+
+> i
+
+] = 0 .
+
+C.3 Bounding the Second-Order Term 
+
+The second-order error term is ∆p(2)  
+
+> i
+
+= 12 b⊤ 
+
+> ℓ
+
+H(i)(sℓ)bℓ. The quadratic form can be explicitly expressed as: 
+
+b⊤ 
+
+> ℓ
+
+H(i)bℓ = pi
+
+(bℓ,i − ¯b)2 −
+
+
+
+> K
+
+X
+
+> j=1
+
+pj b2 
+
+> ℓ,j
+
+− ¯b2
+
+ , (20) 15 where ¯b = PKj=1 pj bℓ,j represents the expected value of the bias vector under the original probability distribution p. We now bound the two components inside the brackets. 
+
+First term. Since bℓ,i ∈ { 0, δ } and the weighted average satisfies 0 ≤ ¯b ≤ δ, the squared difference between them is strictly bounded by (bℓ,i − ¯b)2 ≤ δ2.
+
+Second term. This component represents the variance of the bias under distribution p. Since the indicator variable is strictly binary ( gℓ,j ∈ { 0, 1}), it inherently satisfies g2 
+
+> ℓ,j
+
+= gℓ,j . For the bias terms bℓ,j = δg ℓ,j , this implies: 
+
+b2 
+
+> ℓ,j
+
+= ( δg ℓ,j )2 = δ2gℓ,j = δ(δg ℓ,j ) = δb ℓ,j . (21) Substituting this identity into the probability-weighted sum yields: 
+
+> K
+
+X
+
+> j=1
+
+pj b2 
+
+> ℓ,j
+
+=
+
+> K
+
+X
+
+> j=1
+
+pj (δb ℓ,j ) = δ
+
+
+
+> K
+
+X
+
+> j=1
+
+pj bℓ,j 
+
+ = δ¯b. (22) The entire second term then simplifies to a downward-opening quadratic function with respect to ¯b.By completing the square, we obtain: 
+
+> K
+
+X
+
+> j=1
+
+pj b2 
+
+> ℓ,j
+
+− ¯b2 = δ¯b − ¯b2 = −
+
+
+
+¯b − δ
+
+2
+
+2
+
++ δ2
+
+4 . (23) Because the squared component is non-negative, the global maximum of this term is achieved at 
+
+¯b = δ/ 2, leading to the strict bound: 
+
+> K
+
+X
+
+> j=1
+
+pj b2 
+
+> ℓ,j
+
+− ¯b2 ≤ δ2
+
+4 . (24) Combining the bounds for both the first and second terms, the absolute value of the total second-order deviation is limited by: 
+
+∆p(2)  
+
+> i
+
+≤ 12 pi
+
+
+
+δ2 + δ2
+
+4
+
+
+
+= 58 piδ2 = O(δ2). (25) 
+
+Conclusion 
+
+Combining the derivations above, under the first-order approximation, the expected routing probability satisfies: 
+
+Eg[p(g) 
+
+> i
+
+] = pi + Eg[∆ p(1)  
+
+> i
+
+] + Eg[∆ p(2)  
+
+> i
+
+] = pi + 0 + O(δ2). (26) This confirms that the watermark injection preserves the expected routing probabilities (i.e., 
+
+Eg[p(g) 
+
+> i
+
+] = pi at the first order), demonstrating that the routing process remains unbiased in ex-pectation. 
+
+D Performance on Moderate-Complexity Tasks. 
+
+Table 6 shows the detection-text quality trade-off on both MultiNews and ELI5. On the smaller Mixtral-8 ×7B model, which is harder to achieve balance, WaterMoE achieves substantially higher detection rates under strict thresholds while also attaining the highest AUC and maintaining Rouge-L comparable to the unwatermarked baseline. A similar trend holds on ELI5, where WaterMoE achieves the best AUC and Rouge-L, with strong detection performance. Overall, it achieves strong detectability without sacrificing text quality across models and tasks. 
+
+E Three-Ent and Semantic Entropy Analysis 
+
+As illustrated in Fig. 5, we compare the trigram entropy (three-ent) and semantic entropy of texts generated by different methods. Our proposed WaterMoE produces entropy values that are closest to those of the non-watermarked model. In contrast, other watermarking methods lead to noticeable reductions in entropy. This observation indicates that WaterMoE better preserves the diversity and richness of the generated text, maintaining natural generation characteristics while embedding the watermark. 16 Table 6: Watermarking performance on Moderate-Complexity Tasks. WaterMoE consistently achieves the highest AUC and TPR while maintaining competitive Rouge-L scores. 
+
+Dataset: MultiNews Algorithm Mixtral-8 ×7B Qwen TPR@1% TPR@5% AUC Rouge-L TPR@1% TPR@5% AUC Rouge-L 
+
+Unwatermarked - - - 38.1 - - - 40.6 EWD [26] 71.0 84.5 94.2 37.8 91.5 95.5 99.3 40.1 EXPEdit [39] 41.5 61.5 91.7 35.3 36.0 48.0 77.6 31.5 KGW [17] 21.0 49.5 86.5 36.3 98.5 100.0 100.0 40.3 MorphMark [27] 26.0 41.0 88.2 36.4 77.0 93.5 98.9 40.5 SIR [42] 21.5 36.0 85.0 35.9 - - - -SynthID [18] 8.0 17.5 63.7 38.0 98.0 99.0 99.5 40.5 
+
+Unbiased [40] 74.5 82.5 93.1 37.7 13.0 52.0 73.8 40.5 UPV [41] 17.0 29.5 87.4 34.2 3.5 27.0 84.3 40.3 XSIR [43] 8.0 19.5 67.5 35.3 - - - -
+
+WaterMoE 83.5 86.5 99.6 38.3 100.0 100.0 100.0 40.4 
+
+Dataset: ELI5 Algorithm Mixtral-8 ×7B Qwen TPR@1% TPR@5% AUC Rouge-L TPR@1% TPR@5% AUC Rouge-L 
+
+Unwatermarked - - - 31.2 - - - 28.8 EWD 87.0 91.0 98.6 29.3 100.0 100.0 100.0 28.5 EXPEdit 28.5 28.5 64.9 29.4 32.0 32.0 69.8 26.1 KGW 78.0 89.5 97.6 28.8 100.0 100.0 100.0 28.5 MorphMark 49.5 64.5 90.8 29.3 92.0 96.5 99.5 28.5 SIR 63.0 75.5 93.7 28.6 - - - -SynthID 43.0 67.0 92.1 30.2 99.5 100.0 100.0 28.5 Unbiased 84.0 89.5 96.4 29.8 100.0 100.0 100.0 28.0 UPV 60.5 80.5 95.1 28.4 95.5 100.0 99.9 28.2 XSIR 47.0 60.5 87.5 27.6 - - - -
+
+WaterMoE 81.0 97.5 98.8 30.5 100.0 100.0 100.0 28.8 
+
+Table 7: Watermark hyperparameters across different task complexity levels. EXPEdit and Unbiased are distortion-free algorithms and thus do not require injection strength parameters (denoted by -). SIR and XSIR are not applicable to high-complexity tasks as they are incompatible with the Qwen model. 
+
+Algorithm Low Moderate High 
+
+KGW δ = 2 δ = 2 δ = 5 
+
+SynthID num_leaves=2 num_leaves=2 num_leaves=8 
+
+EWD δ = 2 δ = 2 δ = 5 
+
+EXPEdit - - -MorphMark kexp = 1 .3 kexp = 1 .3 kexp = 7 
+
+Unbiased - - -UPV δ = 2 δ = 2 δ = 4 
+
+SIR δ = 1 δ = 1 -XSIR δ = 1 δ = 1 -WaterMoE δ = 0 .8 δ = 0 .2 δ = 0 .2
+
+F Watermarking Setup for Reproducibility 
+
+To ensure reproducibility, we summarize the watermark-specific hyperparameters for all algorithms under different task complexity levels in Table 7. Each cell reports the key hyperparameter used for the corresponding setting. 17 Unwatermark WaterMoE KGW SynthID SEMSTAMP 
+
+7
+
+8
+
+9
+
+10 
+
+11 
+
+12 
+
+13 
+
+11.72 11.74 
+
+10.07 
+
+11.39 
+
+9.87 9.75 9.76 
+
+8.21 
+
+9.74 9.60 
+
+Comparison of Three-ent and Semantic ent across Models 
+
+Three-ent 
+
+Semantic ent Figure 5: Trigram entropy and semantic entropy comparison. WaterMoE preserves entropy closest to the non-watermarked model, indicating better text diversity. 
+
+G Dataset and Global Prompts 
+
+To ensure evaluation consistency and standardize model behavior across diverse tasks, we define a specific "Global Prompt" for each dataset. These prompts serve as the foundational instructions that dictate the model’s reasoning style and output constraints, effectively minimizing performance variance caused by prompt phrasing. The complete set of these standardized instructions, categorized by task type and dataset, is presented in Figure 6. These prompts are prepended to each individual query to guide the model’s generation process throughout our experiments. Dataset Task Type Global Prompt 
+
+MultiNews Summarization Please summarize the following article: 
+
+ELI5 Open-domain QA Please answer the question: 
+
+APPS Code Generation Please output only the final Python code solution. 
+
+> Do not include any explanation or reasoning.
+
+CodeContests Code Generation Please output only the final Python code solution. 
+
+> Do not include any explanation or reasoning.
+
+GSM8K Math Reasoning Please reason step by step, and you MUST provide a final answer. 
+
+> The final answer MUST be explicitly written in the format \boxed{}.
+
+MMLU Multiple Choice 
+
+> The following is a multiple-choice question.
+> First, reason through the problem step by step, analyzing each option.
+> Then, conclude with your final answer using ONLY one letter from A, B, C, or D,
+> placed inside \boxed{}.
+> Do not include any text inside the box other than the single letter.
+
+Figure 6: Detailed Global Prompts used across various datasets to standardize model instructions and output formats. 
+
+H Configuration of Attack Prompts 
+
+In this section, we present the prompts used for different types of watermark attacks. In addition to the document-level paraphrasing attack, we specifically design token-level substitution. 18 Token-level Substitution Attack. The prompt for the token-level substitution attack explicitly instructs the model to replace a specific ratio of words with their synonyms while maintaining the original semantic meaning and logical order as much as possible, as shown in Figure 7. Please rewrite the following text by substituting words. 
+
+Requirement: Replace exactly {ratio}% of the words while keeping the overall semantics, sentence order, and logic unchanged. 
+
+Strategy: 
+
+The primary goal is to achieve the {ratio}% substitution rate through synonym replacement. If a high substitution rate is requested, prioritize reaching the target ratio even if semantic coherence cannot be fully guaranteed. If a low substitution rate is requested, ensure that {100-ratio}% of the text remains strictly unchanged. Output only the rewritten text without any additional explanation. {text} Figure 7: Prompt used for the token-level substitution attack. 
+
+Document-level Paraphrasing Attack. For the document-level paraphrasing attack, we instruct the model to rewrite the entire text output, simulating a real-world scenario of semantic restructuring, as depicted in Figure 8. Please rewrite the following text (Only return the rewritten text): {text} Figure 8: Prompt used for the document-level paraphrasing attack. 
+
+I ROC-AUC Curves of Watermarking Methods on MultiNews. 
+
+As shown in Fig.9, we present the ROC-AUC curves of all evaluated watermarking algorithms on the MultiNews task using Mixtral-8x7B. 
+
+J Examples of Prompts and Generated Texts across Different Tasks 
+
+To provide a qualitative understanding of watermark behavior across different task types, we present representative examples from three categories: summarization, code generation, and alignment. For each task, we show the input prompt together with the corresponding outputs generated with and without watermarking. These examples highlight how WaterMoE embeds watermark signals while preserving task fidelity. In particular, the comparisons illustrate that the watermarked outputs remain semantically consistent with the unwatermarked ones, even under strict task constraints such as structured code generation and format-sensitive alignment tasks. 19 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+EWD 
+
+> EWD (AUC = 0.9397)
+
+(a) EWD 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+EXPEdit  
+
+> EXPEdit (AUC = 0.9169)
+
+(b) EXPEdit 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+KGW  
+
+> KGW (AUC = 0.8647)
+
+(c) KGW 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+MorphMark 
+
+> MorphMark (AUC = 0.8817)
+
+(d) MorphMark 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+SIR  
+
+> SIR (AUC = 0.8508)
+
+(e) SIR 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+SynthID  
+
+> SynthID (AUC = 0.6368)
+
+(f) SynthID 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+Unbiased 
+
+> Unbiased (AUC = 0.9312)
+
+(g) Unbiased 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+UPV  
+
+> UPV (AUC = 0.8737)
+
+(h) UPV 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> False Positive Rate
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> True Positive Rate
+
+WaterMoE  
+
+> WaterMoE (AUC = 0.9957)
+
+(i) WaterMoE 
+
+Figure 9: ROC-AUC curves of different watermarking methods on MultiNews (Mixtral-8x7B). In Philadelphia, on Sunday, November 30, a 5 p.m. deadline imposed by Mayor Michael Nutter for Occupy Philly to leave Dilworth Plaza expired without any police removal. Roughly 100 protesters continued to stay peacefully, chanting and distributing food, as law enforcement kept a low-key and composed presence. Chief Inspector Joseph Sulivan highlighted collaboration and nonviolence, noting that conflict was not the goal and that the city was seeking a solution.Although authorities intended to move forward with a $50 million renovation of Dilworth  including new facilities and fencing, authorities did not act immediately.  A number of tents had already been taken down, and some demonstrators were preparing to move to Occupy locations in Washington, D.C.Meanwhile, city officials and observers, such as activist Ellen Rogovinhar, called for restraint and voiced support for the movement’s message. Public figures, including Russell Simmons, also appealed to Mayor Nutter to refrain from using force. The situation stayed calm throughout, with no arrests reported. In Philadelphia, a deadline set by Mayor Michael Nutter for Occupy Philly to vacate Dilworth Plaza by 5 p.M. on Sunday, November 30, passed without a police eviction. About 1,00 of protesters remained peacefully, chanting and sharing food, while police maintained a calm presence. Police Chief Inspector Joseph Sulivan emphasized cooperation and nonviolence, stating that confrontation was not desired and that the city was working toward a resolution. Although the city planned to begin a $50-million renovation of Dilworth, including new facilities and fencing, authorities did not act immediately. Many tents were already being dismantled, with some protesters planning to relocate to Occupy sites in Washington, D.C. City officials and observers, including activist Ellen Rogovinhar, urged restraint and expressed support for the movement’s message, while public figures like Russell Simmons urged Mayor Nutter to avoid force. No arrests were made, and the situation remained peaceful. Please summarize the following article: Passage 1: The  early Monday declared an unlawful assembly on the streets surrounding City Hall and ordered Occupy L.A. protesters to immediately disperse or face arrest. Police officers carrying batons, plastic handcuffs and non-lethal weapons lined up on 1st Street directly outside headquarters in anticipation of possible arrests of protesters who were standing in the streets. "It is not our intent to clear the park at this time," an officer said over a loudspeaker... 
+
+Prompt Watermark text Unwatermark text Summarization Task 
+
+Figure 10: An example of the Summarization task from the Multi-News dataset. The texts are generated using the WaterMoE watermark algorithm. In the “Watermark text” section, words with a green background indicate tokens that were altered by the watermark algorithm, while words with a gray background indicate unchanged tokens that remain identical to those in the “Unwatermark text”. 20 Please output only the final Python code solution. Do not include any explanation or reasoning.Write a Python solution for the following problem: You have a long fence which consists of n sections. Unfortunately, it is not painted, so you decided to hire q painters to paint it. i-th painter will paint all sections x such that .Unfortunately, you are on a tight budget, so you may hire only q - 2 painters. Obviously, only painters you hire will do their work. You want to maximize the number of painted sections if you choose q - 2 painters optimally. A section is considered painted if at least one painter paints it... 
+
+Prompt Watermark text Unwatermark text Coding Task 
+
+n, q = map(int, input().split()) segs = [tuple(map(int, input().split())) for _ in range(q)] ans = 0 for i in range(q): for j in range(i + 1, q): # difference array to mark coverage diff = [0] * (n + 2) for k, (l, r) in enumerate(segs): # skip removed painters if k != i and k != j: diff[l] += 1 diff[r + 1] -=  1
+
+cur = cnt = 0 for x in range(1, n + 1): cur += diff[x] if cur > 0: cnt += 1 ans = max(ans, cnt) print(ans) n, q = map(int, input().split()) painters = [] for _ in range(q): 
+
+l, r = map(int, input().split()) 
+
+painters.append((l, r)) max_painted = 0 # Try removing every pair of painters for i in range(q): 
+
+for j in range(i + 1, q): 
+
+# Create a set of painted sections when painters i and j are removed 
+
+painted = set() 
+
+for k in range(q): 
+
+if k != i and k != j: 
+
+l, r = painters[k] 
+
+for section in range(l, r + 1): 
+
+painted.add(section) 
+
+max_painted = max(max_painted, len(painted)) print(max_painted) Figure 11: An example of the Coding task from the APPS dataset. The text demonstrates the prompt and the corresponding outputs generated with and without the WaterMoE watermark algorithm. Write a long email template that invites a group of participants to a meeting, with at least 500 words. The email must include the keywords "correlated" and "experiencing" and should not use any commas. 
+
+Prompt Watermark text Unwatermark text Alignment Task 
+
+Dear Team I hope this message finds you well and in good spirits. I am writing to formally invite you to an important upcoming meeting that will play a pivotal role in shaping the direction of our upcoming initiatives. This gathering is not just another routine check-in it is a collaborative opportunity for all of us to come together share perspectives and align on our shared goals. Your presence and input are essential to the success of this session and we truly value your contributions. The meeting is scheduled for Thursday the 18th of April at 10:00 AM in the main conference room at the headquarters building. If you are unable to attend in person please let us know in advance so we can arrange remote access. We are committed to ensuring that every participant has the ability to engage fully regardless of location. ... Dear Team In good spirits I hope this note reaches you well. I am contacting you to extend a formal invitation to a significant upcoming meeting which will have an important role in guiding the course of our future initiatives. This session is not merely a regular update it serves as a shared opportunity for everyone to gather exchange ideas and  align on our shared goals. Your participation  and your feedback is vital for the effectiveness of this discussion and  we truly value your contributions. On Thursday the 18th of April at 10:00 AM the session will be held in the main conference room at the headquarters building. If attending in person is not possible please notify us beforehand so that we can organize remote participation. We are dedicated to making sure every attendee can fully engage regardless of their location and circumstances. ... 
+
+Figure 12: An example of the Alignment task from the IFEval dataset. The text illustrates the prompt along with the watermarked (using WaterMoE) and unwatermarked generation results, demonstrating adherence to the length and formatting constraints. 21
