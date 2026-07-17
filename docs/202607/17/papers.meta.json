@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-17",
+  "date": "2026-07-17",
+  "generated_at": "2026-07-17T21:22:03",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/17/2607.13336v1-delving-into-the-temporal-challenges-of-unified-video-protection-against-image-to-video-and-fine-tuning-based-customization",
+      "section": "quick",
+      "title_en": "Delving into the Temporal Challenges of Unified Video Protection Against Image-to-Video and Fine-Tuning-based Customization",
+      "authors": "Yuxin Huang, Ziming Hong, Mingming Gong, Wanyu Wang, Jing Zhang, Tongliang Liu",
+      "date": "2026-07-14",
+      "pdf": "https://arxiv.org/pdf/2607.13336v1",
+      "score": "7.0",
+      "evidence": "针对定制化的视频保护，类似水印防御",
+      "tldr": "视频生成模型支持个性化视频定制，但带来隐私和版权风险。现有防护仅针对图像，视频防护面临时序压缩、单视频扰动脆弱、时序不一致三大挑战。本文提出TC-UAP，利用跨视频滑动窗口优化身份级多帧统一对抗扰动，引入内在时序建模和外源代理时序攻击损失，使扰动时序一致且鲁棒。实验表明，TC-UAP在参考型和微调型定制化下取得最强身份保护，并抵抗多种未知时序攻击。",
+      "tags": "query:watermarking",
+      "abstract_en": "Recent diffusion-based video generation models have enabled high-quality personalized video customization through both tuning-based pipelines, which fine-tune a video diffusion model, and reference-based pipelines such as image-to-video generation. However, these capabilities raise serious concerns about personal privacy, identity ownership and intellectual property protection. Existing anti-customization works focus on protecting images, while protection for videos against both reference- and tuning-based customization remains largely underexplored. Protecting videos in this setting raises three challenges: (i) Image-level perturbations, optimized frame by frame, cannot survive temporal compression by 3D video VAE. (ii) A video-level perturbation optimized on a single video is vulnerable to temporal editing and fails to protect unseen videos. (iii) Temporally inconsistent perturbations are not robust to temporal attacks. To address these challenges, we propose Temporally Consistent Universal Adversarial Perturbations (TC-UAP), the first protection method against both reference- and tuning-based video customization. TC-UAP optimizes an identity-level multi-frame UAP over sliding windows from multiple videos, accounting for local temporal dependencies induced by temporal compression in video VAE and enabling a single perturbation to protect unseen videos of varying lengths. Moreover, we introduce intrinsic temporal modeling and an extrinsic surrogate temporal-attack loss, which make the perturbation temporally consistent and robust to unseen temporal attacks. Empirically, quantitative and qualitative results show that TC-UAP achieves the strongest identity protection compared with existing methods under both reference- and tuning-based video customization, and remains robust under multiple unseen temporal attacks.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
