@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-18 <!--dpr-date:20260718-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/18/2607.10695v1-effective-synthetic-image-detection-via-noise-residual-clustering" data-sidebar-item="{&quot;title&quot;: &quot;Effective Synthetic Image Detection via Noise Residual Clustering&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.10695v1-effective-synthetic-image-detection-via-noise-residual-clustering&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;基于噪声残差指纹的合成图像检测&quot;}">Effective Synthetic Image Detection via Noise Residual Clustering</a>
   * 2026-07-17 <!--dpr-date:20260717-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/17/2607.13336v1-delving-into-the-temporal-challenges-of-unified-video-protection-against-image-to-video-and-fine-tuning-based-customization" data-sidebar-item="{&quot;title&quot;: &quot;Delving into the Temporal Challenges of Unified Video Protection Against Image-to-Video and Fine-Tuning-based Customization&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.13336v1-delving-into-the-temporal-challenges-of-unified-video-protection-against-image-to-video-and-fine-tuning-based-customization&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;针对定制化的视频保护，类似水印防御&quot;}">Delving into the Temporal Challenges of Unified Video Protection Against Image-to-Video and Fine-Tuning-based Customization</a>

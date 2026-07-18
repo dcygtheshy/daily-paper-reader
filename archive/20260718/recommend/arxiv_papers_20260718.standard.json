@@ -1,0 +1,57 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-18T20:30:20.179050+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.10695v1",
+      "source": "arxiv",
+      "title": "Effective Synthetic Image Detection via Noise Residual Clustering",
+      "abstract": "The rapid advancement of generative artificial intelligence (AI) has made synthetic images remarkably realistic, posing security threats such as misinformation and fraud. It is significant to detect the synthetic image in the manner of passive and blind image authentication. Most existing detectors rely on supervised training with large labeled datasets, leading to high costs and degraded performance on unknown generative models. To attenuate such deficiencies, we propose a training-free detection method. Specifically, noise residual fingerprints are first extracted by a simple yet effective pre-trained Noiseprint++ model. Then multi-scale features are further extracted from such residual by a frozen Vision Transformer (ViT), followed by adaptive weighted fusion. Only a few real image samples are used needed to initialize the clustering centers for unsupervised K-Means, distinguishing real and synthetic images without training. Extensive evaluations on four benchmark datasets show that our proposed scheme achieves an average accuracy of 82.2%, outperforming the state-of-the-art detectors on generalization ability. Superior performance is gained on the popular diffusion type of synthetic images, and the effectiveness of each module is validated by ablation studies. Source code will be publicly available at https://github.com/multimediaFor/NoiseCluSID.",
+      "authors": [
+        "Caihui Yan",
+        "Gang Cao",
+        "Huawei Tian",
+        "Zhen Li",
+        "Yuhang Zhai"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.CR"
+      ],
+      "published": "2026-07-12T10:38:18+00:00",
+      "link": "https://arxiv.org/pdf/2607.10695v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "noise residual fingerprinting for synthetic image detection",
+      "llm_evidence_cn": "基于噪声残差指纹的合成图像检测",
+      "llm_evidence": "基于噪声残差指纹的合成图像检测",
+      "canonical_evidence": "基于噪声残差指纹的合成图像检测",
+      "llm_tldr_en": "Proposes a training-free detection method for synthetic images using noise residual fingerprints extracted by Noiseprint++ and a frozen ViT for clustering.",
+      "llm_tldr_cn": "针对合成图像检测，提出一种无需训练的方法：使用预训练Noiseprint++模型提取噪声残差指纹，再通过冻结的Vision Transformer提取多尺度特征并自适应加权聚类，实现对未知生成模型的有效盲检测。",
+      "llm_tldr": "针对合成图像检测，提出一种无需训练的方法：使用预训练Noiseprint++模型提取噪声残差指纹，再通过冻结的Vision Transformer提取多尺度特征并自适应加权聚类，实现对未知生成模型的有效盲检测。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

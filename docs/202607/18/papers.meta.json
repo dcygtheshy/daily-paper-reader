@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-18",
+  "date": "2026-07-18",
+  "generated_at": "2026-07-18T20:31:12",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/18/2607.10695v1-effective-synthetic-image-detection-via-noise-residual-clustering",
+      "section": "quick",
+      "title_en": "Effective Synthetic Image Detection via Noise Residual Clustering",
+      "authors": "Caihui Yan, Gang Cao, Huawei Tian, Zhen Li, Yuhang Zhai",
+      "date": "2026-07-12",
+      "pdf": "https://arxiv.org/pdf/2607.10695v1",
+      "score": "6.0",
+      "evidence": "基于噪声残差指纹的合成图像检测",
+      "tldr": "生成式AI使合成图像高度逼真，但现有检测方法依赖大量标注数据且泛化能力差。本文提出无需训练的检测方法：先用预训练Noiseprint++提取噪声残差指纹，再用冻结的Vision Transformer提取多尺度特征并自适应融合，最后仅用少量真实图像初始化K-Means聚类中心，实现无监督分类。在四个基准数据集上平均准确率82.2%，超越现有最先进方法，尤其在扩散模型生成图像上表现突出。该方法无需训练、泛化性强，为合成图像检测提供了高效新思路。",
+      "tags": "query:watermarking",
+      "abstract_en": "The rapid advancement of generative artificial intelligence (AI) has made synthetic images remarkably realistic, posing security threats such as misinformation and fraud. It is significant to detect the synthetic image in the manner of passive and blind image authentication. Most existing detectors rely on supervised training with large labeled datasets, leading to high costs and degraded performance on unknown generative models. To attenuate such deficiencies, we propose a training-free detection method. Specifically, noise residual fingerprints are first extracted by a simple yet effective pre-trained Noiseprint++ model. Then multi-scale features are further extracted from such residual by a frozen Vision Transformer (ViT), followed by adaptive weighted fusion. Only a few real image samples are used needed to initialize the clustering centers for unsupervised K-Means, distinguishing real and synthetic images without training. Extensive evaluations on four benchmark datasets show that our proposed scheme achieves an average accuracy of 82.2%, outperforming the state-of-the-art detectors on generalization ability. Superior performance is gained on the popular diffusion type of synthetic images, and the effectiveness of each module is validated by ablation studies. Source code will be publicly available at https://github.com/multimediaFor/NoiseCluSID.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
