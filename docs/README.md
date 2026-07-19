@@ -6,24 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-18
-- 运行时间：2026-07-18 20:31:06 UTC
+- 最新运行日期：2026-07-19
+- 运行时间：2026-07-19 20:56:07 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-今日速读1篇论文，聚焦合成图像检测技术。值得关注的方向：基于噪声残差聚类的伪造检测方法（评分6.0/10）。建议读者可进一步对比其他合成检测算法，评估其在真实场景中的鲁棒性。
-- 详情：[/202607/18/README](/202607/18/README)
+今日速读1篇论文，聚焦网络流 watermarking 的队列稳定性判据。文章提出因果IPD-QIM水印的稳定性条件，值得关注网络水印鲁棒性与隐蔽性的平衡方向。建议你先理解队列稳定性对水印检测的影响，再看文中提出的充要条件是否适用于你自己的网络场景。
+- 详情：[/202607/19/README](/202607/19/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Effective Synthetic Image Detection via Noise Residual Clustering](/202607/18/2607.10695v1-effective-synthetic-image-detection-via-noise-residual-clustering)  
-   标签：评分：6.0/10、query:watermarking
-   evidence：基于噪声残差指纹的合成图像检测
+1. [A Queueing-Stability Criterion for Causal IPD-QIM Network Flow Watermarking](/202607/19/2607.14954v1-a-queueing-stability-criterion-for-causal-ipd-qim-network-flow-watermarking)  
+   标签：评分：7.0/10、query:watermarking
+   evidence：使用IPD-QIM的网络流水印
 
 
 <div class="dpr-home-promo-card">

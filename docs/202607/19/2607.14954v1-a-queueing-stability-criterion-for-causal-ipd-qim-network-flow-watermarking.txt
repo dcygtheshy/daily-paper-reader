@@ -1,0 +1,747 @@
+Title: A Queueing-Stability Criterion for Causal IPD-QIM Network Flow Watermarking
+
+URL Source: https://arxiv.org/pdf/2607.14954v1
+
+Published Time: Fri, 17 Jul 2026 01:37:59 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+> IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 1
+
+# A Queueing-Stability Criterion for Causal IPD-QIM Network Flow Watermarking 
+
+Jiuxiang Cao, Guang Cheng, and Guangjie Liu 
+
+Abstract —On multi-hop encrypted links such as Tor and cascaded VPNs, tunneling flattens packet lengths and protocol fields, leaving inter-packet delay (IPD) as the main carrier for active flow attribution. Causality, however, lets the embedder delay packets but never advance them, so each quantization-index-modulation (QIM) alignment injects nonnegative dwell into a delay buffer; unbounded dwell would break lattice alignment through overflow and impose unacceptable delay on the host connection. Whether a causal QIM watermark can be embedded stably on bursty real traffic has largely been left to empirical configuration rather than analysis. We model the embedder as a reflected dwell queue under the actual fixed dual-lattice, equiprobable-random-bit rule, where the injection is state-dependent—set by the current effective interval and the bit—rather than an exogenous uniform variable. The substitution 
+
+Yi = δi − ri gives only an algebraic Lindley-form identity; stability is governed by the busy-state drift at large dwell, where the effective interval collapses to zero and the mean injection becomes ∆/4. Hence, away from the critical boundary, the buffer is stable if and only if μd > ∆/4 (i.e. ∆ < 4μd)for i.i.d. backgrounds, and, under stationary-ergodic and finite-state Markov-modulated traffic with instantaneous overload, if and only if the time-average intensity ¯ρ < 1. With the exogenous decoding floor ∆ ≥ cσ ξ (c = 4 Q−1(ϵ/ 2) ), this yields the operating window ∆ ∈ [cσ ξ , 4¯ μd). Controlled simulations confirm a sharp transition at ρ = 1 set only by the mean; on four real application-level IPD traces, with each simulated chain confined to a single flow (no cross-flow splicing), the criterion gives the correct stability direction under flow-local correlation and burstiness, while pooled cross-flow means overestimate the margin. These results provide a testable stable-embeddability criterion and a quantization-step configuration baseline for causal QIM network flow watermarking. 
+
+Index Terms —Network flow watermarking, quantization index modulation, causal constraint, queueing stability, Lindley recur-sion, operating window, network service management. 
+
+I. I NTRODUCTION 
+
+# NETWORK flow watermarking is an active traffic-analysis technique: at one observation point the embedder per-turbs the timing of a flow to embed a recoverable identifier, so that the same flow can be re-identified elsewhere in the network. It is a basic means of active traceback and attack attribution on encrypted links [1] and remains an active 
+
+J. Cao is with the School of Cyber Science and Engineering, Southeast University, Nanjing 211189, China, and also with Jiangsu Jinling Science & Technology Group Co., Ltd., Nanjing 210000, China (e-mail: caojiuxi-ang@seu.edu.cn). G. Cheng is with the School of Cyber Science and Engineering, Southeast University, Nanjing 211189, China (e-mail: chengguang@seu.edu.cn). G. Liu is with the School of Electronics and Information Engineering, Nanjing University of Information Science and Technology, Nanjing 210044, China (e-mail: gjieliu@nuist.edu.cn). Corresponding author: Guangjie Liu. 
+
+research direction [2]. On multi-hop encrypted paths such as Tor and cascaded VPNs, tunnel encapsulation flattens packet lengths and protocol fields, leaving inter-packet delay (IPD) as essentially the only usable watermark carrier [3]– [5]. Quantization index modulation (QIM) [6] quantizes the host to a lattice that depends on the watermark bit and thus looks naturally suited to IPD embedding. Flow watermarking, however, is causal: the embedder may only delay packets, never advance them, whereas image or audio watermarking may freely increase or decrease sample values. This asym-metry is not an implementation detail but a prerequisite for whether the watermark can run stably. In operational terms, network flow watermarking is a capa-bility the operator runs at the boundary of the managed domain (Fig. 1): an edge router or switch at the egress embeds the identifier by perturbing the timing of an outgoing flow, and a detector at a downstream vantage point recovers it, so the operator can attribute or trace that flow across the network it manages. The callouts in Fig. 1 zoom into the per-flow embedding and decoding mechanism analyzed below. Because the embedder acts on live service traffic at a forwarding device, deploying it is a network-management task, and the quantization step ∆ is effectively the only knob the operator sets. Its two failure modes are both management failures: too large a ∆ lets the edge queue’s delay grow without bound and breaks the quality of service of the very traffic that carries the mark, whereas too small a ∆ makes the mark undecodable and renders the attribution capability useless. Configuring the watermark is therefore the question of for what range of ∆
+
+the edge embedder stays stable (QoS-safe) while remaining decodable (attribution-effective) .The consequence of causality is structural. Each embedding aligns the current packet to a lattice point no earlier than its arrival, injecting a nonnegative alignment cost into a delay buffer, so the buffer depth accumulates packet by packet. If this dynamics is unstable, the depth grows without bound with the number of embedded packets: excessive dwell triggers budget truncation, so the output IPD can no longer land exactly on the target lattice point, causing overflow and decoding errors; the same dwell also acts on the real payload packets, and once it exceeds transport- or application-layer tolerances it forces connection resets or session interruption. The core question of causal IPD-QIM is therefore not whether the embedder is convenient to implement, but whether the watermark can be embedded stably without breaking the host traffic or its own decodability. Classical QIM assumes the embedder may freely rewrite host samples and hence never analyzes the stability of this recursion [6], [7]; the flow-watermarking literature has arXiv:2607.14954v1 [cs.CR] 16 Jul 2026 IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 2                         
+
+> Operator’s managed domain
+> host host
+> Egress router/ switch (embedder)
+> Public network (Tor / VPN, multi-hop)
+> marked flow Downstream vantage (detector)
+> +jitter σξFlow attribution / traceback
+> Embedding: delay-only IPD-QIM
+> in out round up to ∆-lattice per-flow buffer δ≤B; knob ∆
+> ∆too large ⇒δdiverges ⇒QoS breach
+> Decoding: de-quantize IPDs
+> recv recovered bits 1 0 1 1 0
+> reliable if ∆≥cσ ξ
+> ∆too small ⇒undecodable
+> Fig. 1. Deployment view of causal IPD-QIM flow watermarking.
+
+long used delay injection but mostly left its sustainability at the level of empirical configuration. We phrase this as the stable embeddability of causal QIM watermarking: given a background IPD process and a quanti-zation step ∆, does the embedding dwell admit a finite steady state while the step still meets a basic decoding-reliability requirement? Under a deployment-given buffer budget, ∆ is the main free parameter of the system, and its admissible range is squeezed from two sides—queue stability sets an upper bound and decoding reliability a lower bound. Working on the queue side, we answer three progressive questions. (i) Under what condition does the buffer recursion admit a steady state with non-diverging dwell? (ii) Does this stability survive bursty, autocorrelated, even instantaneously overloaded real traffic? (iii) Combining the queue-side upper bound with the decoding-side lower bound, can one obtain a testable operating window? The first two fix the upper bound (Theorems 2 and 3); the third adds the lower bound and assembles the window (Section IV-C). The mathematical object running through all three is the reflect-then-inject dwell recursion of causal QIM: a one-step substitution Yi = δi − ri writes it in standard Lindley form (Lemma 1), but under a fixed lattice the injection ri is coupled to the queue state and is not an exogenous independent input, so stability is decided not by classical i.i.d. queueing results but by the drift between the deep-buffer busy-state mean injection ∆/4 and the background service. Our main contributions are as follows. (1) Recursion identity and i.i.d. stability of the causal QIM buffer (Lemma 1, Theorem 2). The dwell recursion is a nonstandard reflect-then-inject form; the substitution 
+
+Yi = δi − ri writes it in Lindley form, but under a fixed lattice ri is set jointly by the effective interval and the random bit and cannot be treated as an exogenous uniform input. We therefore analyze the large-dwell drift: when the buffer is deep the effective interval collapses to 0, the random bit yields an average injection of 
+
+∆/4 over the two fixed lattices, and a Foster–Lyapunov drift criterion gives the stability condition μd > ∆/4,translating can the watermark be embedded stably into the testable inequality ∆ < 4μd.(2) Burst-robust stability (Theorem 3). Under a stationary-ergodic background (including finite-state Markov modu-lation), buffer stability depends only on the time-average intensity ( ¯ρ < 1), not on the instantaneous intensity: even if some intervals are instantaneously overloaded (ρ(J) > 1, dwell accumulating), the queue is globally stable as long as the slow intervals drain the buffer on average. This substantively extends the i.i.d. condition 
+
+μd > ∆/4 to real bursty traffic; on four application-level real IPD traces, even the most autocorrelated scenarios keep a finite steady-state dwell with the criterion pointing the right way. (3) Decoding-side lower bound and the step-size operat-ing window (Assumption 3, Sections IV-A and IV-C). From channel jitter, via a single-symbol error-rate upper bound, we derive a sufficient lower bound ∆ ≥ cσ ξ with 
+
+c = 4 Q−1(ϵ/ 2) ; combined with the queue-stability upper bound it gives the conservative window ∆ ∈ [cσ ξ , 4¯ μd),nonempty iff σξ < 4¯ μd/c , turning how to choose the step 
+
+from trial and error into an explicit two-sided criterion. This lower bound and the resulting window supply the constraint complementary to the stability upper bound. This work focuses on the stable embeddability of causal QIM watermarking in encrypted-flow attribution: a stability criterion away from the critical boundary, its robust extension to real bursty traffic, and the conservative step-size operating window. Section II reviews the QIM/causal embedding and queueing-stability threads and summarizes the gap; Section III builds the queueing model, embedding rule, and basic assump-tions; Section IV first derives the decoding-side functional lower bound ∆ ≥ cσ ξ , then the recursion identity and the i.i.d. / burst-robust stability results (the upper bound), and assembles the window; Section V validates the criterion on controlled synthetic backgrounds and, chiefly, on real application-level IPD continuous traces; Section VI concludes. II. R ELATED WORK 
+
+A. Network flow watermarking 
+
+Active flow watermarking perturbs a flow’s timing or packet lengths at ingress and detects the perturbation at egress to IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 3
+
+correlate the two ends; it is the main route for active attribu-tion of encrypted traffic, tracing back to Cabuk et al.’s [8] design and detection of IP covert timing channels. Wang and Reeves [1] proposed a watermark-correlation scheme that slightly adjusts the timing of selected packets, designed specif-ically to resist timing perturbation, bringing IPD modulation into stepping-stone correlation; Wang et al. [3] further injected a unique watermark in the inter-packet timing domain so that long flows are uniquely identifiable. Later improvements followed two lines, lower visibility and higher robustness. RAINBOW [4] is non-blind: it uses ingress-archived original IPDs for differential detection, embedding with far smaller delay and removing the self-interference of the host flow under blind detection; SWIRL [5] trades a per-flow marking pattern for scalability while keeping delay small. The DSSS scheme of Yu et al. [9] instead uses direct-sequence spread spectrum, marginally adjusting the sender rate with a pseudo-noise code to embed a covert spread-spectrum signal. After 2018, schemes diversified the carrier: Yang et al. [10] embed with ON/OFF timing on Tor and detect with a sliding-window 
+
+L1 distance, HeteroTiC [11] combines order, timing, and length into a heterogeneous channel, DynMark [12] adds a dynamic packet-count dimension, and Cui et al. [13] raise coding efficiency with hexadecimal encoding. These schemes advance robustness or efficiency but all treat delay injection as an implementation detail, and none analyzes whether the injection can be sustained under the delay-only, never advance 
+
+constraint. Alongside the embedding side, attacks and defenses have evolved. Kiyavash et al. [14] showed that interval-based wa-termarks introduce temporal correlation, enabling a multi-flow attack that, from a few marked flows, detects the watermark, recovers secret parameters, and even removes it, and that applies to both anonymous communication and stepping-stone detection. Lin and Hopper [15] argued that being covert only to passive detection is insufficient, and proposed stronger known/chosen-flow attack models. Recent defenses such as DeMarking [16] rewrite IPDs in real time with a generative adversarial network to erase the watermark while trying not to disrupt the service. This pressure keeps pushing the embedding side toward smaller, more controlled timing perturbations: the smaller the perturbation, the more the embedder must align packets precisely to lattice points, and the more critical the prerequisite of whether the buffer stays stable under the causal constraint—precisely the concern of this paper. At the survey level, Iacovazzi and Elovici [17] classify flow-watermarking algorithms by carrier, visibility, and robustness; the recent problem-oriented survey of Li et al. [2] reviews the 2001–2025 development and lists five open problems— identity representation, embedding/detection placement, ro-bustness to hopping, communication efficiency, and fast de-tection in large background flows. That survey notes that “embedding should not markedly degrade the host’s quality of service” is a necessary condition many methods overlook, yet still treats it as an efficiency–robustness trade-off, without touching its root cause: whether the embedding delay grows without bound under the delay-only, never advance constraint. 
+
+B. Quantization index modulation 
+
+QIM, introduced by Chen and Wornell [6], is a provably good class of embedding: the sender picks one of a set of lattices (or a more general codebook) according to the bit to embed and quantizes the host onto it; the receiver only decides which lattice the (possibly noisy) signal is near, without knowing the host itself. The same work proposes a distortion-compensated variant (DC-QIM) that trades a linear combination of quantized and original signal for a better noise-resistance/distortion balance. The theoretical justification of QIM rests on Costa’s writing on dirty paper [18]: when the sender non-causally knows a Gaussian interference to be added on the channel, a clever encoding (random bin-ning / lattice coding) can fully cancel it, so the capacity equals that of the interference-free channel. This non-causal assumption is exactly what QIM-type methods rely on to approach that capacity: in image or audio watermarking the host is naturally known to the sender in advance, but in flow watermarking the arrival times of future packets are precisely what the embedder cannot know ahead—this mismatch is the starting point of the present paper. Cox et al. [7] give a widely used standard reference on the positioning of QIM and spread-spectrum watermarking. QIM remains active: Mao et al. [19] propose content-aware CA-QIM/CAMD-QIM to lower distortion, and Lyu [20] optimizes the dither structure to improve PSNR/SSIM. All these assume the embedder may freely rewrite host samples and need not consider the delay-only physical constraint—natural for image/audio but exactly what fails in the flow-watermarking setting above; the two threads intersect at causality. 
+
+C. Embedding queues and stability tools 
+
+The Lindley recursion [21] is the basis of steady-state analysis for the single-server queue; Loynes [22] proved, by a backward-coupling construction, the necessary and sufficient condition (negative drift) for the waiting-time sequence to converge to a unique stationary regime under stationary-ergodic input; Foster [23] gave the drift criterion for positive recurrence of Markov chains, and Meyn and Tweedie [24] and Asmussen [25] developed the stability theory of chains systematically. These tools target the standard Lindley form 
+
+add the increment, then reflect , whereas the causal-QIM dwell recursion is the nonstandard reflect, then inject form (Eq. (3)), so classical results do not apply directly; Lemma 1 provides the reduction step bridging this gap. Notably, Loynes’ result requires no independence, only stationary ergodicity, and Birkhoff’s ergodic theorem [26] together with the spectral theory of Markov additive processes [25] are the companion tools needed to extend stability to non-independent, bursty traffic. Empirically, Paxson and Floyd [27] observed long ago that wide-area IPDs deviate markedly from Poisson and are bursty, so a stability analysis must tolerate non-i.i.d., bursty real backgrounds. 
+
+D. Feasibility of causal QIM 
+
+Under the causal constraint, whether this embedding queue is feasible splits into two progressive layers. The first, most IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 4                                               
+
+> TABLE I MAIN SYMBOLS .Symbol Meaning
+> di;μd,¯μd, σ dbackground IPD (inter-arrival), its mean, time-average mean, std
+> ∆QIM quantization step
+> ri∈[0 ,∆) lattice-alignment injection; under fixed lattices set by εi, w i
+> δi=t′
+> i−tidwell of packet i(buffer depth)
+> Yi=δi−rireduced waiting-time variable (Section IV-B)
+> Xi=ri−1−direduced increment; state-dependent under fixed lattices
+> ρ= ∆ /(4 μd)busy-state traffic intensity ( ¯ρ: time-average)
+> Bbuffer budget
+> δ∞steady-state dwell
+> σξstd of channel net IPD jitter (exogenous)
+> p(γ),¯p(γ)single-symbol error rate and its conservative bound, γ= ∆ /σ ξ
+> ϵtarget single-symbol error rate
+> c= 4 Q−1(ϵ/ 2) conservative step coefficient ensuring p(γ)≤ϵ
+
+basic: can the buffer grow without bound? In classical QIM the embedder is assumed to rewrite host samples freely, so this constraint never exists and the question never arises; the bipolar modulation of spread-spectrum schemes runs into the 
+
+cannot advance packets difficulty (Section III-A analyzes this for DSSS [9]-type schemes), and existing work mostly circum-vents it with per-packet positive bias or fixed pre-buffering, rarely turning it into a testable stability criterion. Theorem 2 in Section IV is our answer to this layer ( μd > ∆/4). The second layer is harder: real traffic is neither independent nor stationary—does the previous conclusion still hold? The key to fixed-lattice random-bit QIM is not to reduce the injection to some uniform distribution but to identify the deep-buffer busy-state mean injection ∆/4; on this drift structure we extend to Markov-modulated and stationary-ergodic backgrounds and prove that stability is decided only by the time-average drift (Theorem 3). Two layers, two answers, together give the queue-side upper bound on ∆. Beyond the upper bound, ∆
+
+also needs a decoding-side lower bound before a testable conservative window can be obtained; this half comes from decoding reliability and is not a gap left by the two threads above. III. A Q UEUEING MODEL OF THE CAUSAL QIM EMBEDDER 
+
+The causal QIM embedder is essentially a single-server queue: arriving packets are customers, the quantization align-ment cost is the service, and a packet’s dwell time is its waiting time. This section makes the correspondence precise—first why, under causality, only QIM gives a queueable nonnegative one-sided injection (Section III-A), then the dwell recursion from the embedding rule (Section III-B) and the budgeted buffer dynamics (Section III-C), and finally the assumptions the analysis relies on (Section III-D). Table I collects the main symbols. 
+
+A. Causal feasibility of the modulation scheme 
+
+The choice of modulation scheme is tightly constrained by two premises: one-sidedness —causality dictates that the embedder may only delay a packet, never advance it, so the injection ri ≥ 0 always holds; and statistical unpredictabil-ity —the protocol of the watermarked traffic is arbitrary, so the mean, variance, and even distributional shape of its IPDs are unknown to the embedder and may switch abruptly within one session. Both mainstream modulation ideas run into trouble under these constraints. The first idea follows RAINBOW/SWIRL: encode a bit by aggregating an IPD statistic over a symbol window—a slow window accumulates positive delay to raise the mean, a fast window consumes pre-accumulated buffer to lower it. But the pair is asymmetric: the slow window’s spreading can accumulate indefinitely, whereas the fast window’s shrinking 
+
+can only be supported by a pre-accumulated buffer depth D0;once a natural IPD exceeds μd + D0, that single late packet drains the D0-deep buffer at once, lowering the mean fails, and no larger buffer or stronger error correction can help. The second idea is per-packet spread spectrum: superpose a pseudo-random bipolar sequence of positive/negative ad-justments on each IPD and recover the bit by correlation. But a negative chip means the dwell must decrease, exactly what causality forbids—the per-packet positive-bias remedy makes the accumulated delay grow monotonically with the sequence length N , and the one-shot pre-buffering remedy fails frequently in dense flows for lack of buffer. Both failures point to one root cause: both encodings require the dwell to shrink at certain moments, and shrinking is the one direction causality forbids. QIM avoids this operation: its quantizer rounds upward ( qw(x) ≥ x), each embedding injecting only a nonnegative alignment cost ri ∈ [0 , ∆) into the buffer and working from the zero state; encoding a 0 or a 1 both amount to rounding up to a different lattice ( Q0 at 
+
+k∆, Q1 at (k + 12 )∆ ), with no forced draining. We stress, however, that each injection is nonnegative is only necessary, not sufficient, for stability—under the fixed-lattice random-bit model without per-symbol dither, the feasibility criterion away from the critical boundary, μd > ∆/4, is given in Section IV by Theorem 2. 
+
+B. The IPD-QIM embedding rule and dwell recursion 
+
+Fix a step ∆ > 0. To avoid mixing a physical-layer minimum inter-send gap with the watermark lattice, we adopt a zero-phase convention: if an implementation must keep a fixed minimum gap, first subtract it as a common offset from the IPD, then analyze the extra dwell caused by the lattice. The two complementary lattices are 
+
+Q0 = {k∆ | k ∈ N0}, Q1 = (k + 12 )∆ | k ∈ N0 . (1) With arrival time ti and send time t′ 
+
+> i
+
+of packet i, embedding bit wi follows the causal QIM rule 
+
+t′ 
+
+> i
+
+= t′ 
+
+> i−1
+
++ qwi (εi), εi = max(0 , t i − t′
+
+> i−1
+
+), (2) where qw(x) ≜ min {q ∈ Qw | q ≥ x} rounds up to the nearest point of Qw and εi is the effective interval. Writing the dwell δi ≜ t′ 
+
+> i
+
+− ti ≥ 0, the background IPD di ≜ ti − ti−1,and the alignment injection ri ≜ qwi (εi) − εi ∈ [0 , ∆) , we have qwi (εi) = εi + ri. Substituting into (2) gives δi = t′ 
+
+> i−1
+
++IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 5
+
+εi + ri − ti; with t′ 
+
+> i−1
+
+− ti = δi−1 − di and splitting into two cases—empty ( di ≥ δi−1, so εi = ti − t′
+
+> i−1
+
+, giving δi = ri)and busy ( di < δ i−1, so εi = 0 , giving δi = δi−1 − di + ri)— the merged dwell recursion is 
+
+δi = max(0 , δ i−1 − di) + ri, ri ∈ [0 , ∆) . (3) Under the fixed-lattice model ri is not an exogenous uniform variable but a state-dependent injection set jointly by the effective interval εi and the bit wi. In particular, when the buffer is deep and εi = 0, wi = 0 gives ri = 0 and 
+
+wi = 1 gives ri = ∆ /2, so the busy-state mean injection is ∆/4. Decoding uses nearest-lattice hard decision: with 
+
+ϕi = d′′  
+
+> i
+
+mod ∆ (d′′  
+
+> i
+
+the received IPD, ϕi the in-lattice phase), 
+
+ˆwi = 1[ϕi ∈ [∆ /4, 3∆ /4)] ; with channel net IPD jitter ξi
+
+(std σξ ), the single-symbol hard-decision error rate has the conservative bound P(|ξi| > ∆/4) . We focus on the embedder queue, treat ξ as exogenous, and only in Section IV-A use it to derive the lower bound on the step; a full channel-side error analysis is out of scope. 
+
+C. Buffer dynamics and the budget constraint 
+
+The buffer’s physical capacity is not infinite; its upper limit has two independent sources. Section I noted the first: unbounded dwell eventually hits the tolerance of the upper-layer service carried by the tunnel, forcing connection resets or session interruption. The second lies in the embedder itself: in real deployment it often maintains one such queue for each of many concurrent flows (e.g. tens of Gbps at an enterprise egress), so a single queue’s memory grows linearly in the budget B and the total memory grows with the product of concurrent-flow count and B—a hardware constraint indepen-dent of any single flow. We use B (ms) to capture, in a unified way, the maximum tolerable dwell under these two constraints. The constrained recursion is 
+
+δi = min 
+
+
+
+max(0 , δ i−1 − di) + ri, B 
+
+
+
+, ri ∈ [0 , ∆) . (4) When the truncation min( ·, B ) is active, the required dwell exceeds the budget and the output IPD cannot land exactly on the target lattice point; we call this an overflow . We treat B as a deployment-given fixed budget, using it only to define overflow, not as a design variable. Two levels must be distinguished: stability asks whether the unconstrained exact-alignment recursion (3) admits a finite steady state, decided only by the large-dwell drift and independent of B; the budget asks, once stability holds, how often a finite B is breached. Once truncation occurs the output no longer lands exactly on the target lattice and the subsequent effective interval and phase change, so the truncated bounded chain cannot in turn prove stability. Hence the analysis below runs on the unconstrained recursion (3), with B entering only as a threshold for the downstream tail/overflow question. Define the effective traffic intensity 
+
+ρ ≜ ∆/4
+
+E[di] = ∆4μd
+
+, (5) the ratio of mean injection to mean drain per packet in the deep-buffer busy state. ρ < 1 is the intuitive condition for the buffer not to grow without bound, made rigorous in Theorem 2. Figure 2 shows the per-packet processing flow, and Figure 3 a typical dwell trajectory. As Figure 3 shows, in each packet’s processing the dwell 
+
+δi first drains naturally by the background interval di (under the reflection δi ≥ 0) and is then raised by the QIM injection 
+
+ri; when the dwell touches B it enters the overflow region. The two region types depict the adaptivity of the injection: when the dwell is shallow, the effective interval εi varies with arrivals and ri is small, so the buffer can fall back via the background interval (adaptive-decay region); once the dwell is deep enough that εi ≡ 0, the injection no longer shrinks and the buffer can only drain by di (no-decay region)—exactly where overflow is prone and the budget B is needed. 
+
+D. Basic assumptions 
+
+The analysis below relies on two assumptions on the queue dynamics (Section IV). 
+
+Assumption 1 (Background IPD) . The background inter-arrivals {di}i≥1 satisfy one of two conditions, from weak to strong: in the baseline case they are i.i.d. with di > 0 a.s. and mean μd = E[di] < ∞; in a case closer to real traffic this is relaxed to stationary-ergodic (including finite-state Markov modulation) with time-average mean ¯μd < ∞.
+
+Assumption 2 (Random bits and fixed lattices) . The water-mark bits {wi}i≥1 are i.i.d. with P(wi = 0) = P(wi = 1) = 1/2 and independent of the background arrival process. We introduce no per-symbol dither and do not assume a uniform effective phase; the injection is always set by the fixed-lattice QIM rule 
+
+ri = Rwi (εi), Rw(x) ≜ qw(x) − x. 
+
+Hence {ri} is in general not i.i.d. but a state-dependent injec-tion that changes with the effective interval εi = ( di − δi−1)+.
+
+Assumption 1 chooses a mathematical model for the arrival rhythm, given in two tiers from baseline to generalization. The simplest tier treats each inter-arrival as strictly positive, mutually independent, drawn from a common distribution, with finite long-run mean—the most analyzable and easiest-to- validate model, effectively memoryless: this instant’s inter-arrival is unrelated to the previous one. Real traffic is usually not so: sessions have busy and idle phases, a quiet browsing spell may suddenly turn into a dense download, and adjacent inter-arrivals are clearly correlated. The second tier is built for this: it only requires the long-run average inter-arrival to be finite and the statistics stable, allowing the traffic to switch among several states and adjacent packets to be correlated, at the cost of replacing the simple independent random walk in the proof by a more general ergodic theorem. The conditions the stability conclusion relies on stop here—negative (time-average) drift and ergodicity, with no further assumption on the shape of the background distribution. IV. S TABLE EMBEDDABILITY AND THE OPERATING 
+
+WINDOW OF ∆
+
+This section characterizes the stable embeddability of causal QIM watermarking and the conservative admissible range of IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 6
+
+Effective interval 
+
+εi = max(0 , t i − t′
+
+> i−1
+
+)
+
+QIM lattice map 
+
+d′ 
+
+> i
+
+= qwi (εi)
+
+arrival ti
+
+> εi
+
+bit wi
+
+Budget truncation & send time 
+
+δraw  
+
+> i
+
+= t′ 
+
+> i−1
+
++ d′ 
+
+> i
+
+− ti ≥ 0
+
+δi = min( δraw  
+
+> i
+
+, B ), t′ 
+
+> i
+
+= ti + δi
+
+> d′
+> iti
+
+output t′                                   
+
+> i
+> feedback t′
+> i−1
+> Fig. 2. Per-packet processing flow of the causal QIM buffer.
+> B(budget) overflow adaptive-decay region [εi≪di]
+> packet index i
+> δi(ms) 246
+> 012345678910 11
+> εidecay no decay
+> d1(drain) reflection (δi≥0)
+> QIM injection: ri=qwi(εi)−εi
+> Fig. 3. A typical dwell trajectory ( ∆ = 2 ms, budget B= 6 ms).
+
+the step ∆, squeezed from two sides and given in turn. First a functional lower end (Section IV-A): to guarantee decodability via a single-symbol sufficient bound, the step must meet a conservative decoding floor ∆ ≥ cσ ξ set by the channel jitter. Then the main line: the algebraic identity between the causal-QIM recursion and the Lindley form (Section IV-B), followed by a large-dwell drift analysis for the fixed-lattice, random-bit state-dependent injection that gives the i.i.d. stability condition 
+
+μd > ∆/4 (Theorem 2) and its robust extension to bursty, autocorrelated traffic (Theorem 3), fixing the upper end ∆ <
+
+4¯ μd; combining the two ends yields the conservative, testable window ∆ ∈ [cσ ξ , 4¯ μd) (Section IV-C). 
+
+A. Decoding feasibility: a functional lower bound on ∆
+
+Before discussing queue stability, we establish a more basic functional prerequisite: no matter whether the buffer is stable, if the decoder cannot reliably recover the bit from the received IPDs the watermark does not stand. The channel adds a prop-agation jitter ξ to each IPD; the smaller ∆ and the denser the lattice, the more easily the nearest-lattice decision is flipped, so decodability itself forces a lower bound on the step. This bound is purely a single-symbol SNR matter, independent of the decoding implementation—frame synchronization, error-detecting codes, or multi-frame accumulation can further lower the final error rate through observational redundancy but do not change the single-symbol bound here. 
+
+Assumption 3 (Decoding model) . The channel adds i.i.d. jitter ξ ∼ N (0 , σ 2 
+
+> ξ
+
+) to each IPD; for the ∆-step QIM nearest-lattice hard decision, the true single-symbol error rate is p(γ)
+
+with γ = ∆ /σ ξ .
+
+For any sent lattice point, if |ξ| ≤ ∆/4 the received phase stays in the correct decision region, so the error event is contained in {| ξ| > ∆/4}. Hence p(γ) ≤ ¯p(γ) ≜ 2Q(γ/ 4) 
+
+with Q(x) = P(N (0 , 1) > x ). Here ¯p is a conservative bound, not the exact rate under periodic modulo decision, which would count as correct the cases where noise shifts by whole steps back into a same-class lattice. Since Q is continuous and strictly decreasing, so is ¯p(γ) on γ > 0; thus for any target ϵ ∈ (0 , 12 ) there is a unique c(ϵ) := 4 Q−1(ϵ/ 2) with 
+
+¯p(c(ϵ)) = ϵ, and γ ≥ c(ϵ) gives p(γ) ≤ ϵ. This yields the functional lower bound 
+
+∆ ≥ c σ ξ , c = 4 Q−1  ϵ
+
+> 2
+
+ , (6) i.e. the step must be at least 4Q−1(ϵ/ 2) times the jitter std to IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 7
+
+keep the single-symbol error rate below ϵ, depending only on the ratio ∆/σ ξ .This lower bound differs in origin from the stability up-per bound below: it is a decoding-side functional sufficient condition, not an intrinsic result of the queue recursion. It rests on the idealized model of Assumption 3 (i.i.d. Gaussian net jitter). ξ is a channel perturbation distinct from the host inter-arrival di; if the real ξ is correlated or heavy-tailed, the Gaussian tail underestimates extreme jitter, the c needed for the same ϵ grows, and it must be recalibrated to the deployed channel’s measured jitter. Thus ∆ ≥ cσ ξ gives a conservative order-of-magnitude lower end that shifts as the channel model is refined but does not change the queue-intrinsic upper end or the stability conclusion. 
+
+B. Recursion identity and state-dependent injection 
+
+The recursion (3) is reflect, then inject (first max(0 , δ i−1 −
+
+di), then add ri), unlike the standard Lindley form add the increment, then reflect for single-server waiting times. The substitution below still writes it in Lindley form, but this is only an algebraic identity: under a fixed lattice ri is set by 
+
+εi and wi and thus coupled to the queue state, so one cannot treat ri as an exogenous uniform input and directly invoke the classical Loynes result. 
+
+Lemma 1 (Recursion identity) . For the budget-free dwell recursion (3) , let Yi ≜ δi − ri = max(0 , δ i−1 − di) ≥ 0. Then for any realization of {(di, r i)}—without any independence or stationarity assumption—the standard Lindley recursion 
+
+Yi =  Yi−1 + Xi
+
++, Xi ≜ ri−1 − di, (7) 
+
+holds, with (x)+ = max(0 , x ) and dwell δi = Yi + ri. Under a fixed lattice Xi is in general not an i.i.d. increment, since 
+
+ri−1 = Rwi−1 (( di−1 − δi−2)+) depends on the past queue state; hence Lemma 1 states only the recursion structure and does not by itself give a stability condition. Proof. By the definition of Yi, δi−1 = Yi−1 + ri−1. Substitut-ing into Yi = max(0 , δ i−1 − di) gives Yi = max(0 , Y i−1 +
+
+ri−1 − di) = ( Yi−1 + Xi)+, i.e. (7). The dwell δi = Yi + ri
+
+follows from the definition. The proof uses neither the inde-pendence nor the distribution of ri.The engineering meaning: the causal QIM buffer is still a queue, with the background IPD di providing natural drain and the alignment cost ri a new workload; but under a fixed lattice this workload is not an exogenous service demand—it adapts to the effective interval. When the buffer is shallow, 
+
+εi = ( di − δi−1)+ inherits the background phase and ri varies with it; when the buffer is deep, almost all packets have εi = 0 ,the system enters the busy state, and the average injection degenerates to Ew[Rw(0)] = ∆ /4. Thus stability is decided not by a global average phase injection but by the net drift in the large-dwell region. 
+
+C. Stability: i.i.d. criterion and burst robustness 
+
+Theorem 2 (Stability of fixed-lattice random-bit QIM) . Under Assumptions 1 and 2, with the background arrival distribution non-degenerate and satisfying the usual Markov-chain small-set condition, if 
+
+μd > ∆4 (ρ < 1) ,
+
+then the budget-free dwell chain (3) is positive recurrent, admits a finite unique stationary distribution δ∞, and con-verges to it from any finite initial value. If the overflow event of packet i is defined as the unconstrained exact-alignment dwell exceeds the deployment budget B, the steady-state tail probability is P(δ∞ > B ); this tail characterizes budget risk and does not enter the stability threshold itself. Conversely, if μd < ∆/4, the average drift in the large-dwell region is positive, the chain has no finite stationary distribution, and any finite budget is breached persistently. The critical boundary 
+
+μd = ∆ /4 depends on finer distributional structure and is not taken as a deployable operating point. Proof. Take V (x) = x. Given δi−1 = x, εi = ( di − x)+ and 
+
+δi = x − min( di, x ) + Rwi (( di − x)+), so the one-step drift is D(x) = E[δi − x | δi−1 = x]= −E[min( di, x )] + ERwi
+
+ (di − x)+ .
+
+Since 0 ≤ Rw(·) < ∆ and (di − x)+ → 0 a.s. as x →∞, dominated convergence gives lim x→∞ D(x) = −μd +
+
+Ew[Rw(0)] . In the zero-phase fixed dual lattice, R0(0) = 0 
+
+and R1(0) = ∆ /2, so Ew[Rw(0)] = ∆ /4. If μd > ∆/4, there exist x0, η > 0 with D(x) ≤ − η for x ≥ x0; the Foster– Lyapunov drift criterion [23], [24] gives positive recurrence and a finite stationary distribution. If μd < ∆/4, the large-dwell drift is positive, and the standard reverse-drift criterion shows no finite stationary distribution exists. The budget part only interprets the steady-state tail: after the unconstrained model reaches steady state, P(δ∞ > B ) gives the probability that the required dwell exceeds the budget. If the real system uses hard truncation (4), truncation changes the subsequent state and phase, so its long-run truncation fre-quency is a tail problem of the truncated implementation and cannot be used to change or prove the above threshold. Theorem 2 translates is embedding feasible into a testable engineering inequality: as long as the background mean inter-arrival exceeds the busy-state mean injection ( μd > ∆/4), the buffer admits a stationary distribution and the dwell does not diverge. The contrapositive is equally strong: when ρ > 1
+
+(∆ > 4μd) the large-dwell drift is positive, the buffer grows without bound, and QIM is unusable. The stability condition thus sets an upper bound ∆ < 4μd. This bound comes from the mean injection ∆/4 at εi = 0 under the real lattice rule, not the ∆/2 of a uniform-phase assumption; if the implementation adds per-symbol dither, non-equiprobable coding, dynamic phase, or feedback step, the busy-state mean injection changes with the rule and the upper bound must be recomputed from the new drift. Combining this stability upper end with the decoding lower end ∆ ≥ cσ ξ of Section IV-A, the conservative admissible range of the step is squeezed from both sides, 
+
+∆ ∈ [ cσ ξ , 4μd ), c = 4 Q−1(ϵ/ 2) . (8) IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 8
+
+The lower end cσ ξ is the decodability floor (keeping the single-symbol error rate below ϵ), the upper end 4μd the queue-stability ceiling of fixed-lattice random-bit QIM; both depend only on measurable deployment quantities—channel jitter σξ
+
+and background inter-arrival μd. The window is nonempty iff 
+
+σξ < 4μd/c ; when jitter is too large or the background too dense so it is empty ( σξ ≥ 4μd/c ), a fixed step cannot meet both ends, and the problem should turn to online estimation, adaptive step, or feedback control rather than tuning a single fixed ∆.The above assumes i.i.d. background IPDs; real traffic is bursty and autocorrelated—SSH switching from interactive to bulk transfer, or the first packet after a video re-buffering, makes the local inter-arrival drop sharply, so the instantaneous intensity ρ(J) = ∆ /(4 μd(J)) exceeds 1 in some intervals. Whether stability survives such input is exactly its robustness. Since the large-dwell drift of fixed-lattice QIM depends only on the busy injection ∆/4 and the time-average background drain, the same criterion extends to stationary-ergodic input. 
+
+Theorem 3 (Robust stability) . Let the background {di} be modulated by an irreducible aperiodic finite-state Markov chain {Ji}, with E[di | Ji = j] = μd(j) < ∞; the water-mark bits satisfy Assumption 2, and the joint chain (δi, J i)
+
+satisfies the same irreducibility and small-set conditions as in Theorem 2. Write ¯μd = Eπ [d] = P 
+
+> j
+
+πj μd(j) (π the stationary distribution) and ¯ρ = ∆ /(4¯ μd). If ¯ρ < 1 (equivalently ¯μd >
+
+∆/4), the budget-free dwell chain admits a finite stationary distribution. In particular, even if some modulation states are instantaneously overloaded ( ρ(Ji) = ∆ /(4 μd(Ji)) > 1, dwell accumulating), the buffer is globally stable as long as ¯ρ < 1; if 
+
+¯ρ > 1, the large-dwell average drift is positive and the system is unstable. Proof. Consider the joint chain (δi, J i). Write the one-step expected drain m(j) ≜ E[di | Ji−1 = j] = P 
+
+> k
+
+Pjk μd(k) (P
+
+the transition matrix); by πP = π, P 
+
+> j
+
+πj m(j) = ¯ μd. Given 
+
+(δi−1, J i−1) = ( x, j ), as in Theorem 2 δi−x = − min( di, x )+ 
+
+Rwi (( di − x)+), so the one-step drift 
+
+D(x, j ) = − E[min( di, x ) | j]+ ERwi
+
+ (di − x)+ j
+
+satisfies lim x→∞ D(x, j ) = ∆ /4 − m(j) (drain by monotone convergence to m(j), injection by dominated convergence to 
+
+Ew[Rw(0)] = ∆ /4). In an overloaded state ( m(j) < ∆/4)this limit is positive, so the one-step drift of V = δ is not uniformly negative at large δ and Foster–Lyapunov does not apply directly—the technical crux of tolerating instantaneous overload. To remove the state-dependence of the drain, introduce a correction. Since {Ji} is finite, irreducible, aperiodic and 
+
+¯μd − m has zero π-mean, the Poisson equation g(j) −P 
+
+> k
+
+Pjk g(k) = ¯μd − m(j) has a bounded solution g (on the zero-π-mean subspace where I − P is invertible). Take 
+
+V (δ, j ) = δ + g(j); its one-step drift is 
+
+EV (δi, J i) − V (δi−1, J i−1) | x, j 
+
+= D(x, j ) + 
+
+P 
+
+> k
+
+Pjk g(k) − g(j)
+
+
+
+= D(x, j ) +  m(j) − ¯μd
+
+,
+
+using the Poisson equation. Letting x → ∞, the state-dependent m(j) is cancelled by the drift of g:
+
+lim  
+
+> x→∞
+
+E[∆ V | x, j ] =   ∆4 − m(j) +  m(j) − ¯μd
+
+
+
+= ∆4 − ¯μd,
+
+independent of j. If ¯μd > ∆/4, there exist x0, η > 0 with this drift ≤ − η for all j and δ ≥ x0; since g is bounded, 
+
+{(δ, j ) : δ ≤ x0} is a small set, and the Foster–Lyapunov criterion [24] gives positive recurrence of the joint chain and a finite stationary distribution of δi. The correction g(J) uses the modulation’s own fluctuation to cancel the deviation of the drain m(J) around ¯μd, so overloaded states are compensated by slow states in the time-average sense—the rigorous source of stability decided by the time-average drift ∆/4 − ¯μd.
+
+Conversely if ¯μd < ∆/4, the limit is positive, V has uniformly positive drift at large δ, and the reverse-drift criterion shows no finite stationary distribution. Theorem 3 shows buffer stability is decided by the time-average intensity, not the instantaneous one. Even with whole intervals of instantaneous overload ( ρ(J) > 1, dwell accumu-lating there), the queue does not diverge as long as the slow intervals drain the buffer on average ( ¯ρ < 1). This extends the i.i.d. condition μd > ∆/4 to ¯μd > ∆/4 for correlated, bursty traffic. Correspondingly the window’s upper end generalizes from 4μd to the time-average 4¯ μd, i.e. ∆ ∈ [cσ ξ , 4¯ μd); the form is unchanged, only the ceiling now set by the time-average inter-arrival. Section V first checks the sharpness of this transition on synthetic backgrounds, then examines the position of ∆ relative to the empirical ceiling 4ˆ μd on real application-level IPDs, observing whether the steady dwell on continuous segments stays finite. V. E XPERIMENTS 
+
+The aim here is not a full flow-watermarking system eval-uation but to test how the stability criterion of Section IV behaves in two kinds of evidence. Section V-A is the synthetic-data experiment: on controlled backgrounds we check, one by one, the recursion identity, the phase-transition critical point and its shape-independence, the near-critical scaling, burst-robust stability, and the decoding floor and step-size window, confirming that the numerical implementation matches the theoretical mechanism. Section V-B is the real-data experiment and the main body of this section: without assuming i.i.d. or finite-state Markov traffic, we take pcap-extracted application-level IPD continuous traces as background, first checking in the safe region whether the stability margin is positive and the steady dwell bounded, then sweeping the step along the real background to approach and cross the stability boundary 
+
+ρ = 1 , to check that the criterion holds in the safe region and correctly locates the divergence critical point. All queue-side experiments run on the budget-free dwell recursion (Eq. (3)) with no budget cap, because stability only asks whether the unconstrained exact-alignment dwell diverges: estimating the steady dwell E[δ∞] directly on this recursion cleanly separates a bounded steady state from un-bounded growth, and B is only a threshold for overflow IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 9
+
+risk after stability holds, not part of the stability-threshold estimate. The design parameter under study is the step ∆,whose admissible range is squeezed by the stability upper bound and the decoding lower bound. 
+
+A. Synthetic-data experiments 
+
+These experiments place the theoretical objects of Sec-tion IV under controlled conditions and check them one by one: confirming the numerical implementation and the quan-titative form of each conclusion. The checks use a lognormal IPD as baseline background (the distribution-family sweep, two-state Markov modulation, and non-ideal-jitter checks vary the background or jitter as needed): lognormal has positive support and a right-skewed heavy tail, the queue recursion solves stably on it, and it suits a systematic sweep of the criterion’s parameter region. What is needed is only a control-lable distribution and stable computation, not that lognormal be the unique model of real wide-area traffic; real IPDs are often fitted by lognormal, Weibull, or gamma heavy-tailed distributions [28], and below we verify that the divergence critical point is independent of the distribution family, so this choice does not sway the criterion. The baseline takes mean μd = 20 ms and coefficient of variation CV = 0 .5 (std 
+
+σd = 10 ms); watermark bits are drawn i.i.d. equiprobably, and the injection is computed by the fixed dual-lattice QIM rule (2) from the effective interval εi and bit wi, with no per-symbol dither and ri not preset to a uniform distribution. Each check varies the relevant parameter—CV, intensity ρ = ∆ /(4 μd),two-state Markov modulation, and channel jitter σξ —with values given in place. Steady quantities are estimated from 
+
+2 × 10 3–8 × 10 3 independent chains of 5 × 10 3–1.2 × 10 4
+
+packets each (dropping a warm-up), lengthening chains near the critical point; full parameters are in the released scripts. These controlled experiments only confirm the numerical implementation and the quantitative form of each theoretical conclusion, and are not an engineering validation independent of the real-data evidence of Section V-B. The per-theorem checks are collected in Figure 4, the window and non-ideal-jitter checks in Figure 5. 
+
+1) Recursion identity and the i.i.d. stability transition: On a stable configuration ∆ = 24 ms ( ρ = ∆ /(4 μd) = 0 .30 ) we simulate the fixed-lattice random-bit recursion and extract the reduced sequence by Yi = δi − ri: the steady samples give 
+
+E[δ∞] − E[Y∞] = 10 .71 ms, matching the empirical mean injection E[ri] = 10 .71 ms and confirming δi = Yi + ri as a path-wise identity. Meanwhile the sample correlation of Yi and 
+
+ri is −0.306 , showing that under the fixed lattice the injection is strongly coupled to the queue state and cannot be written as a convolution of an independent Y and an independent uniform 
+
+r. On the busy subsample ( εi = 0 ): the busy fraction is about 
+
+0.277 and its empirical mean injection is 6.00 ms, exactly the theoretical ∆/4 = 6 ms. This confirms the key fact of the derivation: the reduction is only a recursion identity, and the stability threshold is set by the deep-buffer busy-state mean injection ∆/4.Figure 4(a) sweeps ρ = ∆ /(4 μd) over four same-mean (μd = 20 ms) backgrounds from different families—lognormal (CV = 0 .5, 1.0), Weibull ( k = 1 .2), gamma ( k = 2 ): the four curves are uniformly bounded for ρ < 1, and the divergence knee lands sharply at ρ = 1 regardless of family or fine shape, a direct manifestation of Theorem 2’s critical point set only by the mean. The dwell before the knee rises with a heavier tail (at ρ = 0 .9, from 132 ms for lognormal CV 0.5 to 194 ms for CV 1.0), but the divergence position does not move. Thus using a lognormal background does not sway the conclusion: real IPDs are often heavy-tailed and markedly non-Poisson [27], fitted by lognormal, Weibull, or gamma [28], and the criterion sees only the mean; the real-data evidence (Section V-B) uses measured IPDs directly, free of any parametric distribution. Figure 4(b) depicts the divergence rate near the upper bound: the steady dwell E[δ∞] is approximately linear in 
+
+1/(1 − ρ) (linear fit R2 = 0.999 ), i.e. it diverges as the reciprocal of the margin 1 − ρ. This gives the quantitative cost near the bound—each step of ∆ toward 4¯ μd scales the steady dwell by 1/(1 −ρ); so a real deployment should not set 
+
+∆ near the pooled boundary but keep a margin commensurate with traffic heterogeneity before ρ = 1 .
+
+2) Burst-robust stability: Figure 4(c) uses a two-state Markov background (slow state μA = 36 , burst state μB =4 ms, symmetric transitions making the time-average ¯μd =20 ms) and sweeps the time-average intensity ¯ρ = ∆ /(4¯ μd):although the burst-state instantaneous intensity ρB reaches 
+
+4.75 × overload, as long as ¯ρ < 1 the steady dwell is bounded ( E[δ∞] = 553 ms at ¯ρ = 0.95 ), and the knee still lands exactly at ¯ρ = 1, not ρB = 1. In particular, 
+
+∆ = 24 ms ( ¯ρ = 0 .30 , burst state ρB = 1 .5 overloaded, half the time in that state) gives E[δ∞] = 17 .6 ms—half the time instantaneously overloaded yet the queue stable, exactly Theorem 3’s stability decided by the time-average drift. From the proof, this half-time overload corresponds to a positive one-step drift ∆/4 − m(J) > 0 in the burst state (here ∆/4 = 6 > μ B = 4 ), which the correction g(J) of Theorem 3 averages away over the modulation cycle, so the joint chain’s effective drift converges to the state-independent 
+
+∆/4 − ¯μd < 0; the knee locked at ¯ρ = 1 rather than ρB = 1 
+
+is the numerical evidence of this cancellation. To generalize the time-average is the only decider from a single configuration, fix ¯ρ = 0 .80 and vary only the burst structure: mild burst ( ρB = 1 ), strong burst ( ρB = 6 ), and strong-persistent burst ( ρB = 6 , stay probability 0.9) give steady dwells 13 .2, 27 .0, 62 .8 ms respectively, all bounded. The stronger and more persistent the burst, the larger the dwell, but stability itself is unaffected—as long as the time-average drift is negative the queue is stable, the burst structure changing only the magnitude of the dwell, not whether it diverges. 
+
+3) Decoding floor and the step-size operating window: 
+
+Figure 4(d) checks the decoding-side sufficient lower bound. Under Gaussian jitter we Monte-Carlo the single-symbol error rate p(γ) of the QIM nearest-lattice hard decision ( γ = ∆ /σ ξ )against the sufficient bound 2Q(γ/ 4) : for γ ≳ 5 the two nearly coincide (the measured-to-bound ratio is near 1, at most 1.03 , within Monte-Carlo error), so the sufficient bound is nearly tight in the working region and not a conservative overestimate; only for γ ≲ 4 (noise comparable to the step, IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 10 
+
+modulo wraparound significant) is the measurement clearly be-low the bound. At the design threshold c(ϵ) = 4 Q−1(ϵ/ 2) the measured error rate matches the target ϵ (at c(10 −2) = 10 .30 
+
+and c(10 −3) = 13 .16 the measured p/ϵ ratios are 1.004 and 
+
+1.005 , within Monte-Carlo error), confirming that the floor 
+
+∆ ≥ cσ ξ is both sufficient and tight under the ideal channel model. Once the stability upper end and decoding lower end are separately verified, Figure 5(a) puts both on the same ∆
+
+axis and validates the window [cσ ξ , 4μd) as a whole. With 
+
+μd = 20 ms, jitter σξ = 2 ms, target ϵ = 10 −2 (c = 10 .3,so lower end cσ ξ = 20 .6 ms, upper end 4μd = 80 ms), we estimate along ∆ both the single-symbol error rate and the steady dwell. Three regions are clear: for ∆ < 20 .6 ms the error rate exceeds ϵ (∆ = 12 gives p = 0 .13 ), undecodable; for ∆ ≥ 80 ms the steady dwell enters the critical or divergent region ( ∆ = 80 already at 1166 ms, ∆ = 84 rising to 
+
+4280 ms and exploding further); only inside [20 .6, 80) ms (e.g. 
+
+∆ = 24 , p = 2.7 × 10 −3, E[δ∞] = 12 .3 ms; ∆ = 40 ,
+
+p = 5 .7 × 10 −7, E[δ∞] = 23 .4 ms) is the watermark both decodable and the queue stable. This two-sided squeeze is the complete characterization of stable embeddability along the step; when jitter grows so that cσ ξ ≥ 4μd the window is empty and a fixed step can no longer meet both constraints. The lower end ∆ ≥ cσ ξ rests on i.i.d. Gaussian jitter; heavy-tailed real jitter makes the floor optimistic. Figure 5(b) confirms this: under variance-matched Gaussian, Laplace, and Student-t3 (heavy-tailed) jitter we measure the single-symbol error rate. The Gaussian case matches the theoretical c (10 .31 
+
+vs. 10 .30 at ϵ = 10 −2); but heavy-tailed jitter needs a markedly larger c for the same ϵ—at ϵ = 10 −2, Laplace and t3 rise to 
+
+13 .0 and 13 .3 (about 26% –29% over Gaussian), at ϵ = 10 −3
+
+Laplace rises to 19 .6 (49% over), and t3, with too heavy a tail, cannot push the single-symbol error below 10 −3 within 
+
+γ ≤ 20 . Thus the single-symbol error rate is set only by the marginal tail of the jitter, a heavy tail makes 2Q(γ/ 4) sys-tematically underestimate, and the floor must be recalibrated to a larger c from the measured jitter distribution; the temporal correlation of jitter affects only multi-symbol/frame decoding, not the single-symbol floor. 
+
+B. Real-data experiments 
+
+This section checks the criterion on real traffic in two steps: first in the safe region ( ∆ ∈ {8, 12 , 16 } ms) whether the stability margin is positive and the steady dwell bounded, then sweeping the step along the real background to approach and cross the boundary ρ = 1 to see whether the criterion correctly locates the divergence critical point. In both steps every simulated chain’s window is drawn from within a single candidate flow, never spliced across flows (see the extraction protocol below). Real IPDs are taken from two encrypted-traffic datasets re-leased by the Canadian Institute for Cybersecurity (CIC/UNB): ISCXTor2016 [29] and ISCXVPN2016 [30]. Both collect per-packet pcaps of browsing, chat, streaming audio/video, file transfer, VoIP, and mail/P2P in a controlled environment, cov-ering Tor-anonymized, VPN-tunneled, and non-anonymized (NonTor) transport; Tor and NonTor come from ISCXTor2016, VPN from ISCXVPN2016. We extract the per-packet unidirectional in-flow IPD se-quence, not flow-level means or session-level statistics: within each application we recover the packet arrival times inside a single unidirectional flow, take adjacent-arrival differences as millisecond IPDs, and restrict to [1 , 500] ms to remove sub-millisecond capture/batch-send effects and over-long session idles. The simulation unit is a single real flow: each chain’s whole window comes from a contiguous segment inside one real flow, never spliced across flows—the recursion state δi−1
+
+has no physical meaning at a flow boundary, and concatenating IPDs of different connections would inject a spurious corre-lation at the splice. Accordingly we keep only unidirectional flows of length at least Lmin = 5000 IPDs after filtering ( 5000 
+
+being the maximum window used later), and each chain’s random start and window are confined to one candidate flow, flows sampled by length so each real IPD sample is chosen with roughly equal probability. To avoid mixing very different services into one aver-aged sample, we choose four representative application-level scenarios: Tor browsing (anonymous web access), Tor file-transfer (bulk transfer under anonymization), and VPN audio (continuous media in a tunnel). The fourth would ideally be NonTor web access as an un-anonymized baseline, but the NonTor web flows passing the [1 , 500] ms filter are mostly very short: of 1496 candidate flows the longest has only 1102 IPDs, none reaching Lmin = 5000 , so it cannot support window simulation without cross-flow splicing; we therefore use the length-sufficient NonTor audio of the same dataset as the un-anonymized reference channel. Table II lists the candidate and retained flow statistics (Tor2016, VPN2016 abbreviate ISCXTor2016, ISCXVPN2016). 
+
+Retained is the number of candidate flows reaching Lmin ;
+
+Total IPDs is the concatenated sample count of those flows (with in-flow offset records that forbid cross-flow windows). The data thus keeps the in-flow burstiness, short-range cor-relation, and heavy-tailed marginal of each real flow rather than compressing them into one mean per flow, and the offset records ensure every simulation window falls entirely within a single connection. Table III gives the retained-flow count and basic statistics of the four scenarios: they consist of 12 , 6, 6, 24 retained flows ( Samples is the total in-flow IPD count), and all real-data experiments below run on these flows with each chain strictly within a single flow. Lag-1 autocorrelation is computed in-flow, dropping cross-boundary adjacent pairs. The means span 19 –40 ms. VPN audio has the lowest CV ( 0.24 ) but extreme kurtosis ( 1869 .5), i.e. a near-constant media interval with a few far-above-mean outlier subsequences; the other three have CV 1.5–1.8, a more pronounced right-skewed heavy tail. Lag-1 autocorrelation spans widely, from 0.02 for NonTor audio (almost no residual predictable structure) to 0.37 for Tor browsing, covering near-memoryless to markedly autocorre-lated real structure—a representative sample for testing the criterion across correlation strengths. The stability-margin experiment takes three representative steps ∆ ∈ { 8, 12 , 16 } ms, directly showing robustness to step IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 11 0.2 0.4 0.6 0.8 1.0 1.2 
+
+= /(4 d)
+
+10 1
+
+10 2
+
+10 3
+
+10 4
+
+> [ ] (ms)
+
+(a) Transition independent of family ( = 1 )
+
+> lognormal (CV=0.5)
+> lognormal (CV=1.0)
+> Weibull (k=1.2)
+> gamma (k=2)
+
+2 3 4 5 6 7 8 9 10 
+
+1/(1 )
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+120 
+
+> [ ] (ms)
+
+(b) Near-critical heavy-traffic scaling    
+
+> simulation
+> linear fit R2= 0.999
+
+0.2 0.4 0.6 0.8 1.0 1.2 
+
+time-average intensity 
+
+10 1
+
+10 2
+
+10 3
+
+10 4   
+
+> [ ] (ms)
+> burst state Bup to 4.8×
+
+(c) Burst-robust stability (knee at = 1 )
+
+> two-state Markov
+
+2 4 6 8 10 12 14 
+
+= /
+
+10 3
+
+10 2
+
+10 1
+
+> single-symbol error rate  p( )
+> c(1 e 02)
+> c(1 e 03)
+
+(d) Decoding floor vs. sufficient bound   
+
+> bound 2Q( /4)
+> measured p( )
+
+Fig. 4. Per-theorem fine-grained checks on synthetic backgrounds. TABLE II APPLICATION -LEVEL IPD DATA EXTRACTED BY FLOW BOUNDARY AND USED IN THE EXPERIMENTS .Scenario Source Candidate Retained Total IPDs Flow-length range Tor browsing Tor2016 26 12 248,706 5,923–44,269 Tor file-transfer Tor2016 8 6 445,635 39,661–127,968 VPN audio VPN2016 47 6 1,122,044 184,298–193,125 NonTor audio Tor2016 95 24 834,591 5,421–121,579 
+
+choice. The criterion depends only on the dimensionless ρ =∆/(4 μd), not the absolute ∆: these steps give ρ over 0.05 –
+
+0.21 for the four scenarios, all inside the ceilings 4ˆ μd (77 –
+
+158 ms). Larger ∆ (up to crossing the ceiling) is covered by the synthetic experiment (Section V-A) and the boundary stress test (Section V-B2). In the real continuous-trace experiments, each group’s 6000 chains are spread over all retained flows of the scenario (Table III): each window lies wholly within one flow, with a length-weighted random start advanced in original order to keep local burstiness and autocorrelation, 
+
+5000 packets each (first 1000 a warm-up); the steady mean dwell E[δ∞] is estimated to check whether it stays finite. All computation and plotting scripts are released. 
+
+1) Stability margins: These four backgrounds are far from i.i.d.—lag-1 autocorrelation ˆρ1 from 0.02 to 0.37 , with in-flow bursty heavy tails (Table III)—exactly the stationary-ergodic, burst-correlated backgrounds Theorem 3 characterizes, so this subsection is also a real-data check of Theorem 3, complemen-tary to the synthetic Markov check of Section V-A. Table IV gives results at three steps ∆ ∈ { 8, 12 , 16 } ms: the intensity 
+
+ρ = ∆ /(4ˆ μd) spans 0.05 –0.21 , all inside (0 , 1) ; the steady mean dwell E[δ∞] is always finite and increases monotonically with ∆. Thus, under the burstiness and autocorrelation of real application flows, the criterion robustly gives the correct engineering direction: as long as the time-average drift keeps enough margin, the buffer does not diverge from short dense bursts. The stronger the autocorrelation or right-skew, the IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 12 20 40 60 80 100 
+
+quantization step (ms)                       
+
+> 10 31
+> 10 27
+> 10 23
+> 10 19
+> 10 15
+> 10 11
+> 10 7
+> 10 3
+> 10 1
+> single-symbol error rate  p( )
+> c4d
+> window
+> (a) Operating window [c, 4 d)
+> error rate p( )
+> steady dwell []
+> 5.0 7.5 10.0 12.5 15.0 17.5 20.0
+
+= /                                                    
+
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> single-symbol error rate  p( )
+> = 1 e02
+> = 1 e03
+> (b) Decoding floor under non-ideal jitter
+> Gaussian (ideal)
+> Laplace
+> Student-t3(heavy)
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> steady dwell  [ ] (ms)
+> Fig. 5. The quantization-step operating window and the decoding floor under non-ideal jitter. TABLE III BASIC STATISTICS OF THE APPLICATION -LEVEL REAL IPD DATA .Scenario Retained Samples Mean Median Std CV Kurtosis Lag-1 AC (ms) (ms) (ms) ˆρ1
+> Tor browsing 12 248 ,706 39 .61 10 .38 70 .29 1.77 15 .30.37
+> Tor file-transfer 6445 ,635 23 .08 3.16 35 .52 1.54 35 .70.16
+> VPN audio 61,122 ,044 19 .25 20 .23 4.67 0.24 1869 .50.35
+> NonTor audio 24 834 ,591 35 .65 30 .87 23 .64 0.66 9.50.02
+
+faster the dwell grows with ∆: Tor browsing rises from 
+
+4.45 ms at ∆ = 8 to 11 .32 ms at ∆ = 16 , Tor file-transfer from 4.89 to 11 .59 ms; the near-symmetric VPN audio rises only from 4.00 to 8.05 ms. This foreshadows Section V-B2: the pooled-mean ceiling is optimistic for strongly skewed, dispersed-intensity services, so configuration should keep a margin below the boundary. 
+
+2) Stress test approaching the stability boundary: The four scenarios above ( ∆ ∈ { 8, 12 , 16 } ms) have ρ in the safe region 
+
+0.05 –0.21 , far from ρ = 1 , so they only confirm stable far from the boundary and cannot test whether the criterion truly holds at the critical point. To fill this side, for each real scenario we sweep the step along ρ = ∆ /(4ˆ μd) from the safe region to approach and cross 1 (taking ∆ as a series of multiples of 
+
+4ˆ μd), estimating the steady mean dwell E[δ∞] on the retained-flow-bounded continuous traces. Figure 6(a) shows the four scenarios’ E[δ∞] rising sharply as ρ approaches 1 and amplifying further beyond 1. But a single window’s mean cannot distinguish a bounded-but-large steady state from unbounded growth: for the weakly right-skewed VPN audio (median ≈ mean), E[δ∞] is still about 60 ms at ρ = 0 .8, jumping to 663 then 1678 ms at 
+
+ρ = 0 .95 , 1.0, the knee cleanly at ρ = 1 . To separate large but bounded from divergent , Figure 6(b) gives the window-length diagnostic: on VPN audio, fixing ρ and growing the window 
+
+n from 2000 to 40000 packets—at ρ = 0 .9, E[δ∞] stays at 
+
+152 –167 ms (nearly window-invariant, growth about 1.07 ×), a bounded steady state; at ρ = 1 .0, 1.1 it grows approximately linearly with the window ( 812 → 11564 , 2546 → 46845 ms, about 14 –18 ×), i.e. unbounded divergence. The criterion ρ < 
+
+1 thus correctly locates the divergence critical point on real backgrounds, not only confirming stability far away. However, on strongly in-flow right-skewed scenarios with dispersed cross-flow intensity (Tor browsing, Tor file-transfer, NonTor audio), the ceiling from the overall mean ˆμd is optimistic. Their window diagnostics show that even at pooled 
+
+ρ = 0 .9, nominally stable, E[δ∞] already grows with the window; the cause is a sizeable dispersion of per-flow means, so the pooled mean transfers the idle slack of low-intensity flows to high-intensity ones, whereas a real embedder cannot drain dwell across flows. This does not contradict Theorem 3; it shows the time-average must be that inside a single real queue, not one obtained by pooling many disconnected flows after the fact. Hence a direct configuration rule: judge stability and configure by feeding the densest (smallest-mean) flow’s or a low-quantile per-flow mean, not the pooled mean, into 
+
+∆ < 4¯ μd—keeping a margin below the pooled boundary commensurate with the cross-flow intensity dispersion. Finally, the physical meaning of these numbers. In Figure 6, the steady dwell at ρ ≥ 1 reaches thousands to tens of thousands of milliseconds (at ρ = 1 .1, VPN audio accumulates 
+
+4.68 ×10 4 ms ≈ 47 s on the longest window); this is simulated on the budget-free unconstrained recursion (Eq. (3)) and characterizes how large the dwell would grow without a cap, cleanly separating divergence from boundedness—not a delay actually observed in deployment. Such dwell never appears in a real system: tens-of-seconds delay far exceeds trans-port/application timeouts, so the carried connection resets or IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 13                                              
+
+> TABLE IV STABILITY MARGINS OF REAL CONTINUOUS TRACES AT SEVERAL QUANTIZATION STEPS (∆∈ { 8,12 ,16 }MS ). Scenario Ceiling ρ= ∆ /(4ˆ μd)E[δ∞](ms)
+> 4ˆ μd(ms) ∆=8 12 16 ∆=8 12 16
+> Tor browsing 158 .45 0.050 0.076 0.101 4.45 7.31 11 .32
+> Tor file-transfer 92 .31 0.087 0.130 0.173 4.89 8.07 11 .59
+> VPN audio 76 .99 0.104 0.156 0.208 4.00 6.03 8.05
+> NonTor audio 142 .62 0.056 0.084 0.112 4.04 6.09 8.18
+
+drops first; and the embedder’s finite budget B (Section III-C) truncates dwell to an overflow event (the output IPD loses its anchor) once it touches B. Thus the huge E[δ∞] at ρ ≥ 1
+
+should be read as the numerical fingerprint of a diverging unconstrained dwell, whose deployment meaning is that any finite budget is breached persistently. VI. C ONCLUSION 
+
+This paper studies causal IPD-QIM watermarking for active attribution of encrypted network flows, with the core question: for what quantization step ∆ can the watermark be embedded continuously without the buffer dwell growing without bound? Lemma 1 writes the causal-QIM dwell recursion in Lindley form, but this substitution only provides the recursion structure and does not reduce the fixed-lattice injection to an exogenous uniform input. We therefore analyze directly the busy-state drift of the fixed dual-lattice, equiprobable-random-bit rule in the large-dwell region, where the key fact is that once the effective interval is pressed to zero the mean injection converges to ∆/4.Based on this drift structure, we obtain a stability criterion away from the critical boundary: for i.i.d. backgrounds the system is stable iff μd > ∆/4 (i.e. ∆ < 4μd, Theorem 2); for stationary-ergodic bursty backgrounds it generalizes to 
+
+¯μd > ∆/4 (i.e. ¯ρ < 1, Theorem 3). Stability is thus decided by the time-average drain capacity, and local instantaneous over-load does not necessarily cause divergence. Queue stability gives the upper end 4¯ μd and decoding reliability the exogenous lower end ∆ ≥ cσ ξ (c = 4 Q−1(ϵ/ 2) ); together they form the conservative operating window ∆ ∈ [cσ ξ , 4¯ μd), separating can decode from can embed stably —the lower end controlled by the channel jitter, the upper end determined intrinsically by the causal queue dynamics. Numerical experiments test the criterion at two levels. Synthetic backgrounds that exactly meet the theoretical as-sumptions confirm the recursion identity, the busy injection, the transition at ρ = 1 , the critical point’s independence of the distribution family, and the near-critical divergence scaling; real application- level IPD experiments, without assuming i.i.d. or finite-state Markov structure, draw continuous segments inside single real flows and avoid spurious draining from cross-flow splicing. On four real continuous traces, as long as the empirical intensity is well below the boundary the steady dwell stays finite; as the step approaches and crosses 
+
+ρ = ∆/(4ˆ μd) = 1, the unconstrained dwell shows clear critical amplification and divergence. The real data also expose a configuration boundary: the cross-flow pooled mean can overestimate the stability margin, so stability should be judged by the time-average inside a single queue, using the densest-flow or a low-quantile per-flow mean when needed. The applicability of the criterion is bounded by the drift computation itself. The background must have a well-defined long-run time average, and the embedder must keep the fixed dual-lattice, equiprobable-random-bit rule analyzed here; once per-symbol dither, non-equiprobable coding, dynamic phase, or a feedback step is added, the busy-state mean injection is no longer necessarily ∆/4 and the stability upper bound must be re-established from the new rule. The budget B likewise does not enter the stability threshold: it only measures, after the unconstrained recursion is already stable, the tail risk that the required exact-alignment dwell exceeds the available budget; if the time-average drift is nonnegative, any finite budget can only postpone overflow, not restore stability. Hence what we provide is not a complete deployment protocol but a stability pre-screen for fixed-step causal QIM. Beyond this pre-screen, several harder problems emerge naturally. The closest is an overflow-and-budget theorem: for 
+
+ρ < 1, the decay of the steady tail P(δ∞ > B) with the budget is a large-deviations problem, whose exponential-versus-subexponential dichotomy and the resulting buffer-sizing and effective-bandwidth characterization decide how rare overflow is given stability. Complementary is active control in the overloaded regime: when the time-average drift is nonnegative a fixed step must diverge, so one must shed load online on detecting overload—adaptive step, selective dropping, or congestion-triggered injection back-off—and re-establish a stability guarantee in closed loop; this in turn requires online estimation of the time-average drain ¯μd on non-stationary, session-drifting backgrounds, pushing the of-fline criterion toward real-time control. A more fundamental direction comes from the core quantity itself: the busy-state mean injection Ew[Rw(0)] is the sole embedding-side quan-tity setting the stability ceiling, and the ∆/4 of the fixed dual lattice and the ∆/2 under dither are only two of its endpoints; a unified characterization of this quantity and the corresponding threshold across general QIM variants (dither, non-equiprobable coding, dynamic phase, multi-lattice) would lift the criterion from a single rule to a family. Finally, incorporating the real (correlated, heavy-tailed) channel-jitter distribution, blind frame synchronization, and soft decoding into a joint design with queue stability is what turns the two-sided window into an end-to-end decodable deployment system. IEEE TRANSACTIONS ON NETWORK AND SERVICE MANAGEMENT, VOL. XX, NO. X, JULY 2026 14 0.2 0.4 0.6 0.8 1.0 1.2 
+
+traffic intensity = /(4 d)   
+
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> steady mean dwell  [ ] (ms)
+> = 1
+> (a) Approaching the boundary: four real backgrounds
+> Tor browsing
+> Tor file-transfer
+> VPN audio
+> NonTor audio
+> 10000 20000 30000 40000
+
+window length n (packets)    
+
+> 0
+> 10000
+> 20000
+> 30000
+> 40000
+> [ ] (ms)
+> (b) Window diagnostic (VPN audio)
+> = 0.90 (stable)
+> = 1.00 (predicted divergent)
+> = 1.10 (predicted divergent)
+
+Fig. 6. Stress test approaching the stability boundary. 
+
+ACKNOWLEDGMENT 
+
+This work was supported by the National Natural Science Foundation of China (Grants No. U2436601). REFERENCES [1] X. Wang and D. S. Reeves, “Robust correlation of encrypted attack traffic through stepping stones by manipulation of interpacket delays,” in 
+
+Proc. 10th ACM Conf. Computer and Communications Security (CCS) ,2003, pp. 20–29. [2] T. Li, K. Liu, and S. Du, “A survey on network flow watermarking: A problem-oriented perspective,” Computers & Security , 2026. [3] X. Wang, S. Chen, and S. Jajodia, “Network flow watermarking attack on low-latency anonymous communication systems,” in Proc. IEEE Symposium on Security and Privacy (S&P) , 2007, pp. 116–130. [4] A. Houmansadr, N. Kiyavash, and N. Borisov, “RAINBOW: A robust and invisible non-blind watermark for network flows,” in Proc. 16th Network and Distributed System Security Symposium (NDSS) , 2009. [5] A. Houmansadr and N. Borisov, “SWIRL: A scalable watermark to detect correlated network flows,” in Proc. 18th Network and Distributed System Security Symposium (NDSS) , 2011. [6] B. Chen and G. W. Wornell, “Quantization index modulation: A class of provably good methods for digital watermarking and information embedding,” IEEE Trans. Inf. Theory , vol. 47, no. 4, pp. 1423–1443, 2001. [7] I. J. Cox, M. L. Miller, J. A. Bloom, J. Fridrich, and T. Kalker, Digital Watermarking and Steganography , 2nd ed. Morgan Kaufmann, 2007. [8] S. Cabuk, C. E. Brodley, and C. Shields, “IP covert timing channels: Design and detection,” in Proc. 11th ACM Conf. Computer and Com-munications Security (CCS) , 2004, pp. 178–187. [9] W. Yu, X. Fu, S. Graham, D. Xuan, and W. Zhao, “DSSS-based flow marking technique for invisible traceback,” in Proc. IEEE Symposium on Security and Privacy (S&P) , 2007, pp. 18–32. [10] K. Yang, Z. Liu, Y. Zeng, and J. Ma, “Sliding window based ON/OFF flow watermarking on Tor,” Computer Communications , vol. 196, pp. 66–75, 2022. [11] T. Li, K. Liu, W. Feng, C. Yang, and X. Luo, “HeteroTiC: A robust network flow watermarking based on heterogeneous time channels,” 
+
+Computer Networks , vol. 219, p. 109424, 2022. [12] S. Qiao, H. Zhu, L. Sha, M. Wang, and Q. Guo, “DynMark: Adynamic packet counting watermarking scheme for robust traffic tracing in network flows,” Computers & Security , vol. 157, p. 104571, 2025. [13] J. Cui, K. Han, L. Sha, W. Liu, X. Zhang, and G. Li, “An efficient hexadecimal network flow watermark method for tracking attack traffic connection chain,” Scientific Reports , vol. 13, p. 21111, 2023. [14] N. Kiyavash, A. Houmansadr, and N. Borisov, “Multi-flow attacks against network flow watermarking schemes,” in Proc. 17th USENIX Security Symposium , 2008, pp. 307–320. [15] Z. Lin and N. Hopper, “New attacks on timing-based network flow watermarks,” in Proc. 21st USENIX Security Symposium , 2012. [16] Y. Yuan, J. Ge, and G. Cheng, “DeMarking: A defense for network flow watermarking in real-time,” Computers & Security , vol. 152, p. 104355, May 2025. [17] A. Iacovazzi and Y. Elovici, “Network flow watermarking: A survey,” 
+
+IEEE Communications Surveys & Tutorials , vol. 19, no. 1, pp. 512–530, 2017. [18] M. H. M. Costa, “Writing on dirty paper,” IEEE Trans. Inf. Theory ,vol. 29, no. 3, pp. 439–441, 1983. [19] J. Mao, H. Tang, S. Lyu, Z. Zhou, and X. Cao, “Content-aware quantization index modulation: Leveraging data statistics for enhanced image watermarking,” IEEE Trans. Inf. Forensics Secur. , vol. 19, pp. 1935–1947, 2024. [20] S. Lyu, “Optimized dithering for quantization index modulation,” in 
+
+Proc. IEEE Int. Conf. Acoust. Speech Signal Process. (ICASSP) , 2023, pp. 1–5. [21] D. V. Lindley, “The theory of queues with a single server,” Math. Proc. Cambridge Philos. Soc. , vol. 48, no. 2, pp. 277–289, 1952. [22] R. M. Loynes, “The stability of a queue with non-independent inter-arrival and service times,” Math. Proc. Cambridge Philos. Soc. , vol. 58, no. 3, pp. 497–520, 1962. [23] F. G. Foster, “On the stochastic matrices associated with certain queuing processes,” Annals of Mathematical Statistics , vol. 24, no. 3, pp. 355– 360, 1953. [24] S. P. Meyn and R. L. Tweedie, Markov Chains and Stochastic Stability .London: Springer-Verlag, 1993. [25] S. Asmussen, Applied Probability and Queues , 2nd ed. Springer, 2003. [26] R. Durrett, Probability: Theory and Examples , 5th ed. Cambridge University Press, 2019. [27] V. Paxson and S. Floyd, “Wide-area traffic: The failure of Poisson modeling,” IEEE/ACM Trans. Networking , vol. 3, no. 3, pp. 226–244, 1995. [28] A. Arfeen, K. Pawlikowski, D. McNickle, and A. Willig, “The role of the Weibull distribution in modelling traffic in Internet access and backbone core networks,” Journal of Network and Computer Applications , vol. 141, pp. 1–22, 2019. [29] A. Habibi Lashkari, G. Draper Gil, M. S. I. Mamun, and A. A. Ghorbani, “Characterization of tor traffic using time based features,” in Proc. 3rd Int. Conf. Information Systems Security and Privacy (ICISSP) , Porto, Portugal, 2017, pp. 253–262, dataset: ISCXTor2016, https://www.unb.ca/cic/datasets/tor.html. [30] G. Draper Gil, A. Habibi Lashkari, M. S. I. Mamun, and A. A. Ghorbani, “Characterization of encrypted and VPN traffic using time-related fea-tures,” in Proc. 2nd Int. Conf. Information Systems Security and Privacy (ICISSP) , Rome, Italy, 2016, pp. 407–414, dataset: ISCXVPN2016, https://www.unb.ca/cic/datasets/vpn.html.

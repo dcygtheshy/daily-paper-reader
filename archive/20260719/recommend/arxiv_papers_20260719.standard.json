@@ -1,0 +1,54 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-19T20:55:12.744990+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.14954v1",
+      "source": "arxiv",
+      "title": "A Queueing-Stability Criterion for Causal IPD-QIM Network Flow Watermarking",
+      "abstract": "On multi-hop encrypted links such as Tor and cascaded VPNs, tunneling flattens packet lengths and protocol fields, leaving inter-packet delay (IPD) as the main carrier for active flow attribution. Causality lets the embedder delay packets but never advance them, so each quantization-index-modulation (QIM) alignment injects nonnegative dwell into a delay buffer; unbounded dwell breaks lattice alignment and delays the host connection unacceptably. Whether a causal QIM watermark embeds stably on bursty traffic has largely been left to empirical configuration rather than analysis. We model the embedder as a reflected dwell queue under the fixed dual-lattice, equiprobable-bit rule, where injection is state-dependent -- set by the current interval and bit -- rather than exogenous. The substitution $Y_i=δ_i-r_i$ gives only an algebraic Lindley-form identity; stability is governed by the busy-state drift at large dwell, where the effective interval collapses to zero and the mean injection becomes $Δ/4$. Away from the critical boundary, the buffer is stable iff $μ_d>Δ/4$ (i.e. $Δ<4μ_d$) for i.i.d. backgrounds, and, under stationary-ergodic and finite-state Markov-modulated traffic with instantaneous overload, iff the time-average intensity $\\barρ<1$. With the exogenous decoding floor $Δ\\ge cσ_ξ$ ($c=4Q^{-1}(ε/2)$), this yields the operating window $Δ\\in[cσ_ξ,4\\barμ_d)$. Simulations confirm a sharp transition at $ρ=1$ set only by the mean; on four real IPD traces, with each simulated chain confined to a single flow, the criterion gives the correct stability direction under flow-local correlation and burstiness, while pooled cross-flow means overestimate the margin. These results give a testable stable-embeddability criterion and a quantization-step configuration baseline for causal QIM network flow watermarking.",
+      "authors": [
+        "Jiuxiang Cai",
+        "Guang Cheng",
+        "Guangjie Liu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-07-16T13:04:21+00:00",
+      "link": "https://arxiv.org/pdf/2607.14954v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "network flow watermarking using IPD-QIM",
+      "llm_evidence_cn": "使用IPD-QIM的网络流水印",
+      "llm_evidence": "使用IPD-QIM的网络流水印",
+      "canonical_evidence": "使用IPD-QIM的网络流水印",
+      "llm_tldr_en": "Analyzes stability of causal IPD-QIM network flow watermarking via queueing model, providing a stability criterion for bursty traffic.",
+      "llm_tldr_cn": "该论文针对因果IPD-QIM网络流水印在突发流量下的稳定性问题，建立了嵌入器的反射停留队列模型，并推导出稳定性判据。该方法通过双晶格等概率比特规则进行状态依赖注入，理论分析和仿真验证了所需缓冲区大小的上界。这项工作为网络流水印提供了稳定运行的指导，属于水印技术在网络层面的研究。",
+      "llm_tldr": "该论文针对因果IPD-QIM网络流水印在突发流量下的稳定性问题，建立了嵌入器的反射停留队列模型，并推导出稳定性判据。该方法通过双晶格等概率比特规则进行状态依赖注入，理论分析和仿真验证了所需缓冲区大小的上界。这项工作为网络流水印提供了稳定运行的指导，属于水印技术在网络层面的研究。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-19 <!--dpr-date:20260719-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/19/2607.14954v1-a-queueing-stability-criterion-for-causal-ipd-qim-network-flow-watermarking" data-sidebar-item="{&quot;title&quot;: &quot;A Queueing-Stability Criterion for Causal IPD-QIM Network Flow Watermarking&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.14954v1-a-queueing-stability-criterion-for-causal-ipd-qim-network-flow-watermarking&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;使用IPD-QIM的网络流水印&quot;}">A Queueing-Stability Criterion for Causal IPD-QIM Network Flow Watermarking</a>
   * 2026-07-18 <!--dpr-date:20260718-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/18/2607.10695v1-effective-synthetic-image-detection-via-noise-residual-clustering" data-sidebar-item="{&quot;title&quot;: &quot;Effective Synthetic Image Detection via Noise Residual Clustering&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.10695v1-effective-synthetic-image-detection-via-noise-residual-clustering&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;基于噪声残差指纹的合成图像检测&quot;}">Effective Synthetic Image Detection via Noise Residual Clustering</a>
