@@ -1,0 +1,127 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-21T21:34:35.109654+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 3,
+    "deep_cap": 6,
+    "deep_selected": 3,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.16648v1",
+      "source": "arxiv",
+      "title": "Synchronization-Free Algebraic Fingerprints for Large Language Models: From Autoregressive to Diffusion Models",
+      "abstract": "Large Language Models (LLMs) have created an urgent need for reliable watermarking methods that enable attribution of generated text while remaining robust to editing and paraphrasing. We propose a novel synchronization-free watermarking scheme in which every watermark consists of a single binary congruence generated from a pair of neighbouring tokens. For each token pair, a cryptographic hash determines an evaluation point of a Reed--Solomon polynomial representing the secret identity, while the parity of the polynomial evaluation determines the watermark bit embedded into the second token of the pair. Since each congruence is self-contained and depends only on the local token pair, the proposed construction is naturally resistant to insertions, deletions, and token reordering. We analyse the recovery problem from an algebraic perspective, discuss several decoding algorithms suitable for different identity sizes, and model watermark corruption as a Binary Symmetric Channel. The analysis shows that reliable recovery requires only a small redundancy even for relatively high token corruption rates. Unlike existing block-based watermarking schemes, the proposed method avoids synchronization problems while providing a flexible framework for embedding both short and long secret identities.",
+      "authors": [
+        "Jaroslaw Janas",
+        "Josef Pieprzyk",
+        "Pawel Morawiecki"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.IT"
+      ],
+      "published": "2026-07-18T05:43:22+00:00",
+      "link": "https://arxiv.org/pdf/2607.16648v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Proposes fingerprinting watermark for autoregressive and diffusion models",
+      "llm_evidence_cn": "提出了适用于自回归和扩散模型的指纹水印方法",
+      "llm_evidence": "提出了适用于自回归和扩散模型的指纹水印方法",
+      "canonical_evidence": "提出了适用于自回归和扩散模型的指纹水印方法",
+      "llm_tldr_en": "Proposes a synchronization-free watermarking scheme using Reed-Solomon polynomials and token-pair congruences, applicable to both autoregressive and diffusion models, robust to editing and paraphrasing.",
+      "llm_tldr_cn": "针对LLM和扩散模型生成文本的归属问题，提出了一种免同步的水印方案。每个水印由相邻token对生成的单个二进制同余组成，通过Reed-Solomon多项式编码秘密身份，具有自洽性且无需同步，对编辑和转述具有鲁棒性。该方案可扩展至自回归和扩散模型。",
+      "llm_tldr": "针对LLM和扩散模型生成文本的归属问题，提出了一种免同步的水印方案。每个水印由相邻token对生成的单个二进制同余组成，通过Reed-Solomon多项式编码秘密身份，具有自洽性且无需同步，对编辑和转述具有鲁棒性。该方案可扩展至自回归和扩散模型。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking techniques for diffusion models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.17056v1",
+      "source": "arxiv",
+      "title": "High-Capacity Robust Watermarking Technology for High-Resolution Images",
+      "abstract": "Most existing watermarking techniques are primarily designed for low-resolution images, with few methods tailored for high-resolution images. Moreover, the embedding capacity is often limited to fixed lengths (e.g., 30, 100, 256 bits, etc.), which struggles to meet practical demands. To address these issues, this paper proposes a high-capacity robust watermarking method for high-resolution images, capable of embedding a watermark of 4 KB (32,768 bits) into images with a resolution of 1024*1024, achieving an embedding rate of 0.0313 bpp. Specifically, this paper adopts a block-wise strategy to effectively embed the watermark into local regions, enabling the network to train and learn normally even under low-resource conditions. The encoder and decoder structures respectively employ a reversible symmetric architecture with three convolutional and three deconvolutional layers, ensuring consistency in the coupling and decoupling of the watermark and image features. Additionally, the loss function combines global and local losses with weighted contributions. By incorporating constraints on the visual quality and robustness of local block regions, the overall imperceptibility and robustness of the image are further enhanced. Extensive experimental results verify that the proposed method is effective and feasible in high-resolution image scenarios with high-capacity watermarking, while demonstrating strong robustness against various noise attacks.",
+      "authors": [
+        "Shaowu Wu",
+        "Wei Lu",
+        "Qing Qian",
+        "Mingsen Deng"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-07-19T03:57:46+00:00",
+      "link": "https://arxiv.org/pdf/2607.17056v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "robust watermarking for high-resolution images with high capacity",
+      "llm_evidence_cn": "针对高分辨率图像的高容量鲁棒水印",
+      "llm_evidence": "针对高分辨率图像的高容量鲁棒水印",
+      "canonical_evidence": "针对高分辨率图像的高容量鲁棒水印",
+      "llm_tldr_en": "Proposes a robust watermarking method for high-resolution images that embeds up to 4KB of data into 1024x1024 images with block-wise strategy, achieving high capacity and robustness.",
+      "llm_tldr_cn": "现有水印方法多针对低分辨率图像且容量有限。本文提出一种面向高分辨率图像的高容量鲁棒水印方法，采用分块策略将32,768比特水印嵌入1024x1024图像中，嵌入率达0.0313 bpp。编码器和解码器在低资源条件下也能正常训练，实验证明该方法在保持高容量的同时具备强鲁棒性，满足了实际应用对高分辨率图像水印的需求。",
+      "llm_tldr": "现有水印方法多针对低分辨率图像且容量有限。本文提出一种面向高分辨率图像的高容量鲁棒水印方法，采用分块策略将32,768比特水印嵌入1024x1024图像中，嵌入率达0.0313 bpp。编码器和解码器在低资源条件下也能正常训练，实验证明该方法在保持高容量的同时具备强鲁棒性，满足了实际应用对高分辨率图像水印的需求。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.17592v1",
+      "source": "arxiv",
+      "title": "SSTMark: Robust Training-Free Semantic-Level Speech Watermarking",
+      "abstract": "As speech generation models become increasingly realistic and widely accessible, concerns about the misuse, attribution, and governance of synthetic speech continue to grow. Watermarking provides a practical way to make synthesized speech traceable and verifiable. Most existing speech watermarking methods embed watermark information into signal-level representations, such as waveforms or spectrograms. Under sufficiently strong distortions, the embedded watermark may be weakened or destroyed, leading to degraded detectability. In this paper, we propose SSTMark, a training-free speech watermarking framework that operates at the semantic level through text watermarking. Unlike conventional signal-level watermarking methods, SSTMark encodes watermark information into the semantic content conveyed by generated speech, and detects the watermark from the recovered linguistic content. Experiments on AudioMarkBench demonstrate that SSTMark exhibits the strongest average robustness. Compared with the state-of-the-art baselines at a fixed false positive rate of 1\\%, SSTMark improves the average detection rate by 4.6\\% and 16.9\\% on signal-processing edits and compression edits, respectively.",
+      "authors": [
+        "Kuan-Lin Chu",
+        "Jun-Cheng Chen",
+        "Chun-Shien Lu"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD"
+      ],
+      "published": "2026-07-20T06:20:17+00:00",
+      "link": "https://arxiv.org/pdf/2607.17592v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Robust training-free semantic-level speech watermarking",
+      "llm_evidence_cn": "鲁棒的无训练语义级语音水印",
+      "llm_evidence": "鲁棒的无训练语义级语音水印",
+      "canonical_evidence": "鲁棒的无训练语义级语音水印",
+      "llm_tldr_en": "Proposes SSTMark, a training-free speech watermarking method operating at semantic level via text watermarking, achieving robustness against distortions.",
+      "llm_tldr_cn": "现有语音水印通常在信号级嵌入，易被失真破坏。本文提出SSTMark，一种无需训练的水印框架，在语义级别通过文本水印实现鲁棒嵌入。实验表明，该方法在强失真下仍能保持高检测率，且不依赖信号级表示。为语音水印提供了新的鲁棒范式。",
+      "llm_tldr": "现有语音水印通常在信号级嵌入，易被失真破坏。本文提出SSTMark，一种无需训练的水印框架，在语义级别通过文本水印实现鲁棒嵌入。实验表明，该方法在强失真下仍能保持高检测率，且不依赖信号级表示。为语音水印提供了新的鲁棒范式。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
