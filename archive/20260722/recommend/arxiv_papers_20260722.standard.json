@@ -1,0 +1,53 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-22T21:34:29.682037+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.18445v1",
+      "source": "arxiv",
+      "title": "ChainMark: Model-Free LLM Watermarking with Closed-Form Calibration",
+      "abstract": "Regulatory regimes such as the EU AI Act mandate machine-readable marking of synthetic text, but existing watermark detectors rely on the generating LM and on heuristic thresholds with no closed-form calibration. We introduce ChainMark, an active watermark that partitions the vocabulary into S states via keyed SHA-256 and forces a hard Markov transition on a fraction rho of positions; the detector replays the partition from the same key in O(n) hash operations, with no LM access. We derive a closed-form S*(n, rho, alpha) mapping a target FPR, text length, and budget to the minimum state count (Theorem 1), prove a universal robustness threshold delta* = 1 - 1/sqrt(2) approximately 29.3% that is invariant in (S, rho, n) (Theorem 2), and generalise both to any k-regular transition topology (Theorem 3). Across three instruction-tuned LLMs and four domains, ChainMark strictly dominates KGW and SWEET under translation and random-substitution attacks at matched budget; a one-corpus empirical recalibration restores the 1% target FPR on natural-language text.",
+      "authors": [
+        "Chengheng Li-Chen",
+        "Kyuhee Kim"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-07-20T18:56:53+00:00",
+      "link": "https://arxiv.org/pdf/2607.18445v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Uses SHA-256 and closed-form calibration for LLM watermarking",
+      "llm_evidence_cn": "使用SHA-256和闭环校准进行大语言模型水印",
+      "llm_evidence": "使用SHA-256和闭环校准进行大语言模型水印",
+      "canonical_evidence": "使用SHA-256和闭环校准进行大语言模型水印",
+      "llm_tldr_en": "ChainMark proposes a model-free LLM watermark using SHA-256-based vocabulary partitioning and Markov transitions, with closed-form calibration and universal robustness threshold.",
+      "llm_tldr_cn": "ChainMark提出了一种无模型的大语言模型水印方法，通过基于SHA-256的词汇表分区和硬马尔可夫转移来嵌入水印，并推导出闭环校准公式以控制误报率。该方法无需访问生成模型即可检测，且证明了29.3%的通用鲁棒性阈值，适用于监管合规要求下的机器可读标记需求。",
+      "llm_tldr": "ChainMark提出了一种无模型的大语言模型水印方法，通过基于SHA-256的词汇表分区和硬马尔可夫转移来嵌入水印，并推导出闭环校准公式以控制误报率。该方法无需访问生成模型即可检测，且证明了29.3%的通用鲁棒性阈值，适用于监管合规要求下的机器可读标记需求。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

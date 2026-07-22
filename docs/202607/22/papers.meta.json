@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-22",
+  "date": "2026-07-22",
+  "generated_at": "2026-07-22T21:36:14",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/22/2607.18445v1-chainmark-model-free-llm-watermarking-with-closed-form-calibration",
+      "section": "deep",
+      "title_en": "ChainMark: Model-Free LLM Watermarking with Closed-Form Calibration",
+      "authors": "Chengheng Li-Chen, Kyuhee Kim",
+      "date": "2026-07-20",
+      "pdf": "https://arxiv.org/pdf/2607.18445v1",
+      "score": "8.0",
+      "evidence": "使用SHA-256和闭环校准进行大语言模型水印",
+      "tldr": "现有水印检测依赖生成模型和启发式阈值，缺乏闭式校准。ChainMark通过密钥SHA-256将词汇划分为S个状态，在部分位置强制马尔可夫转移嵌入水印，检测时仅需O(n)哈希操作，无需模型访问。理论推导出最小状态数闭式公式和通用鲁棒性阈值（约29.3%），在多个LLM和攻击下优于KGW和SWEET，且一步重校准即可恢复目标FPR。贡献在于提供了首个无模型、可闭式校准的文本水印方案。",
+      "tags": "query:watermarking",
+      "abstract_en": "Regulatory regimes such as the EU AI Act mandate machine-readable marking of synthetic text, but existing watermark detectors rely on the generating LM and on heuristic thresholds with no closed-form calibration. We introduce ChainMark, an active watermark that partitions the vocabulary into S states via keyed SHA-256 and forces a hard Markov transition on a fraction rho of positions; the detector replays the partition from the same key in O(n) hash operations, with no LM access. We derive a closed-form S*(n, rho, alpha) mapping a target FPR, text length, and budget to the minimum state count (Theorem 1), prove a universal robustness threshold delta* = 1 - 1/sqrt(2) approximately 29.3% that is invariant in (S, rho, n) (Theorem 2), and generalise both to any k-regular transition topology (Theorem 3). Across three instruction-tuned LLMs and four domains, ChainMark strictly dominates KGW and SWEET under translation and random-substitution attacks at matched budget; a one-corpus empirical recalibration restores the 1% target FPR on natural-language text.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

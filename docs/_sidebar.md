@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-22 <!--dpr-date:20260722-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/22/2607.18445v1-chainmark-model-free-llm-watermarking-with-closed-form-calibration" data-sidebar-item="{&quot;title&quot;: &quot;ChainMark: Model-Free LLM Watermarking with Closed-Form Calibration&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.18445v1-chainmark-model-free-llm-watermarking-with-closed-form-calibration&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;使用SHA-256和闭环校准进行大语言模型水印&quot;}">ChainMark: Model-Free LLM Watermarking with Closed-Form Calibration</a>
   * 2026-07-21 <!--dpr-date:20260721-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/21/2607.16648v1-synchronization-free-algebraic-fingerprints-for-large-language-models-from-autoregressive-to-diffusion-models" data-sidebar-item="{&quot;title&quot;: &quot;Synchronization-Free Algebraic Fingerprints for Large Language Models: From Autoregressive to Diffusion Models&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.16648v1-synchronization-free-algebraic-fingerprints-for-large-language-models-from-autoregressive-to-diffusion-models&quot;, &quot;score&quot;: &quot;10.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;提出了适用于自回归和扩散模型的指纹水印方法&quot;}">Synchronization-Free Algebraic Fingerprints for Large Language Models: From Autoregressive to Diffusion Models</a>

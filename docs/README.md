@@ -6,27 +6,21 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-21
-- 运行时间：2026-07-21 21:36:45 UTC
+- 最新运行日期：2026-07-22
+- 运行时间：2026-07-22 21:36:07 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：3
+- 本次总论文数：1
+- 精读区：1
 - 速读区：0
 
 ### 今日简报（AI）
-今日精读两篇重磅研究：大模型无同步代数指纹（满分10分）与高分辨率图像鲁棒水印（9分），分别破解生成模型同步瓶颈与高容量鲁棒性难题。建议优先精读这两篇论文，关注LLM和图像水印的版权保护新范式。
-- 详情：[/202607/21/README](/202607/21/README)
+今日精读一篇高评分论文，聚焦大语言模型（LLM）的“无模型”水印技术。核心亮点是提出一种无需重新训练、自带闭式校准的文本水印方案，可在不改变模型结构的情况下实现有效溯源。建议普通读者关注：该技术为AI生成内容检测提供了低成本、易部署的新思路。
+- 详情：[/202607/22/README](/202607/22/README)
 
 ### 精读区论文标签
-1. [Synchronization-Free Algebraic Fingerprints for Large Language Models: From Autoregressive to Diffusion Models](/202607/21/2607.16648v1-synchronization-free-algebraic-fingerprints-for-large-language-models-from-autoregressive-to-diffusion-models)  
-   标签：评分：10.0/10、query:watermarking
-   evidence：提出了适用于自回归和扩散模型的指纹水印方法
-2. [High-Capacity Robust Watermarking Technology for High-Resolution Images](/202607/21/2607.17056v1-high-capacity-robust-watermarking-technology-for-high-resolution-images)  
-   标签：评分：9.0/10、query:watermarking
-   evidence：针对高分辨率图像的高容量鲁棒水印
-3. [SSTMark: Robust Training-Free Semantic-Level Speech Watermarking](/202607/21/2607.17592v1-sstmark-robust-training-free-semantic-level-speech-watermarking)  
+1. [ChainMark: Model-Free LLM Watermarking with Closed-Form Calibration](/202607/22/2607.18445v1-chainmark-model-free-llm-watermarking-with-closed-form-calibration)  
    标签：评分：8.0/10、query:watermarking
-   evidence：鲁棒的无训练语义级语音水印
+   evidence：使用SHA-256和闭环校准进行大语言模型水印
 
 ### 速读区论文标签
 - 本次无速读推荐。
