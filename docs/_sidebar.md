@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-24 <!--dpr-date:20260724-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/24/2607.21132v1-investigating-codec-internal-latent-audio-watermarking-for-neural-codec-robustness" data-sidebar-item="{&quot;title&quot;: &quot;Investigating Codec-Internal Latent Audio Watermarking for Neural Codec Robustness&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.21132v1-investigating-codec-internal-latent-audio-watermarking-for-neural-codec-robustness&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;研究神经音频编解码器中潜在空间水印的鲁棒性&quot;}">Investigating Codec-Internal Latent Audio Watermarking for Neural Codec Robustness</a>
   * 2026-07-22 <!--dpr-date:20260722-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/22/2607.18445v1-chainmark-model-free-llm-watermarking-with-closed-form-calibration" data-sidebar-item="{&quot;title&quot;: &quot;ChainMark: Model-Free LLM Watermarking with Closed-Form Calibration&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.18445v1-chainmark-model-free-llm-watermarking-with-closed-form-calibration&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;使用SHA-256和闭环校准进行大语言模型水印&quot;}">ChainMark: Model-Free LLM Watermarking with Closed-Form Calibration</a>

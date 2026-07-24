@@ -1,0 +1,57 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-24T21:33:10.969757+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.21132v1",
+      "source": "arxiv",
+      "title": "Investigating Codec-Internal Latent Audio Watermarking for Neural Codec Robustness",
+      "abstract": "Neural audio codecs are challenging transformations for audio watermarking because they re-encode, quantize, and resynthesize speech. This paper investigates continuous latent-space watermarking for codec robustness. Instead of adding a watermark only to the waveform or spectrogram, we embed a 32-bit message into the continuous latent representation of a codec-like speech autoencoder. The pipeline uses a SEANet-style encoder-decoder, a Conformer-based message embedder, RVQ-guided latent decomposition, and a latent-domain detector trained under signal-processing and neural-codec transformations. Rather than proposing a final universal watermarking baseline, we characterize the trade-offs that appear when the watermark carrier is moved before neural decoding. On 48 kHz speech, EnCodec-aware training improves EnCodec-24k bit accuracy from 78.8% to 95.6% and 97.1%, while PESQ decreases from 3.727 to 3.514 and 3.427.",
+      "authors": [
+        "Zi Hu",
+        "Houmin Sun",
+        "Linxi Li",
+        "Yechen Wang",
+        "Liwei Jin",
+        "Carsten Maple",
+        "Ming Li"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD"
+      ],
+      "published": "2026-07-23T10:12:36+00:00",
+      "link": "https://arxiv.org/pdf/2607.21132v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Investigates latent-space watermarking in neural audio codecs for robustness",
+      "llm_evidence_cn": "研究神经音频编解码器中潜在空间水印的鲁棒性",
+      "llm_evidence": "研究神经音频编解码器中潜在空间水印的鲁棒性",
+      "canonical_evidence": "研究神经音频编解码器中潜在空间水印的鲁棒性",
+      "llm_tldr_en": "This paper explores continuous latent-space watermarking for neural audio codecs by embedding a 32-bit message into the latent representation of a SEANet autoencoder, achieving robustness against signal processing and codec transformations.",
+      "llm_tldr_cn": "该论文研究针对神经音频编解码器的连续潜在空间水印方法。将32位消息嵌入到类SEANet语音自编码器的连续潜在表示中，采用Conformer消息嵌入器和RVQ引导的潜在分解，并在潜在域训练检测器。实验表明该方法对信号处理和神经编解码变换具有鲁棒性，揭示了将水印载体移至编码器之前的设计权衡。",
+      "llm_tldr": "该论文研究针对神经音频编解码器的连续潜在空间水印方法。将32位消息嵌入到类SEANet语音自编码器的连续潜在表示中，采用Conformer消息嵌入器和RVQ引导的潜在分解，并在潜在域训练检测器。实验表明该方法对信号处理和神经编解码变换具有鲁棒性，揭示了将水印载体移至编码器之前的设计权衡。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

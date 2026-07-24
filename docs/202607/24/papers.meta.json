@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-24",
+  "date": "2026-07-24",
+  "generated_at": "2026-07-24T21:34:08",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/24/2607.21132v1-investigating-codec-internal-latent-audio-watermarking-for-neural-codec-robustness",
+      "section": "deep",
+      "title_en": "Investigating Codec-Internal Latent Audio Watermarking for Neural Codec Robustness",
+      "authors": "Zi Hu, Houmin Sun, Linxi Li, Yechen Wang, Liwei Jin, Carsten Maple, Ming Li",
+      "date": "2026-07-23",
+      "pdf": "https://arxiv.org/pdf/2607.21132v1",
+      "score": "8.0",
+      "evidence": "研究神经音频编解码器中潜在空间水印的鲁棒性",
+      "tldr": "神经音频编解码器因重编码、量化和重合成对水印构成挑战。本文提出在连续潜空间中嵌入水印，使用SEANet编码器-解码器、Conformer嵌入器和RVQ引导潜分解，并在潜域训练检测器。在48kHz语音上，EnCodec感知训练将EnCodec-24k比特准确率从78.8%提升至95.6%和97.1%，但PESQ从3.727降至3.514和3.427。揭示了将水印载体移至神经解码前潜空间的权衡，为鲁棒水印研究提供新视角。",
+      "tags": "query:watermarking",
+      "abstract_en": "Neural audio codecs are challenging transformations for audio watermarking because they re-encode, quantize, and resynthesize speech. This paper investigates continuous latent-space watermarking for codec robustness. Instead of adding a watermark only to the waveform or spectrogram, we embed a 32-bit message into the continuous latent representation of a codec-like speech autoencoder. The pipeline uses a SEANet-style encoder-decoder, a Conformer-based message embedder, RVQ-guided latent decomposition, and a latent-domain detector trained under signal-processing and neural-codec transformations. Rather than proposing a final universal watermarking baseline, we characterize the trade-offs that appear when the watermark carrier is moved before neural decoding. On 48 kHz speech, EnCodec-aware training improves EnCodec-24k bit accuracy from 78.8% to 95.6% and 97.1%, while PESQ decreases from 3.727 to 3.514 and 3.427.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
