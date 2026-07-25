@@ -6,25 +6,25 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-24
-- 运行时间：2026-07-24 21:34:03 UTC
+- 最新运行日期：2026-07-25
+- 运行时间：2026-07-25 20:53:53 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：1
 - 速读区：0
 
 ### 今日简报（AI）
-今日精读一篇关于神经编解码器鲁棒性研究的音频水印论文，评分8.0。
+今日精读一篇LLM网关模型替换与路由稀释审计的高分论文。
 
-研究发现，在编解码器内部潜伏空间嵌入水印可显著提升对压缩和噪声的鲁棒性，且不影响音质。
+研究提出IRIS黑盒审计方法，在有限预算下能有效检测模型是否被偷偷替换或服务降级。
 
-建议关注该方向在数字版权保护中的应用，后续可对比其他水印方案的实际性能差异。
-- 详情：[/202607/24/README](/202607/24/README)
+建议关注大模型API安全，学习如何验证服务商实际提供的模型是否与宣称一致。
+- 详情：[/202607/25/README](/202607/25/README)
 
 ### 精读区论文标签
-1. [Investigating Codec-Internal Latent Audio Watermarking for Neural Codec Robustness](/202607/24/2607.21132v1-investigating-codec-internal-latent-audio-watermarking-for-neural-codec-robustness)  
+1. [Which Model Is Actually Serving You? IRIS: Budgeted Black-Box Auditing of Model Substitution and Routing Dilution in LLM Gateways](/202607/25/2607.20860v1-which-model-is-actually-serving-you-iris-budgeted-black-box-auditing-of-model-substitution-and-routing-dilution-in-llm-gateways)  
    标签：评分：8.0/10、query:watermarking
-   evidence：研究神经音频编解码器中潜在空间水印的鲁棒性
+   evidence：通过文本输出对后端进行指纹识别
 
 ### 速读区论文标签
 - 本次无速读推荐。
