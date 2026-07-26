@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-26",
+  "date": "2026-07-26",
+  "generated_at": "2026-07-26T21:07:38",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/26/2607.17610v1-semantic-color-naturalness-breaker-preventing-illegitimate-colorization-via-content-aware-color-priors",
+      "section": "deep",
+      "title_en": "Semantic Color Naturalness Breaker: Preventing Illegitimate Colorization via Content-Aware Color Priors",
+      "authors": "Yuki Nii, Futa Waseda, Ching-Chun Chang, Isao Echizen",
+      "date": "2026-07-20",
+      "pdf": "https://arxiv.org/pdf/2607.17610v1",
+      "score": "8.0",
+      "evidence": "针对未经授权着色的语义级UE保护框架",
+      "tldr": "自动着色技术使得灰度媒体易被非法彩色化，从而侵犯版权。本文提出语义颜色自然度破坏器（SCNB），通过添加不可感知的扰动，迫使着色模型生成与内容不一致的颜色，同时保持灰度图像的视觉质量。引入内容感知颜色分布距离（CaCDD）作为优化目标和评估指标，无需真实彩色参考。在ImageNet上的实验表明，该方法在极小扰动预算和常见后处理下仍能有效阻止非法着色，为灰度内容的主动版权保护提供了实用方案。",
+      "tags": "query:watermarking",
+      "abstract_en": "Automatic image colorization enables large-scale and low-cost reuse of grayscale media (e.g., manga panels and archival photographs), facilitating unauthorized reuse and redistribution. Once released online, grayscale content can be readily turned into unauthorized colorized derivatives using off-the-shelf models, creating a practical need for proactive, content-side protection at publication time. Building on Uncolorable Examples (UE), which add imperceptible perturbations to released grayscale images to degrade unauthorized colorization, we propose Semantic Color Naturalness Breaker (SCNB) -- a semantic-level UE framework that drives colorization outputs toward content-inconsistent colors while preserving the visual fidelity of the released grayscale media. We further introduce Content-aware Color Distributional Distance (CaCDD), a ground-truth-free, content-aware measure of color plausibility derived from semantic color priors, used both as the optimization objective of SCNB and as an evaluation metric. Experiments on ImageNet show that our method remains effective under small perturbation budgets and common post-processing, supporting practical deployment in real-world content-sharing pipelines.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

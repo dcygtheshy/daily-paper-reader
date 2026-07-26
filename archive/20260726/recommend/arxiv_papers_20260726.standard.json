@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-26T21:06:25.774340+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.17610v1",
+      "source": "arxiv",
+      "title": "Semantic Color Naturalness Breaker: Preventing Illegitimate Colorization via Content-Aware Color Priors",
+      "abstract": "Automatic image colorization enables large-scale and low-cost reuse of grayscale media (e.g., manga panels and archival photographs), facilitating unauthorized reuse and redistribution. Once released online, grayscale content can be readily turned into unauthorized colorized derivatives using off-the-shelf models, creating a practical need for proactive, content-side protection at publication time. Building on Uncolorable Examples (UE), which add imperceptible perturbations to released grayscale images to degrade unauthorized colorization, we propose Semantic Color Naturalness Breaker (SCNB) -- a semantic-level UE framework that drives colorization outputs toward content-inconsistent colors while preserving the visual fidelity of the released grayscale media. We further introduce Content-aware Color Distributional Distance (CaCDD), a ground-truth-free, content-aware measure of color plausibility derived from semantic color priors, used both as the optimization objective of SCNB and as an evaluation metric. Experiments on ImageNet show that our method remains effective under small perturbation budgets and common post-processing, supporting practical deployment in real-world content-sharing pipelines.",
+      "authors": [
+        "Yuki Nii",
+        "Futa Waseda",
+        "Ching-Chun Chang",
+        "Isao Echizen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-07-20T06:56:57+00:00",
+      "link": "https://arxiv.org/pdf/2607.17610v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "semantic-level UE framework for protection against unauthorized colorization",
+      "llm_evidence_cn": "针对未经授权着色的语义级UE保护框架",
+      "llm_evidence": "针对未经授权着色的语义级UE保护框架",
+      "canonical_evidence": "针对未经授权着色的语义级UE保护框架",
+      "llm_tldr_en": "Proposes Semantic Color Naturalness Breaker (SCNB) that adds imperceptible perturbations to grayscale images to drive automatic colorization toward content-inconsistent colors, serving as a proactive watermark-like protection.",
+      "llm_tldr_cn": "针对灰度图像在网络上易被自动着色模型非法利用的问题，本文提出语义颜色自然度破坏器（SCNB）。该方法在发布灰度图像时添加不可感知的扰动，迫使自动着色模型产生与内容不一致的颜色，从而保护原图不被非法着色。实验表明，该方法能够有效干扰多种着色模型，同时保持原图视觉质量，为数字媒体版权保护提供了一种新的主动防御手段。",
+      "llm_tldr": "针对灰度图像在网络上易被自动着色模型非法利用的问题，本文提出语义颜色自然度破坏器（SCNB）。该方法在发布灰度图像时添加不可感知的扰动，迫使自动着色模型产生与内容不一致的颜色，从而保护原图不被非法着色。实验表明，该方法能够有效干扰多种着色模型，同时保持原图视觉质量，为数字媒体版权保护提供了一种新的主动防御手段。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
