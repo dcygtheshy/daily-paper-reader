@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-27",
+  "date": "2026-07-27",
+  "generated_at": "2026-07-27T21:38:26",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/27/2607.22386v1-correlation-aware-and-gaussianity-preserving-robust-latent-angular-watermarking-for-diffusion-models",
+      "section": "deep",
+      "title_en": "Correlation-Aware and Gaussianity-Preserving Robust Latent Angular Watermarking for Diffusion Models",
+      "authors": "Yebin Zheng, Haonan An, Guang Hua, Zhiping Lin, Yuguang Fang",
+      "date": "2026-07-24",
+      "pdf": "https://arxiv.org/pdf/2607.22386v1",
+      "score": "10.0",
+      "evidence": "针对扩散模型的潜在角度水印，关注高斯性保持和对扰动的鲁棒性",
+      "tldr": "现有扩散模型潜域水印方法因破坏潜变量高斯性或对扰动敏感而易被攻击或移除，且忽视水印后潜变量相关性退化导致生成质量下降。本文提出潜角水印(LAW)，将水印位编码为潜变量对之间的对跖角，保持高斯性并最大化位间几何分离。理论证明解码角误差方差与潜变量对范数成反比，并精确定量水印后自相关结构的稀疏退化。实验表明LAW在鲁棒性和生成保真度上显著优于现有方法。",
+      "tags": "query:watermarking",
+      "abstract_en": "Latent domain watermarking for diffusion models embeds watermarks directly into the latent prior, enjoying non-intrusiveness to model parameters and seamless integration with the generation process. However, due to the violation of latent Gaussianity or sensitivity to normal and malicious perturbations during latent inversion, existing methods are prone to watermark detection or removal attacks. A further overlooked problem is the violation of the i.i.d. latent condition after watermarking, which leads to latent correlation degradation and generation fidelity loss. Although this has been externally measured by FID, the internal correlation structure has yet to be rigorously characterized. To address the above issues, and motivated by the rotation-invariant property of isotropic Gaussian, we propose \\textit{Latent Angular Watermarking (LAW)}, which encodes watermark bits as antipodal angles ($\\pmπ/2$ relative to a reference pair) between disjoint pairs of latent elements while preserving the Gaussianity. The antipodal ($π$-separation) encoding maximizes geometric separation between bit values, and we prove that the decoding angular-error variance is proportional to the norm of the latent pair, i.e., $\\operatorname{var}(Δφ) \\propto 1/ρ^2$. We further propose a magnitude-driven variant, LAW-M, which anchors watermark bits in the most geometrically stable latent dimensions, yielding additional robustness gains. Theoretically, we provide a rigorous characterization of the induced correlation degradation, deriving in closed form the autocorrelation structure of the watermarked latent and proving that correlations are confined to a sparse, structured set of off-diagonal elements with fixed $\\pmπ/4$ values.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/27/2607.21958v1-efficient-online-llm-watermark-detection-via-rao-blackwellized-e-processes",
+      "section": "deep",
+      "title_en": "Efficient Online LLM Watermark Detection via Rao-Blackwellized E-Processes",
+      "authors": "Lu Luo, Dandan Mo, Chengdong Xu, Ting Li, Jinhan Xie, Huiqiong Li, Niansheng Tang",
+      "date": "2026-07-24",
+      "pdf": "https://arxiv.org/pdf/2607.21958v1",
+      "score": "8.0",
+      "evidence": "大语言模型水印在线检测方法",
+      "tldr": "针对大语言模型文本检测需求，现有固定时程方法无法支持在线停止。提出基于Rao-Blackwellized e-processes的高效在线水印检测框架，实现递归令牌级证据更新且无需完整历史。针对Gumbel-max水印实例化，转化为枢轴量驱动的序贯检验。理论证明任意停止下类型I错误控制及水印一致性。仿真和真实文本实验验证了高效在线检测与严格任意有效保证。",
+      "tags": "query:watermarking",
+      "abstract_en": "As large language models (LLMs) are increasingly deployed, reliable and efficient mechanisms for distinguishing AI-generated text from human-written content have become essential. Statistical watermarking has emerged as a promising solution, yet most existing methods are typically fixed-horizon procedures, precluding valid early stopping in streaming generation. In this paper, we develop an efficient online watermark detection framework with anytime-valid inference based on Rao-Blackwellized e-processes, enabling recursive token-level evidence updates without storing the full history. In particular, we instantiate the framework for the Gumbel-max watermark and reduce the original token-level dependence testing problem to a pivot-induced sequential testing problem with an explicit null distribution. Theoretically, we prove anytime-valid Type I error control under arbitrary optional stopping and establish positive asymptotic log-growth under watermarking, implying consistency of the proposed stopping rules. Simulations and experiments on real LLM-generated text demonstrate efficient online detection with rigorous anytime-valid guarantees.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

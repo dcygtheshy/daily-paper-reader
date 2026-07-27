@@ -1,0 +1,306 @@
+Title: Efficient Online LLM Watermark Detection via Rao-Blackwellized E-Processes
+
+URL Source: https://arxiv.org/pdf/2607.21958v1
+
+Published Time: Mon, 27 Jul 2026 00:23:02 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# Efficient Online LLM Watermark Detection via Rao–Blackwellized E-Processes 
+
+# Lu Luo 1, Dandan Mo 1, Chengdong Xu 2, Ting Li 2,Jinhan Xie 1, Huiqiong Li 1, Niansheng Tang 1,
+
+1Yunnan Key Laboratory of Statistical Modeling and Data Analysis, Yunnan University, Kunming, China 
+
+2School of Statistics and Management, Shanghai University of Finance and Economics, Shanghai, China 
+
+Abstract 
+
+As large language models (LLMs) are increasingly deployed, reliable and efficient mechanisms for distinguishing AI-generated text from human-written content have become essential. Statistical watermarking has emerged as a promising solution, yet most existing methods are typically fixed-horizon procedures, precluding valid early stopping in streaming generation. In this paper, we develop an efficient online water-mark detection framework with anytime-valid inference based on Rao–Blackwellized e-processes, enabling recursive token-level evidence updates without storing the full history. In particular, we instantiate the framework for the Gumbel-max watermark and reduce the original token-level dependence testing problem to a pivot-induced sequential testing problem with an explicit null distribution. Theoretically, we prove anytime-valid Type I error control under arbitrary optional stopping and establish positive asymptotic log-growth under watermarking, implying consistency of the proposed stopping rules. Simulations and experiments on real LLM-generated text demonstrate efficient online detection with rigorous anytime-valid guarantees. 
+
+Keywords: Large Language Models; Anytime-valid; E-values and E-processes; Watermark Detection; ; Rao–Blackwellization 
+
+1arXiv:2607.21958v1 [stat.ML] 24 Jul 2026 1 Introduction 
+
+The rapid advancement of large language models (LLMs), exemplified by GPT-4 (Achiam et al., 2023), LLaMA (Grattafiori et al., 2024), and DeepSeek (Liu et al., 2024), has substantially expanded the capabilities of text generation and facilitated the widespread deployment of LLM-based systems, including conversational interaction, summarization, and knowledge-intensive reasoning (Brown et al., 2020; Bubeck et al., 2023; Touvron et al., 2023; Grattafiori et al., 2024). Yet the same progress that underpin the practical utility of LLMs has also made the provenance of digital text increasingly difficult to ascertain. High-fidelity synthetic text can now be generated and disseminated at scale, creating opportunities for misuse in misinformation campaigns, plagiarism, automated impersonation, and other forms of content abuse (Stokel-Walker, 2022; Kasneci et al., 2023; Milano et al., 2023). As LLM-generated outputs become progressively more difficult to distinguish from human-authored writing, reliable provenance attribution has emerged as a central challenge spanning statistics, machine learning, and trustworthy AI. This has motivated a rapidly growing literature on principled methods for detecting AI-generated content (Jawahar et al., 2020; Mitchell et al., 2023; Su et al., 2023). Broadly speaking, existing detection strategies fall into three main paradigms: machine learning (ML)-based detectors, statistics-based detectors, and watermarking-based detectors. ML-based methods train discriminative classifiers on corpora of human-written and LLM-generated text (Guo et al., 2024; Mao et al., 2024). Statistics-based methods, including DetectGPT (Mitchell et al., 2023) and Fast-DetectGPT (Bao et al., 2023), instead exploit distributional signatures of generated text, such as token log-probabilities, rank statistics, probability curvature (Zhou et al., 2025, 2026). Although these post-hoc approaches have demonstrated empirical effectiveness, their reliability depends heavily on the persistence 2of model-specific artifacts. As generative models improve, as deployment distributions shift, and as generated text undergoes paraphrasing, editing, or other post-generation perturbations, such artifacts may become attenuated or disappear altogether (Li et al., 2025). These limitations motivate watermarking-based methods, which offer a white-box strategy mechanism (Tang et al., 2024): rather than inferring provenance solely from incidental artifacts of generation, watermarking deliberately embeds statistically detectable signals into the LLM decoding processes. A statistical watermarking scheme implements this principle by modifying the decoding rule of the language model. Let V denote the token vocabulary, with |V| = N ≥ 2. At generation step t, an unwatermarking language model produces a next-token prediction (NTP) distribution Pt ∈ ∆( V) and samples a token Wt ∼ Pt. In contrast, a watermarking model generates the token through a key-dependent decoder, Wt = S(Pt, ζ t), where ζt is a pseudo-random variable (or vector) determined by the previous context and a secret key, and can therefore be reconstructed by an authorized detector. The decoder S is designed to preserve the generation quality while inducing a statistically detectable dependence between 
+
+Wt and ζt. This dependence-based formulation encompasses representative watermarking mechanisms such as the Gumbel-max watermark and the green-red list watermark (Aaron-son, 2023; Kirchenbauer et al., 2023), and it naturally reduces watermark detection to a hypothesis-testing problem: under the null hypothesis, the observed tokens are independent of the reconstructed seeds, whereas under the alternative hypothesis, the watermarking mechanism induces dependence between them (Hu et al., 2023; Piet et al., 2025). Nevertheless, these developments are primarily tailored to fixed-horizon regimes, in which the detector evaluates a completed text or a prespecified number of tokens. This paradigm is poorly aligned with practical LLM deployments (Yao et al., 2022; Nakano et al., 2021; Xi 3et al., 2025), where outputs are generated sequentially and reliable decisions may be needed before the full response is available. Naively monitoring fixed-sample p-values over time can inflate false-positive rates and compromise Type I error control (Gr¨ unwald et al., 2020; Howard et al., 2021; Johari et al., 2022), while deferring detection to a predetermined horizon may introduce avoidable latency and computational overhead. This tradeoff motivates an anytime-valid sequential watermark detection framework that enables token-by-token evidence accumulation while preserving Type I error control under arbitrary data-dependent stopping rules. Against this backdrop, recent work has begun to recast the detection of LLM-generated text as a sequential testing problem. Chen and Wang (2024) studied online detection of general LLM-generated text through betting-based sequential tests, but their method is not designed for watermark verification and depends on external human reference data as well as an auxiliary scoring function. For watermark detection, Su et al. (2026) developed an e-process framework based on sequential dependence testing between generated tokens and reconstructed pseudo-random variables. Although their approach provides anytime-valid guarantees, its adaptive constructions are inherently history-dependent, i.e., calibrators or weights must be updated from the accumulated sequence of watermark-related statistics, which may limit one-pass, memory-efficient implementations in fully streaming settings. In a related direction, Huang et al. (2026) proposed an anchored e-value framework for sequential watermark detection, whose performance depends critically on the choice of an anchor distribution used to approximate the target model. Despite these advances, existing approaches do not yet simultaneously provide a fully online and anytime-valid watermark detection procedure that avoids full-history dependence and does not rely on a carefully chosen anchor distribution. This gap motivates the following question: 4Can one design an anytime-valid watermark detector that accumulates evidence token by token without retaining the full history of watermark-related statistics? We answer this question by developing an e-process-based framework for online watermark detection that is both anytime-valid and amenable to one-pass implementation. We formulate watermark detection as a sequential test of the dependence induced by watermarking between generated tokens and reconstructed pseudo-random variables, with the Gumbel-max watermark serving as a representative example for instantiating our proposed framework. The key technical step is a pivot-induced reduction motivated by the Rao–Blackwellization principle for e-processes (de Roos et al., 2025). This reduction recasts the original watermark testing problem into a tractable reduced form with an explicit null distribution, enabling simple token-by-token updates without retaining the full history of watermark-related statistics. Building on this, we derive a fixed-parameter e-process and further propose the plug-in and mixture e-processes to address the choice of this fixed parameter. Figure 1 provides an overview of the proposed framework, and our main contributions are summarized below. 
+
+• An online and anytime-valid framework for watermark detection. We develop an anytime-valid framework for online watermark detection based on e-processes. Focusing on the Gumbel-max watermark, we reformulate the problem through a pivot-induced reduced construction under which the null distribution becomes explicit. This leads to a truly online detector without retaining the full history of watermark-related statistics, while preserving validity under anytime stopping. 
+
+• A Rao–Blackwellized reduced formulation. Motivated by the Rao–Blackwellization principle for e-variables and e-processes, we construct a pivot-induced reduced process with an explicit null distribution. Under a surrogate reduced family, the cumulative pivot 5Figure 1: Overview of the proposed online watermark detection framework. The generated text is treated as a token stream. statistic becomes sufficient, yielding a formal Rao–Blackwellized interpretation of the proposed e-process. 
+
+• Theoretical guarantees for validity and evidence accumulation. We show that the proposed e-process yields a valid e-process under the reduced null, and hence provides anytime-valid Type I error control under optional stopping. We further establish positive asymptotic log-growth under watermarking, which implies consistency of the corresponding stopping rule. Under the surrogate reduced family, we characterize the oracle value of the optimal e-process in closed form and derive asymptotic guarantees for both the empirical plug-in and mixture extensions. 62 Preliminaries 
+
+# 2.1 E-values and e-processes 
+
+To formalize our online watermark detection, we adopt the framework of e-values and e-processes, which enables sequential accumulation of statistical evidence with time-uniform error guarantees (Vovk and Wang, 2021; Ramdas et al., 2023; Ramdas and Wang, 2025). Let H0 denote the null hypothesis, represented by a possibly composite family of distributions P0. In a sequential setting, let {F t}t≥0 be the filtration generated by the observations up to time t. We begin by recalling the relevant definitions, i.e., e-values, sequential e-values and e-processes. 
+
+Definition 2.1 (E-value (Ramdas and Wang, 2025)) . An e-value E for P0 is an [0 , ∞]-valued random variable satisfying EP [E] ≤ 1 for all P ∈ P 0 .
+
+Definition 2.2 (Sequential e-value (Ramdas and Wang, 2025)) . A sequence of e-values 
+
+{Et}t≥1 for P0, adapted to {F t}t≥0, is called sequential if EP [Et | F t−1] ≤ 1 for all t ≥ 1
+
+and all P ∈ P 0.
+
+Proposition 2.3 (E-process (Ramdas and Wang, 2025)) . Let {Et}t≥1 be a finite (or infinite) sequence of sequential e-values for P0. Define Mt = Qts=1 Es for t ≥ 1, and M0 = 1 . Then 
+
+M = {Mt}t≥0 is an e-process for P0.
+
+The resulting anytime-valid guarantee follows from Ville’s inequality (Ramdas et al., 2023). For any significance level α ∈ (0 , 1), sup P ∈P 0 P sup t≥0 Mt ≥ 1/α  ≤ α. As a result, the stopping rule τα = inf {t ≥ 1 : Mt ≥ 1/α } defines an anytime-valid level-α sequential test. In online watermark detection, this permits continuous monitoring of a growing token stream and valid stopping whenever sufficient evidence has accumulated, without inflating the Type I error probability. 7The subsequent construction is guided by the Rao–Blackwellization principle for e-processes (de Roos et al., 2025), which states that conditioning on a sufficient reduced filtration preserves the e-process property and hence maintains anytime-valid inference. This principle allows us to replace a full-data evidence process with a reduced one that removes nuisance randomness and supports simpler online updates. Additional preliminaries on Rao–Blackwellization are provided in Appendix. 
+
+# 2.2 Problem formulation 
+
+We now formulate our online watermark detection problem. At time t, the language model conditions on the previously generated text w[t−1] = ( w1, . . . , w t−1) and produces a NTP distribution Pt = P(Wt = w | w[t−1] ) ∈ ∆( V), where ∆( V) denotes the set of probability distributions over V. In the absence of watermarking, the next token is sampled according to Pt, i.e., Wt ∼ Pt.A watermarking mechanism modifies this sampling rule through a secret-key-dependent randomization. Let K denote the watermark key, and let ζt be the pseudo-random variable associated with step t, generated from the key and the preceding context. An authorized detector can reconstruct ζt from the observed text and the shared key. The watermarking LLMs generate the next token according to the rule Wt ∼ S(Pt, ζ t) for some (deterministic) decoder S. The purpose of the watermark is to preserve the quality, and ideally the marginal behavior of the base model while inducing a detectable statistical dependence between Wt
+
+and ζt. This leads to the sequential hypothesis-testing formulation: 
+
+H0 : Wt ⊥⊥ ζt | F t−1, H1 : Wt ∼ S(Pt, ζ t).
+
+Under H0, the pseudo-random variable does not influence token generation; equivalently, conditional on the past, the token is generated independently of ζt. Under H1, the water-8marking mechanism couples the generated token with the pseudo-random variable via the key-dependent decoding rule. In our online setting, the detector observes tokens sequentially and updates its evidence after each newly generated token. Our primary goal is to reject H0 as early as possible when watermark-induced dependence is present, while maintaining valid Type I error control under arbitrary data-dependent stopping rules. 
+
+# 3 Online Watermark Detection 
+
+In this section, we develop a general e-process framework for online watermark detection, with the Gumbel-max watermark serving as a representative instantiation. Our construction first reduces the full sequential experiment to a pivot-induced reduced problem, enabling an anytime-valid detector with token-level online updates. We then introduce a surrogate reduced family that elucidates the Rao–Blackwellized interpretation of the method. Building on this, we further develop plug-in and mixture implementations for practical parameter choices. 
+
+# 3.1 The proposed token-level pivot framework 
+
+At each time t, the observed watermarking data ( Wt, ζ t) consist of a token Wt and an associated pseudo-random variable ζt. Following the pivot-based formulation of Li et al. (2025), we consider the null hypothesis H0 corresponding to the unwatermarking generation mechanism. Under H0, the token generation satisfies PH0 (Wt = w | F t−1, ζ t) = Pt(w), w ∈V, where Pt(w) denotes the (generally unknown) NTP distribution. Hence, under H0, the pseudo-random signal ζt does not influence token generation. To test for the presence of watermarking in streaming data, we adopt an e-process 9framework for sequential inference. A central difficulty is that the underlying distribution 
+
+Pt(w) is unknown and historical data may not be directly accessible. To overcome this, we construct a token-level pivot 
+
+Zt = Tt(Wt, ζ t), (1) and base the construction of e-processes on the transformed sequence {Zt}t≥1. We propose to use the reduced filtration Gt = σ(Z1, . . . , Z t) ⊆ F t. The pivot function Tt is designed such that the conditional distribution of Zt given Gt−1 is fully specified under H0, even though Pt(w) is unknown. Under the alternative hypothesis, the distribution of Zt deviates systematically from this reference behavior, enabling detection of watermarking effects. Existing watermark detectors typically operate on the full detection filtration Ft. For example, Christ et al. (2024) proposed a cryptographic watermarking scheme in which de-tection is performed using the secret key shared with the watermarking generator. Similarly, Dathathri et al. (2024) developed SynthID-Text, whose detector aggregates watermark-induced scores computed from the keyed watermarking mechanism. In contrast, our proposed framework operates with a reduced filtration rather than the full filtration. This construction is in the spirit of Rao–Blackwellization, leading to a more stable and efficient sequential procedure while preserving validity for online testing (de Roos et al., 2025). 
+
+# 3.2 A Gumbel-max watermark example 
+
+The specific form of Tt and the corresponding null reference distribution depend on the watermarking mechanism (Aaronson, 2023; Kirchenbauer et al., 2023). We next present the construction for the Gumbel-max watermark as a representative example. Our method, however, is not tied to this specific design and extends naturally to other watermarking mechanisms. 10 We now specialize the above framework to the Gumbel-max watermark and derive the corresponding reduced testing problem explicitly. At time t, the LLMs produce a NTP distribution Pt. Given the watermark key K and the current generation context, we generate a pseudo-random vector ζt = ( Ut,w )w∈V , where Ut,w 
+
+> i.i.d.
+
+∼ Unif (0 , 1) for w ∈ V .Under watermarking, the t-th token is generated by Wt = arg max w:Pt(w)>0 log Ut,w /P t(w).
+
+For the watermark, a natural pivot is the pseudo-random variable indexed by the token, 
+
+Yt = Ut,W t . Under the null, the token Wt is sampled from the original Pt, yielding the pivotal null distribution Yt | G t−1 ∼ Unif (0 , 1), according to the pivot-based analysis of Li et al. (2025). To obtain a more convenient reference distribution for e-process construction, following Fernandez et al. (2023); Li et al. (2026), we construct the final pivot to be 
+
+Zt = − log(1 − Yt) = − log(1 − Ut,W t ), Zt | G t−1 ∼ Exp(1) under H0.
+
+Although the pivot-induced reduced testing problem introduced in Section 3.1 has been extensively studied in offline settings (Aaronson, 2023; Li et al., 2025), existing methods are not directly applicable to streaming text data due to their reliance on access to the full dataset or repeated re-computation over accumulated observations. To handle streaming data without storing the full history, we exploit the explicit null reference distribution of the pivot sequence to construct one-step e-values and the corresponding anytime-valid e-process in the next subsection. 
+
+# 3.3 E-process construction 
+
+For concreteness, we also consider the commonly used Gumbel-max watermark, under which larger values of Zt provide stronger evidence against the null. This naturally motivates an exponential scoring rule of the form eλZ t , where λ ∈ (0 , 1) tunes the sensitivity to large pivot values: larger λ places more weight on extreme observations, while smaller λ yields 11 a more conservative update. To ensure validity under the null, we normalize this score by its null moment generating function, following standard exponential supermartingale constructions for anytime-valid inference (Ramdas et al., 2023; Ramdas and Wang, 2025). Denote St = Pts=1 Zs as the cumulative sum up to t, the resulting one-step e-values are then accumulated multiplicatively to form the e-process 
+
+Mt(λ) = 
+
+> t
+
+Y
+
+> s=1
+
+Es(λ) = (1 − λ)teλ Pts=1 Zs = (1 − λ)teλS t . (2) The following theorem shows that this construction defines a valid e-process on the reduced filtration. 
+
+Theorem 3.1. Suppose that under H0, we have Zt | G t−1 ∼ Exp (1) . Then, for every fixed 
+
+λ ∈ (0 , 1) , the process {Mt(λ)}t≥0 defined in (2) is an e-process with respect to {G t}t≥0
+
+under H0.
+
+Theorem 3.1 shows that the reduced null distribution alone is enough to produce a valid sequential detector. In particular, for any target level α ∈ (0 , 1), the stopping rule 
+
+τα = inf 
+
+
+
+t ≥ 1 : Mt(λ) ≥ 1
+
+α
+
+
+
+is anytime-valid. The theorem also leads directly to an online detection procedure for the Gumbel-max watermark. At each time step, the detector reconstructs the pseudo-random variable associated with the emitted token, transforms it into the reduced pivot Zt, and updates the e-process multiplicatively. The resulting procedure is summarized in Algorithm 1, which makes explicit how the proposed test for Gumbel-max watermark detection is implemented in practice. At each step t, the detector constructs a one-step e-value based on the emitted token and updates the e-process accordingly. Notably, the procedure only requires maintaining the current value of Mt, without accessing or storing the full data history. 12 Algorithm 1 Online Gumbel-max watermark detection using an e-process 
+
+Require: Significance level α ∈ (0 , 1), fixed parameter λ ∈ (0 , 1).  
+
+> 1:
+
+Initialize M0 ← 1 
+
+> 2:
+
+for t = 1 , 2, . . . , T do  
+
+> 3:
+
+Obtain pivot Yt. 
+
+> 4:
+
+Calculate Zt = − log(1 − Yt).  
+
+> 5:
+
+Form the one-step e-value Et = (1 − λ)eλZ t . 
+
+> 6:
+
+Update the e-process Mt = Mt−1 × Et. 
+
+> 7:
+
+if Mt ≥ α−1 then  
+
+> 8:
+
+return reject H0 at time t 
+
+> 9:
+
+end if  
+
+> 10:
+
+end for  
+
+> 11:
+
+return no rejection The e-process in (2) not only enables efficient online detection, but also admits a natural interpretation within the framework of Rao–Blackwellized e-processes driven by low-dimensional sufficient statistics. This perspective becomes clear by introducing a simple surrogate parametric family built on the null reference distribution. Specifically, recall that under the null, the pivot follows Exp (1) with density q0(z) = e−z . We embed this into a one-parameter exponential family 
+
+qκ(z) = exp {κz − ψ(κ)}q0(z), ψ(κ) = − log(1 − κ), κ ∈ (0 , 1) , (3) which simplifies to qκ(z) = (1 − κ)e−(1 −κ)z . Thus, κ = 0 recovers the null, while κ > 0induces a one-sided deviation under the alternative. Specifically, under qκ, the pivot follows Exp (1 − κ), so larger κ corresponds to a stronger departure from the null. In this sense, κ
+
+provides a simple and interpretable measure of discrepancy. 13 Proposition 3.2. For t ≥ 1, consider the surrogate reduced family {qκ : κ ∈ (0 , 1) } in (3) .Then St = Pts=1 Zs is a sufficient statistic for the reduced experiment at time t. Moreover, for every fixed λ = κ ∈ (0 , 1) , the constructed e-process in (2) at time t is a function of the sufficient statistic St.
+
+Proposition 3.2 shows that the construction is inherently low-dimensional: all relevant information accumulates through the single scalar St. Consequently, the proposed e-process is not only computationally efficient, but also statistically principled. Under the surrogate model, it coincides with a Rao–Blackwellized e-process, where inference is optimally based on the sufficient statistic. 
+
+# 3.4 Choosing λ in practice 
+
+The fixed-λ e-process in Section 3.3 is valid for every λ ∈ (0 , 1), but its performance depends on how well λ matches the (unknown) strength of departure from the reduced null. In practice, it is therefore natural to replace a single fixed choice with either an adaptive plug-in rule or a mixture over candidate values. Both approaches preserve anytime-validity and are standard in e-process-based sequential testing (Ramdas et al., 2022, 2023). Suppose the alternative shifts the pivot toward larger values with EH1 [Zt] = μ. The expected one-step log-growth of the fixed-λ factor is 
+
+EH1 [log Et(λ)] = log(1 − λ) + λμ. (4) Maximizing (4) over λ ∈ (0 , 1) yields the oracle choice λ⋆(μ) = 1 − μ−1. Since μ is unknown, we estimate it online using the empirical mean bμt−1 = ( t − 1) −1 Pt−1 
+
+> i=1
+
+Zi for t ≥ 2, updated recursively via bμt = t−1[( t − 1) bμt−1 + Zt]. This leads to the plug-in e-process 
+
+M plug  
+
+> t
+
+=
+
+> t
+
+Y
+
+> s=1
+
+(1 − λs)eλsZs , λs = clip 
+
+
+
+1 − 1
+
+bμs−1
+
+, λ min , λ max 
+
+
+
+, (5) 14 where 0 < λ min < λ max < 1 are fixed truncation constants to ensure numerical stability. Since each λs depends only on past observations, the resulting process remains adapted and preserves validity under the null. A complementary strategy is to avoid committing to a single value of λ and instead average over a range of candidates. Let π be a probability measure on (0 , 1). The corresponding mixture e-process is M mix  
+
+> t
+
+= R Q ts=1 (1 − λ)eλZ s π(dλ ). Because each fixed-λ
+
+process is an e-process under H0, the mixture construction also preserves null-validity by convexity (Ramdas et al., 2022, 2023). In practice, it is convenient to use a discrete approximation with grid points λ(1) , . . . , λ (m) and weights π1, . . . , π m which yields 
+
+M mix  
+
+> t
+
+=
+
+> m
+
+X
+
+> k=1
+
+πktY
+
+> s=1
+
+(1 − λ(k))eλ(k)Zs , πk ≥ 0,
+
+> m
+
+X
+
+> k=1
+
+πk = 1 . (6) Appendix states the corresponding validity guarantee for both methods. 
+
+# 4 Theoretical Guarantees 
+
+Under the null, we have established validity for controlling the Type I error. We turn to the alternative and analyze the rate at which the proposed e-process accumulates evidence against the null. 
+
+Assumption 4.1. The probability of generating each token in the NTP is bounded away from 1 for all t ≥ 1.
+
+Assumption 4.2. The sequence (Pt)t≥1 is m-dependent for some m ∈ N.
+
+Assumption 4.1 excludes nearly degenerate next-token distributions. When Pt is close to a point mass, token generation becomes nearly deterministic, so the watermark-induced perturbation has only limited influence on the realized token and the pivot signal becomes 15 weak (Li et al., 2025; Su et al., 2026). Assumption 4.2 imposes a weak dependence condition on the NTP sequence. A closely related m-dependence assumption is adopted in Su et al. (2026) as a stylized model of bounded context dependence and is also consistent with context-dependent watermark mechanisms such as Aaronson (2023); Kirchenbauer et al. (2023). 
+
+Theorem 4.1. Suppose Assumptions 4.1-4.2 hold, under the Gumbel-max alternative, there exists λ ∈ (0 , 1) , such that lim inf T →∞ T −1 log MT (λ) > 0 almost surely. Consequently, for every α ∈ (0 , 1) , the stopping rule τα = inf {T ≥ 1 : MT (λ) ≥ α−1} can reject the null almost surely. 
+
+The quantity lim inf T →∞ T −1 log MT (λ) captures the asymptotic log-growth rate, which governs the power under the alternative (Ramdas et al., 2023; Su et al., 2026). Under mild regularity conditions, the reduced e-process MT (λ) achieves strictly positive asymptotic log-growth, implying that the associated anytime-valid stopping rule is consistent. Similar theoretical results are provided in Li et al. (2025), however, they consider a fixed-horizon offline setting, which does not permit anytime rejection with valid Type I error control under optional stopping. Theorem 4.1 further establishes that, under the Gumbel-max reduced alternative, there exists a fixed choice of λ that yields positive asymptotic log-growth. We now turn to the surrogate reduced family in (3) , where both the asymptotic log-growth rate and the corresponding oracle choice of λ admit closed-form expressions. 
+
+Proposition 4.2. Suppose that under the surrogate reduced family in (3) , the true data-generating distribution is qκ0 for some κ0 ∈ (0 , 1) . Then, the asymptotic log-growth rate 
+
+lim T →∞ T −1 log MT (λ) is uniquely maximized at λ⋆ = κ0, and lim T →∞ T −1 log MT (λ⋆) > 0
+
+almost surely. 
+
+16 Proposition 4.2 makes the role of λ explicit within the surrogate reduced family. In contrast to Theorem 4.1, which only guarantees the existence of a favorable fixed choice under the actual Gumbel-max reduced alternative, the surrogate model identifies the oracle choice in closed form, i.e. λ⋆ = κ0, and shows that it maximizes the asymptotic log-growth rate within the fixed-λ class. This motivates the practical choices of λ used in practice; their corresponding theoretical guarantees are given in Appendix. 
+
+# 5 Experiments 
+
+In this section, we evaluate the proposed online detectors on both synthetic and real-data-based experiments, and compare them with a range of online and offline benchmarks. The proposed methods based on plug-in and mixture e-processes are denoted as Plug-in and 
+
+Mixture , respectively. Online baselines include the weight-adaptive e-process and the 
+
+OG e-process of Su et al. (2026). The fixed-horizon baselines are denoted by Ars , Log , and 
+
+Opt , corresponding to the sum-based watermark statistics with score functions − log (1 − y)(Aaronson, 2023), log y (Fernandez et al., 2023), and the optimized Gumbel-max score (Li et al., 2025), respectively. We consider the significance level to be α = 0 .05, and 500 replicates. 
+
+# 5.1 Synthetic experiments 
+
+We evaluate the proposed online detectors in a synthetic setting. The vocabulary size is fixed at N = 1000 and the horizon at T = 600. At each time t, the NTP distribution Pt ∈ R1000 
+
+is generated from a spike model: draw ∆ t
+
+> iid
+
+∼ Unif (0 .001 , δ ), select a spike token w⋆t ∈ V ,and assign Pt(w⋆t ) = 1 − ∆t, with the remaining mass ∆ t distributed over other tokens. The pseudo-random watermark vector is given by ζt = ( Ut,w )w∈V , where Ut,w 
+
+> iid
+
+∼ Unif(0 , 1). 17 Under H0, tokens are sampled from the unwatermarking model Wt ∼ Cat (Pt), where Cat (Pt) denotes the categorical distribution with probability mass Pt. Under H1, tokens are generated via the Gumbel-max watermark decoder Wt = arg max w:Pt(w)>0 log Ut,w /P t(w).
+
+The parameter δ controls the concentration of Pt. Larger δ increases the typical value of ∆ t,yielding a flatter distribution and more randomness for the Gumbel-max decoder. Hence, under the alternative, larger δ makes the watermark easier to detect than smaller δ.
+
+Figure 2: Average Type II error (on a log scale), sequential Type I error, and online runtime versus text length/token number on the synthetic data with δ = 0 .2 (top) and 
+
+δ = 0 .5 (bottom). Figure 2 presents the simulation results for δ = 0 .2 and δ = 0 .5, reporting the Type II error, sequential Type I error, and online runtime of all online methods. The online methods (solid lines) consistently control the sequential Type I error below the α = 0 .05, whereas the offline baselines Ars, Log, and Opt (dotted lines) exhibit substantial error inflation in the online setting. Although Ars often achieves the fastest decay of Type II error, this gain comes at the cost of losing sequential validity. 18 Among the valid procedures, the proposed plug-in and mixture e-processes show faster reductions in Type II error as the text length increases, with the advantage becoming more pronounced in the stronger-signal setting δ = 0 .5, while maintaining substantially lower computational cost than the other online procedures. These results suggest that the proposed plug-in and mixture e-processes offer the most favorable trade-off between empirical power, anytime-valid Type I error control, and online efficiency. A complementary endpoint summary is provided in Appendix, showing that the proposed plug-in and mixture e-processes attain power comparable to offline detectors while enabling much earlier stopping. 
+
+# 5.2 Real-data-based experiments 
+
+We next evaluate the proposed detectors on text generated by real language models under the Gumbel-max watermark. We consider two language models including facebook/opt-1.3b 
+
+(Zhang et al., 2022) and EleutherAI/gpt-neo-1.3b (Black et al., 2021), and generate watermarking text at three sampling temperatures, namely 1 .0, 0 .7, and 0 .5. We use the AG News dataset (Zhang et al., 2015) as the prompt source, randomly selecting 500 examples for evaluation. The methods considered here are identical to those used in Section 5.1, with one additional online baseline included in the real-data setting. In particular, we also evaluate anchored E-watermarking (Huang et al., 2026) under two anchor choices, namely a same-model anchor and a small-model anchor. The former uses the same model as the generator, whereas the latter uses a smaller model from the same family with size reduced to 125M. Figure 3 reports the real-data results at temperature 1 .0 on OPT-1.3B and GPT-Neo-1.3B. The offline baselines, including Ars, Log and Opt, can achieve low Type II error for sufficiently long watermarking sequences, but their sequential Type I error quickly increases 19 Figure 3: Average Type II error, sequential Type I error, and online runtime versus text length/token number on the real data at temperature 1 .0, with OPT-1.3B (top) and GPT-Neo-1.3B (bottom). far beyond the nominal level α = 0 .05, making them unsuitable and invalid for online detection. In contrast, the online methods maintain valid sequential Type I error control across both models. Among them, our plug-in and mixture e-processes achieve competitive detection power while being substantially more efficient than the weight-adaptive and OG e-process baselines. The anchor-based comparisons further show that model mismatch can severely weaken detection power, as the small-model anchor exhibits persistently large Type II error, whereas the same-model anchor performs well only when a matched reference model is available. It is important to note, however, that the same-model anchor relies on an anchor distribution obtained by querying the reference LLM, which incurs an additional inference cost that is substantially larger than the post-hoc score-based and e-process computations reported in the runtime panels. Overall, these results demonstrate that our plug-in and mixture e-processes provide a favorable trade-off between empirical power, anytime-valid 20 Type I error control, and online computational efficiency on real LLM-generated text. Additional comparisons at temperatures 0 .5 and 0 .7 and endpoint summaries are reported in Appendix, showing that the proposed methods remain competitive across temperatures while preserving the advantage of early stopping. 
+
+# References 
+
+Aaronson, S. (2023), ‘Watermarking of large language models’. https://simons. berkeley.edu/talks/scott-aaronson-ut-austin-openai-2023-08-17 .Achiam, J., Adler, S., Agarwal, S., Ahmad, L., Akkaya, I., Aleman, F. L., Almeida, D., Altenschmidt, J., Altman, S., Anadkat, S. et al. (2023), ‘Gpt-4 technical report’, arXiv preprint arXiv:2303.08774 . Bao, G., Zhao, Y., Teng, Z., Yang, L. and Zhang, Y. (2023), ‘Fast-detectgpt: Efficient zero-shot detection of machine-generated text via conditional probability curvature’, arXiv preprint arXiv:2310.05130 . Black, S., Leo, G., Wang, P., Leahy, C. and Biderman, S. (2021), ‘Gpt-neo: Large scale autoregressive language modeling with mesh-tensorflow’, Zenodo . Brown, T., Mann, B., Ryder, N., Subbiah, M., Kaplan, J. D., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A. et al. (2020), ‘Language models are few-shot learners’, Advances in Neural Information Processing Systems 33 , 1877–1901. Bubeck, S., Chandrasekaran, V., Eldan, R., Gehrke, J., Horvitz, E., Kamar, E., Lee, P., Lee, Y. T., Li, Y., Lundberg, S. et al. (2023), ‘Sparks of artificial general intelligence: Early experiments with gpt-4’, arXiv preprint arXiv:2303.12712 10 .Chen, C. and Wang, J.-K. (2024), ‘Online detection of llm-generated texts via sequential hypothesis testing by betting’, arXiv preprint arXiv:2410.22318 . Christ, M., Gunn, S. and Zamir, O. (2024), Undetectable watermarks for language models, in ‘The Thirty Seventh Annual Conference on Learning Theory’, PMLR, pp. 1125–1139. Dathathri, S., See, A., Ghaisas, S., Huang, P.-S., McAdam, R., Welbl, J., Bachani, V., 21 Kaskasoli, A., Stanforth, R., Matejovicova, T. et al. (2024), ‘Scalable watermarking for identifying large language model outputs’, Nature 634 (8035), 818–823. de Roos, D., Chugg, B., Gr¨ unwald, P. and Ramdas, A. (2025), ‘Rao-blackwellized e-variables’, arXiv preprint arXiv:2512.16759 . Fernandez, P., Chaffin, A., Tit, K., Chappelier, V. and Furon, T. (2023), Three bricks to consolidate watermarks for large language models, in ‘2023 IEEE International Workshop on Information Forensics and Security (WIFS)’, IEEE, pp. 1–6. Grattafiori, A., Dubey, A., Jauhri, A., Pandey, A., Kadian, A., Al-Dahle, A., Letman, A., Mathur, A., Schelten, A., Vaughan, A. et al. (2024), ‘The llama 3 herd of models’, arXiv preprint arXiv:2407.21783 . Gr¨ unwald, P., de Heide, R. and Koolen, W. M. (2020), Safe testing, in ‘2020 Information Theory and Applications Workshop (ITA)’, IEEE, pp. 1–54. Guo, H., Cheng, S., Jin, X., Zhang, Z., Zhang, K., Tao, G., Shen, G. and Zhang, X. (2024), ‘Biscope: Ai-generated text detection by checking memorization of preceding tokens’, Advances in Neural Information Processing Systems 37 , 104065–104090. Howard, S. R., Ramdas, A., McAuliffe, J. and Sekhon, J. (2021), ‘Time-uniform, nonpara-metric, nonasymptotic confidence sequences’, The Annals of Statistics 49 (2), 1055–1080. Hu, Z., Chen, L., Wu, X., Wu, Y., Zhang, H. and Huang, H. (2023), ‘Unbiased watermark for large language models’, arXiv preprint arXiv:2310.10669 . Huang, B., Xu, E., Ramchandran, K., Jiao, J. and Jordan, M. I. (2026), ‘Towards anytime-valid statistical watermarking’, arXiv preprint arXiv:2602.17608 . Jawahar, G., Abdul-Mageed, M. and Laks Lakshmanan, V. (2020), Automatic detection of machine generated text: A critical survey, in ‘Proceedings of the 28th International Conference on Computational Linguistics’, pp. 2296–2309. Johari, R., Koomen, P., Pekelis, L. and Walsh, D. (2022), ‘Always valid inference: Continuous monitoring of a/b tests’, Operations Research 70 (3), 1806–1821. Kasneci, E., Seßler, K., K¨ uchemann, S., Bannert, M., Dementieva, D., Fischer, F., Gasser, U., Groh, G., G¨ unnemann, S., H¨ ullermeier, E. et al. (2023), ‘Chatgpt for good? on opportunities and challenges of large language models for education’, Learning and 22 Individual Differences 103 , 102274. Kirchenbauer, J., Geiping, J., Wen, Y., Katz, J., Miers, I. and Goldstein, T. (2023), A watermark for large language models, in ‘International Conference on Machine Learning’, PMLR, pp. 17061–17084. Li, X., Ruan, F., Wang, H., Long, Q. and Su, W. J. (2025), ‘A statistical framework of watermarks for large language models: Pivot, detection efficiency and optimal rules’, The Annals of Statistics 53 (1), 322–351. Li, X., Ruan, F., Wang, H., Long, Q. and Su, W. J. (2026), ‘Robust detection of watermarks for large language models under human edits’, Journal of the Royal Statistical Society Series B: Statistical Methodology 88 (2), 491–515. Liu, A., Feng, B., Xue, B., Wang, B., Wu, B., Lu, C., Zhao, C., Deng, C., Zhang, C., Ruan, C. et al. (2024), ‘Deepseek-v3 technical report’, arXiv preprint arXiv:2412.19437 . Mao, C., Vondrick, C., Wang, H. and Yang, J. (2024), ‘Raidar: generative ai detection via rewriting’, arXiv preprint arXiv:2401.12970 . Milano, S., McGrane, J. A. and Leonelli, S. (2023), ‘Large language models challenge the future of higher education’, Nature Machine Intelligence 5(4), 333–334. Mitchell, E., Lee, Y., Khazatsky, A., Manning, C. D. and Finn, C. (2023), Detectgpt: Zero-shot machine-generated text detection using probability curvature, in ‘International Conference on Machine Learning’, PMLR, pp. 24950–24962. Nakano, R., Hilton, J., Balaji, S., Wu, J., Ouyang, L., Kim, C., Hesse, C., Jain, S., Kosaraju, V., Saunders, W. et al. (2021), ‘Webgpt: Browser-assisted question-answering with human feedback’, arXiv preprint arXiv:2112.09332 . Piet, J., Sitawarin, C., Fang, V., Mu, N. and Wagner, D. (2025), Markmywords: Analyzing and evaluating language model watermarks, in ‘2025 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML)’, IEEE, pp. 68–91. Ramdas, A., Gr¨ unwald, P., Vovk, V. and Shafer, G. (2023), ‘Game-theoretic statistics and safe anytime-valid inference’, Statistical Science 38 (4), 576–601. Ramdas, A., Ruf, J., Larsson, M. and Koolen, W. M. (2022), ‘Testing exchangeability: Fork-convexity, supermartingales and e-processes’, International Journal of Approximate 23 Reasoning 141 , 83–109. Ramdas, A. and Wang, R. (2025), ‘Hypothesis testing with e-values’, Foundations and Trends ® in Statistics 1(1-2), 1–390. Stokel-Walker, C. (2022), ‘Ai bot chatgpt writes smart essays-should professors worry?’, Nature 614 (7947), 214–216. Su, J., Zhuo, T., Wang, D. and Nakov, P. (2023), Detectllm: Leveraging log rank information for zero-shot detection of machine-generated text, in ‘Findings of the Association for Computational Linguistics: EMNLP 2023’, pp. 12395–12412. Su, W., Wang, R. and Zhao, Z. (2026), ‘Online llm watermark detection via e-processes’, arXiv preprint arXiv:2602.14286 . Tang, R., Chuang, Y.-N. and Hu, X. (2024), ‘The science of detecting llm-generated text’, Communications of the ACM 67 (4), 50–59. Touvron, H., Martin, L., Stone, K., Albert, P., Almahairi, A., Babaei, Y., Bashlykov, N., Batra, S., Bhargava, P., Bhosale, S. et al. (2023), ‘Llama 2: Open foundation and fine-tuned chat models’, arXiv preprint arXiv:2307.09288 . Vovk, V. and Wang, R. (2021), ‘E-values: Calibration, combination and applications’, The Annals of Statistics 49 (3), 1736–1754. Xi, Z., Chen, W., Guo, X., He, W., Ding, Y., Hong, B., Zhang, M., Wang, J., Jin, S., Zhou, E. et al. (2025), ‘The rise and potential of large language model based agents: A survey’, Science China Information Sciences 68 (2), 121101. Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K. and Cao, Y. (2022), ‘React: Synergizing reasoning and acting in language models’, arXiv preprint arXiv:2210.03629 . Zhang, S., Roller, S., Goyal, N., Artetxe, M., Chen, M., Chen, S., Dewan, C., Diab, M., Li, X., Lin, X. V. et al. (2022), ‘Opt: Open pre-trained transformer language models’, arXiv preprint arXiv:2205.01068 . Zhang, X., Zhao, J. and LeCun, Y. (2015), ‘Character-level convolutional networks for text classification’, Advances in Neural Information Processing Systems 28 .Zhou, H., Zhu, J., Su, P., Ye, K., Yang, Y., Gavioli-Akilagun, S. A. and Shi, C. (2025), ‘Adadetectgpt: Adaptive detection of llm-generated text with statistical guarantees’, 24 arXiv preprint arXiv:2510.01268 . Zhou, H., Zhu, J., Yang, Y. and Shi, C. (2026), ‘Detecting llm-generated text with perfor-mance guarantees’, arXiv preprint arXiv:2601.06586 . 25
