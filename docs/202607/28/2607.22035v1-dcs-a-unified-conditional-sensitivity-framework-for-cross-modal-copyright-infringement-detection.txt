@@ -1,0 +1,927 @@
+Title: DCS: A Unified Conditional Sensitivity Framework for Cross-Modal Copyright Infringement Detection
+
+URL Source: https://arxiv.org/pdf/2607.22035v1
+
+Published Time: Mon, 27 Jul 2026 00:27:30 GMT
+
+Number of Pages: 32
+
+Markdown Content:
+# DCS: A Unified Conditional Sensitivity Framework for Cross-Modal Copyright Infringement Detection 
+
+Xiafeng Man 
+
+Fudan University 
+
+xfmanacad@outlook.com 
+
+July 27, 2026 
+
+Abstract 
+
+Currently, most foundation models can reproduce or strongly depend on copyrighted training content, but output similarity alone is insufficient for infringement detection, because similar outputs may also arise from public-domain concepts, common stylistic conventions, or ordinary statistical generalization. In this paper, we develops a unified post-hoc detection framework that treats copyright infringement evidence as a counterfactual conditional distribution shift: a protected target is suspicious when the model’s behavior under aligned conditions would change measurably if that target were included in, or removed from, the training process. We formalize this view through conditional differential privacy and introduce Dual-Branch 
+
+Conditional Sensitivity (DCS), an operational statistic that measures the observable gap be-tween two locally perturbed model states. Specifically, the proposed DCS framework creates a learning branch and an unlearning branch around the deployed model, connects their displace-ment to the unavailable counterfactual retraining effect through influence-function analysis, and bounds the observable sensitivity by the counterfactual privacy-budget surrogate, local curvature, training-set scale, and perturbation step size. To distinguish target-specific memorization from generic fine-tuning instability, we further define a calibrated detection statistic that subtracts the sensitivity measured under orthogonal conditions. The DCS framework is instantiated for ridge-regularized linear regression, conditional diffu-sion models, autoregressive language models, and multimodal models. These instantiations show how the same principle can be evaluated through prediction gaps, image-embedding divergence, token-distribution or entropy shifts, and cross-modal representation changes. The resulting for-mulation provides an interpretable bridge between privacy leakage, memorization, and copyright detection across modalities, while making explicit the broader auditing assumptions under which post-hoc infringement detection is statistically meaningful. 
+
+1arXiv:2607.22035v1 [cs.LG] 24 Jul 2026 Contents 
+
+Notation 31 Introduction 42 Problem Formulation 6
+
+2.1 Counterfactual Distribution Shift . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 62.2 Copyright Trilemma . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 62.3 Problem Assumptions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+
+3 Differential Privacy View of Copyright 9
+
+3.1 Notation and Problem Setup . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 93.2 Influence Functions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 93.3 From Privacy Bounds to Publicity Violations . . . . . . . . . . . . . . . . . . . . . . 10 3.3.1 Differential Privacy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 3.3.2 Conditional Privacy and Publicity . . . . . . . . . . . . . . . . . . . . . . . . 11 3.4 Formal Criteria for Infringement and Non-Infringement . . . . . . . . . . . . . . . . 12 
+
+4 Dual-Branch Conditional Sensitivity (DCS) 13 
+
+4.1 Counterfactual Privacy Budget . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 4.2 Dual-Branch Perturbation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 4.3 Influence-Function Coupling . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 4.4 Conditional Sensitivity . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 4.5 Calibrated Detection Statistic . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 
+
+5 Modality-Specific Instantiations 18 
+
+5.1 Linear Regression Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 5.2 Conditional Diffusion Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 5.3 Language Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 5.4 Multimodal Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 
+
+6 Conclusion 29 
+
+2Notation 
+
+We use calligraphic letters such as X for spaces or abstract domains, bold symbols such as p for vectors or matrices, hats such as ˆθ for empirical estimators obtained from an optimization problem. 
+
+Symbol Description 
+
+Math 
+
+H Hessian matrix 
+
+λ Eigenvalue 
+
+λmax (H) Largest eigenvalue or local maximum curvature of the Hessian 
+
+∥ · ∥ F Frobenius norm 
+
+Models, Datasets, and Samples 
+
+M Randomized model or mechanism 
+
+X , Y Model input and output space 
+
+S Measurable output event 
+
+p ∈ P Condition content and its space (e.g., prompts, queries or multimodal contents) 
+
+Pc, P⊥ Target-aligned conditioning set and orthogonal conditioning set 
+
+θD ∈ Θ Model parameter trained on dataset D and its space 
+
+D (e.g., D+, D−) Training dataset or locally perturbed model state shorthand 
+
+D′ Neighboring dataset differing from D in one target sample or concept 
+
+zi = ( xi, y i) A training data point with input xi and output yi
+
+U (·) Semantic neighborhood Φ Query function 
+
+Losses, Influence, and Sensitivity 
+
+L(·) Loss function 
+
+R(θ) Empirical risk 
+
+Iup Influence of upweighting a training point 
+
+η Fine-tuning step size 
+
+I Fine-tuning branch indicator 
+
+GS (M ), LS (M, D ) Global and local sensitivity of a query or mechanism 
+
+CS (zc, p) Conditional sensitivity with target concepts and conditions 
+
+Sc(zc), S⊥(zc) Aligned sensitivity and orthogonal background sensitivity 
+
+CDS (zc), ]CDS (zc) Calibrated detection statistic and normalized calibrated statistic ∆θ Parameter displacement 
+
+Probability and Privacy 
+
+Pr[ ·] Probability of an event 
+
+q(·) Density or probability mass function 
+
+ϵ, δ Differential privacy budget and its failure probability 
+
+bϵ(zc, p) Observation-space surrogate of the conditional privacy budget 
+
+f (zc) Confidence score 31 Introduction 
+
+Due to the effect of scaling law, most large artificial intelligence models are increasingly trained on heterogeneous corpora containing text, images, code, audio, video, and multimodal associations collected at web scale. Their practical value comes from the ability to generalize from this data, but the same training process can also create model behaviors that reproduce, reconstruct, or strongly depend on protected expressive content. Prior studies [1, 2, 3] on memorization and extraction have shown that rare or distinctive samples can become disproportionately influential in learned models, especially in long-tail regions of the data distribution. Diffusion models raise a particularly visible version of this concern, because generated images may replicate training examples or protected visual styles in ways that resemble digital forgery [4, 5, 6]; related memorization risks are also emerging in video diffusion models [7]. Copyright auditing 1 therefore requires more than a raw comparison between a generated output and a reference work. Two outputs may be similar because the target work was memorized, but it may also results from generic concept expression or similar region of the training distribution. Recent benchmarks and evaluation studies on copyright show that infringement detection and mitigation mostly depend on target concepts and prompts [8, 9, 10]. However, even when ordinary prompts do not directly extract a close copy, a model may also contain information about a protected work. The central difficulty is that we must demonstrate that the target work has a measurable effect on the model’s output behavior, not merely visual or textual similarity. Based on the analysis above and our previous study [11], we formulate copyright infringement detection as a counterfactual distributional problem . As developed in Section 2, we will com-pare the behavior of a model trained with or without target concepts. This framing separates explicit infringement from ordinary generalization, and points out the auditing constraints faced by copyright holders, model providers, and third-party auditors. In particular, a meaningful auditing procedure must operate under a copyright trilemma : the target must be sufficiently distinctive, the model must expose observable behavior, and the model may also be protected by mechanisms that suppress direct extraction [12, 13, 14, 15]. Therefore, we define a clear operational boundary and necessary assumptions for the detection work. To give this view a mathematical foundation, Section 3 reinterprets copyright memorization through differential privacy. Classical differential privacy [16, 17] provides statistical guarantees against the information an adversary can infer through the output of a randomized algorithm. In the region of copyright infringement detection, we adapt this idea to conditional generation by defining conditional privacy, conditional publicity, and (non-) infringement criteria 
+
+under prompts, queries, or multimodal conditions. In this view, the inclusion of an infringed target should produce large conditional privacy violation, while a non-infringed or irrelevant target should produce approximate invariance. The main technical contribution appears in Section 4. Directly training the counterfactual model from scratch is usually infeasible, especially when the original training data and training pipeline are unavailable. Dual-Branch Conditional Sensitivity ( DCS ) therefore employs a perturbation strategy. Specifically, we construct two local branches from the original parameter state: a learning branch that takes a small optimization step toward the target, and an unlearning branch that takes the opposite step. The divergence between the two branches under aligned conditions defines the conditional sensitivity score. Through the coupling of influence function [18, 19], the local dual-branch gap acts as an operational surrogate for the unavailable counterfactual drift induced by    
+
+> 1In this paper, detection denotes the technical task of estimating the evidence of copyright infringement, whereas
+> auditing denotes the broader investigative setting in which such detection is deployed.
+
+4including or excluding the target. However, fine-tuning any large model can introduce global instability unrelated to the target–the global parameter shift. Fine-tuning models on the target sample will inevitably influence the gener-ation of unrelated samples. To address this problem, we define a calibrated detection statistic 
+
+in Section 4.5. It compares sensitivity under aligned conditions Pc with the one under orthogonal conditions P⊥. The aligned component estimates the model’s response in the semantic neighbor-hood of the protected work, while the orthogonal component estimates background drift caused by the perturbation procedure itself. Their difference yields a more robust infringement signal. Finally, in Section 5, we instantiate the framework across several model classes: In ridge-regularized linear regression, the sensitivity and privacy-budget surrogate admit a closed-form rela-tionship controlled by residuals and Hessian geometry. In conditional diffusion models, sensitivity is measured as the representation-space gap (e.g., CLIP image embeddings [20]) between learning and unlearning samplers under aligned prompts, following the empirical motivation of our prior work [11]. In casual language models, the sensitivity signal appears as a divergence in next-token distributions or entropy along target continuations, consistent with the transformer-based large lan-guage model paradigm [21, 22]. In multimodal models, we extend the framework to the cross-modal representations and attention-based associations, allowing the framework to capture protected bind-ings between names, prompts, images, styles, and other modalities. 
+
+In summary, our work makes the following contributions: 
+
+• To our knowledge, we are the first to establish a unified theoretical foundation for the copyright detection view of differential privacy; 
+
+• We propose a theoretically grounded theory for the post-hoc detection of copyright infringe-ment. Specifically, we first formulate the evidence of copyright infringement as a conditional distribution shift; then we propose that a meaningful auditing procedure must operate under a copyright trilemma and that detection work has operational boundaries. 
+
+• From the perspective of mathematics and statistics, we introduce dual-branch conditional sensitivity (DCS) statistic, a unified conditional sensitivity measure for memorization and publicity violations, based on dual-branch perturbations: learning and unlearning fine-tuning branches. We also define an orthogonally calibrated detection score that greatly discounts generic fine-tuning drift; 
+
+• We instantiate our framework in different modalities, such as linear model, diffusion model, language model, and multimodal model. 52 Problem Formulation 
+
+2.1 Counterfactual Distribution Shift 
+
+Defining the boundary between copyright infringement and legitimate model generalization remains a challenge in the discipline of artificial intelligence and law regulations, because output similarity alone is not a causal notion. When a model generates text or image output, it is inherently difficult to evaluate infringement based solely on raw, unfeatured outputs. It may arise from public-domain concepts, common stylistic conventions, or independent statistical convergence, rather than model memorization or direct replication. Therefore, a static comparison between a generated output and a copyrighted reference is insufficient for determining whether the protected work had a concrete effect on the model. Therefore, we formulate the detection of copyright infringement as a counterfactual distributional problem . Let xc denote a copyrighted sample or concept, and let MD denote a model trained on dataset D. The relevant question is not merely whether some output of MD resembles xc, but whether the conditional output distribution of the model would change if xc were removed from, or added to, the training process. In this view, infringement evidence corresponds to a measurable behavioral dependence of the model on the target copyrighted data. The proposed formulation consists of two components: 
+
+• Counterfactual Analysis : The model is evaluated across two states: one in which the target copyrighted data or concept is included in the training set, such as Dtrain ∪ { xc}, and one in which it is strictly omitted, such as Dtrain \ { xc}.
+
+• Shift Quantification : The behavioral difference between these states is measured through controlled conditioning spaces, such as prompts, queries, or multimodal contexts, by estimating the statistical distance between the output distributions. With these formulations, a large counterfactual shift implies that the target data greatly in-fluences model’s behavior, therefore suggesting potential infringement. Conversely, approximate invariance suggests only generalization or no infringement. 
+
+2.2 Copyright Trilemma 
+
+Auditing Constraints Training datasets are often proprietary and not publicly disclosed due to legal, commercial, or privacy constraints. In some cases, even the model developers lack full visibility into the data sources and do not retain a complete record of all data sources, making direct access or full auditing impossible. 
+
+Copyright Trilemma In such cases, copyright auditing is constrained by a three-way tension among copyright holders, auditors, and model providers. Effective auditing requires the simultaneous satisfaction of these three parts, but in practice, three objectives cannot all be guaranteed, that is, any model can only satisfy at most two of the following objectives, as shown in Figure 1: 
+
+• High distinctiveness : The audited target should contain protectable and non-generic ex-pressive copyright characteristics, rather than merely reflecting public knowledge or highly homogeneous patterns. 
+
+• Observable behavior : The model’s outputs should reveal enough information for auditors to estimate the internal distributional variations induced by the target data. 6(Copyright Holders) 
+
+High Distinctiveness 
+
+Observable Behavior 
+
+> (Auditors)
+
+Robust Generalization  
+
+> (Model Provider s)
+
+# TRILEMMA 
+
+[Scenario  2] 
+
+> Vague Fluctuation
+> (Copyright Holders Fail)
+
+Figure 1: Trilemma of Copyright Auditing 
+
+• Robust generalization : The model itself should generalize without exposing memorized training data. It should also protect copyright of training datasets by alignment, unlearning, concept erasure, or privacy-preserving mechanisms, therefore ensuring legitimate outputs. 
+
+Copyright Trilemma Scenarios We list three scenarios in copyright trilemma: 
+
+• Scenario 1: Deceptive Output. In this scenario, a distinctive sample is included in train-ing corpus, but the model employs robust post-hoc alignment, machine unlearning, differ-ential privacy or other data protection mechanisms during training. These mechanisms may smooth observable output behaviors, thereby creating a hidden infringement state that stan-dard output-based detection methods fail to capture. 
+
+• Scenario 2: Vague Fluctuation. Even for a secure and well-aligned model, auditors may possess sensitive tools capable of tracking subtle statistical fluctuations in the output space. However, if the target consists of highly homogeneous or generic concepts, such as ordinary natural landscapes, it may lack sufficiently distinctive expression [23]. In this case, any ob-served similarity can be plausibly attributed to legitimate generalization rather than copyright infringement. 
+
+• Scenario 3: Auditable Plagiarism. When a model is trained on a highly distinctive copy-righted work by copyright holders and operates without stringent privacy protection, its condi-tional output distribution may shift dramatically toward the long-tail memorized behavior [1]. This setting provides strong evidence for auditing, but it also indicates a failure of model pri-vacy and security. Unmasked memorization leaves extractable output behavior, making the model susceptible to membership inference and data extraction attacks [2, 3, 4]. 
+
+2.3 Problem Assumptions 
+
+The trilemma above implies that distributional shift detection is meaningful only under explicit operational assumptions. Our framework is not intended to declare infringement from arbitrary 7output resemblance. Instead, it tests whether a sufficiently distinctive target induces a statistically observable change in model behavior under controlled counterfactual perturbations. First, the target data must display high semantic, stylistic, or structural salience . Highly ho-mogeneous or generic samples are difficult to isolate from the background training distribution because the marginal contribution of a single redundant data point may yield near invariance under counterfactual analysis. Second, the model must exhibit observable behavior . If specific algorithm fully masks the effect of the target data, then the relevant distributional change may be invisible to the parameter or output interrogation. Third, the auditor must have access to a controlled conditioning space . The space could be a set of prompts, captions, reference contexts, or multimodal queries semantically aligned with the target concept. These conditions define the neighborhood in which behavioral dependence is measured. Under these assumptions, our goal is to construct a post-hoc detection statistic that estimates whether the inclusion or exclusion of a target copyrighted sample produces a measurable conditional distribution shift based on its infringement or non-infringement. The following sections will formalize it through differential privacy and a unified sensitivity measure. 83 Differential Privacy View of Copyright 
+
+In this section, we formalize copyright memorization as a conditional privacy problem. We first introduce the notation and sample effects from the lens of influence function, and then reinterpret copyright exposure through differential privacy, conditional publicity, and its behavioral criteria. 
+
+3.1 Notation and Problem Setup 
+
+Let X denote the input space and Y denote the discrete or continuous output space. A foundation model parameterized by θ ∈ Θ ⊆ Rd is trained on a base dataset D = {z1, z 2, . . . , z n}, where each data point zi = ( xi, y i) ∈ X × Y .For a point z and parameter state θ, let L(z; θ) be the loss function. We assume that the empirical risk R(θ) is twice-differentiable and strictly convex in θ, the objective function and its unique optimal estimator ˆθ are formulated as: 
+
+R(θ) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+L(zi; θ); (3.1) ˆθ ≜ arg min  
+
+> θ∈Θ
+
+R(θ) = arg min 
+
+> θ∈Θ
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+L(zi; θ). (3.2) In conditional generation scenarios, we denote p ∈ P as a generalized conditioning prompt operator initialized from or semantically aligned with the neighborhood U (zc) of a target concept 
+
+zc (e.g., stylistically, structurally, or contextually similar samples). 
+
+3.2 Influence Functions 
+
+Influence functions [18] estimate the impact of training points on model parameters without re-training the model from scratch. Scalable attribution methods such as TRAK [19] further motivate the use of local linearized approximations when direct counterfactual retraining is unavailable. For diffusion models, training-data attribution methods similarly aim to quantify how individual sam-ples affect generated behavior [24, 25]. The change in model parameters due to removing a point z
+
+from the training set is given by: ∆ˆθz = ˆθ−z − ˆθ = arg min 
+
+> θ∈Θ
+
+1
+
+n
+
+X 
+
+> zi̸=z
+
+L(zi; θ) − arg min 
+
+> θ∈Θ
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+L(zi; θ). (3.3) To avoid the computational cost of complete retraining, we compute the parameter change of z by introducing a small perturbation ϵ:ˆθϵ,z = arg min  
+
+> θ∈Θ
+
+[R(θ) + ϵL(z; θ)] . (3.4) By forming a first-order linear approximation around ˆθ [26], the parameter change under up-weighting z is formalized as: 
+
+Iup ,params (z) ≜ dˆθϵ,z 
+
+dϵ ϵ=0 
+
+= −H−1ˆθ ∇θL(z; ˆθ) (3.5) 9where Hˆθ is the positive-definite Hessian matrix: 
+
+Hˆθ ≜ 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+∇2
+
+> θ
+
+L(zi; ˆθ). (3.6) Since removing a point z is mathematically equivalent to shifting its sample weight by ∆ ϵ = − 1 
+
+> n
+
+,the parameter shift can be linearly approximated as: ∆ˆθ(z) ≈ − 1
+
+n Iup ,params (z) = 1
+
+n H−1ˆθ ∇θL(z; ˆθ). (3.7) Correspondingly, the influence of sample z on the model’s loss prediction at point ztest can be estimated as: 
+
+Iup ,loss (z, z test ) = −∇ θL(ztest ; ˆθ)⊤H−1ˆθ ∇θL(z; ˆθ). (3.8) Despite theoretical elegance, influence functions suffer from the computational intractability of calculating H−1. Although prior work [27, 28, 29] has developed approximations to the inverse Hessian matrix, these methods still require substantial memory and computation. 
+
+3.3 From Privacy Bounds to Publicity Violations 
+
+To reinterpret copyright memorization or infringement under a rigorous framework, we formalize model behaviors with differential privacy metrics. 
+
+3.3.1 Differential Privacy 
+
+Differential privacy is a formal notion of algorithmic privacy, which aims to prevent the release of private information [16, 17]. Let D0 ∈ X m denote a database from the input domain X , and two databases D, D ′ ∈ X m
+
+are said to be neighbouring datasets if d(D, D ′) ≤ 1, where d represents the distance between two datasets. A randomized mechanism M maps the input space X to a measurable output space Y.Differential privacy is formally defined as follows: 
+
+Definition 1 (Differential Privacy) . A randomized mechanism M : X m → Y is said to satisfy (ϵ, δ )-differential privacy if for every pair of neighbouring databases D and D′, and for every measurable output event S ⊆ Y :
+
+Pr[ M (D) ∈ S] ≤ eϵ · Pr[ M (D′) ∈ S] + δ (3.9) 
+
+with probability 1 − δ, where ϵ is the privacy budget and δ is a failure probability for the definition (typically δ ≤ 1 
+
+> n2
+
+), which means the privacy guarantee cannot hold with probability δ.
+
+For a query M : D0 → R , the global sensitivity (GS) is the maximum distance for any two neighbouring datasets: 
+
+GS (M ) = max  
+
+> D,D ′:d(D,D ′)≤1
+
+M (D) − M (D′) F (3.10) which is independent of the actual dataset being queried. Another measure of sensitivity, local sensitivity of M at D : D0, fixes one of the two datasets D
+
+to be the actual dataset being queried, and considers all of its neighbors: 
+
+LS (M, D ) = max  
+
+> D′:d(D,D ′)≤1
+
+M (D) − M (D′) F . (3.11) 10 3.3.2 Conditional Privacy and Publicity 
+
+As most large models produce outputs under conditioning spaces, we first define conditional differ-ential privacy: 
+
+Definition 2 (Conditional Differential Privacy) . A randomized mechanism M : X m × P → Y 
+
+conditioned on p ∈ P is said to satisfy (ϵ, δ, p)-conditional differential privacy if for every pair of neighbouring databases D and D′ that differ by at most one single element associated with the semantic neighborhood U (p), and for every measurable output event S ⊆ Y :
+
+Pr[ M (D, p) ∈ S] ≤ eϵ · Pr[ M (D′, p) ∈ S] + δ (3.12) 
+
+with probability 1 − δ, where ϵ is the conditional privacy budget and δ is a failure probability for the definition. 
+
+Definition 3 (Conditional Publicity) . A randomized mechanism M : X m × P → Y conditioned on 
+
+p ∈ P is said to satisfy (ϵ, p)-conditional publicity if there exist neighbouring training datasets D
+
+and D′ that differ in at most one single element, and there exists at least one measurable output event S ⊆ Y such that: 
+
+Pr[ M (D, p) ∈ S] > e ϵ · Pr[ M (D′, p) ∈ S] ≫ Pr[ M (D′, p) ∈ S] (3.13) 
+
+where ϵ > 200 indicates a substantial violation of privacy, i.e., the model output strongly depends on the presence of a specific concept in the training set. 
+
+The notion of conditional publicity implies that an algorithm could significantly alter its relevant outputs when a single concept in the training dataset is modified. On the contrary, an input that the model has not seen, namely, non-infringed data, could be relatively private: 
+
+Proposition 1. Let x be a data point that does not appear in either D or its neighbouring dataset 
+
+D′. In the idealized case where the conditional output distribution of M is independent of x and its semantic neighborhood, the mechanism M satisfies (0 , 0, p)-conditional differential privacy with respect to x for any condition p.
+
+The requirement x /∈ D and x /∈ D′ is often too strict in realistic models, where semantic neighbors of x may still influence model behavior even if x itself is not present in the training set. To address this, we introduce a relaxed notion of approximate relative privacy: 
+
+Definition 4 (Approximate Relative Privacy) . Let x be a data point such that x / ∈ D and x / ∈ D′,and let S ⊆ Y be a measurable output event under conditions in U (p). We say the model M satisfies 
+
+(ϵ, δ, p)-approximate relative conditional differential privacy with respect to x if: 
+
+Pr[ M (D, p) ∈ S] ≤ eϵ · Pr[ M (D′, p) ∈ S] + δ (3.14) 
+
+for small ϵ > 0 and δ ≈ 0, indicating negligible influence from x or its semantic neighborhood. 
+
+The above proposition and definition formalize the notion that non-infringed data should not exert measurable influence on the model’s output distribution. In contrast to infringed data that violates conditional privacy guarantees, non-infringed data satisfies strict or approximate relative privacy. This theoretical distinction lays the foundation for our detection criterion: if a concept induces statistically significant behavioral change in model outputs, it suggests potential memorization and copyright infringement. 11 3.4 Formal Criteria for Infringement and Non-Infringement 
+
+Copyright infringement may occur when an algorithm M is trained on a dataset D that includes a subset of copyrighted or unauthorized data samples DC = {xc1 , x c2 , . . . , x cn } ⊂ D, without permission. Evidence for such an infringement claim is typically established by demonstrating that the model’s outputs reproduce or are substantially similar to the protectable expressive elements of the samples in DC .Building upon the formalism of conditional differential privacy and publicity, we now define mathematical behavioral criteria for: when an algorithm M exhibits evidence of infringement upon a specific data point, and when it does not, based on observable model behavior. 
+
+Definition 5 (Copyright Infringement) . Let xc ∈ DC denote a copyrighted data point, and let p
+
+be a conditional input semantically aligned with xc. We say that model M trained on D exhibits infringement evidence upon xc if there exists a measurable output event S ⊆ Y such that: 
+
+Pr[ M (D, p) ∈ S] ≫ Pr[ M (D′, p) ∈ S] (3.15) 
+
+where D′ = D \ { xc} is a neighboring dataset. 
+
+This definition implies that the relevant output of M is significantly influenced by the presence of xc, thereby providing evidence of copyright exposure induced by memorization. 
+
+Definition 6 (Copyright Non-Infringement) . Let x be a non-infringed data point such that x / ∈ D
+
+for all training datasets considered. We say that model M does not exhibit infringement evidence upon x if for any input condition p and for every measurable output event S ⊆ Y such that: 
+
+Pr[ M (D, p) ∈ S] = Pr[ M (D′, p) ∈ S]. (3.16) 
+
+To allow for a relaxed setting, we say that M satisfies approximate non-infringement evidence if the following (ϵ, δ, p)-differential privacy condition holds: 
+
+Pr[ M (D, p) ∈ S] ≤ eϵ · Pr[ M (D′, p) ∈ S] + δ. (3.17) This definition states that the output distribution is invariant, or approximately invariant, with respect to the inclusion or exclusion of x, thereby indicating that x has no measurable influence on model behavior under specific conditions. 12 4 Dual-Branch Conditional Sensitivity (DCS) 
+
+To establish a rigorous mathematical foundation for post-hoc copyright infringement detection across modalities, we introduce the Dual-Branch Conditional Sensitivity (DCS) framework. Our aim is to transform the privacy budget from previous sections into an operational statistic that can be estimated without retraining the foundation model from scratch. DCS is used for denoting complete detection framework, rather than a single scalar quantity. It consists of three levels: (i) dual-branch perturbation , which constructs learning and unlearning branches around the target; (ii) pointwise conditional sensitivity CS (zc, p), which measures the branch divergence under one aligned or orthogonal condition; and (iii) the calibrated DCS detection statistic, CDS (zc), which aggregates pointwise sensitivity over aligned conditions and subtracts or normalizes by orthogonal background sensitivity. The framework proceeds by first defining a counterfactual privacy budget (Section 4.1), then constructing dual-branch perturbations (Section 4.2), relating their displacement to counterfactual influence through influence functions (Section 4.3), projecting the resulting parameter variation into an observable output space (Section 4.4), and finally calibrating the resulting detection statistic against orthogonal conditions (Section 4.5). 
+
+4.1 Counterfactual Privacy Budget 
+
+In the canonical framework of Conditional Differential Privacy (CDP), a randomized generative mechanism M can be formalized as M : D × P → Y , where D denotes the space of training datasets, P denotes the conditioning space, and Y denotes the output space. For a dataset D, we write θD ∈ Θ for the corresponding trained parameter state. Let D and D′ be neighboring datasets that differ only in one target copyrighted concept zc,such that D \ D′ = {zc}. For a given condition p ∈ P and a measurable output event S ⊆ Y ,the conditional empirical privacy budget captures the maximum log-likelihood ratio triggered by the counterfactual inclusion or exclusion of zc. Derived from Eq. 3.9, we define the conditioned counterfactual privacy budget as: 
+
+ϵ(zc, p) ≜ sup 
+
+> S⊆Y
+
+ln Pr[ M (D, p) ∈ S]Pr[ M (D′, p) ∈ S] . (4.1) When the conditional outputs admit densities or probability mass functions qD(y|p) and qD′ (y|p)with respect to a common base measure, Eq. 4.1 can be written as: 
+
+ϵ(zc, p) = ess sup 
+
+> y∈Y
+
+ln qD(y|p)
+
+qD′ (y|p) . (4.2) For practical estimation in a chosen observation, feature, score, or log-density space, we use the norm-based surrogate: 
+
+bϵ(zc, p) ≜ ln qD(·| p)
+
+qD′ (·| p) F
+
+, (4.3) where ∥·∥ F denotes the norm induced by the selected observable representation. Unlike the essential-supremum privacy budget ϵ(zc, p), the surrogate bϵ(zc, p) measures the aggregate log-density drift in the chosen observation space and is used as the operational quantity in the sensitivity bound below. 13 4.2 Dual-Branch Perturbation 
+
+In practical digital forensics, direct evaluation of Eq. 4.1 is computationally infeasible because the counterfactual trained parameter state θD′ cannot be directly obtained without retraining model from scratch. To avoid the computation process, our framework operationalizes the local effect of zc
+
+by applying two opposite optimization updates to the pretrained weight state θD. Such lightweight local adaptation can be implemented with ordinary fine-tuning or parameter-efficient updates such as LoRA [30]. Given a target sample zc, we initiate two parallel, lightweight fine-tuning branches to construct explicit parameter variants. The learning branch, where the indicator I = +1, takes the step to learn the target concept: 
+
+θD+ = θD − η∇θL(zc; θD). (4.4) Concurrently, the unlearning branch, where the indicator I = −1, takes the opposite step to unlearn that concept: 
+
+θD− = θD + η∇θL(zc; θD), (4.5) where L(zc; θD) denotes the task-specific loss such as causal language modeling or score-matching, and η > 0 represents a small local step size. Here, we use D+ and D− as shorthand for the two locally perturbed model states, not as fully retrained datasets. But its ideal state is the same as the fully retrained one. Since θD+ and θD− are explicit parameter states produced by these two local updates, their displacement in the parameter space Θ provides an operational quantity that can be compared with the unavailable counterfactual drift induced by removing zc:∆θ ≜ θD+ − θD− = −2η∇θL(zc; θD) (4.6) 
+
+4.3 Influence-Function Coupling 
+
+To relate the operational displacement to the counterfactual removal of zc, we use the influence-function approximation from Eq. 3.7. If D′ = D \ { zc} denotes the neighboring dataset with the target removed, then: 
+
+θD′ − θD ≈ 1
+
+n H−1∇θL(zc; θD), (4.7) where n is the cardinality of the base training dataset, and H = ∇2R(θD) is the Hessian matrix: 
+
+∇θL(zc; θD) ≈ nH(θD′ − θD) = −nH(θD − θD′ ). (4.8) Substituting Eq. 4.8 into Eq. 4.6 yields: ∆θ ≈ 2nη · H(θD − θD′ ). (4.9) In summary, Eq. 4.9 shows that the dual-branch displacement provides an operational counter-part to the counterfactual parameter change caused by removing the target sample zc. Under the approximation of influence function, ∆ θ is proportional to the Hessian-weighted difference between 
+
+θD and θD′ . Therefore, the displacement is not an arbitrary perturbation, but a curvature-aware manifestation of the target sample’s contribution to the fine-tuned model. This interpretation highlights that the influence of zc depends jointly on its gradient contribution and on the local curvature of the empirical risk landscape. Samples whose gradients align with sensitive directions of the model can induce larger operational displacements, while gradients along less sensitive or highly constrained directions may produce smaller changes. Hence, the displacement serves as a practical proxy for measuring the counterfactual influence of zc on the model parameters. 14 4.4 Conditional Sensitivity 
+
+Definition To translate internal parametric variations into measurable evidence, we project the dual-branch parameters back into the output space Y under the generalized condition p. We define the Conditional Sensitivity CS (zc, p) via the Frobenius norm of the macroscopic output behavior divergence: 
+
+CS (zc, p) ≜ dO
+
+O(D+, p), O (D−, p) , (4.10) where O ∈ O is the observable representation, such as Frobenius, KL divergence and cosine, dO is the distance of certain modality. In the following passage, we will mostly use the Frobenius as the instantiation: 
+
+CS (zc, p) = M (D+, p) − M (D−, p) F (4.11) 
+
+First-Order Bound The conditional sensitivity admits a first-order upper bound that connects the observable dual-branch output divergence to the counterfactual exposure of the target sample and the local curvature of the empirical risk landscape: 
+
+Proposition 2 (Conditional Sensitivity Bound) . Assume that M (D, p) is locally differentiable in θ
+
+around θD, that the training step size η is sufficiently small for a first-order approximation, and that the output representation is chosen in a feature, score, logit, or log-density space where the norm 
+
+∥ · ∥ F is well-defined. Assume further that the norm-based log-density drift in this representation is measured by bϵ(zc, p) as defined in Eq. 4.3. Then the conditional sensitivity satisfies the first-order bound: 
+
+CS (zc, p) ≲ 2nη · λmax (H) · bϵ(zc, p). (4.12) 
+
+Proof. Since the optimization step size η is small, both perturbed parameter states remain in a local neighborhood of θD where the mechanism is well approximated by its first-order expansion: 
+
+M (D+, p) − M (D−, p) ≈ [∇θM (D, p)] T · (θD+ − θD− ) = [ ∇θM (D, p)] T · ∆θ. (4.13) Substituting Eq. 4.9 gives: 
+
+CS (zc, p) ≈ 2nη · [∇θM (D, p)] T · H(θD − θD′ ) F . (4.14) By applying the bounded operator norm inequality, the empirical Hessian matrix H can be structurally decoupled from the inner Frobenius matrix product and projected into the spectral domain as the local maximum eigenvalue, or local principal curvature scalar, λmax (H): 
+
+CS (zc, p) ≤ 2nη · λmax (H) · [∇θM (D, p)] T · (θD − θD′ ) F . (4.15) When the observation map is chosen in log-density or score space, the remaining differential term approximates the log-density drift: [∇θM (D, p)] T · (θD − θD′ ) ≈ ln qD(·| p)
+
+qD′ (·| p) . (4.16) The pointwise magnitude of this log-density drift is controlled by the essential-supremum privacy budget ϵ(zc, p) in Eq. 4.1. In the selected observation space, we summarize the same drift by the norm-based surrogate bϵ(zc, p) in Eq. 4.3. Substituting this surrogate into Eq. 4.15 yields Eq. 4.12. 15 The bound shows that the observable sensitivity is governed by four quantities: the local step size η, the training-set scale n, the curvature of the empirical risk landscape λmax (H), and the counterfactual exposure captured by bϵ(zc, p). A target sample that induces a larger counterfactual change in the conditional output distribution can therefore produce a larger gap, especially in regions where the local risk landscape has high curvature. Conversely, if the target has little counterfactual effect on the model under condition p, the induced dual-branch divergence is expected to remain small. In summary, conditional sensitivity provides an operational detection signal for measuring behavioral dependence on the target sample. 
+
+4.5 Calibrated Detection Statistic 
+
+The theoretical bound motivates a post-hoc detection statistic based on the observable dual-branch behavioral gap. Given a target concept zc and a set of aligned conditions Pc ⊆ P around zc, we estimate the raw aligned sensitivity: 
+
+Sc(zc) ≜ Ep∼P c [CS (zc, p)] . (4.17) In practice, CS (zc, p) can be computed in a modality-appropriate observation space, such as image embeddings, text logits, score-matching objectives, or other feature representations. A large value of Sc(zc) indicates that learning and unlearning perturbations around zc produce a measurable behavioral gap, which provides evidence that the target exerts non-negligible influence and explicit infringement on the model. However, the dual-branch perturbation procedure intentionally perturbs model parameters. To separate concept-specific effects from global parameter shift, an auditor may evaluate an orthogonal conditioning set P⊥ whose prompts are semantically unrelated to zc. The corresponding background sensitivity is: 
+
+S⊥(zc) ≜ Ep∼P ⊥ [CS (zc, p)] . (4.18) So the calibrated detection statistic (CDS) is then defined as: 
+
+CDS (zc) ≜ Sc(zc) − S⊥(zc). (4.19) Equivalently, 
+
+CDS (zc) = Ep∼P c [CS (zc, p)] − Ep∼P ⊥ [CS (zc, p)] . (4.20) This calibrated statistic is intended to retain target-specific sensitivity while reducing output changes caused by generic fine-tuning instability. When a normalized statistic is preferred, one may use: 
+
+]CDS (zc) ≜ Sc(zc)
+
+S⊥(zc) + τ , (4.21) where τ > 0 is a small stabilizer. This form measures the aligned sensitivity relative to the back-ground sensitivity induced by orthogonal conditions. The calibration gives a direct statistical interpretation. S⊥(zc) estimates the sensitivity that would be observed even if the target concept were irrelevant, whereas Sc(zc) measures sensitivity in the concept neighborhood. A reliable infringement signal should therefore satisfy two conditions: the aligned sensitivity is large, and the gap between aligned and orthogonal sensitivity is also large. This prevents the detector from confusing general model instability with target-specific memorization. For practical detection, the final confidence score can be obtained by mapping the calibrated statistic through a monotone scoring function: 
+
+f (zc) = σ [a · CDS (zc) + b] , (4.22) 16 where σ(·) is the sigmoid function. A high value of f (zc) indicates strong evidence that the tar-get concept produces a conditional distributional shift beyond generic fine-tuning drift, leading to explicit copyright infringement. 17 5 Modality-Specific Instantiations 
+
+5.1 Linear Regression Models 
+
+We first instantiate the unified sensitivity framework in a ridge-regularized linear regression model (LRM) [31]. This case serves as a closed-form sanity check: every object in the previous section can be explicitly computed. To complement the derivation, we use the diabetes dataset from scikit-learn [32] for empirical verification. 
+
+Model Setup Let D = {(xi, y i)}ni=1 , where xi ∈ Rd, ∥xi∥2 ≤ 1, and |yi| ≤ 1. Let X ∈ Rn×d be the design matrix with rows x⊤ 
+
+> i
+
+, and let y = ( y1, . . . , y n)⊤. We consider the ridge objective: 
+
+LLRM (β; D) = 12n ∥Xβ − y∥22 + ρ
+
+2 ∥β∥22, (5.1) where ρ > 0 is the regularization coefficient. The corresponding mechanism outputs the unique minimizer: ˆβD =
+
+ 1
+
+n X⊤X + ρI 
+
+−1  1
+
+n X⊤y
+
+
+
+. (5.2) We then define the empirical Hessian as: 
+
+H ≜ ∇2 
+
+> β
+
+LLRM ( ˆβD; D) = 1
+
+n X⊤X + ρI. (5.3) Since λmin (H) ≥ ρ, the inverse Hessian exists and is bounded by ∥H−1∥2 ≤ 1 
+
+> ρ
+
+.
+
+Counterfactual Removal via Influence Functions Let zc = ( xc, y c) be the target copyrighted sample and D′ = D \ { zc}. For the single-sample squared loss: 
+
+ℓc(β) = 12 (x⊤ 
+
+> c
+
+β − yc)2, (5.4) the gradient at the trained model is: 
+
+∇β ℓc( ˆβD) = xcrc, (5.5) where the residual is defined as rc ≜ x⊤ 
+
+> c
+
+ˆβD − yc. Since ∥xc∥2 ≤ 1 and |yc| ≤ 1, and since ridge regularization gives 1 
+
+> ρ
+
+, the residual satisfies: 
+
+|rc| ≤ | x⊤ 
+
+> c
+
+ˆβD| + |yc| ≤ 1
+
+ρ + 1 . (5.6) By employing the influence-function approximation from Eq. 3.7, the counterfactual parameter shift induced by removing zc satisfies: ˆβD − ˆβD′ ≈ − 1
+
+n H−1xcrc. (5.7) Consequently, 
+
+∥ ˆβD − ˆβD′ ∥2 ≤ 1
+
+n ∥H−1∥2 · ∥ xc∥2 · | rc| ≤ 1 + ρnρ 2 . (5.8) The resulting upper-bound trend, together with the exact leave-one-out displacement and the influence-function approximation, is shown in Figure 2. 18 10 2 10 1 10 010 6             
+
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> n = 50
+> 10 210 110 0
+> n = 200
+> 10 210 110 0
+> n = 400
+> Leave-One-Out
+> Influence Approximation
+> Bound Trend
+
+Figure 2: Effect of Ridge Regularization on Sensitivity in LRM. The figure shows the change of parameter displacement ∆ β = ∥ ˆβD − ˆβD′ ∥2 after removing a target sample under different regularization strengths ρ and training-set sizes n. The exact leave-one-out solution closely matches the influence-function approximation, while the theoretical upper-bound trend decreases as n and 
+
+ρ increase. This validates the closed-form prediction that ridge curvature stabilizes the model and suppresses the contribution of an individual sample. 
+
+Linear Privacy-Budget Surrogate To connect this parameter displacement with the condi-tional privacy budget, suppose that the prediction at a test feature xtest follows a Gaussian obser-vation model with variance σ2:
+
+ytest | D ∼ N (x⊤ 
+
+> test
+
+ˆβD, σ 2). (5.9) For neighboring datasets D and D′, define μD = x⊤ 
+
+> test
+
+ˆβD and μD′ = x⊤ 
+
+> test
+
+ˆβD′ . Under the Gaussian observation model, the pointwise log-likelihood ratio is: log qD(y|xtest )
+
+qD′ (y|xtest ) = μD − μD′
+
+σ2
+
+
+
+y − μD + μD′
+
+2
+
+
+
+. (5.10) For bounded outputs satisfying the inequality y − μD +μD′ 
+
+> 2
+
+≤ By, this gives: 
+
+bϵLRM (xtest ) ≲ By
+
+σ2 x⊤
+
+> test
+
+( ˆβD − ˆβD′ ) ≈ By
+
+nσ 2 x⊤
+
+> test
+
+H−1xc · | rc|. (5.11) This expression is the linear-model counterpart of the counterfactual privacy budget in Eq. 4.1: the privacy exposure is governed by the residual rc and by the leverage of the target direction through the inverse Hessian. Figure 3 visualizes the directional structure of the privacy-budget surrogate on the diabetes dataset. The background heatmap plots bϵLRM (xtest ) over a two-dimensional slice spanned by the target direction and a curvature-orthogonal direction, while the dark points show the projected real samples. The heatmap is symmetric because the surrogate depends on the magnitude x⊤
+
+> test
+
+H−1xc ,so projected diabetes samples exhibit an approximately two-sided empirical distribution. Further-more, the exposure concentrates along the inverse-Hessian direction H−1xc, rather than the raw target direction xc, illustrating the role of local Hessian geometry in shaping privacy leakage. 
+
+Dual-Branch Perturbation The dual-branch fine-tuning construction admits an exact one-step closed form. Starting from the white-box model ˆβD, we define: 
+
+βD+ = ˆβD − ηx crc, (5.12) 19 −1.00 −0.75 −0.50 −0.25 0.00 0.25 0.50 0.75 1.00 
+
+Target Direction Component 
+
+> −1.00
+> −0.75
+> −0.50
+> −0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Curvature-Orthogonal Component
+
+xc
+
+H −1 xc
+
+> 0.000
+> 0.004
+> 0.008
+> 0.012
+> 0.016 ̂
+> εLRM (xtest )
+
+Figure 3: Inverse-Hessian Governs Directional Privacy Exposure in LRM. The heatmap shows the privacy budget bϵLRM (xtest ) over a 2D slice spanned by the target direction xc and a curvature-orthogonal direction. Dark points denote real diabetes samples projected onto this slice. The exposure concentrates along H−1xc, rather than the raw target direction xc, illustrating that the privacy budget is controlled by the residual magnitude and the targeted inverse-Hessian. 
+
+βD− = ˆβD + ηx crc, (5.13) which corresponds to Eq. 4.4 and Eq. 4.5. The induced behavioral gap at xtest is: 
+
+CS LRM (zc, x test ) ≜ x⊤
+
+> test
+
+(βD+ − βD− ) = 2 η · x⊤
+
+> test
+
+xc · | rc|. (5.14) Figure 4 empirically visualizes this first-order coupling on the diabetes dataset. Across different ridge strengths ρ, the dual-branch gap CS LRM remains positively correlated with the privacy-budget surrogate bϵLRM . The coupling becomes tighter as ρ increases, consistent with the fact that stronger regularization stabilizes the Hessian geometry and reduces the discrepancy between xc and H−1xc.
+
+First-Order Coupling Comparing the gap with the privacy budget gives: 
+
+CS LRM (zc, x test )
+
+bϵLRM (xtest ) ∝ 2nησ 2 |x⊤
+
+> test
+
+xc||x⊤
+
+> test
+
+H−1xc| . (5.15) When the detection direction lies in the target neighborhood, i.e., xtest ≈ xc, this ratio is controlled by the Rayleigh quotient of Hessian in the target direction. Therefore, in linear models, the dual-branch behavioral gap and the counterfactual privacy budget are first-order equivalent up to the local curvature induced by the Hessian. 
+
+Limitation This closed-form derivation also clarifies a limitation of purely residual-based linear detection. If a linear model exactly interpolates the target sample and rc = 0, then a single gradient step on ℓc has zero first-order effect. In practice, this degeneracy can be avoided by evaluating a semantic neighborhood of the target, using nonzero perturbation residuals, or moving to richer observation spaces. The diffusion instantiation below follows this neighborhood-based strategy. 20 0.000 0.008 0.016 0.024 ̂      
+
+> εLRM
+> 0.00
+> 0.15
+> 0.30
+> 0.45
+> 0.60
+> CS LRM
+> ρ=0.03, corr=0.74
+> 0.000 0.008 0.016 0.024 ̂
+> εLRM
+> ρ=0.12, corr=0.89
+> 0.000 0.008 0.016 0.024 ̂
+> εLRM
+> ρ=0.48, corr=0.97
+> −1.2
+> −1.0
+> −0.8
+> −0.6
+> −0.4
+> −0.2
+> 0.0
+> Curvature Ratio
+> Binned Median
+> Linear Fit
+
+Figure 4: Conditional Sensitivity and Privacy Budget Surrogate in LRM. It reports the relationship between dual-branch behavioral gap CS LRM and the privacy-budget surrogate bϵLRM 
+
+under different regularization strength ρ. Each point corresponds to a target-test direction pair from the diabetes dataset. As ρ increases, the correlation becomes stronger, indicating that stronger ridge regularization stabilizes Hessian geometry and makes CS LRM a closer first-order surrogate for bϵLRM .
+
+5.2 Conditional Diffusion Models 
+
+We now instantiate the same framework in conditional diffusion models (CDM), including denois-ing and latent diffusion families [33, 34]. It follows the dual-branch structure: the target concept is represented by a neighborhood of semantically aligned images and prompts, and the model is per-turbed through learning and unlearning branches under the score-matching objective. This setting is closely related to concept editing and erasure methods that modify diffusion behavior around specified visual or textual concepts [35, 36]. The efficiency of this dual-branch procedure has been validated in our prior work [11]. 
+
+Model Setup Let z0 denote an image or latent representation associated with the target concept 
+
+zc, and let p ∈ P be the condition such as a text prompt or image. A diffusion model [33] corrupts 
+
+z0 through a Gaussian forward process zt = αtz0 + σtξ, where ξ ∼ N (0 , I ), t denotes the timestep, and αt, σ t are the noise schedule coefficients. Let ξθ(zt, t, p) be the denoising network that predicts the injected noise. The conditional score-matching loss for the target concept can be represented as: 
+
+LCDM (zc; θ) = Ez0∈U (zc),ξ,t, p∼P c
+
+h
+
+wt ∥ξ − ξθ(αtz0 + σtξ, t, p)∥22
+
+i
+
+, (5.16) where U (zc) is the semantic neighborhood of the target and wt denotes the weight. This loss is the diffusion analogue of the single-sample loss L(zc; θ) in the unified theory in Section 4.2; related subject-driven customization methods also rely on small target neighborhoods to bind prompts to visual concepts [37, 38]. 
+
+Dual-Branch Perturbation Given the pretrained parameter state θD, the learning and unlearn-ing branch perturbation in Eq. 4.4 and Eq. 4.5 is defined by: 
+
+θD+ = θD − η∇θLCDM (zc; θD), (5.17) 
+
+θD− = θD + η∇θLCDM (zc; θD). (5.18) 21 Figure 5: Conditional Sensitivity (CLIP Image Encoder) across Categories in the Copy-right Infringement Detection of Stable Diffusion. Three categories are separately (left) human face, (middle) architecture, and (right) arts painting. Infringed samples are more sensitive to the model outputs behavior. Therefore, the parameter displacement of two branch parameters can be written as: ∆θ = θD+ − θD− = −2η∇θLCDM (zc; θD). (5.19) By the same influence-function argument as Eq. 4.9, this displacement is coupled to the coun-terfactual drift θD − θD′ through the local curvature of the score-matching objective. 
+
+Observable Representation Since generated contents are high-dimensional and stochastic, the observable mechanism should be evaluated in a stable representation space. Let Φ denote a query function, such as an image encoder, text-image embedding model, or any domain-specific feature extractor. For a condition p and dataset D corresponding to parameter θD, we define: 
+
+M (D, p) ≜ Φ [ GD(p)] . (5.20) where G denotes the generative sampler. The diffusion conditional sensitivity is then: 
+
+CS CDM (zc, p) = M (D+, p) − M (D−, p) F = ∥Φ [ GD+ (p)] − Φ [ GD− (p)] ∥F . (5.21) Its equivalent cosine form is: 
+
+CS CDM ,cos (zc, p) = 1 − Φ [ GD+ (p)] ⊤ · Φ [ GD− (p)] 
+
+∥Φ [ GD+ (p)] ∥2 · ∥ Φ [ GD− (p)] ∥2
+
+, (5.22) which is mostly used in the CLIP image embeddings [20]. It matches the practical dual-branch per-turbation intuition: infringed concepts produce a larger branch divergence under aligned conditions, while non-infringed or generic concepts produce only minor changes. Figure 5 in our prior work [11] empirically illustrates this pattern across face, architecture, and artistic-painting categories in Stable Diffusion Model [34], indicating larger representation-space divergence between the learning and unlearning branches under aligned prompts. 22 0.9   
+
+> 0.8
+> 0.7
+> 0.6
+> 0.5
+> 0.4
+> 0.3
+> Unlearning Branch Learning Branch
+> +∞−∞
+> Learned Model
+> Conditional Sensitivity Metric
+> Unlearned Model Text-to-Image Model
+
+D                        
+
+> Training Timestep
+> Neighbourhood Images
+> -50 -40 -30 -20 -10 050 100 150 200 250 300
+> Non-Infringed Samples
+> with a Narrower Gap
+> Infringed Samples
+> with a Larger Gap
+> Infringed Sample
+> Non-Infringed Sample
+> xiTarget Images
+> ()iU x
+> {}iDDx+=∪}\{ iDDx−=
+
+Figure 6: Dual-Branch Perturbation in Conditional Diffusion Models. Given a target neigh-borhood U (zc) and aligned conditions Pc, the pretrained sampler G is locally updated into two branches: the learning branch GD+ and the unlearning branch GD− . Conditional sensitivity mea-sures the representation-space gap (e.g., CLIP image encoder) between two branch outputs. 
+
+Source of the Score-Matching Signal The score-matching formulation also identifies the source of the signal. Let rt(z0, p; θ) = ξθ(αtz0 + σtξ, t, p) − ξ be the denoising residual. Then the target gradient can be written schematically as: 
+
+∇θLCDM (zc; θ) = Ez0,ξ,t, p
+
+h
+
+2wt · (∇θξθ(αtz0 + σtξ, t, p)) ⊤ · rt(z0, p; θ)
+
+i
+
+. (5.23) The gap measures how strongly the model’s denoising field around the target neighborhood changes under opposite local updates. If the target concept induces strong model-specific depen-dence, the denoising field around U (zc) may become locally specialized, so opposite updates can induce a larger representation gap. If the concept is absent or only weakly represented through generalization, the same perturbation is absorbed by the model’s broader denoising prior, resulting in a smaller conditional sensitivity. 
+
+Calibrated Detection Statistic As diffusion fine-tuning can change global generation behav-ior even for conditions unrelated to the target, the calibrated score from the previous section is essential in this modality: aligned conditions from Pc estimate target-specific sensitivity, while or-thogonal conditions from P⊥ estimate background fine-tuning drift. The difference between these two quantities yields a more stable post-hoc copyright detection statistic. 
+
+Visualization Figure 6 in our prior work [11] illustrates how the conditional diffusion instantiation operationalizes the dual-branch perturbation. Starting from a target concept neighborhood U (zc)and aligned conditions Pc, the pretrained sampler is locally updated in two opposite directions: the learning branch decreases the target score-matching loss, while the unlearning branch increases it. The resulting samplers GD+ and GD− are then evaluated under matched conditions, and their 23 outputs are projected into a stable representation space through Φ. A large representation gap indicates that the target neighborhood induces a strong condition-specific behavioral response, whereas the orthogonal calibration in Section 4.5 diminishes global drift unrelated to the target. 
+
+5.3 Language Models 
+
+Model Setup For autoregressive language models (LM), the mechanism M maps a condition, which mostly denotes a prompt p = ( w1, . . . , w m), to a conditional distribution over token sequences. Modern LMs are commonly built on transformer architectures [21], with recent open foundation model families such as Qwen providing representative evaluation backbones [39, 40]. Given param-eters θ, the probability of a continuation y = ( y1, . . . , y T ) is factorized as: 
+
+qθ(y|p) = 
+
+> T
+
+Y
+
+> t=1
+
+qθ(yt|p, y <t ). (5.24) The target copyrighted data point zc may be a passage, code fragment, or stylistic expression; the modality-specific loss is the negative log-likelihood: 
+
+LLM (zc; θ) = −
+
+> T
+
+X
+
+> t=1
+
+log qθ(yct |pc, y c<t ), (5.25) where ( pc, y c) denotes a prompt-continuation pair associated with the target. 
+
+Dual-Branch Perturbation For language models, the dual-branch perturbation is instantiated by applying two opposite local updates with respect to the target negative log-likelihood. The learning branch performs a gradient descent step on the target sequence, and the unlearning branch performs the corresponding ascent step: 
+
+θD+ = θD − η∇θLLM (zc; θD), (5.26) 
+
+θD− = θD + η∇θLLM (zc; θD). (5.27) where η > 0 is a perturbation step size. The purpose of this construction is to probe the local sensitivity of the model around zc. If the target passage is strongly encoded in the model, then two updates in opposite directions should produce a measurable change in the conditional next-token distributions along the target prefix. If the passage is only weakly represented, or if the prompt activates general linguistic knowledge rather than target-specific memorization, the two branches should remain closer in decoding behavior. 
+
+Observable Representation Unlike vision models, language models expose memorization through changes in token probabilities and entropy. For a probe prompt p aligned with the target, we define the next-token entropy at step t as: 
+
+Hθ(t|p) = − X
+
+> v∈V
+
+qθ(v|p, y <t ) log qθ(v|p, y <t ), (5.28) where V is the vocabulary. A memorized continuation typically corresponds to an unusually con-centrated token distribution along the target sequence. Therefore, the language-model conditional 24 NLL  PPL  Top -1        
+
+> 0.028 1.03 0.992
+> 2.737 15.43 0.352
+> Infringed Sample: the Declaration of Independence (1776)
+> Non-Infringed Sample: the Pro-Human AI Declaration (2026)
+
+mean=0.28 
+
+mean=0.98 Figure 7: Prefix-Conditioned Token Concentration in LM. Given a fixed prefix prompt, Qwen2.5-7B assigns substantially higher ground-truth next-token probability to the infringed pas-sage than to a non-infringed control passage. Dashed lines denote mean target-token probability over the continuation. The large confidence gap indicates that the infringed passage induces a near-deterministic continuation pattern, consistent with extractable memorization. sensitivity can be measured by the divergence between token distributions in the two branches: 
+
+CS LM (zc, p) = 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+DKL 
+
+h
+
+qθD+ (·| p, y <t ) qθD− (·| p, y <t )
+
+i
+
+. (5.29) An entropy-based alternative is: 
+
+CS Ent (zc, p) = 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+HθD+ (t|p) − HθD− (t|p) . (5.30) The KL form measures direct distributional disagreement, while the entropy form measures how much the certainty of the model changes under learning versus unlearning. If a target passage is memorized, the unlearning branch should disrupt the low-entropy continuation pattern more strongly than it would for a merely generic or unseen text. Hence a large token-distribution or entropy gap provides evidence of target-specific memorization or copyright infringement. 
+
+Calibrated Detection Statistic The same calibration principle applies to language models. Prompts in Pc should be semantically aligned with the target passage, while orthogonal prompts in 
+
+P⊥ should be unrelated in topic, style, or named entities. The calibrated language score subtracts global decoding instability from target-specific token sensitivity. 
+
+Visualization Figure 7 visualizes the language-model instantiation through prefix-conditioned token concentration. Given an aligned prefix prompt from a target passage, the model is evaluated 25 on the ground-truth continuation, and the probability assigned to each correct next token is recorded along the continuation positions. An infringed or memorized passage induces a highly concentrated decoding trajectory: the model assigns near-deterministic probability to most ground-truth next tokens, producing a low-entropy and low-perplexity continuation profile. By contrast, a non-infringed control passage produces a much less concentrated trajectory, with frequent probability drops and a lower average target-token probability. The vertical gap between the two mean probability levels is the language-model ana-logue of the representation-space gap used in diffusion models: it reflects target-specific conditional dependence under aligned prompts, while orthogonal prompts can be used to subtract background linguistic predictability. 
+
+5.4 Multimodal Models 
+
+For vision-language and multimodal generative models, a protected target may be encoded not only within a single modality, but also in the association between modalities. For example, a textual con-dition may activate a protected visual identity, a building name may retrieve a specific architectural appearance, or an artist identifier may induce a distinctive visual style. In such cases, output sim-ilarity alone may be insufficient for detecting infringement, because the relevant signal can appear as an internal binding between a condition and a protected visual, textual, or semantic concept. We therefore instantiate conditional sensitivity in a cross-modal representation space. 
+
+Model Setup Let M denote a multimodal model that takes a condition p and, when applicable, an input or generated representation z. The model may produce outputs in one or more modalities, while internally maintaining joint representations that connect textual, visual, latent, or memory tokens. We denote such a cross-modal representation by: ΨD(p, z ) ∈ H cross , (5.31) where Hcross is a shared representation space for measuring modality-level associations. Depending on the architecture, Ψ D corresponds to a joint image-text embedding, a multimodal hidden state, or a latent conditioning vector. To construct the two perturbation branches, the target concept must be paired with a modality-specific cross-modal objective. We write this objective abstractly as: 
+
+Lcross (zc; θ) = E(p,z )∼U (zc) [ℓcross (p, z ; θ)] , (5.32) where U (zc) denotes the target neighborhood containing aligned text, image, audio, latent, or other modality pairs, and ℓcross may be instantiated as a contrastive image-text loss, captioning negative log-likelihood, image-text matching loss, multimodal reconstruction loss, or another architecture-specific binding objective. This loss plays the same role as LCDM in diffusion models and LLM in language models. 
+
+Dual-Branch Perturbation As in the previous modalities, we construct two local branches around the pretrained parameter point θD by taking opposite steps on the cross-modal target loss: 
+
+θD+ = θD − η∇θLcross (zc; θD), (5.33) 
+
+θD− = θD + η∇θLcross (zc; θD), (5.34) 26 where the learning branch strengthens the target association and the unlearning branch weakens it. Their displacement is therefore: ∆θ = θD+ − θD− = −2η∇θLcross (zc; θD). (5.35) Given these two perturbed branches, we define cross-modal conditional sensitivity as: 
+
+CS cross (zc, p) = ∥ΨD+ (p, z c) − ΨD− (p, z c)∥Hcross . (5.36) This statistic measures how strongly the learned correspondence between the condition and the protected concept changes under opposite perturbations. If the model has memorized a specific cross-modal association, such as a character name with a distinctive face, a building name with a protected architectural image, or an artist identifier with a protected style, then the two branches should produce a larger representation gap around aligned prompts. If the association is weak, generic, or produced mainly by broad semantic generalization, the corresponding gap should remain smaller. 
+
+Attention as a Special Case For architectures with explicit cross-attention [21], the general representation map Ψ D can be instantiated by attention tensors. Let a(ℓ,h ) 
+
+> D
+
+(p, z ) denote the cross-attention matrix at layer ℓ and head h, where tokens from one modality attend to tokens from another modality. Collecting these matrices over selected layers and heads gives: 
+
+AD(p, z ) = {a(ℓ,h ) 
+
+> D
+
+(p, z )}ℓ,h . (5.37) The attention-based sensitivity score is then written as: 
+
+CS attn (zc, p) = ∥A D+ (p, z c) − A D− (p, z c)∥F . (5.38) Thus, attention sensitivity is an architectural realization of cross-modal conditional sensitivity, rather than the only possible definition. This distinction is important for models that use joint-token transformers, contrastive encoders, latent conditioning modules, or decoder-only multimodal architectures, where the relevant binding may not be represented by an explicit cross-attention matrix. 
+
+Joint Output–Representation Score Cross-modal sensitivity can also be combined with output-space sensitivity. Let Φ out be an encoder for the generated or predicted output, and let Ψ D be the selected internal cross-modal representation. A joint score can be written as 
+
+CS joint (zc, p) = α Φout 
+
+M (D+, p) − Φout 
+
+M (D−, p) 
+
+> F
+
+(5.39) + (1 − α) ∥ΨD+ (p, z c) − ΨD− (p, z c)∥Hcross , (5.40) where α ∈ [0 , 1] controls the balance between observable output divergence and internal cross-modal representation divergence. The output term captures visible behavioral changes, while the representation term captures changes in the internal association between the condition and the protected concept. This formulation is useful when generated samples are noisy, stochastic, or visually ambiguous, but the model’s internal cross-modal representation still reveals stable concept-specific dependence. 27 Calibrated Detection Statistic The same orthogonal calibration principle applies in the cross-modal setting. Aligned prompts in Pc should activate the suspected protected association, while orthogonal prompts in P⊥ should preserve the general modality structure without referring to the protected concept. The calibrated score subtracts background multimodal instability from target-specific cross-modal sensitivity, reducing the risk that generic prompt sensitivity or sampling vari-ance is mistaken for memorization. 28 6 Conclusion 
+
+This paper presents Dual-Branch Conditional Sensitivity (DCS) , a unified framework for post-hoc copyright infringement detection in generative and multimodal models. Instead of treating infringement as a static similarity judgment between an output and a copyrighted reference, we formulate it as a counterfactual conditional distribution shift. Under this view, evidence of infringe-ment arises when the inclusion or exclusion of a protected target produces a measurable change in the model’s behavior under aligned conditions. The proposed theory connects copyright memorization with conditional differential privacy. Con-ditional publicity characterizes the case in which a target concept produces a substantial privacy violation, while non-infringement corresponds to approximate invariance with respect to the tar-get. This formulation clarifies why distinctive long-tail works can be more auditable than generic concepts, and why output-only tests must be interpreted under explicit assumptions about target salience, observable model behavior, and access to controlled conditioning spaces. To make the counterfactual criterion operational, we introduce conditional sensitivity based on a dual-branch perturbation procedure. The learning branch and unlearning branch approximate opposite local movements around the target concept, and their observable divergence serves as a surrogate for the unavailable retraining-based counterfactual. The first-order analysis shows that this divergence is controlled by the counterfactual privacy-budget surrogate, the training-set scale, the perturbation step size, and the local Hessian curvature. Furthermore, the calibrated detection statistic subtracts sensitivity under orthogonal conditions, reducing false evidence caused by global parameter shift or sampling instability. The modality-specific instantiations demonstrate that the same principle can be applied beyond a single model family. Linear regression provides a closed-form sanity check in which residuals and inverse-Hessian geometry govern exposure. Conditional diffusion models express the signal through image or latent representation divergence. Language models expose it through token-distribution and entropy shifts. Multimodal models extend the criterion to cross-modal representation and at-tention sensitivity, capturing protected associations that may not be visible from raw outputs alone. The framework also has clear limitations. It does not claim to decide legal infringement by itself, nor does it eliminate the need for domain-specific evidence about protectable expression, authorization, and substantial similarity. Its statistical reliability depends on the distinctiveness of the target, the quality of aligned and orthogonal conditions, the stability of the perturbation procedure, and the observability of the chosen representation. 29 References 
+
+[1] Vitaly Feldman. Does learning require memorization? a short tale about a long tail. In 
+
+Proceedings of the 52nd Annual ACM SIGACT Symposium on Theory of Computing , STOC 2020, page 954–959, New York, NY, USA, 2020. Association for Computing Machinery. [2] Nicholas Carlini, Florian Tramer, Eric Wallace, Matthew Jagielski, Ariel Herbert-Voss, Kather-ine Lee, Adam Roberts, Tom Brown, Dawn Song, Ulfar Erlingsson, et al. Extracting training data from large language models. In 30th USENIX security symposium (USENIX Security 21) ,pages 2633–2650, 2021. [3] Nicolas Carlini, Jamie Hayes, Milad Nasr, Matthew Jagielski, Vikash Sehwag, Florian Tramer, Borja Balle, Daphne Ippolito, and Eric Wallace. Extracting training data from diffusion models. In 32nd USENIX security symposium (USENIX Security 23) , pages 5253–5270, 2023. [4] Gowthami Somepalli, Vasu Singla, Micah Goldblum, Jonas Geiping, and Tom Goldstein. Dif-fusion art or digital forgery? investigating data replication in diffusion models. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 6048–6058, 2023. [5] Junlei Zhou, Jiashi Gao, Ziwei Wang, and Xuetao Wei. Copyscope: Model-level copyright infringement quantification in the diffusion workflow, 2023. [6] Zhenting Wang, Chen Chen, Lingjuan Lyu, Dimitris N Metaxas, and Shiqing Ma. Diagno-sis: Detecting unauthorized data usages in text-to-image diffusion models. In The Twelfth International Conference on Learning Representations , 2023. [7] Chen Chen, Enhuai Liu, Daochang Liu, Mubarak Shah, and Chang Xu. Investigating memo-rization in video diffusion models, 2025. [8] Rui Ma, Qiang Zhou, Yizhu Jin, Daquan Zhou, Bangjun Xiao, Xiuyu Li, Yi Qu, Aishani Singh, Kurt Keutzer, Jingtong Hu, Xiaodong Xie, Zhen Dong, Shanghang Zhang, and Shiji Zhou. A dataset and benchmark for copyright infringement unlearning from text-to-image diffusion models, 2024. [9] Zhenting Wang, Chen Chen, Vikash Sehwag, Minzhou Pan, and Lingjuan Lyu. Evaluating and mitigating ip infringement in visual generative ai, 2024. [10] Qipan Xu, Zhenting Wang, Xiaoxiao He, Ligong Han, and Ruixiang Tang. Can large vision-language models detect images copyright infringement from genai?, 2025. [11] Xiafeng Man, Zhipeng Wei, and Jingjing Chen. Copyright infringement detection in text-to-image diffusion models via differential privacy. Proceedings of the AAAI Conference on Artificial Intelligence , 40(10):7910–7917, Mar. 2026. [12] Lucas Bourtoule, Varun Chandrasekaran, Christopher A Choquette-Choo, Hengrui Jia, Adelin Travers, Baiwu Zhang, David Lie, and Nicolas Papernot. Machine unlearning. In 2021 IEEE symposium on security and privacy (SP) , pages 141–159. IEEE, 2021. [13] Silas Alberti, Kenan Hasanaliyev, Manav Shah, and Stefano Ermon. Data unlearning in diffu-sion models, 2025. 30 [14] Rohit Gandikota, Joanna Materzynska, Jaden Fiotto-Kaufman, and David Bau. Erasing con-cepts from diffusion models, 2023. [15] Nupur Kumari, Bingliang Zhang, Sheng-Yu Wang, Eli Shechtman, Richard Zhang, and Jun-Yan Zhu. Ablating concepts in text-to-image diffusion models, 2023. [16] Cynthia Dwork. Differential privacy: A survey of results. In Manindra Agrawal, Dingzhu Du, Zhenhua Duan, and Angsheng Li, editors, Theory and Applications of Models of Computation ,pages 1–19, Berlin, Heidelberg, 2008. Springer Berlin Heidelberg. [17] Cynthia Dwork and Aaron Roth. The algorithmic foundations of differential privacy. Found. Trends Theor. Comput. Sci. , 9(3–4):211–407, August 2014. [18] Pang Wei Koh and Percy Liang. Understanding black-box predictions via influence functions. In 
+
+Proceedings of the 34th International Conference on Machine Learning - Volume 70 , ICML’17, page 1885–1894. JMLR.org, 2017. [19] Sung Min Park, Kristian Georgiev, Andrew Ilyas, Guillaume Leclerc, and Aleksander Madry. Trak: Attributing model behavior at scale, 2023. [20] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agar-wal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever. Learning transferable visual models from natural language supervision, 2021. [21] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, L ukasz Kaiser, and Illia Polosukhin. Attention is all you need. In I. Guyon, U. Von Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, editors, Advances in Neural Information Processing Systems , volume 30. Curran Associates, Inc., 2017. [22] Wayne Xin Zhao, Kun Zhou, Junyi Li, Tianyi Tang, Xiaolei Wang, Yupeng Hou, Yingqian Min, Beichen Zhang, Junjie Zhang, Zican Dong, Yifan Du, Chen Yang, Yushuo Chen, Zhipeng Chen, Jinhao Jiang, Ruiyang Ren, Yifan Li, Xinyu Tang, Zikang Liu, Peiyu Liu, Jian-Yun Nie, and Ji-Rong Wen. A survey of large language models, 2026. [23] Amirata Ghorbani and James Zou. Data shapley: Equitable valuation of data for machine learning, 2019. [24] Zheng Dai and David K Gifford. Training data attribution for diffusion models, 2023. [25] Jinxu Lin, Linwei Tao, Minjing Dong, and Chang Xu. Diffusion attribution score: Evaluating training data influence in diffusion models, 2025. [26] R Dennis Cook and Sanford Weisberg. Residuals and influence in regression. 1982. [27] Samyadeep Basu, Xuchen You, and Soheil Feizi. On second-order group influence functions for black-box predictions, 2020. [28] Xiaosen Zheng, Tianyu Pang, Chao Du, Jing Jiang, and Min Lin. Intriguing properties of data attribution on diffusion models, 2024. [29] Bruno Mlodozeniec, Runa Eschenhagen, Juhan Bae, Alexander Immer, David Krueger, and Richard Turner. Influence functions for scalable data attribution in diffusion models, 2025. 31 [30] Edward J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al. Lora: Low-rank adaptation of large language models. ICLR ,1(2):3, 2022. [31] Douglas C Montgomery, Elizabeth A Peck, and G Geoffrey Vining. Introduction to linear regression analysis . John Wiley & Sons, 2021. [32] Fabian Pedregosa, Ga¨ el Varoquaux, Alexandre Gramfort, Vincent Michel, Bertrand Thirion, Olivier Grisel, Mathieu Blondel, Andreas M¨ uller, Joel Nothman, Gilles Louppe, Peter Pretten-hofer, Ron Weiss, Vincent Dubourg, Jake Vanderplas, Alexandre Passos, David Cournapeau, Matthieu Brucher, Matthieu Perrot, and ´Edouard Duchesnay. Scikit-learn: Machine learning in python, 2018. [33] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020. [34] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj¨ orn Ommer. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 10684–10695, 2022. [35] Rohit Gandikota, Hadas Orgad, Yonatan Belinkov, Joanna Materzy´ nska, and David Bau. Uni-fied concept editing in diffusion models, 2024. [36] Kien Nguyen, Anh Tran, and Cuong Pham. Suma: A subspace mapping approach for robust and effective concept erasure in text-to-image diffusion models, 2025. [37] Nataniel Ruiz, Yuanzhen Li, Varun Jampani, Yael Pritch, Michael Rubinstein, and Kfir Aber-man. Dreambooth: Fine tuning text-to-image diffusion models for subject-driven generation. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 22500–22510, 2023. [38] Nupur Kumari, Bingliang Zhang, Richard Zhang, Eli Shechtman, and Jun-Yan Zhu. Multi-concept customization of text-to-image diffusion. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 1931–1941, 2023. [39] An Yang, Baosong Yang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Zhou, Chengpeng Li, Chengyuan Li, Dayiheng Liu, Fei Huang, Guanting Dong, Haoran Wei, Huan Lin, Jialong Tang, Jialin Wang, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin Ma, Jin Xu, Jingren Zhou, Jinze Bai, Jinzheng He, Junyang Lin, Kai Dang, Keming Lu, Keqin Chen, Kexin Yang, Mei Li, Mingfeng Xue, Na Ni, Pei Zhang, Peng Wang, Ru Peng, Rui Men, Ruize Gao, Runji Lin, Shijie Wang, Shuai Bai, Sinan Tan, Tianhang Zhu, Tianhao Li, Tianyu Liu, Wenbin Ge, Xiaodong Deng, Xiaohuan Zhou, Xingzhang Ren, Xinyu Zhang, Xipin Wei, Xuancheng Ren, Yang Fan, Yang Yao, Yichang Zhang, Yu Wan, Yunfei Chu, Yuqiong Liu, Zeyu Cui, Zhenru Zhang, and Zhihao Fan. Qwen2 technical report. arXiv preprint arXiv:2407.10671 , 2024. [40] Qwen Team. Qwen2.5: A party of foundation models, September 2024. 32

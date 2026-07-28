@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-28",
+  "date": "2026-07-28",
+  "generated_at": "2026-07-28T21:37:10",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/28/2607.22035v1-dcs-a-unified-conditional-sensitivity-framework-for-cross-modal-copyright-infringement-detection",
+      "section": "quick",
+      "title_en": "DCS: A Unified Conditional Sensitivity Framework for Cross-Modal Copyright Infringement Detection",
+      "authors": "Xiafeng Man",
+      "date": "2026-07-24",
+      "pdf": "https://arxiv.org/pdf/2607.22035v1",
+      "score": "6.0",
+      "evidence": "将版权侵权视为条件分布偏移，实现对生成模型输出中版权内容的检测",
+      "tldr": "当前基础模型可能复现受版权训练内容，但输出相似度无法区分侵权与合法泛化。本文提出统一的条件敏感性检测框架DCS，将侵权证据视为反事实条件分布偏移，通过条件差分隐私和双分支扰动测量，结合影响函数分析量化敏感度，并设计校准统计量排除通用微调干扰。该框架实例化于线性回归、扩散模型、语言模型及多模态模型，为跨模态版权侵权检测提供了可操作的理论基础和实践工具。",
+      "tags": "query:watermarking",
+      "abstract_en": "Currently, most foundation models can reproduce or strongly depend on copyrighted training content, but output similarity alone is insufficient for infringement detection, because similar outputs may also arise from public-domain concepts, common stylistic conventions, or ordinary statistical generalization.   In this paper, we develops a unified post-hoc detection framework that treats copyright infringement evidence as a counterfactual conditional distribution shift: a protected target is suspicious when the model's behavior under aligned conditions would change measurably if that target were included in, or removed from, the training process.   We formalize this view through conditional differential privacy and introduce Dual-Branch Conditional Sensitivity (DCS), an operational statistic that measures the observable gap between two locally perturbed model states. Specifically, the proposed DCS framework creates a learning branch and an unlearning branch around the deployed model, connects their displacement to the unavailable counterfactual retraining effect through influence-function analysis, and bounds the observable sensitivity by the counterfactual privacy-budget surrogate, local curvature, training-set scale, and perturbation step size. To distinguish target-specific memorization from generic fine-tuning instability, we further define a calibrated detection statistic that subtracts the sensitivity measured under orthogonal conditions.   The DCS framework is instantiated for ridge-regularized linear regression, conditional diffusion models, autoregressive language models, and multimodal models. These instantiations show how the same principle can be evaluated through prediction gaps, image-embedding divergence, token-distribution or entropy shifts, and cross-modal representation changes.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

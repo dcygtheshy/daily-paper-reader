@@ -1,0 +1,52 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-28T21:35:44.015544+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.22035v1",
+      "source": "arxiv",
+      "title": "DCS: A Unified Conditional Sensitivity Framework for Cross-Modal Copyright Infringement Detection",
+      "abstract": "Currently, most foundation models can reproduce or strongly depend on copyrighted training content, but output similarity alone is insufficient for infringement detection, because similar outputs may also arise from public-domain concepts, common stylistic conventions, or ordinary statistical generalization.   In this paper, we develops a unified post-hoc detection framework that treats copyright infringement evidence as a counterfactual conditional distribution shift: a protected target is suspicious when the model's behavior under aligned conditions would change measurably if that target were included in, or removed from, the training process.   We formalize this view through conditional differential privacy and introduce Dual-Branch Conditional Sensitivity (DCS), an operational statistic that measures the observable gap between two locally perturbed model states. Specifically, the proposed DCS framework creates a learning branch and an unlearning branch around the deployed model, connects their displacement to the unavailable counterfactual retraining effect through influence-function analysis, and bounds the observable sensitivity by the counterfactual privacy-budget surrogate, local curvature, training-set scale, and perturbation step size. To distinguish target-specific memorization from generic fine-tuning instability, we further define a calibrated detection statistic that subtracts the sensitivity measured under orthogonal conditions.   The DCS framework is instantiated for ridge-regularized linear regression, conditional diffusion models, autoregressive language models, and multimodal models. These instantiations show how the same principle can be evaluated through prediction gaps, image-embedding divergence, token-distribution or entropy shifts, and cross-modal representation changes.",
+      "authors": [
+        "Xiafeng Man"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-24T07:00:44+00:00",
+      "link": "https://arxiv.org/pdf/2607.22035v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Treats copyright infringement as conditional distribution shift, enabling detection in generative models",
+      "llm_evidence_cn": "将版权侵权视为条件分布偏移，实现对生成模型输出中版权内容的检测",
+      "llm_evidence": "将版权侵权视为条件分布偏移，实现对生成模型输出中版权内容的检测",
+      "canonical_evidence": "将版权侵权视为条件分布偏移，实现对生成模型输出中版权内容的检测",
+      "llm_tldr_en": "Unified post-hoc detection framework for copyright infringement in foundation models using conditional differential privacy to detect training data influence.",
+      "llm_tldr_cn": "本文提出统一事后检测框架，将版权侵权证据视为反事实条件分布偏移，通过条件差分隐私形式化，实现对基础模型输出中受保护训练内容的检测。该方法无需访问训练数据，适用于跨模态场景，为版权验证提供新思路。",
+      "llm_tldr": "本文提出统一事后检测框架，将版权侵权证据视为反事实条件分布偏移，通过条件差分隐私形式化，实现对基础模型输出中受保护训练内容的检测。该方法无需访问训练数据，适用于跨模态场景，为版权验证提供新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

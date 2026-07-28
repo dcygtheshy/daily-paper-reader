@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-28 <!--dpr-date:20260728-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/28/2607.22035v1-dcs-a-unified-conditional-sensitivity-framework-for-cross-modal-copyright-infringement-detection" data-sidebar-item="{&quot;title&quot;: &quot;DCS: A Unified Conditional Sensitivity Framework for Cross-Modal Copyright Infringement Detection&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.22035v1-dcs-a-unified-conditional-sensitivity-framework-for-cross-modal-copyright-infringement-detection&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;将版权侵权视为条件分布偏移，实现对生成模型输出中版权内容的检测&quot;}">DCS: A Unified Conditional Sensitivity Framework for Cross-Modal Copyright Infringement Detection</a>
   * 2026-07-27 <!--dpr-date:20260727-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/27/2607.22386v1-correlation-aware-and-gaussianity-preserving-robust-latent-angular-watermarking-for-diffusion-models" data-sidebar-item="{&quot;title&quot;: &quot;Correlation-Aware and Gaussianity-Preserving Robust Latent Angular Watermarking for Diffusion Models&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.22386v1-correlation-aware-and-gaussianity-preserving-robust-latent-angular-watermarking-for-diffusion-models&quot;, &quot;score&quot;: &quot;10.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;针对扩散模型的潜在角度水印，关注高斯性保持和对扰动的鲁棒性&quot;}">Correlation-Aware and Gaussianity-Preserving Robust Latent Angular Watermarking for Diffusion Models</a>
