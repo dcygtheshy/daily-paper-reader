@@ -1,0 +1,281 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-29T20:07:12.304951+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 5,
+    "deep_cap": 6,
+    "deep_selected": 5,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2607.23553v1",
+      "source": "arxiv",
+      "title": "Collusion-Resistant Image-Agnostic Watermarking for Multi-Screen Shooting",
+      "abstract": "Screen-shooting poses a significant threat to confidential information protection. While existing screen-shooting watermarking methods enable copyright verification, the copyrighted images carrying the same copyright watermark across different screens often exhibit highly similar and estimable watermark patterns. These shared patterns can be exploited for watermark removal and forgery, a threat we term the multi-screen collusion attack. To mitigate this threat, we propose CoMSMark, a collusion-resistant image-agnostic watermarking framework for multi-screen shooting, which reduces shared residual components across screens to resist multi-screen collusion attacks. Specifically, we incorporate screen ID through a style modulation mechanism, enabling the encoder to generate screen-specific watermark residuals for reliable source attribution. We further introduce a collusion suppression loss that reduces shared residual components and encourages high-entropy predictions for forged samples, improving resistance to collusion attacks. Finally, to enable efficient large-scale distribution, CoMSMark employs an image-agnostic encoding paradigm that generates watermark residuals independently of image content. Extensive experiments demonstrate that CoMSMark effectively resists both collusion-based watermark removal and forgery. It maintains an average watermark accuracy above 90% under removal attacks while keeping forged-watermark accuracy near 50%. Moreover, CoMSMark achieves competitive robustness under diverse screen-shooting conditions, including varying capture distances and angles.",
+      "authors": [
+        "Mingyue Chen",
+        "Xin Liao",
+        "Yufeng Wu",
+        "Han Fang",
+        "Xiaoshuai Wu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.MM",
+        "eess.IV"
+      ],
+      "published": "2026-07-26T09:11:01+00:00",
+      "link": "https://arxiv.org/pdf/2607.23553v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Watermarking method for screen-shooting collusion resistance",
+      "llm_evidence_cn": "抗合谋屏幕拍摄水印方法",
+      "llm_evidence": "抗合谋屏幕拍摄水印方法",
+      "canonical_evidence": "抗合谋屏幕拍摄水印方法",
+      "llm_tldr_en": "Proposes CoMSMark, a collusion-resistant image-agnostic watermarking framework for multi-screen shooting that reduces shared residual components to resist multi-screen collusion attacks using style modulation with screen IDs.",
+      "llm_tldr_cn": "针对屏幕拍摄场景中多屏合谋攻击威胁，提出CoMSMark抗合谋水印框架。该框架通过风格调制机制嵌入屏幕ID，减少不同屏幕间共享残差分量，有效抵抗多屏合谋攻击。实验表明该方法在保持图像质量的同时提升鲁棒性，为屏幕拍摄版权保护提供新方案。",
+      "llm_tldr": "针对屏幕拍摄场景中多屏合谋攻击威胁，提出CoMSMark抗合谋水印框架。该框架通过风格调制机制嵌入屏幕ID，减少不同屏幕间共享残差分量，有效抵抗多屏合谋攻击。实验表明该方法在保持图像质量的同时提升鲁棒性，为屏幕拍摄版权保护提供新方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.25222v1",
+      "source": "arxiv",
+      "title": "How to Watermark the RLWE Homomorphic Ciphertexts",
+      "abstract": "In recent years, homomorphic encryption (HE) schemes based on the Ring Learning with Errors (RLWE) problem have rapidly developed and been widely applied to secure computation tasks, including privacy-preserving deep learning inference, privacy-preserving database queries, and related applications. However, most existing HE schemes focus primarily on the feasibility and efficiency of homomorphic computation, often neglecting practical requirements such as copyright protection of ciphertexts, source authentication, and supervision during computation. To address these issues, we propose a watermarking technique for RLWE-based HE ciphertexts. The algebraic structure of RLWE polynomials allows us to embed small noise as watermarking information into the ciphertext polynomials without affecting the plaintext values. However, HE ciphertexts typically undergo multiple homomorphic operations, which can distort or even remove the embedded watermark information. To address this challenge, we propose two practical solutions. The first, ARWMark, is a watermarking scheme based on noise stratification and is robust to homomorphic additive operations. The second scheme, MRWMark, is constructed using the roots of a linear equation and is resilient to both homomorphic additive and multiplicative operations, while supporting zero-bit watermarking. We provide a detailed theoretical analysis, proving that our schemes do not compromise the original security of HE, while ensuring the correctness and robustness of the proposed watermarking techniques. Furthermore, we conduct extensive experiments to demonstrate the effectiveness of both watermarking schemes.",
+      "authors": [
+        "Yufei Zhou"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-07-28T02:53:30+00:00",
+      "link": "https://arxiv.org/pdf/2607.25222v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "watermarking for RLWE homomorphic ciphertexts using small noise embedding",
+      "llm_evidence_cn": "针对RLWE同态加密密文的水印技术，嵌入小噪声",
+      "llm_evidence": "针对RLWE同态加密密文的水印技术，嵌入小噪声",
+      "canonical_evidence": "针对RLWE同态加密密文的水印技术，嵌入小噪声",
+      "llm_tldr_en": "Proposes a watermarking method for RLWE-based homomorphic ciphertexts using algebraic structure to embed small noise as watermark, addressing copyright and authentication needs in HE computations.",
+      "llm_tldr_cn": "现有同态加密方案忽视了密文的版权保护和来源认证等实际需求。本文利用RLWE多项式的代数结构，将小噪声作为水印嵌入密文多项式中，实现密文水印。该方法平衡了水印鲁棒性与计算正确性，为同态加密中的安全管理提供了新工具。",
+      "llm_tldr": "现有同态加密方案忽视了密文的版权保护和来源认证等实际需求。本文利用RLWE多项式的代数结构，将小噪声作为水印嵌入密文多项式中，实现密文水印。该方法平衡了水印鲁棒性与计算正确性，为同态加密中的安全管理提供了新工具。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.25633v1",
+      "source": "arxiv",
+      "title": "Construction-Driven Injection: Linguistically-Grounded Edit-Based Code-Mixing Fingerprints for Large Language Models",
+      "abstract": "Large language models (LLMs) are costly intellectual assets that remain exposed to unauthorized redistribution and commercial misuse. Injected fingerprints, i.e., trigger--target pairs embedded in model behavior, offer a practical, black-box-verifiable ownership signal, but existing methods decouple the two stages of the fingerprint life cycle: how a fingerprint is constructed and how it is injected. Existing fingerprinting frameworks suffer from two limitations. Natural-language fingerprints are prone to accidental activation, and garbled fingerprints are easily filtered by perplexity-based detection. Furthermore, decoupling construction from injection leaves the latter unaware of the trigger's linguistic structure, missing the opportunity for targeted optimization. We argue that fingerprint construction should drive injection, and present a unified fingerprinting framework that jointly optimizes both stages. First, LCF constructs code-mixing fingerprints by combining low-resource languages under a semantic-density substitution rule and grammar-biased mixing, yielding triggers whose perplexity sits far below garbled baselines while avoiding the accidental-activation failures of natural-language triggers. Second, LCFEdit injects each fingerprint with a null-space projection derived from high-resource multilingual representations that preserves knowledge, augmented by a cross-lingual alignment step that steers the weight update toward the fingerprint language's representation subspace. This construction-aware injection ensures that the update is linguistically informed and therefore more stable. Extensive evaluations on imperceptibility, detectability, and harmlessness demonstrate persistent ownership verification with negligible impact on utility.",
+      "authors": [
+        "Yongyi Cui",
+        "Yue Li",
+        "Tianbao Jiang",
+        "Xin Yi"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-07-28T12:16:14+00:00",
+      "link": "https://arxiv.org/pdf/2607.25633v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "edit-based code-mixing fingerprints for LLMs as fingerprinting technique",
+      "llm_evidence_cn": "基于编辑的代码混合指纹作为LLM的指纹技术",
+      "llm_evidence": "基于编辑的代码混合指纹作为LLM的指纹技术",
+      "canonical_evidence": "基于编辑的代码混合指纹作为LLM的指纹技术",
+      "llm_tldr_en": "Construction-Driven Injection proposes linguistically-grounded edit-based code-mixing fingerprints for LLMs, enabling black-box verifiable ownership with reduced accidental activation.",
+      "llm_tldr_cn": "现有LLM指纹方法存在易误触发或易被过滤的问题。本文提出构造驱动注入方法，基于语言学的编辑式代码混合注入指纹，将构造与注入阶段协同优化。实验表明该方法在保持低误触率的同时，能有效抵抗基于困惑度的检测，为LLM版权保护提供了实用的指纹方案。",
+      "llm_tldr": "现有LLM指纹方法存在易误触发或易被过滤的问题。本文提出构造驱动注入方法，基于语言学的编辑式代码混合注入指纹，将构造与注入阶段协同优化。实验表明该方法在保持低误触率的同时，能有效抵抗基于困惑度的检测，为LLM版权保护提供了实用的指纹方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.25750v1",
+      "source": "arxiv",
+      "title": "Detecting CSAM Text-to-Image LoRAs From Weights",
+      "abstract": "Low-rank adaptation (LoRA) fine-tuning has made it cheap and easy to customize open-weight image generation models for specific tasks, including the production of child sexual abuse material (CSAM). Existing moderation relies on metadata or generated outputs, but metadata can be deceptive and generating outputs may itself be unacceptable or illegal. We show that a safer signal lives in the weights. The top-left singular vectors of a LoRA's updates form a compact, inference-free fingerprint ($u_1$) of its strongest learned change. Using human-subject age as a benign proxy for CSAM, we find that $u_1$ identifies what a LoRA was trained on, generalizes across base models, and abstains on unrelated benign content. The signal is robust to additive weight noise, rescaling, and precision reduction. These results indicate that harmful LoRAs could be screened directly from their weights without relying on metadata or generating harmful outputs.",
+      "authors": [
+        "David Demitri Africa",
+        "Cate Heine",
+        "Nadine Staes-Polet",
+        "Kimberly Mai"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CY"
+      ],
+      "published": "2026-07-28T14:12:52+00:00",
+      "link": "https://arxiv.org/pdf/2607.25750v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "fingerprinting generative models via LoRA weight analysis",
+      "llm_evidence_cn": "通过LoRA权重分析对生成模型进行指纹识别",
+      "llm_evidence": "通过LoRA权重分析对生成模型进行指纹识别",
+      "canonical_evidence": "通过LoRA权重分析对生成模型进行指纹识别",
+      "llm_tldr_en": "Proposes a compact fingerprint from LoRA weight updates to detect if a LoRA was fine-tuned on CSAM, robust to noise and rescaling, generalizes across base models.",
+      "llm_tldr_cn": "针对LoRA微调可能用于生成儿童性虐待材料（CSAM）的安全隐患，本文提出一种基于权重指纹的检测方法。该方法利用LoRA权重更新中顶层奇异向量作为紧凑指纹，无需生成图像即可识别训练内容。实验表明，该指纹对权重噪声、缩放、重缩放等扰动鲁棒，能跨基础模型泛化，并对无关内容正确拒识。该工作为生成模型安全提供了一种高效、无需推理的可推广检测方案，显著降低了审核风险。",
+      "llm_tldr": "针对LoRA微调可能用于生成儿童性虐待材料（CSAM）的安全隐患，本文提出一种基于权重指纹的检测方法。该方法利用LoRA权重更新中顶层奇异向量作为紧凑指纹，无需生成图像即可识别训练内容。实验表明，该指纹对权重噪声、缩放、重缩放等扰动鲁棒，能跨基础模型泛化，并对无关内容正确拒识。该工作为生成模型安全提供了一种高效、无需推理的可推广检测方案，显著降低了审核风险。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.22808v1",
+      "source": "arxiv",
+      "title": "Hybrid Semantic and Spectral Ensemble for Robust Synthetic Image Source Attribution",
+      "abstract": "The rapid advancement of text-to-image (T2I) models has necessitated robust Synthetic Image Source Attribution (SIA) methodologies. A critical challenge in SIA is the distribution shift between pristine training images and real-world deployed images, which undergo unknown post-processing operations such as JPEG compression and blurring. In this work, proposed for the DLMMDD Challenge at ICANN 2026, we introduce a dual-branch ensemble framework fusing Semantic Deep Learning with Mathematical Forensic Feature Extraction. The semantic branch employs EfficientNet-B0 regularized with Exponential Moving Averaging (EMA) and Label Smoothing. The forensic branch extracts 126 mathematical features -- including SVD spectral profiles and Local Binary Patterns -- from high-pass noise residuals, compressed via Truncated SVD and classified with XGBoost. Evaluated on a dataset of 10 generators where 55% of the test set is degraded, our approach achieves a private leaderboard accuracy of 95.60%. Furthermore, the entire pipeline is highly computationally efficient, requiring no GPU acceleration and executing end-to-end on a standard CPU in under 6.5 hours, highlighting the practicality and scalability of mathematical forensics for real-world deployment.",
+      "authors": [
+        "Md. Ajwad Hossain"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.GR",
+        "eess.IV"
+      ],
+      "published": "2026-07-24T17:22:33+00:00",
+      "link": "https://arxiv.org/pdf/2607.22808v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "synthetic image source attribution for T2I models",
+      "llm_evidence_cn": "文本到图像模型的合成图像源归属",
+      "llm_evidence": "文本到图像模型的合成图像源归属",
+      "canonical_evidence": "文本到图像模型的合成图像源归属",
+      "llm_tldr_en": "Proposes a hybrid semantic and spectral ensemble for robust synthetic image source attribution, achieving state-of-the-art performance on the DLMMDD Challenge by fusing EfficientNet with mathematical forensic features.",
+      "llm_tldr_cn": "文本到图像模型快速发展带来合成图像溯源需求。本文针对真实场景中的分布偏移，提出双分支集成框架：语义分支用EfficientNet-B0结合EMA和标签平滑；取证分支提取126维数学特征（包括SVD谱和LBP）。在DLMMDD挑战中取得领先性能，为生成模型指纹识别提供了鲁棒方案。",
+      "llm_tldr": "文本到图像模型快速发展带来合成图像溯源需求。本文针对真实场景中的分布偏移，提出双分支集成框架：语义分支用EfficientNet-B0结合EMA和标签平滑；取证分支提取126维数学特征（包括SVD谱和LBP）。在DLMMDD挑战中取得领先性能，为生成模型指纹识别提供了鲁棒方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.23597v1",
+      "source": "arxiv",
+      "title": "HiTMS: A High-Throughput Multi-Stream Linguistic Steganography Framework",
+      "abstract": "Generative linguistic steganography conceals secret bits within the sampling randomness of large language models. Existing schemes are single-stream, conveying an entire secret through a single response to a single prompt. This convention incurs two limitations: it provides no protocol-level support for batched multi-stream inference, and naive co-batching does not conceal slot occupancy or payload completion. We propose HiTMS, which distributes a secret across multiple responses produced jointly over successive rounds of interaction. Each round embeds and extracts several streams within a single batched call, thereby amortizing the cost of model invocation and substantially improving throughput. To ensure recoverability, HiTMS wraps each response in a self-describing frame and employs a key-derived schedule that binds streams to slots and fills unused slots with decoys, guaranteeing exact recovery while concealing the number of active streams. The framework is agnostic to both the language model and the steganographic coder. Across eight dataset-model-coder settings, eight-stream HiTMS achieves up to 4.3 times higher embedding and extraction speeds than single-stream baselines, while reducing the steganalyzer AUROC from 0.681 to 0.601 on average. Additional experiments with 4 to 64 streams demonstrate sustained throughput gains as concurrency increases. GitHub repository for this work is https://github.com/ryehr/HiTMS_steganography.",
+      "authors": [
+        "Ruiyi Yan",
+        "Yugo Murawaki",
+        "Zhongliang Yang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL"
+      ],
+      "published": "2026-07-26T10:54:44+00:00",
+      "link": "https://arxiv.org/pdf/2607.23597v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "linguistic steganography as fingerprinting for generative models",
+      "llm_evidence_cn": "语言隐写作为生成模型的指纹技术",
+      "llm_evidence": "语言隐写作为生成模型的指纹技术",
+      "canonical_evidence": "语言隐写作为生成模型的指纹技术",
+      "llm_tldr_en": "HiTMS proposes a high-throughput multi-stream linguistic steganography framework that distributes secret data across multiple LLM responses, improving throughput and concealment.",
+      "llm_tldr_cn": "现有语言隐写方案仅支持单流嵌入，吞吐量低且易被检测。HiTMS框架通过多轮交互将秘密分布到多个响应中，利用批量调用提高吞吐量，并通过包裹响应保护隐蔽性。实验表明该方法在保持隐蔽性的同时显著提升嵌入效率，为生成模型指纹识别提供了新思路。",
+      "llm_tldr": "现有语言隐写方案仅支持单流嵌入，吞吐量低且易被检测。HiTMS框架通过多轮交互将秘密分布到多个响应中，利用批量调用提高吞吐量，并通过包裹响应保护隐蔽性。实验表明该方法在保持隐蔽性的同时显著提升嵌入效率，为生成模型指纹识别提供了新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.25522v1",
+      "source": "arxiv",
+      "title": "I2VShield: An Efficient Proactive Defense Framework against DiT-based Image-to-Video Models",
+      "abstract": "The rapid advancement of video generation models has led to the increasing misuse of image-to-video (I2V) models. Although substantial progress has been made in detecting AI-generated videos, proactive defenses against I2V models remain underexplored. In particular, current proactive defenses against I2V models predominantly rely on gradient-based adversarial attacks, which require defenders to possess GPUs with substantial memory resources (VRAM) to generate adversarial examples. To address this issue, we propose I2VShield, a privacy protection method based on generative adversarial attacks tailored to Diffusion Transformer (DiT)-based I2V models. The proposed method primarily consists of two components: (1) a text-adaptive perturbation generation framework integrating adversarial learning to mitigate computational overhead while maintaining visual imperceptibility; and (2) an untargeted Multimodal Attention Disruption (MAD) attack that exploits the inherent vulnerabilities of DiT-based I2V models, maximizing the deviation of the internal attention features from their clean states. Extensive experiments demonstrate that our approach achieves highly competitive protection performance across various datasets and mainstream DiT-based I2V models, particularly in disrupting spatiotemporal coherence, while substantially reducing computational costs.",
+      "authors": [
+        "Yimao Guo",
+        "Zuomin Qu",
+        "Wei Lu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-07-28T10:05:11+00:00",
+      "link": "https://arxiv.org/pdf/2607.25522v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "proactive defense against DiT-based I2V models",
+      "llm_evidence_cn": "针对DiT图像到视频模型的主动防御",
+      "llm_evidence": "针对DiT图像到视频模型的主动防御",
+      "canonical_evidence": "针对DiT图像到视频模型的主动防御",
+      "llm_tldr_en": "Proposes I2VShield, a proactive defense framework using generative adversarial attacks to protect privacy from misuse of DiT-based image-to-video models, addressing the lack of efficient proactive defenses.",
+      "llm_tldr_cn": "针对Diffusion Transformer（DiT）图像到视频模型被滥用的问题，现有防御依赖高显存的梯度对抗攻击。本文提出I2VShield，一种基于生成对抗攻击的主动防御方法，包含文本自适应扰动和扰动优化模块，无需大量显存即可生成保护性扰动。实验表明I2VShield能有效干扰I2V生成，保护隐私，为生成模型防御提供新思路。",
+      "llm_tldr": "针对Diffusion Transformer（DiT）图像到视频模型被滥用的问题，现有防御依赖高显存的梯度对抗攻击。本文提出I2VShield，一种基于生成对抗攻击的主动防御方法，包含文本自适应扰动和扰动优化模块，无需大量显存即可生成保护性扰动。实验表明I2VShield能有效干扰I2V生成，保护隐私，为生成模型防御提供新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
