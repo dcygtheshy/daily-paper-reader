@@ -1,0 +1,457 @@
+Title: AnchorMark: Robust Diffusion Watermarking via Latent-Space Rotation Synchrony
+
+URL Source: https://arxiv.org/pdf/2607.27551v1
+
+Published Time: Fri, 31 Jul 2026 00:20:08 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# AnchorMark: Robust Diffusion Watermarking via Latent-Space Rotation Synchrony 
+
+## Yuqi Qian 1,2 , Yun Cao 1,2 , Haocheng Fu 1,2 , Haochen Zhao 1,2 , Hong Zhang 1,2 , Meineng Zhu 3,
+
+> 1
+
+Institute of Information Engineering, Chinese Academy of Sciences 
+
+> 2
+
+School of Cyber Security, University of Chinese Academy of Sciences 
+
+> 3
+
+School of Cybersecurity, University of International Relations qianyuqi@iie.ac.cn, caoyun@iie.ac.cn, fuhaocheng@iie.ac.cn, zhaohaochen@iie.ac.cn, zhanghong@iie.ac.cn, zmneng@uir.edu.cn 
+
+Abstract 
+
+Inversion-based watermarking embeds watermark payloads directly into the generative process, avoiding a separate post-hoc image-domain embedding stage while preserving the native visual fidelity of synthesized images. However, ex-isting methods remain vulnerable to compound lossy post-processing, particularly when rotation is involved, as it dis-rupts the spatial correspondence required for latent-space de-coding. To overcome this limitation, we introduce Anchor-Mark , a training-free, robust inversion-based watermarking. We uncover a latent-space property termed Rotation Syn-chrony : image-domain rotations and their counterparts in the recovered initial latent share the same angle. Building on this property, AnchorMark embeds a synchronization anchor in the central region of the initial latent, enabling accurate esti-mation and correction of the rotation angle during extraction. Experiments show that AnchorMark substantially improves bit accuracy under rotation and combined attacks, with lim-ited impact on image quality. 
+
+## Introduction 
+
+Recent advances in diffusion models have substantially im-proved the quality and controllability of text-to-image gener-ation (Ho, Jain, and Abbeel 2020; Song, Meng, and Ermon 2020; Rombach et al. 2022). Latent diffusion models such as Stable Diffusion can now synthesize realistic, semantically rich, and stylistically diverse images from natural-language prompts, while also raising concerns about content prove-nance, copyright protection, model-output authentication, and synthetic misinformation. Digital watermarking has be-come a crucial technique to address this need. Among exist-ing paradigms, inversion-based watermarking is particularly appealing: it embeds payloads into the initial diffusion la-tent, allowing the watermark to be formed together with the image, and later recovers it through diffusion inversion. This formulation requires no retraining of the underlying genera-tor and is robust to common non-geometric distortions (Wen et al. 2023; Yang et al. 2024; Qian et al. 2026). Nevertheless, their robustness deteriorates markedly under combinations of lossy post-processing operations, particularly when rota-tion is involved. As shown in Fig. 1, under rotations spanning 
+
+Copyright © 2027, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 0°  
+
+> 45 °
+> 90 °
+> 135 °
+> 180 °
+> -45 °
+> -90 °
+> -135 °
+> RivaGAN
+> (Posthoc-based)
+> StableSignature
+> (Fine-tune-based)
+> GaussianShading
+> (Inversion-based)
+> Ours
+> (AnchorMark)
+> 0.9989
+> 0.9590
+> 0.9999
+> 0.9908 0.9905
+> 0.9991
+> 0.9453
+> 0.7522
+> Original Image
+> Standard Anchor Recovered Anchor
+> α
+> Distorted Image
+> α
+> Diffusion Inversion
+
+Figure 1: Intuitive comparison of AnchorMark with repre-sentative state-of-the-art methods from three watermarking paradigms. AnchorMark maintains high payload extraction accuracy across a wide range of rotation angles. 
+
+−180 ◦ to 180 ◦, the bit accuracy of representative watermark-ing methods drops toward 50% over a broad range of angles, indicating nearly random payload recovery rather than a grad-ual loss of watermark strength. The fundamental challenge is latent coordinate-frame mis-alignment: rotation shifts watermark carriers from their ex-pected locations, breaking the spatial correspondence re-quired for payload decoding. Prior work responds to rotation-induced misalignment in two different ways. Learned syn-chronizers explicitly estimate the applied transformation us-ing auxiliary networks or predictors (Fang et al. 2025a), but require additional training and can make synchronization de-pendent on particular architectures, watermarking schemes, or training attack distributions. Rotation-invariant spectral designs instead avoid explicit transformation estimation by suppressing orientation sensitivity (Wen et al. 2023; Ci et al. 2024). Although effective for watermark-presence detection, such designs do not recover the correspondence between la-tent carriers and bit positions required to decode an ordered multi-bit payload. Inversion-based multi-bit watermarking therefore still lacks a lightweight and modular mechanism for watermarking synchronization. To address this challenge, we introduce AnchorMark as a training-free robust inversion-based watermarking. Inspired arXiv:2607.27551v1 [cs.CR] 30 Jul 2026 by the classical rotation property of the Fourier transform, which maps an image-space rotation to the same angular ro-tation in the frequency domain, we investigate how rotation propagates through diffusion latent recovery. We uncover Ro-tation Synchrony in diffusion latent recovery: an image-space rotation induces the same angular rotation in the recovered initial latent. Consequently, matching the recovered latent against rotated references yields a minimum near the ground-truth angle. Based on this property, AnchorMark embeds a compact synchronization anchor in the central region of the initial latent while retaining the surrounding region for pay-load embedding. During recovery, the anchor guides rotation estimation and refinement, after which the aligned image is passed to the original decoder for payload extraction. The main contributions are summarized as follows: 
+
+• We identify rotation-induced latent coordinate misalign-ment as a fundamental failure mode and formalize Rota-tion Synchrony: an image-space rotation induces the same angular rotation in the recovered initial latent. 
+
+• We propose AnchorMark , a training-free robust inversion-based watermarking. It combines a compact multi-frequency phase anchor with statistics-calibrated injection, coarse-to-fine registration, and local refinement guided by payload verification to restore bit-wise align-ment. 
+
+• Extensive experiments demonstrate that AnchorMark consistently improves robustness against rotation attacks and enables reliable multi-bit payload recovery while pre-serving the visual quality and semantic fidelity of gener-ated images. 
+
+## Related Work 
+
+Digital watermarking embeds traceable information into vi-sual content while preserving perceptual quality. Classical transform-domain and neural post-hoc methods modify im-ages after synthesis (Ingemar et al. 2008; Zhu et al. 2018; Zhang et al. 2019; Tancik, Mildenhall, and Ng 2020; Fer-nandez et al. 2022), whereas recent generative watermark-ing methods integrate the signal into the image-generation process. Stable Signature fine-tunes the latent decoder to produce signed images (Fernandez et al. 2023), while Tree-Ring, Gaussian Shading, and ShapeMark embed watermarks into the initial diffusion latent and recover them through inversion (Wen et al. 2023; Yang et al. 2024; Qian et al. 2026). CoSDA further improves this paradigm by reducing inversion drift and compensation errors (Fang et al. 2025b). Although effective against common non-geometric distor-tions, inversion-based multi-bit methods associate payload bits with spatially indexed latent carriers and are therefore vulnerable to rotation-induced misalignment. Geometric robustness has traditionally been addressed through synchronization references, feature-based registra-tion, or invariant descriptors such as Fourier–Mellin features (Bas, Chassery, and Macq 2002). Recent learned methods ex-plicitly predict geometric transformations (Fang et al. 2025a), but require additional training and may depend on specific architectures or attack distributions. Rotation-invariant spec-tral designs, such as Tree-Ring and RingID (Wen et al. 2023; Ci et al. 2024), instead suppress orientation sensitivity to sup-port stable watermark detection. However, multi-bit tracing requires recovering the correspondence between latent car-riers and bit positions, which rotation-invariant aggregation does not provide. AnchorMark addresses this gap by pre-serving the spatially indexed latent structure and explicitly restoring its coordinate alignment for payload recovery. 
+
+## Rotation Synchrony in Latent Space 
+
+AnchorMark is grounded in a structural property of latent space that we term Rotation Synchrony : an image-space rotation induces the same angular rotation in the re-covered initial latent. Prior work has shown that geomet-ric transformations can remain systematically organized in learned representations (Lenc and Vedaldi 2015). Although standard CNNs are not strictly rotation-equivariant (Wor-rall et al. 2017), transformation-dependent spatial structures may persist in their feature spaces (Cohen and Welling 2016; Kouzelis et al. 2025). 
+
+Residual-Bounded Rotation Synchrony 
+
+Let xT denote the initial diffusion latent, and let z0 = Φ( xT )
+
+be the final latent produced by the deterministic sampling map Φ. Let E and D denote the VAE encoder and decoder, respectively, and let Ψ denote deterministic diffusion inver-sion. The generated image is I = D(z0). After applying an image-domain rotation Tα, the recovered initial latent is 
+
+ˆxT (α) = Ψ( E(TαD(z0))) . (1) Throughout the analysis, Rα denotes the corresponding norm-preserving rotation on the continuous latent grid. De-viations introduced by finite-grid interpolation and finite spa-tial support are absorbed into the residual terms below. 
+
+Definition 1 (Rotation Synchrony). Given a generated image–latent pair (I, x T ), the diffusion generation–inversion pipeline exhibits Bα-bounded Rotation Synchrony at angle 
+
+α if 
+
+∥ˆxT (α) − R αxT ∥2 ≤ Bα. (2) Rotation Synchrony therefore characterizes an approximate cross-domain commutativity relation: rotating a generated image before latent recovery approximately agrees with di-rectly rotating its initial latent. Importantly, this property does not assume exact rotation equivariance of either the VAE or the diffusion inversion dynamics. We first characterize the deviation introduced by VAE encoding. Its response to image rotation admits the decom-position 
+
+E(TαD(z0)) = Rαz0 + rvae (α, z 0), (3) where rvae quantifies the VAE-mediated deviation from ideal Rotation Synchrony, including reconstruction inconsistency, finite-resolution interpolation, and boundary effects. Equa-tion (3) is an exact residual decomposition and does not assume that the VAE is rotation-equivariant. We next characterize how this rotational relation propa-gates through deterministic diffusion inversion. Following the ODE interpretation of deterministic diffusion trajectories Figure 2: Illustration of Rotation Synchrony: the initial latent recovered from a rotated image closely matches the corre-spondingly rotated initial latent of the original image. (Song, Meng, and Ermon 2020; Song et al. 2020), we write the inversion dynamics as 
+
+dx (t)
+
+dt = vt(x(t)) , x(0) = z0, x(T ) = Ψ( z0).
+
+(4) We define the rotation-compatibility defect of the inversion vector field as 
+
+δt(α, x ) = vt(Rαx) − R αvt(x). (5) If the inversion dynamics were exactly rotation-compatible, then δt(α, x ) = 0 . For a practical diffusion model, this quan-tity measures the discrepancy between rotating a latent before inversion and rotating the corresponding inversion trajectory. Assume that vt is locally Lipschitz along the relevant tra-jectories, with Lipschitz constant Lt. A standard Gronwall argument gives 
+
+∥Ψ( Rαz0) − R αΨ( z0)∥2
+
+≤
+
+Z T
+
+> 0
+
+exp 
+
+Z Ts
+
+Lτ dτ 
+
+!
+
+∥δs(α, x (s)) ∥2 ds. (6) Thus, the inversion stage preserves the rotational relation re-quired by Rotation Synchrony up to the accumulated rotation-compatibility defect of its vector field. The above analysis is stated for the continuous deterministic inversion flow; the cor-responding finite-step DDIM formulation and its discretiza-tion residual are provided in the appendix. If the inversion map is locally Lipschitz in a neighborhood of Rαz0, with constant LΨ, the VAE residual propagates according to 
+
+∥Ψ( Rαz0 + rvae ) − Ψ( Rαz0)∥2
+
+≤ LΨ ∥rvae (α, z 0)∥2 . (7) Combining Eqs. (6) and (7) yields the following residual-bounded characterization of Rotation Synchrony. 
+
+Proposition 1 (Residual-Bounded Rotation Synchrony). 
+
+Under the above local Lipschitz conditions, for a generated image I = D(Φ( xT )) rotated by α, the inversion-recovered initial latent admits the decomposition 
+
+ˆxT (α) = RαxT + ξα, (8) where 
+
+∥ξα∥2 ≤ LΨ ∥rvae (α, z 0)∥2
+
++
+
+Z T
+
+> 0
+
+exp 
+
+Z Ts
+
+Lτ dτ 
+
+!
+
+∥δs(α, x (s)) ∥2 ds 
+
++ ∥Ψ(Φ( xT )) − xT ∥2 .
+
+(9) The three terms respectively quantify the VAE-mediated rotation residual, the accumulated rotation-compatibility de-fect of the inversion dynamics, and the generation–inversion cycle error. Together, they characterize the deviation from ideal Rotation Synchrony. If all three terms vanish, Eq. (8) reduces to ˆxT (α) = RαxT , and the pipeline is exactly rotation-synchronous. In practical pipelines, Eq. (9) estab-lishes the residual-bounded form of this property, with its right-hand side providing an explicit choice of Bα in Def-inition 1. The practical magnitude of these residuals, and whether they remain sufficiently small to support angle re-covery, are examined empirically below. 
+
+Rotation Estimation via Latent Matching 
+
+The above result motivates rotation estimation through latent matching. For a candidate angle β, let 
+
+yα = Norm(ˆ xT (α)) , zβ = Norm( Rβ xT ) . (10) We define the practical and ideal matching distances as 
+
+Drec (α, β ) = 1
+
+N ∥yα − zβ ∥22 , (11) 
+
+Dideal (α, β ) = 1
+
+N ∥zα − zβ ∥22 . (12) Without recovery residuals, yα = zα, and thus Drec =
+
+Dideal . For a reference latent without nontrivial rotational symmetry, Dideal (α, β ) is minimized at β = α.Let 
+
+ϵα = 1
+
+√N ∥yα − zα∥2 (13) denote the normalized recovery deviation. By the reverse triangle inequality, 
+
+pDrec (α, β ) − pDideal (α, β ) ≤ ϵα. (14) Hence, the practical matching profile is a bounded perturba-tion of its ideal counterpart. When the VAE and inversion residuals are small, its minimum is expected to remain near the ground-truth rotation, which we verify empirically below. 
+
+Empirical Validation of Rotation Synchrony 
+
+We empirically assess whether Rotation Synchrony is suf-ficiently accurate to support angle recovery in pretrained diffusion pipelines. For each initial latent xT , we gener-ate I = D(Φ( xT )) , rotate it by a known angle α, and apply DDIM inversion to obtain ˆxT (α). We then evaluate 
+
+Drec (α, β ) against candidate rotations Rβ xT , using the cen-tral valid region to reduce rotation-induced boundary arti-facts. As shown in Fig. 3, both the sample-wise and averaged matching profiles attain their minima at the ground-truth Figure 3: Empirical validation of Rotation Synchrony: latent matching is minimized near the ground-truth angle, produc-ing a clear low-distance diagonal across rotations. angle or its nearest sampled candidate. The pairwise dis-tance heatmap further exhibits a clear low-distance diagonal, providing a global signature of Rotation Synchrony. Conse-quently, 
+
+ˆα = arg min  
+
+> β
+
+Drec (α, β ) ≈ α. (15) These results show that image rotation remains observable as the dominant orientation shift of the inversion-recovered initial latent, providing the empirical basis for AnchorMark to perform latent synchronization. 
+
+## AnchorMark: Rotation Synchronization for Inversion-Based Watermarking 
+
+In this section, we present AnchorMark , a training-free ge-ometric synchronization framework for inversion-based dif-fusion watermark recovery. Building on the rotation corre-spondence established above, AnchorMark embeds a com-pact multi-frequency phase anchor in the central latent re-gion through statistics-calibrated injection, while retaining the surrounding region for the original multi-bit payload. As illustrated in Fig. 4, recovery combines anchor-guided coarse-to-fine rotation synchronization with local refine-ment, reusing the original watermark decoder for candidate verification and final payload extraction after image-domain correction. 
+
+Decoupled Phase-Anchor Construction 
+
+AnchorMark constructs an analytic orientation reference that is spatially decoupled from the data-bearing watermark pay-load. The construction follows three principles: isolating the synchronization cue from payload modulation, encod-ing rotation through a predictable multi-frequency phase re-sponse, and limiting perturbations to the initial latent through statistics-calibrated injection. 
+
+Anchor–Payload Spatial Decoupling. Given an initial diffusion latent xT ∈ RC×H×W , AnchorMark reserves a compact central patch Ma for synchronization and a chan-nel subset Sa ⊆ { 1, . . . , C } for carrying the phase anchor. The resulting anchor support is therefore defined jointly by the central spatial region and the selected latent channels. Phase-anchor injection is restricted to this support, while the underlying inversion-based watermarking method embeds its multi-bit payload in the remaining latent coordinates. This separation assigns synchronization and message car-rying to disjoint latent supports, preventing payload modula-tion from overwriting the orientation reference and avoiding direct interference from the anchor with payload carriers. The anchor is placed at the latent center because centered image rotations preserve the central structure more consis-tently, whereas peripheral regions are more susceptible to padding, cropping, and interpolation artifacts. The central support therefore provides a stable and modular reference for subsequent rotation registration. 
+
+Multi-Frequency Phase Encoding. Within the s × s an-chor patch, each spatial position (u, v ) is represented in polar coordinates relative to the patch center (uc, v c):
+
+θ(u, v ) = atan2( v − vc, u − uc),ρ(u, v ) = p(u − uc)2 + ( v − vc)2. (16) Let Ca = |S a| and 
+
+P =
+
+ Ca
+
+2
+
+
+
+(17) be the number of available sine–cosine channel pairs. We select an ordered angular-frequency set 
+
+K = {kj }Pj=1 , 1 = k1 < k 2 < · · · < k P ≤ kmax ,
+
+(18) where kmax is limited by the anchor resolution to avoid severe angular aliasing. The j-th harmonic pair is defined as 
+
+Aj (u, v ) = ω(ρ(u, v )) 
+
+cos  kj θ(u, v ) + ϕj
+
+
+
+sin  kj θ(u, v ) + ϕj
+
+
+
+, (19) where ϕj is a predetermined phase offset and ω(ρ) is a radial envelope, with ω(ρ) = 1 when no radial tapering is applied. The two components of Aj are assigned to one latent-channel pair. This construction converts spatial rotation into an analytic phase response. Under a centered rotation by α, the angular coordinate changes from θ to θ − α, yielding 
+
+Aj (θ − α) = Q(kj α)Aj (θ), (20) where 
+
+Q(kj α) = 
+
+ cos( kj α) sin( kj α)
+
+− sin( kj α) cos( kj α)
+
+
+
+. (21) Thus, a rotation by α induces a predictable phase displace-ment of kj α in the j-th harmonic pair. The fundamental com-ponent k1 = 1 provides a stable global orientation reference with limited angular ambiguity, whereas higher-frequency components amplify small angular variations and sharpen local discrimination. Their combination forms a multi-scale phase code that supports both reliable coarse alignment and fine-grained rotation estimation. Initial Latent Watermarked Latent 
+
+Embedding Stage 
+
+> PhaseSync Anchor Region
+> Payload Region
+> A puppy is drinking
+> Starbucks.
+> Watermarked Image
+> Text Prompt
+> Watermarked Latent
+
+Watermarked Image Generation 
+
+Decoding Stage 
+
+Local Refinement Performance Evaluation                 
+
+> Conf () = 0.92
+> - 1 °- 2 °+1 °+2 °
+> - 1 °- 2 °+1 °+2 °
+> - 2 °Conf () = 0.71 - 2 °
+> + 1 °
+> + 1 °
+> + 2 °
+> Conf () = 0.85 - 1 °
+> Conf () = 0.97 +1 °
+> Conf () = 0.81 +2 °
+> Suspect Image Recovered Latent
+> Anchor Reference Verifier
+
+Anchor-Guided Rotation Synchronization      
+
+> Final Correct Angle 𝛾 ∗+1°Corrected Image Watermark Payload
+
+Multi-Frequency Phase Anchor Construction  
+
+> Low-frequency Anchor
+> High-frequency Anchor
+> Conditioned Phase
+> Structuring Anchor Reference
+
+Anchor Injection & Watermark Payload Embedding 
+
+> Anchor–Payload
+> Partition
+
+Transmission     
+
+> JPEG Compression Resize/Rescale
+> Gaussian Noise Blur
+> Rotation Crop
+> Filtering Color/Contrast
+
+1 2 3
+
+> Diffusion Models
+> Synchronous
+> Correction
+> Verification
+> Tracing
+
+Verification & Tracing 
+
+> Coarse-to-Fine Search
+
+Figure 4: Overall pipeline of AnchorMark. A multi-frequency phase anchor is injected into the initial diffusion latent together with the watermark payload; after transmission under common distortions, the recovered anchor guides coarse-to-fine rotation synchronization and local refinement for reliable payload verification and tracing. 
+
+Statistics-Calibrated Anchor Injection. Directly over-writing the initial latent with a deterministic phase template may introduce a substantial distribution shift and degrade image generation. AnchorMark instead embeds the anchor through per-channel moment matching, weak mixing, and post-mixing calibration. Let xa = xT [Ma] denote the original latent patch, and let 
+
+A denote the corresponding multi-frequency phase template. For each selected channel c, the template is first standardized and matched to the mean and standard deviation of the orig-inal latent patch: 
+
+˜Ac = Ac − μ(Ac)
+
+σ(Ac) + ϵ , A∗ 
+
+> c
+
+= σ(xa,c ) ˜Ac + μ(xa,c ), (22) where μ(·) and σ(·) denote the empirical mean and standard deviation. The matched template is then fused with the original latent through 
+
+x′ 
+
+> a,c
+
+= p1 − λ2 xa,c + λA ∗ 
+
+> c
+
+, (23) where λ controls the strength of the synchronization cue. A smaller λ reduces disturbance to the original latent, whereas a larger value strengthens the recoverable phase response. Finally, the mixed patch is recalibrated to the original per-channel moments: 
+
+x′′  
+
+> a,c
+
+= σ(xa,c ) x′ 
+
+> a,c
+
+− μ(x′
+
+> a,c
+
+)
+
+σ(x′
+
+> a,c
+
+) + ϵ + μ(xa,c ). (24) The calibrated patch x′′  
+
+> a
+
+is written back to the anchor support of xT . This procedure approximately restores the original per-channel mean and variance up to the numerical stabilizer while retaining the structured phase component re-quired for synchronization. Because the phase code and its injection are fully analytic, the anchor can be constructed without learned parameters or modifications to the diffusion model. 
+
+Hierarchical Rotation Synchronization and Payload Recovery 
+
+AnchorMark restores the latent coordinate frame through a hierarchical recovery procedure that combines two comple-mentary signals. The phase anchor supports efficient rotation estimation over a wide angular range, whereas the original watermark decoder provides a task-specific criterion for re-solving the remaining fine-grained uncertainty. Accordingly, AnchorMark first performs phase-anchor-guided global reg-istration and then conducts payload-confidence-guided local refinement before final message recovery. 
+
+Anchor-Guided Global Registration. Given an attacked image Iatt , AnchorMark first maps it back to the initial diffu-sion latent space: ˆxT = Inv( Iatt ), and extracts the recovered anchor region ˆxa = ˆ xT [Ma]. Using the shared key, the detec-tor reconstructs the reference anchor xref  
+
+> a
+
+. For each candidate attack angle γ ∈ Ω, the reference anchor is spatially rotated in the latent domain and compared with the recovered anchor through the normalized matching loss 
+
+Lanchor (γ) = MSE  Norm(ˆ xa), Norm  Rγ (xref  
+
+> a
+
+) , (25) where Rγ (·) denotes latent-domain rotation. The initial rota-tion estimate is obtained as γ∗ = arg min γ∈Ω Lanchor (γ). To cover a broad rotation range without exhaustively evaluating a dense angle grid, AnchorMark searches Ω in a coarse-to-fine manner. Because this stage only rotates and compares compact latent anchors after a single inversion, it provides an efficient global estimate of the rotation-induced coordinate misalignment. 
+
+Payload-Guided Local Refinement. Although anchor-guided registration estimates the dominant rotation, small errors may remain because of finite search resolution, image interpolation, and diffusion inversion noise. Such residual misalignment can still disrupt the spatial correspondence required for multi-bit decoding. AnchorMark therefore con-structs a compact local candidate set Ωv around the initial estimate γ∗ and refines it using the native verification crite-rion of the underlying watermarking method. For each γ ∈ Ωv , the attacked image is inversely rotated by −γ, mapped back to the initial latent space, and processed by the original payload decoder. Because AnchorMark con-fines synchronization to the central anchor region, the sur-rounding payload support and its native decoding rule remain unchanged. The payload recovered from this surrounding re-gion is assigned the corresponding verification confidence 
+
+Conf( γ), and the final synchronization angle is selected as 
+
+ˆα = arg max 
+
+> γ∈Ωv
+
+Conf( γ).
+
+The payload decoded at ˆα is returned as the final recovery result. This hierarchical design uses the central phase anchor for wide-range synchronization and the surrounding native payload for task-aligned local refinement. 
+
+## Experiments 
+
+Experimental Settings 
+
+Unless otherwise specified, experiments use Stable Diffusion v2.1 at 512 × 512 resolution with a 4 × 64 × 64 initial latent. Images are generated with 50 denoising steps and a classifier-free guidance scale of 7.5. Watermark recovery uses 10-step DDIM inversion with a null prompt, assuming the original generation prompt is unavailable. AnchorMark uses a 16 ×
+
+16 central anchor over all four latent channels. The multi-frequency phase anchor contains two sine–cosine pairs with 
+
+K = {1, 3}, phase offsets (ϕ1, ϕ 2) = (0 , 0.7) , and injection strength λ = 0 .2. Phase-anchor-guided global registration uses a 5◦ coarse grid followed by 1◦ refinement within ±3◦.Payload-confidence-guided local refinement searches within 
+
+±2◦ using a 0.5◦ step. All experiments are conducted on an NVIDIA L40 GPU. 
+
+Evaluation Metrics 
+
+Following (Yang et al. 2024), we evaluate both watermark detection and tracing. Detection performance is measured by the true positive rate (TPR) at a fixed false positive rate of 10 −6, while tracing performance is measured by bit ac-curacy (Acc). Configurable multi-bit methods use a 256-bit payload; methods with fixed capacity follow their official settings and released weights. TPR and Acc are evaluated on 500 randomly sampled prompts from Stable-Diffusion-Prompts (Gustavosta 2022). Image quality and text–image consistency are assessed using FID (Heusel et al. 2017) and CLIP-Score (Radford et al. 2021), computed on 1,000 COCO2017 prompts (Lin et al. 2014). 
+
+Baselines 
+
+We compare AnchorMark with representative post-hoc meth-ods, including DwtDctSvd (Ingemar et al. 2008) and Riva-GAN (Zhang et al. 2019); the fine-tuning-based Stable Signa-ture (Fernandez et al. 2023); and inversion-based methods, including Tree-Ring (Wen et al. 2023), RingID (Ci et al. 2024), Gaussian Shading (Yang et al. 2024), and Shape-Mark (Qian et al. 2026). Detailed baseline configurations are provided in the appendix. 
+
+Main Results: Comprehensive Rotation-Robustness Comparison 
+
+We evaluate rotation robustness in both detection and tracing settings. Each ±θ◦ setting evaluates both +θ◦ and −θ◦ rota-tion attacks, and the reported results are averaged over the two directions. Table 1 reports TPR/Acc under different rotation magnitudes, together with FID and CLIP-Score for image quality and semantic fidelity. Rotation attacks severely de-grade existing watermarking methods, especially inversion-based multi-bit schemes without synchronization: Gaussian Shading almost loses detection capability beyond small ro-tations, and both Gaussian Shading and ShapeMark keep tracing accuracy close to random guessing. By contrast, AnchorMark restores this coordinate frame through latent registration before decoding. With AnchorMark, Gaussian Shading achieves near-perfect detection and an average Acc of 97 .66% , while ShapeMark reaches almost perfect recov-ery across all tested rotations, including ±60 ◦. Meanwhile, the changes in FID and CLIP-Score remain limited com-pared with the corresponding base methods, indicating that AnchorMark provides accurate geometric correction while preserving visual quality and text-image semantic fidelity. 
+
+Robustness under Combined Attacks 
+
+While the main comparison focuses on isolated rotations, real editing pipelines often combine rotation with resizing, compression, noise, or filtering. These compound attacks are more challenging because they simultaneously disrupt spatial alignment and degrade the anchor or payload signal. We therefore evaluate AnchorMark under randomized com-bined attacks across SDv1.5, SDv2.1, SDv3.5 Medium, and FLUX.1-dev. For each test image, we randomly compose one rotation with one additional image-level distortion. The rota-tion angle is sampled from {15 ◦, 30 ◦, 45 ◦}, covering moder-ate to large geometric misalignment. The second distortion is sampled from five common post-processing operations: upscaling by 1.25 ×, downscaling by 0.9×, JPEG compres-sion with quality factor 75 , Gaussian noise with σ = 0 .01 ,and median blur with kernel size 5. This randomized proto-col avoids evaluating only manually selected attack pairs and better reflects practical editing scenarios where geometric and photometric degradations may appear jointly. We report the average TPR and Acc over all randomly sampled com-bined attacks. Table 2 summarizes the results. AnchorMark Table 1: Main comparison under rotation attacks. For each rotation magnitude, we report TPR / Acc, where TPR is evaluated at FPR = 10 −6 and Acc denotes bit-level tracing accuracy. “–” indicates not applicable. FID and CLIP-Score are reported as mean ± standard deviation. Method Rotation Attack: TPR / Acc ↑ FID ↓ CLIP ↑±5◦ ±10 ◦ ±30 ◦ ±60 ◦
+
+Stable Diffusion v2.1 – – – – 57 .2958 ± 0.9591 0.3080 ± 0.0015 
+
+DwtDctSvd 0.3511 /0.5215 0.3394 /0.5152 0.3115 /0.5069 0.3153 /0.5127 56 .7683 ± 0.9571 0.3122 ± 0.0015 
+
+RivaGAN 0.9971 /0.9974 0.9928 /0.9898 0.6151 /0.6358 0.3992 /0.4875 56 .8412 ± 0.9864 0.3108 ± 0.0014 
+
+Stable Signature 0.9692 /0.9620 0.8827 /0.7230 0.6429 /0.5833 0.5193 /0.5416 57 .5137 ± 1.0388 0.3068 ± 0.0015 
+
+Tree-Ring 0.9560 /– 0.6780 /– 0.2700 /– 0.5120 /– 58 .6148 ± 0.9949 0.3081 ± 0.0014 
+
+RingID 0.8700 /– 0.8840 /– 0.7800 /– 0.7340 /– 58 .1896 ± 0.8413 0.3048 ± 0.0013 
+
+Gaussian Shading 0.0140 /0.5658 0.0000 /0.5523 0.0000 /0.5040 0.0000 /0.5018 58 .0626 ± 0.5199 0.3088 ± 0.0004 
+
++ AnchorMark 0.9900 /0.9750 1.0000 /0.9822 1.0000 /0.9802 0.9960 /0.9689 59 .2894 ± 1.0701 0.3082 ± 0.0012 
+
+ShapeMark 0.5600 /0.5098 0.5820 /0.5122 0.4540 /0.5001 0.4200 /0.4990 56 .4198 ± 0.7918 0.3096 ± 0.0011 
+
++ AnchorMark 1.0000 /1.0000 1.0000 /1.0000 1.0000 /0.9999 1.0000 /1.0000 57 .4025 ± 0.8211 0.3088 ± 0.0012 
+
+maintains stable detection and tracing performance across all evaluated backbones, showing that the proposed synchro-nization mechanism is not tied to a specific diffusion archi-tecture or latent distribution. More importantly, the results demonstrate that AnchorMark remains effective when rota-tion is coupled with common image-level distortions. This indicates that the phase anchor provides a sufficiently robust synchronization cue, and that the two-stage correction-and-extraction strategy can still recover the payload after realistic compound transformations. Table 2: Average TPR / Acc under randomized combined at-tacks across text-to-image backbones. Each attack combines a rotation from {15 ◦, 30 ◦, 45 ◦} with a randomly selected re-size, JPEG, Gaussian noise, or median blur distortion. Backbone TPR / Acc ↑         
+
+> Gaussian Shading + AnchorMark ShapeMark + AnchorMark Stable Diffusion v1.5 0.9981 / 0.9642 1.0000 / 0.9768 Stable Diffusion v2.1 0.9980 / 0.9598 1.0000 / 0.9722 Stable Diffusion v3.5 0.9980 / 0.9527 1.0000 / 0.9641 FLUX.1-DEV 0.9979 / 0.9454 0.9999 / 0.9678
+
+Ablation Study on Phase Anchor Design 
+
+We ablate the phase-anchor template to verify whether the proposed multi-frequency design is necessary. All variants use the same anchor region, injection strength, and decod-ing strategy, and differ only in the injected synchronization pattern. We compare a statistics-matched random anchor, a low-frequency anchor using only the k = 1 harmonic, a high-frequency anchor using only the k = 3 harmonic, and the full multi-frequency anchor combining both components. Table 3 shows that the random anchor remains partially effective: since it is key-dependent and spatially fixed, it can still provide a certain matching signal after rotation. However, it lacks an analytic phase response, leading to less accurate angle estimation and lower tracing accuracy. The low-frequency anchor improves stability and achieves better accuracy than the random anchor, while the high-frequency anchor provides stronger angular sensitivity but is more af-fected by interpolation and inversion noise. The full multi-frequency anchor yields the best performance, reducing the angle estimation error to less than 0.5 ◦. These results confirm that AnchorMark benefits from the structured combination of low-frequency robustness and high-frequency discrimina-tion, rather than merely from inserting an additional latent pattern. Table 3: Ablation study of the phase-anchor design under rotation attacks. 
+
+Anchor Design Angle Error (◦) ↓ TPR / Acc ↑
+
+Gaussian Shading + AnchorMark 
+
+Random 0.4975 0.9850 / 0.9388 Low-frequency only 0.4450 0.9950 / 0.9529 High-frequency only 0.4050 0.9900 / 0.9510 
+
+Full multi-frequency 0.3980 0.9980 / 0.9598 
+
+ShapeMark + AnchorMark 
+
+Random 0.6820 1.0000 / 0.9432 Low-frequency only 0.5710 1.0000 / 0.9581 High-frequency only 0.6070 1.0000 / 0.9488 
+
+Full multi-frequency 0.4929 1.0000 / 0.9722 
+
+## Conclusion 
+
+We presented AnchorMark, a training-free robust inversion-based watermarking. AnchorMark embeds a multi-frequency phase anchor into the initial diffusion latent and restores the correct spatial coordinate frame through hierarchical rotation synchronization and payload recovery. Experiments show that AnchorMark significantly improves multi-bit tracing un-der rotation and combined attacks while preserving image quality and semantic fidelity. These results demonstrate that latent-space synchronization is an effective mechanism for robust inversion-based watermarking under geometric trans-formations. References 
+
+Bas, P.; Chassery, J.-M.; and Macq, B. 2002. Geometrically invariant watermarking using feature points. IEEE transac-tions on image Processing , 11(9): 1014–1028. Ci, H.; Yang, P.; Song, Y.; and Shou, M. Z. 2024. Ringid: Rethinking tree-ring watermarking for enhanced multi-key identification. In European conference on computer vision ,338–354. Springer. Cohen, T.; and Welling, M. 2016. Group equivariant convo-lutional networks. In International conference on machine learning , 2990–2999. PMLR. Fang, H.; Chen, K.; Ma, Z.; Deng, J.; Li, Y.; Zhang, W.; and Chang, E.-C. 2025a. SynTag: Enhancing the Geomet-ric Robustness of Inversion-based Generative Image Water-marking. In Proceedings of the IEEE/CVF International Conference on Computer Vision , 15416–15425. Fang, H.; Chen, K.; Yang, Z.; Cui, B.; Zhang, W.; and Chang, E.-C. 2025b. CoSDA: Enhancing the Robustness of Inversion-based Generative Image Watermarking Frame-work. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 39, 2888–2896. Fernandez, P.; Couairon, G.; Jégou, H.; Douze, M.; and Furon, T. 2023. The stable signature: Rooting watermarks in latent diffusion models. In Proceedings of the IEEE/CVF In-ternational Conference on Computer Vision , 22466–22477. Fernandez, P.; Sablayrolles, A.; Furon, T.; Jégou, H.; and Douze, M. 2022. Watermarking images in self-supervised latent spaces. In ICASSP 2022-2022 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 3054–3058. IEEE. Gustavosta. 2022. Stable Diffusion Prompts Dataset. https://huggingface.co/datasets/Gustavosta/Stable-Diffusion-Prompts. Accessed: 2026-01-23. Heusel, M.; Ramsauer, H.; Unterthiner, T.; Nessler, B.; and Hochreiter, S. 2017. Gans trained by a two time-scale update rule converge to a local nash equilibrium. Advances in neural information processing systems , 30. Ho, J.; Jain, A.; and Abbeel, P. 2020. Denoising diffusion probabilistic models. Advances in neural information pro-cessing systems , 33: 6840–6851. Ingemar, J. C.; Miller, M. L.; Jeffrey, A. B.; Fridrich, J.; and Kalker, T. 2008. Digital watermarking and steganography .Elsevier Inc. Kouzelis, T.; Kakogeorgiou, I.; Gidaris, S.; and Komodakis, N. 2025. Eq-vae: Equivariance regularized latent space for improved generative image modeling. arXiv preprint arXiv:2502.09509 .Lenc, K.; and Vedaldi, A. 2015. Understanding image repre-sentations by measuring their equivariance and equivalence. In Proceedings of the IEEE conference on computer vision and pattern recognition , 991–999. Lin, T.-Y.; Maire, M.; Belongie, S.; Hays, J.; Perona, P.; Ramanan, D.; Dollár, P.; and Zitnick, C. L. 2014. Microsoft coco: Common objects in context. In European conference on computer vision , 740–755. Springer. Qian, Y.; Cao, Y.; Fu, H.; Lv, M.; and Zhu, M. 2026. Shape-Mark: Robust and Diversity-Preserving Watermarking for Diffusion Models. arXiv preprint arXiv:2603.09454 .Radford, A.; Kim, J. W.; Hallacy, C.; Ramesh, A.; Goh, G.; Agarwal, S.; Sastry, G.; Askell, A.; Mishkin, P.; Clark, J.; et al. 2021. Learning transferable visual models from natural language supervision. In International conference on machine learning , 8748–8763. PMLR. Rombach, R.; Blattmann, A.; Lorenz, D.; Esser, P.; and Om-mer, B. 2022. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF confer-ence on computer vision and pattern recognition , 10684– 10695. Song, J.; Meng, C.; and Ermon, S. 2020. Denoising diffusion implicit models. arXiv preprint arXiv:2010.02502 .Song, Y.; Sohl-Dickstein, J.; Kingma, D. P.; Kumar, A.; Er-mon, S.; and Poole, B. 2020. Score-based generative model-ing through stochastic differential equations. arXiv preprint arXiv:2011.13456 .Tancik, M.; Mildenhall, B.; and Ng, R. 2020. Stegastamp: Invisible hyperlinks in physical photographs. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2117–2126. Wen, Y.; Kirchenbauer, J.; Geiping, J.; and Goldstein, T. 2023. Tree-ring watermarks: Fingerprints for diffu-sion images that are invisible and robust. arXiv preprint arXiv:2305.20030 .Worrall, D. E.; Garbin, S. J.; Turmukhambetov, D.; and Bros-tow, G. J. 2017. Harmonic networks: Deep translation and rotation equivariance. In Proceedings of the IEEE conference on computer vision and pattern recognition , 5028–5037. Yang, Z.; Zeng, K.; Chen, K.; Fang, H.; Zhang, W.; and Yu, N. 2024. Gaussian shading: Provable performance-lossless image watermarking for diffusion models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 12162–12171. Zhang, K. A.; Xu, L.; Cuesta-Infante, A.; and Veeramacha-neni, K. 2019. Robust invisible video watermarking with attention. arXiv preprint arXiv:1909.01285 .Zhu, J.; Kaplan, R.; Johnson, J.; and Fei-Fei, L. 2018. Hid-den: Hiding data with deep networks. In Proceedings of the European conference on computer vision (ECCV) , 657–672.

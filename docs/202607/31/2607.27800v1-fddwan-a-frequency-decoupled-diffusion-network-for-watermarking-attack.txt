@@ -1,0 +1,483 @@
+Title: FDDWAN: A Frequency-Decoupled Diffusion Network for Watermarking Attack
+
+URL Source: https://arxiv.org/pdf/2607.27800v1
+
+Published Time: Fri, 31 Jul 2026 00:37:30 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# FDDWAN: A Frequency-Decoupled Diffusion Network for Watermarking Attack 
+
+## Chunpeng Wang 1, Yuxin Li 1, Xiaoyu Wang 2, Jidong Yang 1, Suo Gao 3, Qi Li 1∗ 
+
+> 1
+
+Qilu University of Technology (Shandong Academy of Sciences), Jinan, Shandong Province, China  
+
+> 2
+
+Dalian Maritime University, Dalian, Liaoning Province, China  
+
+> 3
+
+Dalian Polytechnic University, Dalian, Liaoning Province, China 
+
+Abstract 
+
+Existing invisible watermark removal methods often struggle to accurately capture the watermark-bearing features, lead-ing to an unfavorable trade-off between watermark suppres-sion and perceptual fidelity. In this paper, we propose the Frequency-Decoupled Diffusion Watermark Attack Network (FDDWAN), a coarse-to-fine framework that performs wa-termark removal through wavelet-domain decomposition and residual diffusion refinement. In the initial stage, the Wavelet-based Frequency-domain Preliminary Attack Module (WF-PAM) decomposes the watermarked image into low- and high-frequency subbands and applies frequency-specific at-tack strategies tailored to their respective contributions to watermark robustness and perceptual quality. In the next stage, the Frequency-domain Residual Diffusion Attack Mod-ule (FRDAM) separately models the residual distributions be-tween the preliminarily attacked outputs and the correspond-ing watermark-free references during training. Rather than reconstructing the entire image, FRDAM selectively refines frequency-domain residuals, directing the diffusion process toward the remaining watermark-related discrepancies while minimizing modifications to image content. Extensive exper-iments on CelebA and ImageNet across four representative watermarking schemes demonstrate that FDDWAN achieves a more favorable trade-off between watermark removal effec-tiveness and visual fidelity than conventional and learning-based attack methods. 
+
+## Introduction 
+
+Invisible image watermarking embeds imperceptible meta-data into visual content and has served as a foundational technology for various security tasks, including copyright protection (Kou et al. 2025), ownership verification (Wang et al. 2024b), and forgery detection (Liu et al. 2023). The robustness of a watermarking system, however, ultimately depends on whether the watermark remains reliably recov-erable after routine post-processing or adversarial manipula-tion (Chen et al. 2026). This motivates the study of invisible watermark removal, where an attacker seeks to disrupt or in-validate watermark recovery while preserving the perceptual fidelity of the watermarked image. Therefore, investigating such attack methods is essential for clarifying the practical security boundaries of existing watermarking schemes, re-vealing their underlying vulnerabilities, and informing the design of more robust watermarking defenses. 
+
+> ∗
+
+Corresponding author. 
+
+Existing watermark removal methods still struggle with the trade-off between attack ability and perceptual fidelity. Conventional attacks, such as noise addition, filtering, com-pression, and geometric transformation, are simple but input-agnostic, often causing substantial image degradation be-fore invisible watermarks can be effectively destroyed. Re-cent learning-based watermark removal methods have ef-fectively alleviated the limitation of conventional attacks. Nevertheless, many of them operate directly in the spatial domain, where watermark-related signals are intricately en-tangled with semantic structures and visual details. Conse-quently, these methods may either fail to eliminate recover-able watermark evidence or introduce perceptible artifacts into the attacked image. A key insight is that invisible water-mark exhibit distinct frequency-domain characteristics: low-frequency features are usually exploited to enhance robust-ness, whereas high-frequency features predominantly encode textures, edges, and other fine details for reconstruction. This frequency dependence indicates that effective water-mark removal should selectively manipulate frequency fea-tures rather than apply uniform perturbations in the spatial domain. In this paper, we propose a Frequency-Decoupled Diffu-sion Watermarking Attack Network (FDDWAN) for invisible watermark removal, as shown in Fig. 1. FDDWAN consists of two sequential modules: a Wavelet-based Frequency-domain Preliminary Attack Module (WFPAM) and a Frequency-domain Residual Diffusion Attack Module (FRDAM). WF-PAM performs a targeted preliminary attack by separately processing the low- and high-frequency wavelet subbands, while FRDAM further removes the remaining watermark traces through diffusion-based residual refinement in the wavelet domain. By combining frequency-specific pertur-bation with residual diffusion modeling, FDDWAN achieves a favorable trade-off between watermark removal effective-ness and image fidelity. Our contributions are summarized as follows: (1) We formulate invisible watermark removal as afrequency-decoupled attack problem and propose a two-stage framework that integrates wavelet-domain initial suppression with diffusion-based residual refinement. (2) We introduce a frequency-domain residual diffusion strategy that separately models the residual distributions of low- and high-frequency subbands, enabling more effective arXiv:2607.27800v1 [cs.CV] 30 Jul 2026 DWT   
+
+> HFAB HFAB HFAB
+
+# …×6   
+
+> DCB DCB DCB
+
+# …×6 
+
+> IDWT
+
+Wavelet-based Frequency-domain Preliminary Attack Module (WFPAM) 
+
+> IDWT
+
+## CCLFDB HFDB 
+
+Frequency Residual Diffusion Attack Module (FRDAM) 
+
+## T
+
+> low
+
+L
+
+> high
+
+L
+
+> rec
+
+L
+
+> Concatenate Time embedding T
+> Element-wise Addition Dilated Convolution Block High-Frequency Attack Block Low-frequency flow High-frequency flow Loss Function DCB HFAB
+> C
+> diff L
+
+I w I pre I att Figure 1: Overall framework of FDDWAN. It contains two detachable modules: Wavelet-based Frequency-domain Preliminary Attack Module (WFPAM) and Frequency Residual Diffusion Attack Module (FRDAM). watermark suppression while preserving semantic structures and texture details for reconstruction. (3) Extensive experiments on CelebA and ImageNet under multiple watermarking schemes demonstrate that FDDWAN achieves a better balance between watermark removal ef-fectiveness and visual quality, outperforming representative conventional and learning-based attack methods. 
+
+## Related Work 
+
+Invisible watermarking 
+
+Invisible image watermarking aims to embed imperceptible ownership or authentication information into visual content while maintaining perceptual quality and watermark robust-ness. Early watermarking methods primarily relied on hand-crafted embedding strategies and can generally be catego-rized into spatial-domain, transform-domain, and moment-based approaches. Spatial-domain methods, such as LSB, SIRD, and SDC (Chan and Cheng 2004; Abraham and Paul 2019; Luo et al. 2010), encode watermark information by di-rectly modifying pixel values. Transform-domain schemes instead embed watermarks into coefficients derived from the DFT, DCT, DWT-DCT, or related transforms (Urvoy, Goudia, and Autrusseau 2014; Sisaudia and Vishwakarma 2022; Al-Haj 2007), generally providing greater robustness against common signal processing attacks. Moment-based approaches, including PHFMs, RHFMs, and PHTs (He et al. 2024; Zhang et al. 2025; Tang et al. 2024), exploit invariant representations to further improve the resistance to rotation, scaling, and other geometric distortions. More recently, deep learning-based watermarking meth-ods have used neural networks to jointly optimize watermark embedding and extraction. MBRS (Jia, Fang, and Zhang 2021) improves robustness against JPEG compression by incorporating both real and simulated compression data dur-ing training. HiDDeN (Zhu et al. 2018) formulates data hid-ing and blind watermarking within an end-to-end learning framework, while StegaStamp (Tancik, Mildenhall, and Ng 2020) uses an encoder–decoder network to embed imper-ceptible bit strings and improves decoding robustness by simulating printing, photography, and geometric distortions during training. TrustMark (Bui, Agarwal, and Collomosse 2025) combines spatial and spectral objectives to achieve ro-bust watermarking for images of arbitrary resolutions. These methods generally follow a post-hoc setting (An et al. 2024), in which watermarks are embedded into existing images. In-generation watermarking instead incorporates watermark information directly into the image synthesis process. Stable Signature (Fernandez et al. 2023) fine-tunes the decoder of a latent diffusion model so that generated images contain a predefined binary signature for source attribution. Compared with conventional approaches, learning-based watermarking methods can learn more adaptive embedding strategies and achieve better robustness across diverse distortions. Invisible watermarking Attack 
+
+Invisible watermark removal aims to disrupt embedded wa-termark information while preserving the perceptual quality of the attacked image. Conventional attacks rely on signal processing operations, such as noise addition, filtering, com-pression, cropping, and geometric transformations (Wang et al. 2024c). However, these non-selective perturbations of-ten provide limited effectiveness against robust watermarks or introduce noticeable visual degradation (Wang, Wu, and Niu 2007; Daoui et al. 2022). Learning-based methods improve attack adaptivity by learning transformations from watermarked images to at-tacked outputs. FAADW (Chen et al. 2025) employs fea-ture attention to extract watermark-related residual features, whereas HIWANet (Wang et al. 2024a) combines asym-metric optimization with high-frequency suppression to re-duce perceptual distortion. Diffusion-based methods have also been studied for watermark removal. DiffWA (Li 2023) treats watermark removal as a conditional reconstruction task. Zhao et al. (Zhao et al. 2024) propose a family of regeneration attacks that add Gaussian noise to watermarked images or their latent representations and then reconstruct them using pretrained generative models. The two variants, VAEAttack and Diffusion Attack, use pretrained VAEs and diffusion models, respectively. In addition, UnMarker (Kas-sis and Hengartner 2025) disrupts robust watermarks by di-rectly optimizing the image spectrum without requiring ac-cess to the watermark detector. Despite their effectiveness, existing methods generally process the image in the spatial domain, regenerate the image as a whole, or manipulate fre-quency information without explicitly modeling the distinct roles of different frequency bands. In contrast, FDDWAN performs frequency-specific preliminary attacks and residual diffusion refinement in the wavelet domain, thereby reducing unnecessary modifications to image content. 
+
+## Method 
+
+Given a watermarked image Iw ∈ RH×W ×c, our goal is to generate an attacked image Iatt ∈ RH×W ×c that dis-rupts watermark extraction while maintaining perceptual fi-delity and semantic consistency with the input image. FD-DWAN explicitly decouples low- and high-frequency sub-bands, performs a targeted preliminary attack in the wavelet domain, and then removes watermark information through diffusion-based residual refinement. As shown in Fig. 1, FDDWAN contains two sequential modules. The Wavelet-based Frequency-domain Preliminary Attack Module (WF-PAM) performs the preliminary attack by perturbing low-and high-frequency subbands with different strategies. The Frequency-domain Residual Diffusion Attack Module (FR-DAM) then models the residual between the preliminarily attacked output and the original image in the wavelet do-main. 
+
+Wavelet-Domain Representation 
+
+Wavelet transforms decompose images into localized fre-quency subbands while preserving spatial characteristics and Concat         
+
+> in LLH
+> in H
+> HL
+> in H
+> HH
+> in H
+> LH
+> out H
+> (a) (b)
+> d=1 d=2 d=3
+> out LSoftmax Q
+> K
+> V
+> HH
+> out H
+> HL
+> out H
+> Concat
+> Dilated Conv 3×3 LayerNorm LeakyReLu Conv 1×1 Conv 3×3
+
+Figure 2: Architecture of (a) the Dilated Convolution Block and (b) the High-Frequency Attack Block. multi-scale information (Xiang et al. 2025). Invisible wa-termarks are typically distributed across frequency bands with different functional roles: low-frequency subbands con-tribute primarily to robustness against common distortions, whereas high-frequency features facilitate imperceptibility by embedding watermarks within textures and structural de-tails. Motivated by these observations, we apply the discrete wavelet transform (DWT) to decompose the watermarked image Iw.
+
+DWT( Iw) = ( IwLL , I wLH , I wHL , I wHH ), (1) where IwLL denotes the low-frequency approximation sub-band, while IwLH , IwHL , and IwHH denote the horizontal, ver-tical, and diagonal detail subbands, respectively. After the attack, the image will be reconstructed by inverse DWT(IDWT): 
+
+Iatt = IDWT( Ipre i + ˆ ri), (2) where Ipre i denotes the preliminarily attacked subbands gen-erated by WFPAM and ˆri denotes the frequency residuals predicted by FRDAM, where i ∈ { LL, LH, HL, HH }.
+
+Wavelet-based Frequency Preliminary Attack Module 
+
+WFPAM aims to generate a preliminarily attacked image in the wavelet domain. WFPAM comprises two coordinated branches which consists of six Dilated Convolution Blocks (DCBs) and six High-Frequency Attack Blocks (HFABs) re-spectively. The DCBs process the low-frequency subband, focusing on destroying invisible watermark information em-bedded into the low-frequency regions, while the HFABs suppresses high-frequency watermark cues under the guid-ance of low-frequency structural feature. The six DCBs are paired with six HFABs. Within each pair, the DCB output is fed into the HFAB as low-frequency structural guidance. 
+
+Dilated Convolution Block. To capture watermark-related features at different spatial scales, each DCB uses three paral-lel dilated convolutions, as shown in Fig. 2(a). Given an input low-frequency feature Lin , the output of the i-th branch is 
+
+L(i) = LeakyReLU( Lin ∗di W (i)), i = 1 , 2, 3 (3) where di ∈ { 1, 2, 3} is the dilation rate, ∗di represents a 3x3 convolution and W (i) denotes the learnable convolution ker-nel. The outputs of the three branches are then concatenated along the channel dimension 
+
+Lout = Concat( L(1) , L (2) , L (3) ). (4) The feature Lout is passed to the next DCB and simulta-neously used as the query corresponding HFAB. After six DCBs, we denote the preliminarily attacked low-frequency subband by Ipre LL .
+
+High-Frequency Attack Block. As shown in Fig. 2(b). Given three input high-frequency features HLH in , HHL in , and 
+
+HHH in , the HFAB first concatenates them along the channel dimension: Hin = Concat( HLH in , H HL in , H HH in ). The query is generated from Lout , while the key and value are generated from Hin :
+
+Q = WQ · LN( Lout ),K = WK · Conv 3×3
+
+ Conv 1×1(LN( Hin )) ,V = WV · Conv 3×3
+
+ Conv 1×1(LN( Hin )) ,
+
+(5) where LN( ·) denotes layer normalization, WQ, WK , and WV
+
+are learnable projections used to generate the query Q, key 
+
+K, and value V , respectively. Then, the output feature map can be obtained from the formula: 
+
+A = Softmax 
+
+ QK T
+
+√dk
+
+
+
+V, (6) where dk denotes the feature dimension of the projected query and key vectors. Finally, the attention feature A is projected by a 1 × 1
+
+convolution and then divided along the channel dimension to obtain the three directional high-frequency outputs: 
+
+(HLH out , H HL out , H HH out ) = split(Conv 1×1(A)) , (7) where Conv 1×1(·) maps the attention feature A to 3c chan-nels, and split( ·) divides the result into three c-channel fea-tures corresponding to the LH , HL , and HH directions. After six paired DCBs and HFABs, we obtained the preliminarily attackedsubbands Ipre LL , Ipre LH , Ipre HL , and Ipre HH .Through IDWT, we can obtain the preliminarily attackedim-age: 
+
+Ipre = IDWT( Ipre LL , I pre LH , I pre HL , I pre HH ). (8) 
+
+Frequency-Domain Residual Diffusion Attack Module 
+
+FRDAM learns the residual corrections between preliminar-ily attacked subbands and their corresponding clean refer-ences, allowing the diffusion model to focus on frequency-domain refinement rather than full-subbands generation. FR-DAM consists of two separately parameterized conditional diffusion branches: the Low-Frequency Diffusion Branch (LFDB) and the High-Frequency Diffusion Branch (HFDB). LFDB processes the LL subband, whereas HFDB uses one shared parameter set to process the LH , HL , and HH sub-bands. For clarity, the diffusion process is described below using LFDB as an example. The target low-frequency residual and its conditional sub-bands are defined as: 
+
+x(l)0 = rLL = GLL − Ipre  
+
+> LL
+
+, x(l) 
+
+> c
+
+= Ipre  
+
+> LL
+
+, (9) where GLL and Ipre  
+
+> LL
+
+denote the clean and preliminarily at-tacked low-frequency subbands, respectively. x(l)0 is the target residual modeled by LFDB, while x(l) 
+
+> c
+
+is the conditional input supplied to the denoising network. The clean subband GLL 
+
+is used only during training to construct the target residual. 
+
+Forward Process. Following DDPM (Ho, Jain, and Abbeel 2020), the forward process gradually adds Gaussian noise to the target residual. Its one-step transition is defined as: 
+
+q
+
+
+
+x(l) 
+
+> t
+
+| x(l)
+
+> t−1
+
+
+
+= N
+
+
+
+x(l) 
+
+> t
+
+; √αt x(l)
+
+> t−1
+
+, (1 − αt)I
+
+
+
+, (10) where αt = 1 −βt, βt controls the noise variance at diffusion timestep t, and t ∈ { 1, . . . , T }, with T denoting the total number of diffusion timesteps. Let ¯αt = Qtτ =1 ατ . The noisy residual at an arbitrary step 
+
+t can be obtained directly from x(l)0 as: 
+
+q
+
+
+
+x(l) 
+
+> t
+
+| x(l)0
+
+
+
+= N
+
+
+
+x(l) 
+
+> t
+
+; √¯αt x(l)0 , (1 − ¯αt)I
+
+
+
+. (11) Equivalently, the noisy residual is sampled by: 
+
+x(l) 
+
+> t
+
+= √¯αt x(l)0 + √1 − ¯αt ϵ(l), ϵ(l) ∼ N (0, I). (12) 
+
+Reverse Process. The reverse process starts from x(l) 
+
+> T
+
+∼N (0, I) and progressively recovers the target residual under the guidance of x(l) 
+
+> c
+
+. At each reverse step, the conditional U-Net takes the noisy residual x(l) 
+
+> t
+
+, the conditional component 
+
+x(l) 
+
+> c
+
+, and the timestep t as inputs, and predicts the Gaussian noise contained in x(l) 
+
+> t
+
+:
+
+ˆϵ(l) 
+
+> t
+
+= ϵθL
+
+
+
+x(l) 
+
+> t
+
+, x (l) 
+
+> c
+
+, t 
+
+
+
+, (13) where θL denotes the parameters of LFDB. The network directly predicts only ˆϵ(l) 
+
+> t
+
+. Based on this prediction, the target residual at the current reverse step is analytically estimated as: 
+
+ˆx(l)0,t = x(l) 
+
+> t
+
+− √1 − ¯αt ˆϵ(l)
+
+> t
+
+√¯αt
+
+. (14) During inference, we employ deterministic DDIM sam-pling (Song, Meng, and Ermon 2021) with η = 0 . Let 
+
+T = {t1, t 2, . . . , t K } denote a decreasing sequence of se-lected sampling timesteps, where t1 > t 2 > · · · > t K , and let ¯αtK+1 = 1 . The deterministic DDIM update from tk to 
+
+tk+1 is 
+
+x(l) 
+
+> tk+1
+
+= p¯αtk+1 ˆx(l)0,t k + p1 − ¯αtk+1 ˆϵ(l) 
+
+> tk
+
+. (15) In our implementation, each diffusion branch employs 
+
+K = 10 selected sampling timesteps. Starting from x(l) 
+
+> t1
+
+,Eq. (15) is iteratively applied along the selected timestep sequence. At the end, the terminal estimate ˆx(l)0 is the low-frequency residual predicted by LFDB: 
+
+ˆrLL = ˆ x(l)0 . (16) HFDB follows the same forward and reverse processes for the LH , HL , and HH subbands. The three high-frequency subbands share a single parameter set θH , and the terminal outputs of their reverse processes are used as the correspond-ing predicted residuals: 
+
+ˆrj = ˆ x(j)0 , j ∈ { LH, HL, HH }. (17) 
+
+Loss Functions 
+
+Preliminary Attack Loss. Let G denote the clean host im-age, and let GLL , GLH , GHL , and GHH denote its wavelet subbands. WFPAM is supervised directly in the wavelet do-main by aligning the preliminarily attacked subbands with the corresponding clean subbands. The low-frequency loss is defined as: 
+
+Llow = ∥Ipre LL − GLL ∥2 , (18) The high-frequency loss is computed over the three direc-tional high-frequency subbands: 
+
+Lhigh = X
+
+> j∈{ LH,HL,HH }
+
+Ipre j − Gj 2 , (19) where Ipre j and Gj denote the preliminarily attacked and clean high-frequency subbands in direction j, respectively. To further preserve image content in the spatial domain, we employ a mean loss in L1 reconstruction: 
+
+Lrec = 1
+
+N ∥Ipre − G∥1 , (20) where Ipre is the preliminarily attacked image reconstructed from the four preliminarily attacked subbands, and N is the total number of image elements. The overall preliminary attack loss is defined as: 
+
+Lpre = λlow Llow + λhigh Lhigh + λrec Lrec , (21) where λlow , λhigh , and λrec control the contributions of the low-frequency loss, high-frequency loss, and spatial recon-struction loss, respectively. 
+
+Diffusion Loss. FRDAM is trained using the noise-prediction objective. The three high-frequency subbands are stacked along the batch dimension and processed by HFDB with shared parameters θH . The overall diffusion loss is de-fined as: 
+
+Ldiff = Et,ϵ (l)
+
+
+
+ϵ(l) − ϵθL
+
+
+
+x(l) 
+
+> t
+
+, x (l) 
+
+> c
+
+, t 
+
+ 22
+
+
+
++ Et,ϵ (h)
+
+
+
+ϵ(h) − ϵθH
+
+
+
+x(h) 
+
+> t
+
+, x (h) 
+
+> c
+
+, t 
+
+ 22
+
+
+
+,
+
+(22) where the superscripts (l) and (h) denote the low-frequency sample and the batch-stacked high-frequency samples, re-spectively. 
+
+Total Loss. WFPAM and FRDAM are jointly optimized using the following overall training objective: 
+
+Ltotal = Lpre + λdiff Ldiff , (23) where λdiff controls the contribution of the diffusion loss. During joint training, Lpre supervises the preliminary frequency-domain attack and spatial reconstruction, while 
+
+Ldiff trains LFDB and HFDB to predict the noise added to the corresponding low- and high-frequency residual targets. 
+
+## Experimental Results 
+
+All experiments are implemented in PyTorch 2.5 and trained on a single NVIDIA GeForce RTX 4090 GPU. We opti-mize FDDWAN using Adam (Kingma and Ba 2015) with 
+
+β1 = 0 .9, β2 = 0 .999 , an initial learning rate of 1 × 10 −4,and a batch size of 2. The number of diffusion steps is set to T = 1000 , and the model is trained for 500K op-timization iterations. FDDWAN is evaluated on face im-ages of CelebA dataset, as well as general natural im-ages from ImageNet. All images are resized to 256 ×256. Furthermore, we evaluate four representative watermark-ing schemes: transform-domain DCT (Sisaudia and Vish-wakarma 2022), orthogonal moment-based PHFMs (He et al. 2024), deep learning-based HiDDeN (Zhu et al. 2018) and StegaStamp (Tancik, Mildenhall, and Ng 2020). To com-prehensively evaluate FDDWAN, we compare it with five conventional attacks—Gaussian noise (variance 0.001), salt-and-pepper noise (density 0.005), speckle noise (variance 0.005), average filtering with a 3 ×3 kernel, and JPEG com-pression with a quality factor of 50—as well as four represen-tative learning-based methods: FAADW (Chen et al. 2025), HIWANet (Wang et al. 2024a), Diffusion Attack (Zhao et al. 2024) and UnMarker (Kassis and Hengartner 2025). For a fair comparison, all methods are evaluated using identical test images. We evaluate attack performance using PSNR (Wang et al. 2003), SSIM (Wang et al. 2004), and BER (Ali 2013). Higher PSNR and SSIM values indicate better visual fidelity, whereas, for binary watermark messages, a BER close to 0.5 indicates random guessing and therefore stronger watermark removal. 
+
+Visual Quality and Attack Effectiveness 
+
+As shown in Table 1, conventional attacks generally provide limited watermark removal capability while causing notice-able image degradation. Their PSNR values mostly fluctu-ate around 30 dB, indicating that fixed operations such as noise addition, filtering, and JPEG compression inevitably disturb image content. Meanwhile, their BER values remain relatively low in most cases. In particular, the BER values against PHFMs and StegaStamp are often below 0.1, and sev-eral attacks produce values close to zero, showing that most embedded watermark bits can still be correctly recovered. Al-though some conventional attacks achieve moderately higher BER against DCT, their overall attack performance remains inconsistent across different watermarking schemes. Learning-based attacks generally achieve stronger water-mark disruption, particularly against HiDDeN and StegaS-tamp. UnMarker and Diffusion Attack, for example, achieve Attack method Watermarking method CelebA dataset (PSNR/BER) ImageNet dataset (PSNR/BER) DCT PHFMs HiDDeN StegaStamp DCT PHFMs HiDDeN StegaStamp Conventional Gaussian noise 30.09/0.1182 27.02/0.0352 30.04/0.0644 32.52/0.0333 30.20/0.1025 30.21/0.0195 30.18/0.0574 30.13/0.0281 Salt & pepper 27.65/0.1553 27.36/0.0742 28.13/0.0458 27.29/0.0018 27.36/0.0537 27.44/0.0273 27.93/0.0788 28.25/0.0021 Speckle noise 29.41/0.1260 29.51/0.0547 30.28/0.0546 29.11/0.0021 34.37/0.1777 34.45/0.1117 30.15/0.0937 30.26/0.0000 Average filter 30.68/0.2734 30.69/0.0456 31.34/0.0473 29.62/0.0135 28.91/0.2725 28.92/0.0344 29.52/0.0661 26.35/0.0346 JPEG 32.47/0.2168 32.14/0.0820 32.54/0.1122 31.52/0.0030 31.72/0.2148 31.89/0.0547 29.33/0.1248 29.14/0.0020 Learning-based  FAADW 31.02/0.2848 30.89/0.1503 31.78/0.3188 30.35/0.2946 28.75/0.3122 28.43/0.1389 26.21/0.3196 26.17/0.2720 HIWANet 31.76/0.2818 31.25/0.1753 32.58/0.2688 31.62/0.2592 29.43/0.3048 30.97/0.2123 28.53/0.2725 30.28/0.2649 Diffusion Attack 31.72/0.2720 33.17/0.1909 30.54/0.4039 34.64/0.4000 30.83/0.2700 32.66/0.2139 30.36/0.4236 34.02/0.3210 UnMarker 32.64/0.2849 32.41/0.1211 30.76/0.4318 30.05/0.3536 30.54/0.3433 30.36/0.1567 30.30/0.4200 30.34/0.3948 
+
+Ours 42.48/0.3135 45.14/0.2363 40.72/0.4496 39.84/0.5333 43.01/0.3740 44.27/0.2578 42.21/0.4388 38.81/0.4667 
+
+Table 1: Quantitative Comparison of different attack methods across various watermarking methods on the CelebA and ImageNet datasets. Bold and underlined values denote the best and second-best results, respectively. Watermarked Image Gaussian Noise UnMarker FDDWAN DCT PSNR / SSIM 30.09 / 0.7734 32.64 / 0.9100 42.48 / 0.9940 PHFMs PSNR / SSIM 27.02 / 0.7764 32.41 / 0.9619 45.14 / 0.9869 HiDDeN PSNR / SSIM 30.04 / 0.7730 30.76 / 0.7575 40.72 / 0.9970 Stega Stamp PSNR / SSIM 32.52 / 0.8299 30.05 / 0.9385 39.84 / 0.9595 
+
+Figure 3: Qualitative comparison of Gaussian noise, Un-Marker, and the proposed FDDWAN. BER values above 0.4 against HiDDeN in several settings. However, their effectiveness remains sensitive to the tar-get watermarking method, especially for PHFMs. Moreover, their PSNR values mostly remain within 26 –34 dB, indicat-ing that stronger watermark disruption is often accompanied by noticeable visual degradation. In contrast, FDDWAN achieves the highest PSNR and BER in all eight dataset–watermarking combinations. It consistently increases BER across both conventional and learning-based watermarking schemes while preserving sub-stantially higher image quality. In particular, FDDWAN im-proves the BER over UnMarker in every evaluated setting and simultaneously increases PSNR by a considerable mar-gin. These results demonstrate that FDDWAN effectively alleviates the common trade-off between watermark removal strength and visual fidelity. The qualitative results in Fig. 3 further support the quanti-tative comparison. Gaussian noise introduces visible grain-like perturbations, whereas UnMarker causes noticeable smoothing and loss of local details. In comparison, FD-DWAN better preserves facial structures and fine-grained textures, particularly around the enlarged eye regions. Across the four visualized watermarking methods, FDDWAN con-sistently achieves PSNR values of approximately 40 dB and SSIM values above 0.95 . Together with the consistently higher BER values, these results show that FDDWAN ef-fectively disrupts embedded watermarks while maintaining high perceptual similarity to the corresponding watermarked images. 
+
+The Generalizability of FDDWAN 
+
+Generalization across post-hoc watermarking methods. 
+
+We first evaluate FDDWAN on four post-hoc invisible wa-termarking methods not included in the training set, in-cluding SIRD (Abraham and Paul 2019), DFT (Urvoy, Goudia, and Autrusseau 2014), DWT-DCT (Al-Haj 2007), and MBRS (Jia, Fang, and Zhang 2021). For each method, 500 images are randomly selected from the CelebA test set for watermark embedding. As shown in Fig. 4, FDDWAN con-sistently achieves over 10 dB higher PSNR than UnMarker while maintaining comparable BER across all four meth-ods. Although UnMarker attains higher BER, FDDWAN preserves better image quality and achieves a more favorable trade-off between watermark disruption and visual fidelity. These results demonstrate the generalization ability of FD-DWAN across different conventional invisible watermarking schemes. 
+
+Generalization across in-generation watermarking meth-ods. To examine whether FDDWAN extends beyond post-hoc watermarking, we further evaluate it on Stable Signa-ture (Fernandez et al. 2023), where the watermark is inte-SIRD DFT DwtDct MBRS 
+
+> 30
+> 35
+> 40
+> 45
+> PSNR (dB)
+> PSNR (FDDWAN)
+> PSNR (UnMarker)
+> BER (FDDWAN)
+> BER (UnMarker)
+> 0.20
+> 0.25
+> 0.30
+> 0.35
+> 0.40
+> 0.45
+> BER
+
+Figure 4: Comparison between UnMarker and our FDDWAN on the CelebA dataset for four unseen watermarking meth-ods.                 
+
+> Method BER PSNR ↑SSIM ↑LPIPS ↓
+> UnMarker 0.31 25.54 0.7860 0.0180 Diffusion Attack 0.44 30.01 0.8886 0.1178 FDDWAN 0.42 35.52 0.9257 0.0344
+
+Table 2: Quantitative comparison of different attacks on the generative watermarking method Stable Signature. grated into the image generation process. To further assess perceptual similarity, we additionally employ LPIPS (Zhang et al. 2018), where a lower value indicates better visual fi-delity. As shown in Table 2, FDDWAN achieves a BER of 0.42, close to the 0.44 obtained by Diffusion Attack and higher than the 0.31 of UnMarker. Meanwhile, it obtains the best PSNR and SSIM scores of 35.52 dB and 0.9257, respectively, together with a LPIPS score of 0.0344. Overall, FDDWAN maintains competitive watermark re-moval performance while preserving high perceptual quality, showing a balanced trade-off. 
+
+Ablation Studies 
+
+Ablation Study on WFPAM. We evaluate the contribu-tion of each component in WFPAM on CelebA by individ-ually removing DCB, HFAB, and Low-query. The results are reported in Table 3. Removing any component decreases both PSNR and BER, confirming that all three components contribute to the overall performance. Removing HFAB pro-duces the largest reduction in PSNR, indicating that HFAB plays an important role in preserving textures and local de-tails. Removing DCB also leads to a substantial performance decrease, demonstrating the importance of processing the low-frequency subband for suppressing robust watermark signals. The performance degradation caused by removing Low-query further indicates that guidance from the low-frequency subband facilitates watermark disruption in the high-frequency subbands. 
+
+Ablation Study on FRDAM. Table 4 compares DM, RDM, and different frequency-specific diffusion configura-tions on CelebA. Replacing DM with RDM improves both Method PSNR ↑ BER w/o DCB 33.14 0.0834 w/o HFAB 29.14 0.1196 w/o Low-query 36.04 0.1208 Ours 45.14 0.2363 
+
+Table 3: Ablation results for WFPAM on CelebA using the PHFMs watermarking scheme. Configuration PSNR ↑ BER DM 30.86 0.0921 RDM 32.37 0.1142 RDM + D-L 40.85 0.1457 RDM + D-H 42.58 0.1249 RDM + D-L + D-H 45.14 0.2363 
+
+Table 4: Ablation results for FRDAM on CelebA using the PHFMs watermarking scheme. DM and RDM denote the vanilla diffusion model and the residual diffusion model, respectively. D-L and D-H denote diffusion refinement of the low- and high-frequency subbands, respectively. PSNR and BER, indicating that residual prediction provides a more suitable learning objective than direct image refine-ment. Introducing D-L yields a larger improvement in BER, whereas D-H produces a higher PSNR. This difference re-flects the respective roles of diffusion refinement in the low-and high-frequency subbands: the former primarily enhances watermark suppression, whereas the latter contributes more to visual detail preservation. Combining RDM, D-L, and D-H achieves the best overall performance, demonstrating that the two frequency-specific refinement branches are comple-mentary. 
+
+## Conclusion 
+
+In this paper, we propose FDDWAN, a frequency-domain diffusion framework for invisible watermark removal. WF-PAM first decouples the low- and high-frequency wavelet subbands and suppresses watermark-related features within these subbands. FRDAM then removes the remaining water-mark residuals through frequency-specific diffusion refine-ment. Experiments on CelebA and ImageNet demonstrate that FDDWAN achieves a favorable balance between wa-termark removal effectiveness and visual quality, while the ablation results verify the contributions of both modules. However, FRDAM employs two diffusion models to pro-cess the low- and high-frequency subbands separately, and the iterative sampling procedures introduce substantial com-putational overhead and slow inference. This limitation re-duces the practicality of FDDWAN in real-time and resource-constrained scenarios. Future work will focus on reducing the number of sampling steps and the computational cost through accelerated samplers, model distillation, and a shared diffu-sion architecture. References 
+
+Abraham, J.; and Paul, V. 2019. An imperceptible spatial domain color image watermarking scheme. Journal of King Saud University-Computer and Information Sciences , 31(1): 125–133. Al-Haj, A. 2007. Combined DWT-DCT Digital Image Wa-termarking. Journal of Computer Science , 3(9): 740–746. Ali, I. 2013. Bit-Error-Rate (BER) Simulation Using MAT-LAB. International Journal of Engineering Research and Applications , 3(1): 706–711. An, B.; Ding, M.; Rabbani, T.; Agrawal, A.; Xu, Y.; Deng, C.; Zhu, S.; Mohamed, A.; Wen, Y.; Goldstein, T.; and Huang, F. 2024. WAVES: Benchmarking the Robustness of Image Watermarks. In ICML , 1456–1492. Bui, T.; Agarwal, S.; and Collomosse, J. 2025. TrustMark: Robust Watermarking and Watermark Removal for Arbitrary Resolution Images. In ICCV , 18629–18639. Chan, C.-K.; and Cheng, L.-M. 2004. Hiding Data in Images by Simple LSB Substitution. Pattern Recognition , 37(3): 469–474. Chen, J.; Deng, Z.; Zhang, Z.; Li, C.; Jia, L.; and Sun, L. 2026. Decoupling Defense Strategies for Robust Image Wa-termarking. In CVPR , 3316–3325. Chen, M.; Guo, D.; Yao, H.; and Qin, C. 2025. Feature-Attention-Mechanism-Based Attack for Deep Robust Water-marking. IEEE MultiMedia , 32(1): 83–91. Daoui, A.; Karmouni, H.; El Ogri, O.; Sayyouri, M.; and Qjidaa, H. 2022. Robust Image Encryption and Zero-Watermarking Scheme Using SCA and Modified Logistic Map. Expert Systems with Applications , 190: 116193. Fernandez, P.; Couairon, G.; Jégou, H.; Douze, M.; and Furon, T. 2023. The Stable Signature: Rooting Watermarks in Latent Diffusion Models. In ICCV , 22466–22477. He, M.; Wang, H.; Zhang, F.; and Xiang, Y. 2024. Exploring Accurate Invariants on Polar Harmonic Fourier Moments in Polar Coordinates for Robust Image Watermarking. IEEE Transactions on Multimedia , 26: 5435–5449. Ho, J.; Jain, A.; and Abbeel, P. 2020. Denoising Diffusion Probabilistic Models. In NeurIPS , 6840–6851. Jia, Z.; Fang, H.; and Zhang, W. 2021. MBRS: Enhancing Robustness of DNN-Based Watermarking by Mini-Batch of Real and Simulated JPEG Compression. In ACM MM , 41– 49. Kassis, A.; and Hengartner, U. 2025. UnMarker: A Universal Attack on Defensive Image Watermarking. In IEEE S&P ,2602–2620. Kingma, D. P.; and Ba, J. 2015. Adam: A Method for Stochas-tic Optimization. In ICLR .Kou, F.; Yao, Y.; Yao, S.; Wang, J.; Shi, L.; Li, Y.; and Kang, X. 2025. IWRN: A Robust Blind Watermarking Method for Artwork Image Copyright Protection Against Noise Attack. In AAAI , 370–378. Li, X. 2023. DiffWA: Diffusion Models for Watermark At-tack. In ICIICS , 1–8. Liu, X.; Zhang, X.; Su, W.; and Zhang, W. 2023. Reversible Data Hiding in Encrypted Images With Dual-Feature Protec-tion for Forgery Detection. IEEE Transactions on Informa-tion Forensics and Security , 18: 2105–2118. Luo, L.; Chen, Z.; Chen, M.; Zeng, X.; and Xiong, Z. 2010. Reversible image watermarking using interpolation technique. IEEE Transactions on Information Forensics and Security , 5(1): 187–193. Sisaudia, V.; and Vishwakarma, V. P. 2022. A Secure Gray-Scale Image Watermarking Technique in Fractional DCT Domain Using Zig-Zag Scrambling. Journal of Information Security and Applications , 69: 103296. Song, J.; Meng, C.; and Ermon, S. 2021. Denoising Diffusion Implicit Models. In ICLR .Tancik, M.; Mildenhall, B.; and Ng, R. 2020. StegaStamp: Invisible Hyperlinks in Physical Photographs. In CVPR ,2117–2126. Tang, Y.; Li, K.; Wang, C.; Bian, S.; and Huang, Q. 2024. A Two-Stage Robust Reversible Watermarking Using Polar Harmonic Transform for High Robustness and Capacity. In-formation Sciences , 654: 119786. Urvoy, M.; Goudia, D.; and Autrusseau, F. 2014. Percep-tual DFT Watermarking with Improved Detection and Ro-bustness to Geometrical Distortions. IEEE Transactions on Information Forensics and Security , 9(7): 1108–1119. Wang, C.; Li, X.; Xia, Z.; Li, Q.; Zhang, H.; Li, J.; Han, B.; and Ma, B. 2024a. HIWANet: A High Imperceptibility Watermarking Attack Network. Engineering Applications of Artificial Intelligence , 133: 108039. Wang, G.; Ma, Z.; Liu, C.; Yang, X.; Fang, H.; Zhang, W.; and Yu, N. 2024b. MuST: Robust Image Watermarking for Multi-Source Tracing. In AAAI , 5364–5371. Wang, H.; Yao, H.; Qin, C.; and Zhang, X. 2024c. When Robust Reversible Watermarking Meets Cropping Attacks. 
+
+IEEE Transactions on Circuits and Systems for Video Tech-nology , 34(12): 13282–13296. Wang, X.; Wu, J.; and Niu, P. 2007. A New Digital Im-age Watermarking Algorithm Resilient to Desynchronization Attacks. IEEE Transactions on Information Forensics and Security , 2(4): 655–663. Wang, Y.; Li, J.; Lu, Y.; Fu, Y.; and Jiang, Q. 2003. Image Quality Evaluation Based on Image Weighted Separating Block Peak Signal-to-Noise Ratio. In ICNNSP , 994–997. Wang, Z.; Bovik, A. C.; Sheikh, H. R.; and Simoncelli, E. P. 2004. Image Quality Assessment: From Error Visibility to Structural Similarity. IEEE Transactions on Image Process-ing , 13(4): 600–612. Xiang, W.; Liu, C.; Yu, H.; and Chen, X. 2025. Wavelet-Driven Masked Image Modeling: A Path to Efficient Visual Representation. In AAAI , 8611–8619. Zhang, H.; Li, Z.; Chen, Y.; Lu, C.; and Yan, P. 2025. Fast Im-age Reconstruction Method Using Radial Harmonic Fourier Moments and Its Application in Digital Watermarking. Jour-nal of the Franklin Institute , 362(1): 107391. Zhang, R.; Isola, P.; Efros, A. A.; Shechtman, E.; and Wang, O. 2018. The Unreasonable Effectiveness of Deep Features as a Perceptual Metric. In CVPR , 586–595. Zhao, X.; Zhang, K.; Su, Z.; Vasan, S.; Grishchenko, I.; Kruegel, C.; Vigna, G.; Wang, Y.-X.; and Li, L. 2024. In-visible Image Watermarks Are Provably Removable Using Generative AI. In NeurIPS , 8643–8672. Zhu, J.; Kaplan, R.; Johnson, J.; and Li, F.-F. 2018. HiDDeN: Hiding Data with Deep Networks. In ECCV , 657–672.

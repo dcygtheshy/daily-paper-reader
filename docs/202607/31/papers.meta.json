@@ -1,0 +1,69 @@
+{
+  "label": "2026-07-31",
+  "date": "2026-07-31",
+  "generated_at": "2026-07-31T21:37:23",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202607/31/2607.27551v1-anchormark-robust-diffusion-watermarking-via-latent-space-rotation-synchrony",
+      "section": "deep",
+      "title_en": "AnchorMark: Robust Diffusion Watermarking via Latent-Space Rotation Synchrony",
+      "authors": "Yuqi Qian, Yun Cao, Haocheng Fu, Haochen Zhao, Hong Zhang, Meineng Zhu",
+      "date": "2026-07-30",
+      "pdf": "https://arxiv.org/pdf/2607.27551v1",
+      "score": "10.0",
+      "evidence": "扩散模型水印；潜在空间旋转同步；对旋转扰动鲁棒",
+      "tldr": "针对基于反演的扩散水印在旋转等复合攻击下空间对应易遭破坏导致解码失效的问题，提出AnchorMark。该方法无需训练，利用潜在空间旋转同步性，在初始潜在中心嵌入同步锚点，提取时准确估计并校正旋转角度。实验表明AnchorMark在旋转及组合攻击下显著提升位准确率，同时保持图像质量，为鲁棒扩散水印提供了新思路。",
+      "tags": "query:watermarking",
+      "abstract_en": "Inversion-based watermarking embeds watermark payloads directly into the generative process, avoiding a separate post-hoc image-domain embedding stage while preserving the native visual fidelity of synthesized images. However, existing methods remain vulnerable to compound lossy post-processing, particularly when rotation is involved, as it disrupts the spatial correspondence required for latent-space decoding. To overcome this limitation, we introduce AnchorMark, a training-free, robust inversion-based watermarking. We uncover a latent-space property termed Rotation Synchrony: image-domain rotations and their counterparts in the recovered initial latent share the same angle. Building on this property, AnchorMark embeds a synchronization anchor in the central region of the initial latent, enabling accurate estimation and correction of the rotation angle during extraction. Experiments show that AnchorMark substantially improves bit accuracy under rotation and combined attacks, with limited impact on image quality.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/31/2607.27800v1-fddwan-a-frequency-decoupled-diffusion-network-for-watermarking-attack",
+      "section": "deep",
+      "title_en": "FDDWAN: A Frequency-Decoupled Diffusion Network for Watermarking Attack",
+      "authors": "Chunpeng Wang, Yuxin Li, Xiaoyu Wang, Jidong Yang, Suo Gao, Qi Li",
+      "date": "2026-07-30",
+      "pdf": "https://arxiv.org/pdf/2607.27800v1",
+      "score": "9.0",
+      "evidence": "基于小波频率解耦和残差扩散细化的水印移除攻击方法",
+      "tldr": "现有水印去除方法难以平衡水印抑制与视觉保真度。为此提出FDDWAN，通过小波域分解和残差扩散实现粗到细的水印攻击。在多个数据集和水印方案上，该方法在保持图像质量的同时更有效去除水印。为水印攻击提供了更优的频域感知方案。",
+      "tags": "query:watermarking",
+      "abstract_en": "Existing invisible watermark removal methods often struggle to accurately capture the watermark-bearing features, leading to an unfavorable trade-off between watermark suppression and perceptual fidelity. In this paper, we propose the Frequency-Decoupled Diffusion Watermark Attack Network (FDDWAN), a coarse-to-fine framework that performs watermark removal through wavelet-domain decomposition and residual diffusion refinement. In the initial stage, the Wavelet-based Frequency-domain Preliminary Attack Module (WFPAM) decomposes the watermarked image into low- and high-frequency subbands and applies frequency-specific attack strategies tailored to their respective contributions to watermark robustness and perceptual quality. In the next stage, the Frequency-domain Residual Diffusion Attack Module (FRDAM) separately models the residual distributions between the preliminarily attacked outputs and the corresponding watermark-free references during training. Rather than reconstructing the entire image, FRDAM selectively refines frequency-domain residuals, directing the diffusion process toward the remaining watermark related discrepancies while minimizing modifications to image content. Extensive experiments on CelebA and ImageNet across four representative watermarking schemes demonstrate that FDDWAN achieves a more favorable trade-off between watermark removal effectiveness and visual fidelity than conventional and learning-based attack methods.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/31/2607.27811v1-spfm-net-semantic-prior-guided-frequency-constrained-mamba-for-invisible-watermark-attack",
+      "section": "deep",
+      "title_en": "SPFM-Net: Semantic-Prior-Guided Frequency-Constrained Mamba for Invisible Watermark Attack",
+      "authors": "Chunpeng Wang, Yanan Shi, Zhiqiu Xia, Jidong Yang, Suo Gao, Qi Li",
+      "date": "2026-07-30",
+      "pdf": "https://arxiv.org/pdf/2607.27811v1",
+      "score": "9.0",
+      "evidence": "面向不可见水印攻击的语义先验与频域约束方法，直接对应水印攻防",
+      "tldr": "现有水印攻击多依赖预先定义的信号处理或局部受限的修复网络，难以捕捉全局分布水印信号的长程依赖，导致去除效果与视觉保真度之间难以兼顾。本文提出SPFM-Net，利用语义先验引导与频率约束的Mamba框架：首先以高比率掩码破坏水印空间连贯性，并部分微调预训练掩码自编码器重建语义一致图像；其次引入多尺度残差频率特征交互模块聚合水印相关特征，并借助轻量级Mamba全局状态空间建模单元进一步分离水印与内容。通过空间、频率、边缘多级联合约束优化，在多种水印方案上实现了攻击有效性与感知保真度的有利平衡。",
+      "tags": "query:watermarking",
+      "abstract_en": "Existing watermark attacks typically rely on predefined signal-processing operations or locally constrained restoration networks, making it difficult to capture the long-range dependencies of globally distributed watermark signals and resulting in an unfavorable trade-off between removal effectiveness and visual fidelity. In this paper, we propose SPFM-Net, a semantic-prior-guided and frequency-constrained Mamba framework for invisible watermark attack. SPFM-Net first employs high-ratio masking to disrupt the spatial coherence of invisible watermark signals, and then utilizes a partially fine-tuned pretrained Masked Autoencoder to reconstruct semantically consistent image from sparse observations while suppressing watermark-related information. A Multi-scale Residual Frequency Feature Interaction module subsequently aggregates watermark-related residual features across multiple receptive fields, while adaptively suppressing responses from watermark-irrelevant regions. To further capture the long-range dependencies of globally distributed watermark signals, a lightweight Mamba-based Global State-space Feature Modeling (GSFM) unit is introduced to separate watermark-related features from natural image content and suppress the remaining watermark traces. In addition, SPFM-Net is optimized using a multi-level objective that jointly imposes spatial-, frequency-, and edge-domain constraints, enabling effective watermark suppression while preserving perceptual quality. Extensive experiments on representative spatial-domain, transform-domain, orthogonal moment-based, and deep learning-based watermarking schemes demonstrate that SPFM-Net achieves a favorable trade-off between watermark attack effectiveness and perceptual fidelity.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/31/2607.26735v1-dual-inversion-for-text-to-image-diffusion-models-from-both-prompt-and-noise-perspectives",
+      "section": "quick",
+      "title_en": "Dual Inversion for Text-to-Image Diffusion Models: From Both Prompt and Noise Perspectives",
+      "authors": "Xiaolong Liu, Junjian Li, Yuan Xiao, Jiaqi Deng, Dayong Ye, Tianqing Zhu, Huan Huo",
+      "date": "2026-07-29",
+      "pdf": "https://arxiv.org/pdf/2607.26735v1",
+      "score": "6.0",
+      "evidence": "提出文本到图像扩散模型的双重反演方法，可关联基于反演的水印检测",
+      "tldr": "现有文本到图像扩散模型的提示反转方法存在局限：基于梯度的方式不稳定且易产生伪影，无梯度方式虽可读但视觉保真不足。根本原因在于仅反转提示而忽略编码结构信息的潜在噪声。Dualin提出两阶段双反转，先结合CLIP和大型语言模型得到可读提示，再用无条件DDIM反转恢复精确噪声。实验表明其同时实现高质量提示反转与最优保真度，并为可控编辑奠定基础。",
+      "tags": "query:watermarking",
+      "abstract_en": "Prompt inversion, as a typical reverse engineering technique, enables text-to-image (T2I) diffusion models to generate the desired target images without extensive prompt engineering. However, existing prompt inversion methods suffer from significant limitations: (1) gradient-based methods are unstable and uninterpretable, often resulting in generated images with severe artifacts; (2) gradient-free methods yield human-readable prompts but still fail to preserve visual fidelity due to the lack of fine-grained detail alignment. We contend that the limitations stem from treating prompt inversion as a sufficient condition for reverse engineering, ignoring the critical role of the latent noise that encodes structural information. Consequently, we propose Dualin (Dual inversion), a two-stage method that jointly recovers both the semantic prompt and latent noise of the target image. In the first stage, we integrate vision-language model, CLIP and large language model to invert a faithful, human-interpretable hard prompt. In the second stage, unconditional DDIM inversion reconstructs the exact latent noise of the target image, guaranteeing the consistency at the structural information level. Theoretically, we prove that the inverted noise enables flexible image editing without re-optimization. Extensive experiments on diverse datasets demonstrate that Dualin simultaneously generates high-quality inverted prompts and achieves state-of-the-art image fidelity. Additionally, Dualin can establish a robust foundation for the precise and controllable image editing.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

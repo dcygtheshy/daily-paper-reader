@@ -6,27 +6,34 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-30
-- 运行时间：2026-07-30 21:33:04 UTC
+- 最新运行日期：2026-07-31
+- 运行时间：2026-07-31 21:37:14 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：2
-- 速读区：0
+- 本次总论文数：4
+- 精读区：3
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读两篇高分论文，聚焦扩散模型水印鲁棒性与几何失真防御。最值得关注FARI的一步反转水印方案及CASIAL的几何鲁棒技术。建议后续深入研究扩散模型水印的逆向安全与几何攻击对抗机制。
-- 详情：[/202607/30/README](/202607/30/README)
+今日聚焦扩散模型水印，精读2篇、速读1篇，覆盖鲁棒嵌入与攻击方法。
+最值得看：AnchorMark用潜空间旋转同步实现高鲁棒水印（10分），FDDWAN以频域解耦策略发起攻击（9分）。
+下步建议：先掌握潜空间水印基本机制，再结合攻击案例检验其防御边界。
+- 详情：[/202607/31/README](/202607/31/README)
 
 ### 精读区论文标签
-1. [FARI: Robust One-Step Inversion for Watermarking in Diffusion Models](/202607/30/2607.26723v1-fari-robust-one-step-inversion-for-watermarking-in-diffusion-models)  
+1. [AnchorMark: Robust Diffusion Watermarking via Latent-Space Rotation Synchrony](/202607/31/2607.27551v1-anchormark-robust-diffusion-watermarking-via-latent-space-rotation-synchrony)  
    标签：评分：10.0/10、query:watermarking
-   evidence：扩散模型中的鲁棒一步反转水印
-2. [CASIAL: Geometric Distortion Robust Image Watermarking](/202607/30/2607.26729v1-casial-geometric-distortion-robust-image-watermarking)  
+   evidence：扩散模型水印；潜在空间旋转同步；对旋转扰动鲁棒
+2. [FDDWAN: A Frequency-Decoupled Diffusion Network for Watermarking Attack](/202607/31/2607.27800v1-fddwan-a-frequency-decoupled-diffusion-network-for-watermarking-attack)  
    标签：评分：9.0/10、query:watermarking
-   evidence：几何失真鲁棒图像水印
+   evidence：基于小波频率解耦和残差扩散细化的水印移除攻击方法
+3. [SPFM-Net: Semantic-Prior-Guided Frequency-Constrained Mamba for Invisible Watermark Attack](/202607/31/2607.27811v1-spfm-net-semantic-prior-guided-frequency-constrained-mamba-for-invisible-watermark-attack)  
+   标签：评分：9.0/10、query:watermarking
+   evidence：面向不可见水印攻击的语义先验与频域约束方法，直接对应水印攻防
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Dual Inversion for Text-to-Image Diffusion Models: From Both Prompt and Noise Perspectives](/202607/31/2607.26735v1-dual-inversion-for-text-to-image-diffusion-models-from-both-prompt-and-noise-perspectives)  
+   标签：评分：6.0/10、query:watermarking
+   evidence：提出文本到图像扩散模型的双重反演方法，可关联基于反演的水印检测
 
 
 <div class="dpr-home-promo-card">
