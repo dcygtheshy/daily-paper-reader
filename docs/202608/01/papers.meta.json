@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-01",
+  "date": "2026-08-01",
+  "generated_at": "2026-08-01T21:13:47",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/01/2607.25894v1-tiga-trajectory-injected-generative-attack-against-black-box-aigc-detectors",
+      "section": "quick",
+      "title_en": "TIGA: Trajectory-Injected Generative Attack against Black-box AIGC Detectors",
+      "authors": "Xia Du, Zhuosen Bao, Zheng Lin, Jizhe Zhou, Jiawei Lian, Chi-man Pun, Jun Luo, Wei Ni, Symeon Chatzinotas",
+      "date": "2026-07-28",
+      "pdf": "https://arxiv.org/pdf/2607.25894v1",
+      "score": "7.0",
+      "evidence": "针对AIGC检测器的黑盒攻击，与水印防御相关",
+      "tldr": "扩散模型生成人脸日益逼真，对AIGC检测器构成威胁。现有逃避方法多需扰动图像或重新训练，易留伪影。TIGA框架无需源图与训练，在单次DDIM采样轨迹中注入对抗方向，结合多代理梯度先验与黑盒有限差分查询，并用衰减动量和频率整形稳定估计。实验表明其强黑盒攻击、可迁移性和鲁棒性，保持高感知质量。",
+      "tags": "query:watermarking",
+      "abstract_en": "Recent diffusion models have achieved remarkable realism in facial image synthesis, posing growing challenges to artificial intelligence-generated content (AIGC) forensic detectors.Existing evasion methods typically perturb pre-generated images or require detector-aware training, which may introduce visible or statistical artifacts and limit applicability when the diffusion model must remain frozen and the target detector is accessible only through black-box queries. We propose Trajectory-Injected Generative Attack (TIGA), a source-image-free and training free framework that generates detector-evasive images within a single diffusion sampling trajectory. TIGA steers the latent Denoising Diffusion Implicit Model (DDIM) trajectory so that adversarial properties emerge during generation rather than being added afterward. TIGA first aggregates gradients from multiple white-box surrogate detectors to form a transferable, sign-aware prior, and then performs anisotropic directional search with symmetric finite-difference queries to estimate the black-box target response. The estimated directions are stabilized by decayed momentum and injected according to the DDIM noise schedule, with frequency-domain reshaping to suppress high frequency artifacts. Experiments on surrogate and unseen specialized forensic detectors show that TIGA achieves strong blackbox attack performance, transferability, and high robustness under common post-processing operations without source images or diffusion-model retraining, while preserving high perceptual quality.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

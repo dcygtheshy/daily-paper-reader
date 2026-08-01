@@ -1,0 +1,60 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-01T21:12:56.105809+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.25894v1",
+      "source": "arxiv",
+      "title": "TIGA: Trajectory-Injected Generative Attack against Black-box AIGC Detectors",
+      "abstract": "Recent diffusion models have achieved remarkable realism in facial image synthesis, posing growing challenges to artificial intelligence-generated content (AIGC) forensic detectors.Existing evasion methods typically perturb pre-generated images or require detector-aware training, which may introduce visible or statistical artifacts and limit applicability when the diffusion model must remain frozen and the target detector is accessible only through black-box queries. We propose Trajectory-Injected Generative Attack (TIGA), a source-image-free and training free framework that generates detector-evasive images within a single diffusion sampling trajectory. TIGA steers the latent Denoising Diffusion Implicit Model (DDIM) trajectory so that adversarial properties emerge during generation rather than being added afterward. TIGA first aggregates gradients from multiple white-box surrogate detectors to form a transferable, sign-aware prior, and then performs anisotropic directional search with symmetric finite-difference queries to estimate the black-box target response. The estimated directions are stabilized by decayed momentum and injected according to the DDIM noise schedule, with frequency-domain reshaping to suppress high frequency artifacts. Experiments on surrogate and unseen specialized forensic detectors show that TIGA achieves strong blackbox attack performance, transferability, and high robustness under common post-processing operations without source images or diffusion-model retraining, while preserving high perceptual quality.",
+      "authors": [
+        "Xia Du",
+        "Zhuosen Bao",
+        "Zheng Lin",
+        "Jizhe Zhou",
+        "Jiawei Lian",
+        "Chi-man Pun",
+        "Jun Luo",
+        "Wei Ni",
+        "Symeon Chatzinotas"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-07-28T15:51:39+00:00",
+      "link": "https://arxiv.org/pdf/2607.25894v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "related to attacks against AIGC detectors, relevant to watermarking defenses",
+      "llm_evidence_cn": "针对AIGC检测器的黑盒攻击，与水印防御相关",
+      "llm_evidence": "针对AIGC检测器的黑盒攻击，与水印防御相关",
+      "canonical_evidence": "针对AIGC检测器的黑盒攻击，与水印防御相关",
+      "llm_tldr_en": "TIGA is a training-free generative attack that injects adversarial traces into a latent DDIM trajectory to evade black-box AIGC forensic detectors, offering a new angle for watermark robustness evaluation.",
+      "llm_tldr_cn": "现有对抗攻击通常扰动生成图像或依赖可感知检测器训练，易引入伪影且要求扩散模型可变。本文提出TIGA，一种免源图像、免训练的生成攻击框架，在单次扩散采样轨迹内注入扰动使生成图像规避黑盒AIGC检测器。实验表明TIGA产生的逃逸图像在保持视觉质量的同时显著降低检测器识别率。该工作为生成模型水印与取证检测的对抗鲁棒性评估提供了新思路。",
+      "llm_tldr": "现有对抗攻击通常扰动生成图像或依赖可感知检测器训练，易引入伪影且要求扩散模型可变。本文提出TIGA，一种免源图像、免训练的生成攻击框架，在单次扩散采样轨迹内注入扰动使生成图像规避黑盒AIGC检测器。实验表明TIGA产生的逃逸图像在保持视觉质量的同时显著降低检测器识别率。该工作为生成模型水印与取证检测的对抗鲁棒性评估提供了新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-08-01 <!--dpr-date:20260801-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/01/2607.25894v1-tiga-trajectory-injected-generative-attack-against-black-box-aigc-detectors" data-sidebar-item="{&quot;title&quot;: &quot;TIGA: Trajectory-Injected Generative Attack against Black-box AIGC Detectors&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.25894v1-tiga-trajectory-injected-generative-attack-against-black-box-aigc-detectors&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;针对AIGC检测器的黑盒攻击，与水印防御相关&quot;}">TIGA: Trajectory-Injected Generative Attack against Black-box AIGC Detectors</a>
   * 2026-07-31 <!--dpr-date:20260731-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/31/2607.27551v1-anchormark-robust-diffusion-watermarking-via-latent-space-rotation-synchrony" data-sidebar-item="{&quot;title&quot;: &quot;AnchorMark: Robust Diffusion Watermarking via Latent-Space Rotation Synchrony&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.27551v1-anchormark-robust-diffusion-watermarking-via-latent-space-rotation-synchrony&quot;, &quot;score&quot;: &quot;10.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;扩散模型水印；潜在空间旋转同步；对旋转扰动鲁棒&quot;}">AnchorMark: Robust Diffusion Watermarking via Latent-Space Rotation Synchrony</a>
