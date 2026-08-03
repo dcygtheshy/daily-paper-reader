@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-08-03 <!--dpr-date:20260803-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/03/2607.25962v1-lap-forensics-latent-pixel-consistency-guided-multimodal-reasoning-for-deepfake-detection" data-sidebar-item="{&quot;title&quot;: &quot;LaP-Forensics: Latent-Pixel Consistency Guided Multimodal Reasoning for Deepfake Detection&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.25962v1-lap-forensics-latent-pixel-consistency-guided-multimodal-reasoning-for-deepfake-detection&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;利用DDIM逆转换重建和残差图进行深度伪造检测，对潜在水印的逆变换检测方法具有可迁移性。&quot;}">LaP-Forensics: Latent-Pixel Consistency Guided Multimodal Reasoning for Deepfake Detection</a>
   * 2026-08-01 <!--dpr-date:20260801-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/01/2607.25894v1-tiga-trajectory-injected-generative-attack-against-black-box-aigc-detectors" data-sidebar-item="{&quot;title&quot;: &quot;TIGA: Trajectory-Injected Generative Attack against Black-box AIGC Detectors&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.25894v1-tiga-trajectory-injected-generative-attack-against-black-box-aigc-detectors&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;针对AIGC检测器的黑盒攻击，与水印防御相关&quot;}">TIGA: Trajectory-Injected Generative Attack against Black-box AIGC Detectors</a>

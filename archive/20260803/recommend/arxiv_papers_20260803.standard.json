@@ -1,0 +1,56 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-03T20:27:15.299554+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.25962v1",
+      "source": "arxiv",
+      "title": "LaP-Forensics: Latent-Pixel Consistency Guided Multimodal Reasoning for Deepfake Detection",
+      "abstract": "Recent generative models can produce images with few obvious visual artifacts, weakening detectors and explanations that rely only on surface appearance. We present LaP-Forensics, a multimodal framework that augments RGB semantics with reconstruction-based forensic evidence. A frozen Stable Diffusion DDIM inversion-reconstruction model provides a fixed reconstruction reference, and its residual map measures local compatibility with that reference. Independent projectors encode the RGB image and residual map before a structured Where-What-Why model predicts a textual analysis and an artifact mask.Supervised fine-tuning is followed by Group Relative Policy Optimization (GRPO), whose reward combines mask overlap with output-structure and evidence-reference terms. These text-side terms encourage the model to refer to the consistency map but do not constitute a verifier of free-form textual truth. A separate image-level head fuses RGB and DDIM-residual class features. Experiments show cross-generator detection on UniversalFakeDetect and competitive artifact localization on the official SynthScars benchmark. Controlled cue-construction, inversion-horizon, component, reward-term, and counterfactual analyses support the utility of the residual stream under the evaluated settings, while free-form textual faithfulness and reliability under post-processing remain open limitations.",
+      "authors": [
+        "Can Wang",
+        "Yuhao Wang",
+        "Yushe Cao",
+        "Canran Xiao",
+        "Fei Shen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-07-28T16:45:52+00:00",
+      "link": "https://arxiv.org/pdf/2607.25962v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Uses DDIM inversion-reconstruction and residual maps for deepfake detection, a transferable inversion-based detection approach relevant to latent watermark detection.",
+      "llm_evidence_cn": "利用DDIM逆转换重建和残差图进行深度伪造检测，对潜在水印的逆变换检测方法具有可迁移性。",
+      "llm_evidence": "利用DDIM逆转换重建和残差图进行深度伪造检测，对潜在水印的逆变换检测方法具有可迁移性。",
+      "canonical_evidence": "利用DDIM逆转换重建和残差图进行深度伪造检测，对潜在水印的逆变换检测方法具有可迁移性。",
+      "llm_tldr_en": "LaP-Forensics augments RGB semantics with reconstruction residuals from frozen Stable Diffusion DDIM inversion, then uses a Where-What-Why model with RL to detect and localize deepfakes. The inversion-based evidence is directly applicable to latent-space watermark detection.",
+      "llm_tldr_cn": "针对仅依赖表面外观难以检测深度伪造的问题，提出LaP-Forensics多模态框架。它用冻结的Stable Diffusion DDIM逆变换重建生成残差图，与RGB语义共同输入结构化的Where-What-Why模型，并通过GRPO强化学习优化，预测文本分析与伪影掩码。该方法展示了逆变换残差作为可靠取证证据，可迁移到潜在空间水印检测。",
+      "llm_tldr": "针对仅依赖表面外观难以检测深度伪造的问题，提出LaP-Forensics多模态框架。它用冻结的Stable Diffusion DDIM逆变换重建生成残差图，与RGB语义共同输入结构化的Where-What-Why模型，并通过GRPO强化学习优化，预测文本分析与伪影掩码。该方法展示了逆变换残差作为可靠取证证据，可迁移到潜在空间水印检测。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-03",
+  "date": "2026-08-03",
+  "generated_at": "2026-08-03T20:28:12",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/03/2607.25962v1-lap-forensics-latent-pixel-consistency-guided-multimodal-reasoning-for-deepfake-detection",
+      "section": "quick",
+      "title_en": "LaP-Forensics: Latent-Pixel Consistency Guided Multimodal Reasoning for Deepfake Detection",
+      "authors": "Can Wang, Yuhao Wang, Yushe Cao, Canran Xiao, Fei Shen",
+      "date": "2026-07-28",
+      "pdf": "https://arxiv.org/pdf/2607.25962v1",
+      "score": "6.0",
+      "evidence": "利用DDIM逆转换重建和残差图进行深度伪造检测，对潜在水印的逆变换检测方法具有可迁移性。",
+      "tldr": "当前生成模型几乎不产生明显视觉伪影，依赖表面外观的检测器易失效。为此提出LaP-Forensics，一种多模态框架：利用冻结Stable Diffusion的DDIM反演重建残差图作为取证证据，与RGB语义融合；通过Where-What-Why模型联合生成文本分析和伪影掩码，并用GRPO优化。在UniversalFakeDetect上实现有效跨生成器检测，在SynthScars上获得竞争性定位性能。该工作展示了重建一致性证据对深度伪造检测的价值，但自由文本保真度与后处理鲁棒性仍有待改进。",
+      "tags": "query:watermarking",
+      "abstract_en": "Recent generative models can produce images with few obvious visual artifacts, weakening detectors and explanations that rely only on surface appearance. We present LaP-Forensics, a multimodal framework that augments RGB semantics with reconstruction-based forensic evidence. A frozen Stable Diffusion DDIM inversion-reconstruction model provides a fixed reconstruction reference, and its residual map measures local compatibility with that reference. Independent projectors encode the RGB image and residual map before a structured Where-What-Why model predicts a textual analysis and an artifact mask.Supervised fine-tuning is followed by Group Relative Policy Optimization (GRPO), whose reward combines mask overlap with output-structure and evidence-reference terms. These text-side terms encourage the model to refer to the consistency map but do not constitute a verifier of free-form textual truth. A separate image-level head fuses RGB and DDIM-residual class features. Experiments show cross-generator detection on UniversalFakeDetect and competitive artifact localization on the official SynthScars benchmark. Controlled cue-construction, inversion-horizon, component, reward-term, and counterfactual analyses support the utility of the residual stream under the evaluated settings, while free-form textual faithfulness and reliability under post-processing remain open limitations.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
