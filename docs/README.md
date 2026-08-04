@@ -6,24 +6,27 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-03
-- 运行时间：2026-08-03 20:28:06 UTC
+- 最新运行日期：2026-08-04
+- 运行时间：2026-08-04 22:00:16 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
-- 速读区：1
+- 本次总论文数：2
+- 精读区：2
+- 速读区：0
 
 ### 今日简报（AI）
-今日仅速读1篇论文，聚焦深度伪造检测新方法。值得关注的是《LaP-Forensics》提出潜在-像素一致性引导多模态推理，评分6.0/10。建议未来可追踪该方向的多模态融合与可解释性提升。
-- 详情：[/202608/03/README](/202608/03/README)
+今日精读2篇高分论文，聚焦AI安全与数据溯源。最值得关注：利用隐蔽后门规避扩散模型语义水印的攻击手法，以及通过内在分布指纹审计大模型微调数据来源。普通读者可留意AI生成内容可信度与版权追踪技术的攻防进展。
+- 详情：[/202608/04/README](/202608/04/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Robust Watermarks Meet Backdoored Models: Evading Diffusion Semantic Watermarks via Stealthy Backdoor](/202608/04/2608.00543v1-robust-watermarks-meet-backdoored-models-evading-diffusion-semantic-watermarks-via-stealthy-backdoor)  
+   标签：评分：10.0/10、query:watermarking
+   evidence：针对潜在扩散模型语义水印的后门攻击
+2. [Auditing Data Provenance in LLM Fine-tuning via Intrinsic Distributional Fingerprints](/202608/04/2608.02154v1-auditing-data-provenance-in-llm-fine-tuning-via-intrinsic-distributional-fingerprints)  
+   标签：评分：8.0/10、query:watermarking
+   evidence：利用内部分布指纹审计生成模型未经授权的微调
 
 ### 速读区论文标签
-1. [LaP-Forensics: Latent-Pixel Consistency Guided Multimodal Reasoning for Deepfake Detection](/202608/03/2607.25962v1-lap-forensics-latent-pixel-consistency-guided-multimodal-reasoning-for-deepfake-detection)  
-   标签：评分：6.0/10、query:watermarking
-   evidence：利用DDIM逆转换重建和残差图进行深度伪造检测，对潜在水印的逆变换检测方法具有可迁移性。
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
