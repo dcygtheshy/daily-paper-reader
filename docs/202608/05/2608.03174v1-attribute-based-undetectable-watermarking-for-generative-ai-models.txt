@@ -1,0 +1,780 @@
+Title: Attribute-based Undetectable Watermarking for Generative AI Models
+
+URL Source: https://arxiv.org/pdf/2608.03174v1
+
+Published Time: Wed, 05 Aug 2026 00:34:11 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# Attribute-based Undetectable Watermarking for Generative AI Models 
+
+Miryam Mi-Ying Huang ∗
+
+Carnegie Mellon University Pittsburgh, PA, USA 
+
+miyingh@andrew.cmu.edu 
+
+Chung-Wei Lee Independent Researcher 
+
+lee@chungwei.net 
+
+Max Raffel University of Southern California Los Angeles, CA, USA 
+
+mraffel@usc.edu 
+
+Er-Cheng Tang University of Washington Seattle, WA, USA 
+
+erchtang@uw.edu 
+
+Abstract 
+
+Generative AI systems increasingly produce content whose provenance is difficult to verify, motivating watermarking techniques for identifying model-generated outputs. Existing crypto-graphic watermarking methods provide strong undetectability guarantees: without a detection key, watermarked outputs are computationally indistinguishable from unwatermarked ones. However, these approaches do not address the crucial deployment challenge of how to safely delegate detection capabilities. With an unrestricted detection key, a malicious detector may use the detection key beyond its intended scope, enabling watermark sanitization, scope abuse, and user profiling. To mitigate this safety concern, we introduce, to the best of our knowledge, the first attribute-based watermarking for generative AI models, providing fine-grained, policy-controlled watermark detection. In our approach, each generated output is associated with attributes, and each detection key is constrained by a policy on potential attributes. A detection key can only be used to detect watermarked outputs whose attributes satisfy the corresponding policy, while watermarked outputs that fall outside the policy remain computationally indistinguishable from unwatermarked ones. We construct such an attribute-based watermarking scheme and formalize its security properties, including consistency, adaptive robustness to bounded corruptions, undetectability, and soundness, along with a security proof under standard cryptographic assumptions. Our construction integrates constrained pseudorandom functions, pseudorandom error-correcting codes, and randomness recovery procedures with generative AI models. Finally, we implement a prototype and an empirical evaluation, demonstrating that attribute-based watermarking is both effective and practical. 
+
+# 1 Introduction 
+
+Generative artificial intelligence systems now produce text, images, audio, and video that are increasingly difficult to distinguish from human-created content. Large language models (LLMs) achieve high levels of fluency and instruction following, while generative vision models produce 
+
+> ∗
+
+Part of the work was done when Miryam is at University of Southern California 
+
+1arXiv:2608.03174v1 [cs.CR] 4 Aug 2026 realistic synthetic media at scale. These capabilities create substantial societal and economic value, but they also make content provenance a pressing technical and policy challenge. Governments, platforms, academic institutions, and model providers increasingly need mechanisms to identify synthetic content, authenticate digital media, and enforce AI-use policies. Recent policy efforts have explicitly identified watermarking, content labeling, and provenance tracking as tools for reducing the risks of synthetic content [ 1 –3 ]. In particular, the U.S. AI Safety Institute Consortium lists watermarking synthetic content among its priority activities, while NIST’s synthetic-content research agenda highlights unresolved challenges concerning watermark robustness and security gaps in content-authentication ecosystems [ 2, 4]. These efforts underscore both the practical importance of watermarking and the need for stronger, deployable security guarantees. At the same time, real-world institutions have begun deploying ad hoc mechanisms to detect improper AI use. For example, ICML 2026 used hidden instructions embedded in submitted PDFs to detect violations of its LLM-use policy for peer review [ 5]. This approach identified hundreds of violations, but the organizers also noted that it was easy to circumvent once known: a reviewer could remove the hidden instruction by sanitizing the PDF, extracting the visible text, or otherwise changing the document-processing pipeline before using an LLM. This example highlights the fragility of non-cryptographic provenance tracking. Prompt-injection-based “honeypots” can detect careless misuse, but they do not provide a durable provenance mechanism. More generally, ad hoc approaches do not provide formal guarantees regarding robustness, authorization, or privacy. Watermarking has emerged as a leading technical approach for provenance tracking in generative AI. A watermarking scheme embeds a statistically verifiable signal into generated outputs so that an authorized party can later determine whether an output was produced by the model. Early watermarking schemes for language models modify the sampling procedure by intentionally perturb-ing the model’s output distribution [ 6 ], but this approach creates a tension between detectability, robustness, and preservation of generation quality [7]. Recent cryptographic work addresses this tension through undetectable watermarking [ 7 ]. In an undetectable watermarking scheme, watermarked and unwatermarked outputs are computationally indistinguishable to any efficient party that does not hold the relevant detection key, even under adaptive querying [ 7 ]. This property is stronger than preserving any particular quality metric: it implies that no efficient test can distinguish the two distributions without the key. Undetectable watermarking thus provides a principled way to support detection while avoiding observable degradation of generated content. Subsequent works improve undetectable watermarks in terms of the tolerable error rate [ 8] and the attack model in which the watermarks may remain effective to attackers who have access to either a detection oracle [9] or a public detection key [10]. However, undetectability alone does not solve the authorization problem that arises when detection capability must be delegated. In many realistic deployments, a model provider should not hand out an all-purpose detector. Different detectors may be authorized to inspect different classes of outputs. Existing watermarking schemes largely treat detection as coarse-grained: once a detector receives detection capability, the scheme itself does not enforce fine-grained restrictions on which outputs the detector may test. Consider a conference that wishes to delegate watermark detection to its area chairs. If detection is publicly available, an author could repeatedly edit an AI-generated submission and query the detector until detection fails, thereby using the detector as a sanitization oracle. A conventional secret-key watermark prevents such public access, but does not natively enforce fine-grained delegation: an area chair who receives a conference-wide detection key may also be able to test submissions outside the chair’s assigned subject area. 2This lack of policy-scoped detection creates several concrete vulnerabilities. 
+
+• Watermark sanitization. If the detection key is broadly accessible, an adversary may use the detection key to sanitize the watermark. For example, a malicious influencer generating AI-written medical, financial, or political content could repeatedly edit an output and apply detection until the watermark is no longer detected. 
+
+• Scope abuse. A detector authorized in one setting may apply detection outside that setting. For example, an enterprise compliance team may be authorized to verify whether externally released reports were generated by an AI system, but an unrestricted detector could also be applied to internal employee documents, legal drafts, or confidential strategy memos. The detector would then obtain provenance information outside the scope of its delegated authority. 
+
+• User profiling. Broad detection capability can leak behavioral information. If arbitrary parties can scan a user’s public posts for watermarks, they may infer which topics the user relies on AI assistance for, enabling targeted phishing, manipulation, or reputational attacks. These examples suggest a common failure mode: existing detection mechanisms only authenticate 
+
+whether content is watermarked, but do not cryptographically enforce who may test it, which content they may test, or under what policy . Thus, watermarking should provide not only undetectability, but also cryptographic access control for detection. We introduce attribute-based watermarking for generative AI. In our framework, each generated output is associated with an attribute, such as a topic, domain, course identifier, policy category, or other application-defined label. A model provider can issue a detection key tied to a policy over the attributes. The key enables detection only for outputs whose attributes satisfy the policy, while preserving undetectability outside the authorized scope. Thus, verification becomes fine-grained and policy-controlled rather than all-or-nothing. In the conference example, each generated output is associated with a subject-area attribute, and each area chair receives a detection key constrained to the policy for the chair’s assigned area. Authors and ordinary reviewers receive no detection capability, while an area chair’s key reveals no useful information about watermarks on out-of-area submissions. This confines the consequences of key leakage or misuse to the delegated scope. It does not prevent an authorized area chair from misusing detection on an in-scope submission; as in conventional access-control systems, such trusted-role misuse lies outside the goal of policy-scoped delegation. At a technical level, our construction binds the randomness used for watermark generation to the output attribute through a constrained pseudorandom function. The master secret key allows the model provider to generate watermarked outputs for arbitrary attributes. A delegated detection key corresponds to a policy and allows evaluation of the relevant pseudorandom value only on authorized attributes. We combine constrained pseudorandom functions with pseudorandom error-correcting codes and randomness recovery procedures, following the cryptographic watermarking paradigm for randomized generative models. This yields a scheme in which authorized detection remains robust to small perturbations, whereas unauthorized detection reveals no useful information about the watermark. Our contributions are as follows. 
+
+• The first attribute-based verification framework for generative AI. We introduce a modular framework for watermarking schemes with policy-scoped detection. The framework separates master generation authority from delegated detection authority while modeling detection keys as constrained by policies over output attributes. Since the framework is modular rather than tied to a fixed instantiation, advances in any underlying primitive immediately translate to improvements in the resulting watermarking scheme. 3• Security notions for delegated watermark detection. We define consistency for authorized detection, adaptive robustness against bounded modifications of watermarked outputs, unde-tectability outside the authorized policy scope, and soundness against adversaries that do not hold the master secret key. These notions capture the distinction between detecting watermarks within an authorized domain and learning useful information about them outside that domain. 
+
+• A cryptographic construction from constrained pseudorandom functions and pseu-dorandom codes. We give a construction that combines constrained pseudorandom functions, pseudorandom error-correcting codes, pseudorandom generators, and randomness recovery for generative models. The constrained pseudorandom function enforces policy-scoped access to the pseudorandom code, which provides a robust and undetectable watermark. 
+
+• Security proofs of our watermarking scheme. We prove that the construction satisfies the proposed security properties under standard assumptions on the underlying primitives, including correctness and security of the constrained pseudorandom function, pseudorandomness and robustness of the pseudorandom code, and compatibility of the model’s randomness recovery procedure with the tolerated output perturbations. 
+
+• Prototype implementation and empirical evaluation. We implement a prototype of attribute-based watermarking for generative AI models and evaluate its behavior. Our implemen-tation includes master-key generation, constrained detection-key issuance, watermark generation, and authorized detection. Empirically, we validate selective detectability under authorized policies and measure the overhead introduced by the cryptographic components. Overall, attribute-based watermarking provides a cryptographic foundation for controlled prove-nance tracking in generative AI. It preserves the central benefit of undetectable watermarking, namely that watermarked outputs remain indistinguishable from ordinary model outputs to unau-thorized parties, while adding a missing access-control layer: detection can be delegated according to explicit policies over the attributes of generated content. 
+
+# 2 Preliminary 
+
+This section provides abstractions for generative AI models and classifiers, and reviews relevant cryptographic primitives that will be used in our watermarking construction. The following notions will be used. We denote by negl (n) an unspecified function f : N → R≥0
+
+that decays asymptotically faster than any inverse polynomial, or equivalently, a function with 
+
+f (n) = o( 1 
+
+> nc
+
+) for every c > 0. For two strings u, v ∈ Σn over alphabet Σ, we define their relative Hamming distance dist (u, v ) := |{ i:ui̸ =vi}|  
+
+> n
+
+as the fraction of coordinates on which the two strings differ. We also define dist (u, v ) = ∞ when u, v have different length. For a set S, we define 
+
+dist (u, S ) := min v∈S dist (u, v ). Given a randomized algorithm R, we denote its execution on an input x either by R(x), which uses an internal randomness, or R(x; r), where r is the randomness written out explicitly. 
+
+2.1 Generative AI Models 
+
+Generative AI systems, such as large language models, are inherently randomized: when run on the same prompt multiple times, the model may produce different outputs based on internally sampled randomness. We abstract such systems as randomized algorithms that map prompts to outputs. 4Definition 1. A generative AI model is a randomized algorithm Model that takes as input a prompt 
+
+π and generates Model (π; r) → out ∈ Σn an output of length n, where r denotes randomness used by the algorithm. Recent works [ 8, 11 ] observed that the randomness used by generative AI models can often be approximately recovered from the generated output itself. Intuitively, the generation process preserves substantial information about the underlying latent randomness, and the generated output exhibits a high correlation with the randomness used, especially when the output has sufficiently high entropy. Consequently, one can approximately recover a noisy version of the original randomness. Moreover, this approximate recovery can remain possible even if the output is slightly modified or corrupted. We refer the readers to [ 8 , 11 ] for more information on how randomness recovery is achieved. 
+
+Definition 2. A generative AI model is said to admit robust randomness recovery with constant error rate δ if there is an efficient deterministic algorithm RandRecover that takes as input a (potentially corrupted) generated output out ′ ∈ Σn and produces a recovered randomness r′ ∈ { 0, 1}n
+
+that is close to the truncated original randomness r[1: n] ∈ { 0, 1}n in relative Hamming distance. That is, for any error channel E,
+
+Pr 
+
+> r
+> 
+
+dist (out ′, out ) < δ =⇒ dist (r′, r [1: n]) < 2δ
+
+> ∣∣∣∣∣∣∣
+
+out ← Model (π; r)
+
+out ′ ← E (out )
+
+r′ ← RandRecover (out ′) 
+
+> 
+
+= 1 − negl (n)
+
+as long as the output distribution Model (π) has sufficiently high entropy on prompt π. For convenience, throughout this work, we will only consider prompts whose output distribution has sufficiently high entropy. Next, we introduce the role of classifiers in our framework. Given a generative AI model, we use a classifier to assign attributes to generated outputs. A key requirement is that these attribute assignments remain stable across multiple samples generated from the same prompt. In particular, we expect that two independently generated outputs under the same prompt are likely to be assigned the same attribute. For generative AI models, such consistency may not hold automatically, but can often be achieved empirically, for example by applying strategies such as chain-of-thought that encourage more stable and semantically consistent outputs. Generated outputs are also expected to retain stable attributes even under small perturbations. This requirement is closely related to adversarial robustness in machine learning, where a classifier is expected to produce consistent outputs under small adversarial modifications. We formalize these requirements below via notions of adversarial robustness and consistency with respect to the generative model. 
+
+Definition 3. A classifier is an algorithm Classifier (m) → x that maps a message m ∈ Σn to a label x ∈ { 0, 1}n′
+
+. A classifier is η-consistent on a generative AI model Model if for every prompt 
+
+π,
+
+Pr 
+
+> m,m ′←Model (π)
+> [
+
+Classifier (m′) = Classifier (m)] ≥ η. 
+
+A classifier is (δ, ε )-adversarially robust over a distribution D if for every probabilistic polynomial-time adversary A,
+
+Pr 
+
+> m←D , m ′←A (m)
+> [
+
+Classifier (m′)̸ = Classifier (m) ∧ dist (m′, m ) < δ ] ≤ ε. 
+
+If the classifier is adversarially robust over the distribution Model (π) for every π, we simply say that Classifier is an adversarially robust output classifier for Model . In our analysis, we consider 
+
+δ being a small constant, ε = negl (n), and η = 1 − negl (n).52.2 Pseudorandom Error-Correcting Codes 
+
+Traditional error-correcting codes are designed to recover messages from noisy transmissions. Pseudorandom codes (PRC) additionally require the encoded codewords to appear computationally indistinguishable from uniformly random strings while still supporting reliable decoding. 
+
+Definition 4 (Pseudorandom Code [ 8, 9 ]) . A secret-key PRC over alphabet Σ with threshold δ
+
+is a tuple of probabilistic polynomial time algorithms (Gen , Encode , Decode ) with the following syntax. 
+
+• Gen (1 κ; r) → sk : On input security parameter κ and randomness r, it outputs a secret key sk .
+
+• Encode (sk ) → c ∈ Σn: On input a secret key sk , it outputs a codeword c.
+
+• Decode (sk , c ∈ Σn) → 1/0: On input a secret key sk and a word c, it outputs 1 if the decoding succeeds; otherwise, it outputs 0.We refer the readers to Definition 13 for detailed definitions including δ-adaptive robustness, soundness, and pseudorandomness. Pseudorandom codes have been constructed assuming sub-exponential hardness of learning parity with noise (LPN) [8, 9]. 
+
+2.3 Pseudorandom Generators (PRGs) 
+
+Definition 5 (Pseudorandom Generator) . A pseudorandom generator (PRG) is a deterministic polynomial-time algorithm PRG : {0, 1}ℓ → { 0, 1}n, where n > ℓ , such that for every probabilistic polynomial-time adversary A, 
+
+> ∣∣∣∣∣
+
+Pr  
+
+> s←{ 0,1}ℓ
+
+[A(PRG (s)) = 1] − Pr  
+
+> y←{ 0,1}n
+
+[A(y) = 1]  
+
+> ∣∣∣∣∣
+
+= negl (κ).
+
+2.4 Constrained Pseudorandom Functions (CPRFs) 
+
+Constrained pseudorandom functions (CPRFs) extend ordinary pseudorandom functions by allowing the holder of a constrained key to evaluate the function only on a restricted subset of inputs [ 12 ]. Intuitively, constrained keys reveal limited functionality of the underlying PRF while still hiding information about evaluations outside the authorized region. 
+
+Definition 6 (Constrained Pseudorandom Functions) . Let κ be security parameter and pp be a public parameter as inputs implicit in all algorithms. A Constrained Pseudorandom Function (CPRF) with key space K, domain X , and range Y that supports constraints represented by the class of circuits C, where each C ∈ C maps X to {0, 1}, is a tuple of polynomial time algorithms 
+
+(Gen , Eval , Constrain , CEval ) with the following syntax. 
+
+• Gen (1 κ) → msk : The randomized key generation algorithm takes as input a security parameter 
+
+κ and outputs a master secret key msk ∈ K .
+
+• Eval (msk , x ) → y: The deterministic evaluation algorithm takes as input the master secret key msk and input x ∈ X , and outputs y ∈ Y .
+
+• Constrain (msk , C ) → csk : The randomized constrain algorithm takes as input the master secret key msk and a constraint circuit C ∈ C , and outputs a constrained key csk .6• CEval (csk , x ) → y: The deterministic constrained evaluation algorithm takes as input the constrained key csk and an input x ∈ X and outputs y ∈ Y .It is required that Eval (msk , x ) and CEval (csk , x ) produces the same value when C(x) = 1 ,and that the value of Eval (msk , x ) is indistinguishable from random to any efficient adversary with 
+
+csk when C(x) = 0 . We refer the readers to Definition 14 for the full definition. CPRFs have been constructed for several circuit classes, such as general circuits, inner-product circuits, and logarithmic depth circuits [ 13 –15 ]. These results are based on standard cryptographic assumptions, such as the decisional Diffie-Hellman (DDH) or the learning with errors (LWE) assumptions, with some of the assumptions commonly believed to be quantum-secure (post-quantum). 
+
+# 3 Attribute-based Watermarking: Definition and Construction 
+
+Attribute-based watermarking associates generated outputs with attributes while allowing watermark detection only under authorized policies. Such a framework is particularly relevant for generative AI systems where watermark verification, robustness, selective detectability, and output quality preservation may all be required simultaneously. This section introduces the formal framework and security requirements for attribute-based watermarking schemes for generative AI models. The security notions characterize robustness against adversarial corruptions, indistinguishability from ordinary model outputs, and soundness under the presence of a detection key that is authorized for other attributes. A corresponding construction is presented in Section 3.1 and its security analysis is given in Appendix B. Let Model be a generative AI model and Classifier be an adversarially robust output classifier for the model as defined in Section 2.1. Given a prompt π, the model generates an output 
+
+out ← Model (π). We will apply the classifier to obtain an attribute x ← Classifier (out ) associated with the output. A policy f ∈ F specifies a predicate over the attribute space X , and determines whether detection is authorized for outputs with attribute x by evaluating f (x) ∈ { 0, 1}. In an attribute-based watermarking scheme, a detection key for f only enables detection on outputs whose attribute satisfies f (x) = 1 .The attribute serves as an intermediate description of the output, and policies operate on attributes rather than directly on raw outputs. For example, an attribute x ∈ X can be a set of keywords of the output, a policy f can be a function that determines if an attribute x ∈ X contains a keyword that belongs to a certain area, and a policy family F can contain policies of the above type for several different areas (e.g., medical, education, finance). 
+
+Definition 7. An attribute-based watermarking scheme W with attribute space X and policy family 
+
+F for a generative AI model Model consists of the following efficient algorithms: 
+
+• Setup (1 κ) → msk : On input a security parameter κ, it outputs a master secret key msk .
+
+• Issue (msk , f ) → dk f : On input a master secret key msk and a policy f ∈ F , it outputs a detection key dk f tailored for the policy f .
+
+• Generate (msk , π ) → out : On input a master secret key msk and a prompt π, it generates an outcome out .
+
+• Detect (dk f , out ) → 0/1: On input a detection key dk f and an outcome out , it determines whether out is generated by the watermarking scheme. 7• MasterDetect (msk , out ) → 0/1: On input a master secret key msk and an outcome out , it determines whether out is generated by the watermarking scheme. We require that an authorized detection behaves consistently with the master detection procedure. In particular, whenever a policy authorizes detection for an attribute, both procedures should produce the same detection outcome. 
+
+Definition 8 (Consistency) . An attribute-based watermarking scheme W is said to satisfy consis-tency if for every policy f ∈ F and every outcome out with f (Classifier (out )) = 1 ,
+
+Pr 
+
+> [
+
+Detect (dk f , out ) = MasterDetect (msk , out )
+
+> ∣∣∣∣∣
+
+msk ← Setup (1 κ)
+
+dk f ← Issue (msk , f )
+
+> ]
+
+≥ 1 − negl (κ)
+
+We now characterize several security properties of our attribute-based watermarking scheme for generative AI models. These security properties hold even against adversaries who can get a detection key of a policy f ∈ F .The following notion captures the idea that a small fraction of modifications to a watermarked output out should not remove its watermark, even for modifications carried out by an adversary who observed many watermarked outputs and obtained a detection key dk f , as long as the detection key is unauthorized for detecting out , i.e., when f satisfies f (Classifier (out )) = 0 .
+
+Definition 9. (Adaptive Robustness with Detection) An attribute-based watermarking scheme W
+
+is said to satisfy adaptive robustness with detection against δ-fraction of adversarial corruptions if for every policy f ∈ F and every probabilistic polynomial-time adversary A,
+
+Pr 
+
+> [
+
+GRobust  
+
+> κ,f, W
+
+(A) = 1 
+
+> ]
+
+= negl (κ),
+
+where GRobust  
+
+> κ,f, W
+
+(A) is defined as the following security game: 
+
+• Generate msk ← Setup (1 κ) and send the detection key dk f ← Issue (msk , f ) to A.
+
+• A can freely choose to query the generation algorithm out ← Generate (msk , π ) on demand using any prompt π . The security game will record all the generated watermarked outputs as a list S.
+
+• A produces an output out ∗. The game outputs 1 (i.e., A wins the security game) if 
+
+f (Classifier (out ∗)) = 0 , dist (out ∗, S) < δ, and MasterDetect (msk , out ∗) = 0 
+
+The adversary wins the security game if it manages to produce an output out ∗ that is δ-close to some watermarked sample with an attribute that does not satisfies the policy f , yet MasterDetect 
+
+fails to recognize out ∗ as watermarked. Adaptive robustness with detection says that the winning probability of any efficient adversary is negligible. In other words, no efficient adversary can remove the watermark under a small perturbation using the information given by the detection key dk f
+
+when the attribute of the watermarked output does not satisfy the policy f .The following notion captures that watermarking should not affect the quality of generated outputs. In particular, an adversary who holds an unauthorized detection key should not be able to distinguish watermarked outputs from ordinary model outputs. 8Definition 10 (Undetectability) . W is said to satisfy attribute-based undetectability if for every policy f ∈ F and every probabilistic polynomial-time adversary A,
+
+> ∣∣∣
+
+Pr 
+
+> [
+
+1 ← A Env (1 κ,f )]
+
+− Pr 
+
+> [
+
+1 ← A Env ′(1 κ,f )]∣ ∣∣ = negl (κ),
+
+where Env (1 κ, f ) and Env ′(1 κ, f ) are defined as follows. 
+
+Env (1 κ, f ):
+
+• Generate msk ← Setup (1 κ) and return a detection key dk f ← Issue (msk , f ).
+
+• Upon query a prompt π, return a generated output out ← Generate (msk , π ).
+
+Env ′(1 κ):
+
+• Generate msk ← Setup (1 κ) and return a detection key dk f ← Issue (msk , f ).
+
+• Upon query a prompt π, compute an ordinary model output out ← Model (π).If f (Classifier (out )) = 0 , return out . Otherwise return out ′ ← Generate (msk , π ).The following property says that there is no way for a person who holds a detection key dk f to come up with an output with an attribute that does not satisfy the policy f , but the output gets identified as AI generated. 
+
+Definition 11 (Soundness) . W is said to satisfy soundness if for any probabilistic polynomial-time adversary A,
+
+Pr 
+
+> [
+
+GSound  
+
+> κ,f, W
+
+(A) = 1 
+
+> ]
+
+= negl (κ),
+
+where GSound  
+
+> κ,f, W
+
+(A) is defined as the following security game: 
+
+• Generate msk ← Setup (1 κ) and send the detection key dk f ← Issue (msk , f ) to A.
+
+• A produces an output out ∗. The game outputs 1 (i.e., A wins the security game) if 
+
+f (Classifier (out ∗)) = 0 and MasterDetect (msk , out ∗) = 1 
+
+The adversary wins the security game if it manages to come up with an output out ∗ with an attribute that does not satisfies the policy f without accessing the watermark generation algorithm, yet MasterDetect recognizes the output out ∗ as watermarked. 
+
+3.1 Construction 
+
+We now present our construction for attribute-based watermarking. At a high level, the main challenge is to support fine-grained policy-scoped detection. A naive approach would be to generate a separate watermarking and detection key pair for every possible attribute, and distribute only the detection keys corresponding to authorized attributes. However, such an approach scales poorly with the dimension of the attribute space. For example, supporting a 50 -dimensional binary attribute space would require generating and storing 250 distinct keys, resulting in prohibitive storage and key-management costs. Our construction avoids this exponential blowup by using constrained pseudorandom functions to derive attribute-dependent watermarking randomness from a single master secret key. Detection keys are issued with respect to policies over the attribute space, rather than individual attributes, enabling compact policy-scoped delegation. As a result, the total key size remains compact while incurring only a small computational overhead during detection. 9Our construction makes use of the following ingredients introduced in Section 2, including a model Model with randomness recovery RandRecover , an adversarially robust output classifier 
+
+Classifier for the model, a PRG , a CPRF = ( Gen , Eval , Constrain , CEval ), and a PRC =(Gen , Enc , Dec ).
+
+Construction 1. 
+
+- Setup (1 κ):1. msk ← CPRF .Gen (1 κ).2. Output msk .- Issue (msk , f ):1. dk ← CPRF .Constrain (msk , f ).2. Output dk .- Generate (msk , π ):1. out ′ ← Model (π).2. x ← Classifier (out ′).3. r ← CPRF .Eval (msk , x ).4. s ← PRC .Gen (1 κ; PRG (r)) .5. c ← PRC .Enc (s).6. out ← Model (π; c).7. Output out .- Detect (dk , out ):1. x ← Classifier (out ).2. r ← CPRF .CEval (dk , x ).3. s ← PRC .Gen (1 κ; PRG (r)) .4. c ← RandRecover (out ).5. d ← PRC .Dec (s, c ).6. Output 1 iff d = 1 .- MasterDetect (dk , out ):1. x ← Classifier (out ).2. r ← CPRF .Eval (msk , x ).3. s ← PRC .Gen (1 κ; PRG (r)) .4. c ← RandRecover (out ).5. d ← PRC .Dec (s, c ).6. Output 1 if and only if d = 1 .We prove the following theorem for our construction. The proof is given in Appendix B. 
+
+Theorem 12. Construction 1 is an attribute-based watermarking scheme that satisfies consistency (Definition 8), adaptive robustness with detection against a constant δ fraction of adversarial corruptions (Definition 9), undetectability (Definition 10), and soundness (Definition 11). 
+
+# 4 Experiments 
+
+Implementation details. We implement our prototype in PyTorch [ 16 ] using the Hugging Face Transformers library [ 17 ]. For text generation, we use meta-llama/Llama-3.2-1B-Instruct [ 18 , 19 ]. For all generation, we used temperature = 1 .0, top_p = 0 .95 , and top_k = 0 .0 (disabled) unless otherwise specified. All experiments were conducted on NVIDIA L4 GPUs through Google Colab and consumed approximately 70 compute credits in total. Our implementation builds on the pseudorandom-code-based approach to undetectable language-model watermarking introduced by Christ and Gunn [ 8]. The accompanying materials contain the complete implementation, environment setup instructions, evaluation scripts, and scripts for reproducing all figures and tables reported here 1 We instantiate the attribute classifier using BAAI/bge-reranker-v2-m3 [20 , 21 ]. Given a generated output and a candidate attribute from a fixed vocabulary, the model assigns a relevance score to the corresponding output–attribute pair. The classifier is always used in a multi-label manner: we assign every attribute whose relevance score exceeds the fixed threshold τ = 0 .001 . 
+
+> 1GitHub: https://github.com/maxraffel/attribute-based-watermarking .
+
+10 Table 1: Single-attribute-prompt detection matrix. Each column j corresponds to outputs generated from prompts designed to elicit target attribute j, and each row i corresponds to a detection key constrained to attribute i. Each entry reports the fraction of outputs in column j detected by the corresponding constrained key. Entries above 50% are highlighted. Medicine Economics Art Software Sports Medicine 86.0% 28.57% 26.0% 22.0% 33.33% Economics 28.0% 87.76% 14.0% 26.0% 19.61% Art 24.0% 28.57% 88.0% 24.0% 21.57% Software 18.0% 24.49% 16.0% 98.0% 17.65% Sports 26.0% 24.49% 22.0% 22.0% 88.24% We use the same classifier, fixed attribute vocabulary, and threshold throughout all experiments. The experimental conditions differ only in prompt construction: the single-attribute prompts are designed to elicit one target attribute, whereas the two-attribute prompts are designed to jointly elicit two target attributes. Our implementation of RandRecovery uses probability-balanced token masks. At each watermarked generation step, the candidate tokens are partitioned into two sets corresponding to recovered bit values 0 and 1, with their aggregate model probabilities made as close as possible. These two values need not be equally likely under the original next-token distribution. Rather than conditioning on the selected mask at every step, the scheme uses the mask to truncate the token space only with a distribution-dependent probability, which is typically larger when the partition is more balanced and the next-token distribution has higher entropy. The complementary sampling rule is calibrated so that, after marginalizing over the watermarking randomness, the original model probability is unaffected. Thus, the next-token distribution is identical with and without watermarking; balancing the two probability masses instead maximizes how often the mask can be applied and thereby improves bit-embedding and recovery reliability. During recovery, the token partitions are reconstructed deterministically by replaying the observed token sequence through the language model and recomputing the next-token probabilities at every position. Because the recovery algorithm does not receive the original prompt, generation maintains an auxiliary prompt-free model state and constructs the partitions from this state. The same state can subsequently be reconstructed using only the generated continuation. We generate the first 100 tokens without embedding watermark bits. These tokens provide a warm-up prefix from which the prompt-free state can be initialized before watermark embedding begins. Consequently, watermarked generation requires an additional model forward pass at each decoding step to maintain the auxiliary state, while recovery requires model evaluations to reconstruct the masks associated with the observed tokens. For computational efficiency, unwatermarked generation is performed in batches, and the model evaluations required during recovery are also batched. Unless stated otherwise, error bars show the empirical mean plus or minus two standard deviations, i.e., mean ± 2σ.
+
+Attribute-constrained detection. Table 1 shows a clear separation between target and non-target attributes for the single-attribute prompts. For outputs generated from prompts targeting attribute j, the key constrained to j achieves a detection rate between 86% and 98% . In contrast, detection by keys constrained to non-target attributes ranges from 14% to 33 .33% . Thus, constrained 11 Figure 1: Empirical false-positive rate (FPR) as the output length and the corresponding PRC parameter κ increase. Each empirical rate is estimated from 200 generated samples. We ad-ditionally report a Monte Carlo estimate of the false-positive rate of the underlying PRC detec-tor, computed using 100,000 random samples for each value of κ. The redundancy parameter is fixed to ρ = 1 .
+
+Figure 2: Empirical true-positive rate (TPR) as the output length and redundancy increase. We report both end-to-end detection, which in-cludes errors from the multi-label attribute clas-sifier, and detection using the intended ground-truth attribute, which bypasses attribute clas-sification and thereby isolates watermark re-covery and PRC detection under the intended policy. We fix κ = 100 and evaluate 250 sam-ples for each output length. The channel length does not include the 100 token unwatermarked prefix which is skipped by redundancy keys detect outputs generated from prompts targeting their authorized attributes substantially more often than outputs generated from prompts targeting other attributes, although cross-attribute detection remains non-negligible in the current prototype, due to the baseline FPR of the PRC implementation used, as seen in Figure1. The two-attribute-prompt results in Table 2 exhibit the intended policy behavior for all three tested attribute pairs. For each prompt, both target attributes are detected at rates above 50% , with target-attribute detection rates ranging from 76% to 98% . Detection under non-target attributes ranges from 20% to 32% . These results suggest that the construction can support prompts targeting multiple attributes while retaining meaningful separation from unrelated policies. 
+
+Dependence on token-level entropy. We observe substantial variation in detection perfor-mance across prompts and subject areas. This variation is expected because the effectiveness of 
+
+RandRecovery depends strongly on the concentration of the next-token probability distribution encountered during generation. When the distribution is less concentrated and has higher effective entropy, the token vocabulary can typically be partitioned into two sets whose probability masses are closer to 1/2. Although the two recovered bit values need not be exactly equally likely, a more balanced partition increases the probability with which the mask can be applied, and therefore improves bit-embedding and recovery reliability. In more concentrated decoding states, a small number of tokens may carry most of the probability mass, making balanced partitions impossible to construct, drastically reducing the probability with which the desired bit can be embedded. End-to-end detection performance additionally depends on the reliability of the multi-label attribute classifier. Classification accuracy can vary across topics and prompts: an intended target 12 Table 2: Two-attribute-prompt detection matrix. Each column corresponds to outputs generated from a prompt designed to jointly elicit two target attributes, and each row corresponds to the attribute to which the detection key is constrained. Each entry reports the fraction of outputs generated from the column prompt that are detected by the corresponding constrained key. Entries above 50% are highlighted. Variation across prompts may reflect differences in both the token-level entropy of the generated responses and the accuracy of multi-label attribute classification. 
+
+sports_econ art_software medicine_software 
+
+Medicine 32.0% 24.0% 76.0% Economics 86.0% 28.0% 26.0% Art 32.0% 98.0% 26.0% Software 20.0% 98.0% 76.0% Sports 88.0% 32.0% 28.0% Table 3: Mean wall-clock runtime of each scheme stage, in seconds, averaged over 150 runs with 
+
+κ = 100 .Generated tokens Setup No-WM generation WM generation Issue Detect 400 0.000143 5.5573 10.506 0.000887 4.5675 600 0.000137 5.8368 16.437 0.000953 7.3855 attribute may fail to exceed the threshold, or an unrelated attribute may be assigned spuriously, even when the embedded PRC codeword is otherwise recoverable. The reported detection rates therefore reflect the combined effects of the next-token probability distribution, randomness-recovery accuracy, and multi-label attribute-classification accuracy. Consequently, aggregate results may conceal substantial prompt-level heterogeneity. 
+
+Runtime. We measure the wall-clock runtime of each stage of the prototype. The setup stage generates the master secret key and initializes the PRC parameters. The no-wm gen and wm gen 
+
+stages generate an unwatermarked response and a watermarked response, respectively. The issue 
+
+stage produces one unconstrained detection key and one constrained detection key for each attribute in the fixed vocabulary V, where |V| = 5 . The detect stage reports the runtime of a single constrained-key detection, averaged over the five constrained detection keys corresponding to the attributes in V. Thus, the reported value is an average per-key detection time rather than the total time required to run all five constrained keys. 
+
+# Acknowledgements and AI assistance 
+
+The authors thank Shang-Hua Teng, Vatsal Sharan, Elaine Shi, and anonymous reviewers for useful feedback. AI was used to aid in the implementation and experiment creation significantly, primarily though AI-assisted development using Cursor and a variety of models. ChatGPT 5.5 was also utilized for LATEX table generation, as well as formatting and grammatical help. 13 References 
+
+[1] Executive Office of the President. Executive Order 14110 of October 30, 2023: Safe, Secure, and Trustworthy Development and Use of Ar-tificial Intelligence. Federal Register, 88 FR 75191, November 2023. URL https://www.federalregister.gov/documents/2023/11/01/2023-24283/ safe-secure-and-trustworthy-development-and-use-of-artificial-intelligence .Revoked by Executive Order 14148 on January 20, 2025. [2] National Institute of Standards and Technology. Biden–harris administration announces first-ever consortium dedicated to ai safety. https://www.nist.gov/news-events/news/2024/ 02/biden-harris-administration-announces-first-ever-consortium-dedicated-ai ,February 2024. Released February 8, 2024. [3] Reducing risks posed by synthetic content: An overview of technical approaches to digital content transparency. Technical Report NIST AI 100-4, National Institute of Standards and Technology, 2024. [4] U.S. AI Safety Institute. Frontier research on mitigating risks from synthetic content: A call to action. https://www.nist.gov/caisi/ frontier-research-mitigating-risks-synthetic-content-call-action , October 2024. National Institute of Standards and Technology. [5] ICML 2026 Program Chairs. On Violations of LLM Review Policies. ICML Blog, March 2026. URL https://blog.icml.cc/2026/03/18/on-violations-of-llm-review-policies/ .[6] John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In International conference on machine learning , pages 17061–17084. PMLR, 2023. [7] Miranda Christ, Sam Gunn, and Or Zamir. Undetectable watermarks for language models. In 
+
+The Thirty Seventh Annual Conference on Learning Theory , pages 1125–1139. PMLR, 2024. [8] Miranda Christ and Sam Gunn. Pseudorandom error-correcting codes. In Annual International Cryptology Conference , pages 325–347. Springer, 2024. [9] Omar Alrabiah, Prabhanjan Ananth, Miranda Christ, Yevgeniy Dodis, and Sam Gunn. Ideal pseudorandom codes. In Proceedings of the 57th Annual ACM Symposium on Theory of Computing , pages 1638–1647, 2025. [10] Miranda Christ, Noah Golowich, Sam Gunn, Ankur Moitra, and Daniel Wichs. Improved pseudorandom codes from permuted puzzles. arXiv preprint arXiv:2512.08918 , 2025. [11] Sam Gunn, Xuandong Zhao, and Dawn Song. An undetectable watermark for generative image models. In The Thirteenth International Conference on Learning Representations , 2025. URL 
+
+https://openreview.net/forum?id=jlhBFm7T2J .[12] Dan Boneh and Brent Waters. Constrained pseudorandom functions and their applications. In 
+
+International conference on the theory and application of cryptology and information security ,pages 280–300. Springer, 2013. 14 [13] Zvika Brakerski and Vinod Vaikuntanathan. Constrained key-homomorphic prfs from standard lattice assumptions: Or: How to secretly embed a circuit in your prf. In Theory of Cryptography Conference , pages 1–30. Springer, 2015. [14] Geoffroy Couteau, Pierre Meyer, Alain Passelègue, and Mahshid Riahinia. Constrained pseudorandom functions from homomorphic secret sharing. In Annual International Conference on the Theory and Applications of Cryptographic Techniques , pages 194–224. Springer, 2023. [15] Sacha Servan-Schreiber. Constrained pseudorandom functions for inner-product predicates from weaker assumptions. In International Conference on the Theory and Application of Cryptology and Information Security , pages 232–265. Springer, 2024. [16] Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory Chanan, Trevor Killeen, Zeming Lin, Natalia Gimelshein, Luca Antiga, Alban Desmaison, Andreas Köpf, Edward Yang, Zachary DeVito, Martin Raison, Alykhan Tejani, Sasank Chilamkurthy, Benoit Steiner, Lu Fang, Junjie Bai, and Soumith Chintala. PyTorch: An imperative style, high-performance deep learning library. In Advances in Neural Information Processing Systems ,volume 32, pages 8024–8035, 2019. [17] Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue, Anthony Moi, Pierric Cistac, Tim Rault, Rémi Louf, Morgan Funtowicz, Joe Davison, Sam Shleifer, Patrick von Platen, Clara Ma, Yacine Jernite, Julien Plu, Canwen Xu, Teven Le Scao, Sylvain Gugger, Mariama Drame, Quentin Lhoest, and Alexander M. Rush. Transformers: State-of-the-art natural language processing. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , pages 38–45, Online, October 2020. Association for Computational Linguistics. URL https://www.aclweb.org/anthology/2020. emnlp-demos.6 .[18] Meta AI. Llama 3.2 Model Card. https://github.com/meta-llama/llama-models/blob/ main/models/llama3_2/MODEL_CARD.md , 2024. Accessed: 2026-07-30. [19] Meta AI. The llama 3 herd of models, 2024. URL https://arxiv.org/abs/2407.21783 .[20] Jianlyu Chen, Shitao Xiao, Peitian Zhang, Kun Luo, Defu Lian, and Zheng Liu. M3-Embedding: Multi-linguality, multi-functionality, multi-granularity text embeddings through self-knowledge distillation. In Findings of the Association for Computational Linguistics: ACL 2024 , pages 2318–2335, Bangkok, Thailand, August 2024. Association for Computational Linguistics. doi: 10.18653/v1/2024.findings-acl.137. [21] Beijing Academy of Artificial Intelligence. BAAI/bge-reranker-v2-m3. https://huggingface. co/BAAI/bge-reranker-v2-m3 , 2024. Hugging Face model repository; accessed 2026-07-30. [22] Tianrui Wang, Anyu Wang, Tianshuo Cong, Delong Ran, Jinyuan Liu, and Xiaoyun Wang. Cryptanalysis of ldpc-based pseudorandom error-correcting codes. arXiv preprint arXiv:2512.17310 , 2025. 15 A Definitions 
+
+A.1 Pseudorandom Error-Correcting Codes 
+
+Definition 13 (Pseudorandom Code [ 8 , 9 ]) . A secret-key PRC over alphabet Σ with threshold δ
+
+is a tuple of probabilistic polynomial time algorithms (Gen , Encode , Decode ) with the following syntax and properties. 
+
+• Syntax. Let ℓsk , n, k be length functions. 
+
+– Gen (1 κ; r) → sk : On input security parameter κ and randomness r, it outputs a secret key sk ∈ { 0, 1}ℓsk .
+
+– Encode (sk ) → c ∈ Σn: On input a secret key sk , it outputs a codeword c.
+
+– Decode (sk , c ∈ Σn) → 1/0: On input a secret key sk and a word c, it outputs 1 if the decoding succeeds; otherwise, it outputs 0.
+
+• δ-Adaptive Robustness. For every efficient adversary A,
+
+Pr [A wins Gsk −robust  
+
+> PRC ,δ, A
+
+(κ)] ≤ negl (κ),
+
+where Gsk −robust  
+
+> PRC ,δ, A
+
+(κ) is the following security game: 1. The challenger samples sk ← PRC .Gen (1 κ) and initialize transcript τ = ∅.2. The adversary is allowed to make encoding queries. For each encoding query, the challenger responds c = PRC .Encode (sk ) and sets τ ← τ ∪ { c}.3. The adversary sends the challenger c∗.4. The challenger computes d ← PRC .Decode (sk , c ∗). If there exists c ∈ τ such that 
+
+dist (c∗, c ) < δ and d = 0 , then the adversary A wins; otherwise A loses. 
+
+• Soundness. For any fixed word c ∈ Σ∗,
+
+Pr  
+
+> sk ←Gen (1 κ)
+
+[Decode (sk , c ) = 0] ≥ 1 − negl (κ).
+
+• Pseudorandomness. For every probabilistic polynomial-time adversary A, 
+
+> ∣∣∣∣∣
+
+Pr 
+
+> sk ←Gen (1 κ)
+> [
+
+AEncode (sk ,·)(1 κ)
+
+> ]
+
+− Pr 
+
+> [
+
+AU (1 κ) 
+
+> ]∣∣∣∣∣
+
+= negl (κ),
+
+where the oracle U return a uniformly random word in Σn for each query. 
+
+A.2 Constrained Pseudorandom Functions (CPRFs) 
+
+Definition 14 (Constrained Pseudorandom Functions) . Let κ be security parameter and pp be a public parameter as inputs implicit in all algorithms. A Constrained Pseudorandom Function (CPRF) with key space K, domain X , and range Y that supports constraints represented by the class of circuits C, where each C ∈ C maps X to {0, 1}, is a tuple of polynomial time algorithms 
+
+(Gen , Eval , Constrain , CEval ) with the following syntax and properties. 
+
+• Syntax. 16 – Gen (1 κ) → msk : The randomized key generation algorithm takes as input a security parameter κ and outputs a master secret key msk ∈ K .
+
+– Eval (msk , x ) → y: The deterministic evaluation algorithm takes as input the master secret key msk and input x ∈ X , and outputs y ∈ Y .
+
+– Constrain (msk , C ) → csk : The randomized constrain algorithm takes as input the master secret key msk and a constraint circuit C ∈ C , and outputs a constrained key csk .
+
+– CEval (csk , x ) → y: The deterministic constrained evaluation algorithm takes as input the constrained key csk and an input x ∈ X and outputs y ∈ Y .
+
+• Correctness. For all security parameters κ, all constraints C ∈ C , and all inputs x ∈ X such that C(x) = 1 (authorized), it holds that: 
+
+Pr 
+
+[
+
+Eval (msk , x ) = CEval (csk , x )
+
+∣∣∣∣∣
+
+msk ← Gen (1 κ)
+
+csk ← Constrain (msk , C )
+
+]
+
+≥ 1 − negl (κ)
+
+• Security. Any efficient adversary A has negligible distinguishing advantage 
+
+∣∣∣Pr [1 ← exp CPRF  
+
+> A,0
+
+(κ)] − Pr [1 ← exp CPRF  
+
+> A,1
+
+(κ)] 
+
+∣∣∣ = negl (κ),
+
+where exp CPRF  
+
+> A,b
+
+(κ) is the following security experiment ( b is the challenge bit): 1. Setup : The challenger runs msk ← Gen (1 κ), initializes the set Q := ∅, and runs A(1 κ).2. Pre-challenge queries : A adaptively sends arbitrary inputs x ∈ X to the challenger. For each x, the challenger computes y := Eval (msk , x ), sends y to A, and proceeds to update Q := Q ∪ { x}.3. Constrain queries : A sends one constraint C ∈ C to the challenger. The challenger computes csk ← Constrain (msk , C ), and sends csk to A.4. Challenge queries : For the single challenge query, A sends input x∗ ∈ X as its challenge query, subject to the restriction that x∗ /∈ Q and C(x∗) = 0 . If b = 0 , the challenger computes y∗ = Eval (msk , x ∗). Else, if b = 1 , the challenger samples y∗ ← Y . The challenger sends y∗ to A.5. A outputs a bit as its guess. 
+
+# B Theoretical Proofs 
+
+Theorem 12 asserts that Construction 1 satisfies four key properties, which we prove one by one in the next four lemmas (Lemmas 15 to 18). 2
+
+Lemma 15. Construction 1 satisfies consistency (Definition 8). Proof. Let f ∈ F and dk f ← Issue (msk , f ) = CPRF .Constrain (msk , f ). For every x ∈ X , by the correctness of CPRF, we have 
+
+CPRF .Eval (msk , x ) = CPRF .CEval (dk f , x )
+
+> 2For simplicity, the lemmas are stated for classifiers that are consistent and adversarially robust with negligible error. The latter requirement on the negligible error rate can be relaxed based on the concrete target error rate of the watermarking security.
+
+17 with probability 1 − negl (κ). Notice that in the construction, MasterDetect (msk , out ) and 
+
+Detect (dk f , out ) derive r from CPRF .Eval (msk , x ) and CPRF .CEval (dk f , x ) respectively using 
+
+x = Classifier (out ), and performs the same deterministic computation afterwards. Therefore, 
+
+MasterDetect (msk , out ) = Detect (dk f , out ) holds with probability 1 − negl (κ).
+
+Lemma 16. Construction 1 satisfies adaptive robustness with detection against a constant δ fraction of adversarial corruptions (Definition 9). Proof. Let f ∈ F be any policy and A be any probabilistic polynomial-time adversary. Let 
+
+T = poly (κ) be the running time of A. Consider the following probabilities. 
+
+• Let p0 be the probability that the security game GRobust  
+
+> κ,f, W
+
+(A) outputs 1.
+
+• Let p1 be the probability that the following modified security game outputs 1. The modified security game makes the following changes. 
+
+– Additionally sample a uniform j ∈ { 1, 2, . . . , T } and initialize a set T ← ∅ .
+
+– For each generation query made by A with prompt π, additionally compute x ←
+
+Classifier (Model (π)) and check if f (x) = 0 , the special value ˜x is unset, and x̸ ∈ T . If so, update T ← T ∪ { x}. If |T | = j, set a special value ˜x ← x. The rest of the steps for handling a generation query are the same. 
+
+– The modified security game outputs 1 if both the original conditions and the condition 
+
+Classifier (out ∗) = ˜x hold. The original security game only accepts when dist (out ∗, S) < δ , i.e., when there exists 
+
+out ∈ S such that dist (out ∗, out ) < δ . By the adversarial robustness of the classifier, we have 
+
+Classifier (out ∗) = Classifier (out ) except with negligible probability. Therefore, up to a negligible probability, the original security game only outputs 1 when Classifier (out ∗) ∈ T .Since ˜x is chosen from the set T according to an independently sampled j ∈ { 1, 2, . . . , T },the conditional probability of Classifier (out ∗) = ˜x is at least 1 
+
+> T
+
+, and therefore we have 
+
+p1 ≥ p0−negl (κ) 
+
+> T
+
+.
+
+• Let p2 be the probability that the following modified security game outputs 1. The modified security game makes the following changes to the previous game. 
+
+– Additionally sample a secret key sk ← PRC .Gen (1 κ).
+
+– For each generation query made by A with prompt π, additionally compute x ←
+
+Classifier (Model (π)) and check if f (x) = 0 and x = ˜x. If so, compute the corresponding output as out ← Model (π; PRC .Generate (sk )) instead. 
+
+– The same conditions are used to determine the output of the security game, except that the computation of MasterDetect (msk , out ∗) is replaced with the following procedure: 
+
+∗ Compute c ← RandRecover (out ).
+
+∗ Compute d ← PRC .Dec (sk , c ).
+
+∗ Output 0 if and only if d = 0 .Notice that by construction, MasterDetect (msk , out ∗) runs exactly the above procedure, except that MasterDetect (msk , out ∗) derives sx and uses sx instead of sk , where x ←
+
+Classifier (out ∗). Recall that the security game also checks x = ˜x.18 Since we have the guarantee that f (˜x) = 0 , by the security of CPRF, even though the adversary holds dk f ← Issue (msk , f ) = CPRF .Constrain (msk , f ), the value r˜x = CPRF .Eval (msk , ˜x)
+
+is still indistinguishable from a random element. Moreover, the pseudorandomness of PRG 
+
+and the pseudorandomness of r˜x implies that the value PRG (r˜x) is indistinguishable from a random string. Therefore, the adversary cannot distinguish if s˜x = PRC .Gen (1 κ; r˜x) is changed to sk ← PRC .Gen (1 κ), which implies |p1 − p2| ≤ negl (κ).
+
+• Using f and A, we build an efficient adversary B against the adaptive robustness property of 
+
+PRC , where we define B as follows. 
+
+– Generate msk ← Setup (1 κ) and dk f ← Issue (msk , f ).
+
+– Sample a uniform j ∈ { 1, 2, . . . , T } and initialize a set T ← ∅ .
+
+– Run A with input dk f . Whenever A makes a generation query on prompt π, run 
+
+x ← Classifier (Model (π)) . If f (x) = 1 , compute and return out ← Generate (msk , π ).If f (x) = 0 , proceed as follows: 
+
+∗ If the special value ˜x is still unset and if x̸ ∈ T , update T ← T ∪ { x}. If |T | = j, set a special value ˜x ← x.
+
+∗ If ˜x = x, query the oracle given in the adaptive robustness security game of PRC 
+
+on input π to obtain a codeword c. Return out ← Model (π; c).Otherwise, compute and return out ← Generate (msk , π ).
+
+– At some point, A outputs out ∗.
+
+– Abort if Classifier (out ∗)̸ = ˜x.
+
+– Output c∗ ← RandRecover (out ∗).Notice that B produces out ∗ the same way as A does in the previous security game because the queries are handled identically. In addition, B is efficient because it runs the efficient adversary A and additional efficient algorithms. Let p3 be the probability that B breaks the adaptive robustness of PRC . We have 
+
+p3 ≥ Pr 
+
+> [
+
+∃ c ∈ S PRC with dist (c, c ∗) < 2δ
+
+PRC .Decode (sk , c ∗) = 0 
+
+> ]
+
+≥ Pr 
+
+> [
+
+∃ out ∈ S with dist (out, out ∗) < δ 
+
+PRC .Decode (sk , c ∗) = 0 
+
+> ]
+
+− negl (κ)
+
+≥ Pr 
+
+> ˜
+
+x = x∗
+
+∃ out ∈ S with dist (out, out ∗) < δ 
+
+PRC .Decode (sk , c ∗) = 0  
+
+> 
+
+− negl (κ)= p2 − negl (κ),
+
+where the first inequality follows from the robust randomness recovery property, i.e., dist (out, out ∗) <δ implies dist (c, c ∗) < 2δ except with negligible probability, where c is the first n bits of the randomness used by Model to generate out . The second inequality is due to the fact that the probability does not increase under the intersection of events. The equality is by the definition of p2. By the adaptive robustness of PRC applied to B, we have p3 ≤ negl (κ), and therefore 
+
+p2 ≤ negl (κ).Combining all of the above, we conclude that p0 ≤ T · (|p1 − p2| + p2) + negl (κ) ≤ negl (κ).19 Lemma 17. Construction 1 satisfies undetectability (Definition 10). Proof. Let f ∈ F be any policy and A be any probabilistic polynomial-time adversary. Consider the following probabilities. 
+
+• p0 is the probability that AEnv (1 κ,f ) outputs 1. Recall that upon being queried a prompt π,
+
+Env (1 κ, f ) will respond with an output computed as out ← Generate (msk , π ). By construc-tion, Generate (msk , π ) performs the following: 
+
+– x ← Classifier (Model (π)) 
+
+– rx ← CPRF .Eval (msk , x )
+
+– sx ← PRC .Gen (1 κ; PRG (rx)) 
+
+– c ← PRC .Enc (sx, m 0)
+
+– out ← Model (π; c)
+
+• p1 is the probability that AEnv 1(1 κ,f ) outputs 1, where we define Env 1(1 κ, f ) by modifying 
+
+Env (1 κ, f ) in the following manner. Upon being queried a prompt π, it additionally computes 
+
+x ← Classifier (Model (π)) and checks if f (x) = 0 . If so, it would proceed differently as follows: 
+
+– Maintain a set of pairs P ⊆ X × Y initialized as an empty set P ← ∅ .
+
+– If there is an entry (x, y ) ∈ P , then set rx = y. Otherwise, sample a uniformly random element y ← Y , set rx = y, and update P ← P ∪ { (x, y )}.
+
+– sx ← PRC .Gen (1 κ; PRG (rx)) 
+
+– c ← PRC .Enc (sx, m 0)
+
+– out ← Model (π; c)
+
+Since f (x) = 0 , by the security of CPRF, the value CPRF .Eval (msk , x ) is indistinguish-able from a random element against an adversary who holds dk f ← Issue (msk , f ) = 
+
+CPRF .Constrain (msk , f ). Therefore, |p0 − p1| ≤ negl (κ).
+
+• p2 is the probability that AEnv 2(1 κ,f ) outputs 1, where we define Env 2(1 κ, f ) by modifying 
+
+Env 1(1 κ, f ) in the following manner. Upon being queried a prompt π, it additionally computes 
+
+x ← Classifier (Model (π)) and checks if f (x) = 0 . If so, it would proceed differently as follows: 
+
+– Maintain a set of pairs P′ ⊆ X × { 0, 1}poly (κ) initialized as an empty set P′ ← ∅ .
+
+– If there is an entry (x, z ) ∈ P ′, then set sx = z. Otherwise, sample z ← PRC .Gen (1 κ),set sx = z, and update P′ ← P ′ ∪ { (x, z )}.
+
+– c ← PRC .Enc (sx, m 0)
+
+– out ← Model (π; c)
+
+By the pseudorandomness of PRG , the output of PRG under a random seed is computationally indistinguishable from a random element, so |p1 − p2| ≤ negl (κ).
+
+• p3 is the probability that AEnv 3(1 κ,f ) outputs 1, where we define Env 3(1 κ, f ) by modifying 
+
+Env 2(1 κ, f ) in the following manner. Upon being queried a prompt π, it additionally computes 
+
+out ′ ← Model (π), x ← Classifier (out ′) and checks if f (x) = 0 . If so, it would proceed differently as follows: 20 – Sample a fresh random string c, and set out ← Model (π; c)
+
+By the pseudorandomness of PRC , a random output of PRC under a randomly fixed secret key is computationally indistinguishable from a fresh random string. Therefore, |p2 − p3| ≤ negl (κ).
+
+• p4 is the probability that AEnv ′(1 κ,f ) outputs 1. Notice that the only difference between 
+
+Env 3(1 κ, f ) and Env ′(1 κ, f ) is that when f (x) = 0 , the former samples a new out ← Model (π),while the latter sets out ← out ′, where out ′ was also sampled from Model (π). We see that 
+
+out, out ′ follow the same distribution. In computing p3 and p4, these outputs were additionally used to compute the attributes. Hence, the only scenario where Env 3(1 κ, f ) and Env ′(1 κ, f )
+
+differ is when the attributes are different. Since the classifier is η-consistent on Model , we have 
+
+|p3 − p4| ≤ Pr 
+
+> out,out ′←Model (π)
+
+[Classifier (out )̸ = Classifier (out ′)] ≤ 1 − η ≤ negl (κ)
+
+By the triangle inequality, we conclude that 
+
+∣∣∣Pr 
+
+[
+
+1 ← A Env (1 κ,f )]
+
+− Pr 
+
+[
+
+1 ← A Env ′(1 κ,f )]∣ ∣∣ = |p0 − p4| ≤ negl (κ).
+
+Lemma 18. Construction 1 satisfies soundness (Definition 11). Proof. Let f ∈ F be any policy and A be any probabilistic polynomial-time adversary. Consider the following probabilities. 
+
+• Let p0 be the probability that A wins the security game GSound  
+
+> κ,f, W
+
+, in which A produces an output out ∗ and one computes x∗ ← Classifier (out ∗), c ∗ ← RandRecover (out ∗). A wins if f (x∗) = 0 and MasterDetect (msk , out ∗) = 1 . Recall from construction that the latter condition for MasterDetect is equivalent to computing 
+
+– rx∗ ← CPRF .Eval (msk , x ∗)
+
+– sx∗ ← PRC .Gen (1 κ; PRG (rx∗ )) 
+
+and checking if PRC .Dec (sx∗ , c ∗) = 1 .
+
+• Let p1 be defined similarly as p0, except that in the final MasterDetect computation, if 
+
+f (x∗) = 0 , we replace rx∗ ← CPRF .Eval (msk , x ∗) with a uniformly random value r∗ in the range of CPRF . By the security of the constrained PRF, from the view of an adversary A
+
+who only receives dk f ← Issue (msk , f ) = CPRF .Constrain (msk , f ), it cannot distinguish 
+
+rx∗ from a random value when f (x∗) = 0 , so |p0 − p1| ≤ negl (κ).
+
+• Let p2 be defined similarly as p1, except that in the final MasterDetect computation, if 
+
+f (x∗) = 0 , we replace sx∗ ← PRC .Gen (1 κ; PRG (r∗)) with a freshly sampled PRC key 
+
+s∗ ← PRC .Gen (1 κ). By the pseudorandomness of PRG , |p1 − p2| ≤ negl (κ). Since s∗ is a fresh PRC key, by the soundness of PRC , for any fixed c,
+
+Pr  
+
+> s∗←PRC .Gen (1 κ)
+
+[PRC .Dec (s∗, c ) = 1] ≤ negl (κ).
+
+Applying this to c∗, we have p2 ≤ negl (κ).
+
+Combining the above, we obtain p0 ≤ | p0 − p1| + |p1 − p2| + p2 ≤ negl (κ).21 C Experimental Details 
+
+Sources of error and other limitations: 
+
+• Classification . The MNLI model will randomly misclassify the generated text significantly, which results in an error since the result of CPRF is affected. Using a different implementation of classification may be able to easily improve this prototype. 
+
+• RandRecovery . When token sampling has low entropy during watermarked generation, it reduces the opportunity for the provided randomness to be encoded, later reducing recovery accuracy. Additionally, since the RandRecovery implementation uses the non-special token index of each token in the text to recreate the relevant partitions and reclaim the randomness, it must identify retokenization discrepancies, and throw away more random bits to re-align itself, further impacting recovery success. This also makes the RandRecovery implementation extremely susceptible to deletion or insertion attacks. 
+
+• PRC . As shown in Fig. 1, the false positive rate of the scheme directly follows that of the bare PRC attempting to decode a random, unrelated sequence. Using PRC implementations with better false positive rates will directly improve the FPR of the watermarking scheme. Our theoretical results model the PRC as an abstract primitive satisfying pseudorandomness, soundness, and adaptive robustness. These guarantees should be distinguished from the security of any particular concrete implementation. Recent work by [ 22 ] presents cryptanalytic attacks against certain LDPC-based PRC instantiations, including attacks that exploit their concrete algebraic and decoding structure. Thus, while these results do not contradict our generic construction, they highlight that a practical deployment must instantiate the scheme with a PRC whose concrete security has been carefully evaluated. 
+
+• Prompt variety . Benchmarks were repeatedly ran on a few arbitrarily picked demonstrative prompts to show feasibility of the watermarking scheme. 
+
+• Sample size . Due to computational limitations, all benchmarks were only ran with sample sizes of 100-500. Access to more computing would enable higher confidence analysis of behavior. 22 Table 4: Prompts used for the single-label benchmark (Table 1), with sample output snippets. 
+
+κ = 100 , ρ = 3 .
+
+Prompt Unwatermarked Generation Watermarked Generation Labels 
+
+Explain how stem cell therapy is being used in regenerative medicine. Stem cell therapy is a rapidly evolving field in regenerative medicine, where stem cells are used to repair, replace, or regen-erate damaged or diseased tissues and organs. Here’s an overview of how stem cell therapy is be-ing used in regenerative medicine: [...truncated] Stem cell therapy, also known as stem cell treatment or regenera-tive medicine, is a type of medical treatment that uses stem cells to repair or replace damaged or dis-eased tissues and organs. Here’s an overview of how [...truncated] medicine Explain the economic effects of raising the minimum wage on em-ployment and businesses. Raising the minimum wage can have both positive and negative economic effects on employment and businesses. Here are some of the key effects: **Positive effects:** 1. **Increased consumer spend-ing**: Higher minimum wages can lead to increased consumer spending, [...truncated] Raising the minimum wage can have both positive and negative economic effects on employment and businesses. Here are some of the key effects: **Positive effects:** 1. **Increased wages for low-income workers**: Raising the minimum wage can lead to higher wages [...truncated] economics Explain how Surrealist artists used dream imagery to challenge reality and logic. Surrealist artists, a group of 20th-century artists who sought to challenge reality and logic, used dream imagery as a primary tool to achieve this goal. By tapping into the subconscious mind and exploring the realm of the irra-tional, they created [...truncated] Surrealist artists, a group of French artists led by André Bre-ton, used dream imagery to chal-lenge reality and logic in their works, particularly in the 1920s and 1930s. This movement was characterized by the exploration of the subconscious mind, [...trun-cated] art Break down the most influential software breakthroughs in history. Here’s a breakdown of some of the most influential software break-throughs in history: 1. **The Development of the First Computer (1936)**: Charles Babbage’s Analytical En-gine, designed in the 19th century, was the first mechanical computer. [...truncated] There have been numerous in-fluential software breakthroughs throughout history. Here’s abreakdown of some of the most significant ones: 1. **Computer Algorithms (1950s-1960s)**: The develop-ment of algorithms like the Quick Sort, Merge Sort, and Binary Search [...truncated] software Explain the role of strategy and teamwork in achieving success in sports. Strategy and teamwork are cru-cial components of success in sports, as they enable athletes to work together, adapt to different game situations, and overcome obstacles to achieve their goals. [...truncated] Strategy and teamwork are cru-cial elements in achieving success in sports. Both are essential com-ponents that work together to drive performance, build relation-ships, and foster a winning cul-ture. [...truncated] sports 
+
+23 Table 5: Prompts used for the multiple-label benchmark (Table 2), with sample output snippets. 
+
+κ = 100 , ρ = 3 .
+
+[ID] Prompt Unwatermarked Genera-tion Watermarked Generation Labels 
+
+[sports_econ] Explain the economic nuance and impact of Drake Maye during his col-lege football career at North Carolina. Drake Maye is a standout quarterback in college football, playing for the University of North Carolina Tar Heels. His economic nuance and impact on the team are multifaceted and significant. **Economic Nuance:** 1. **Financial Aid:** Maye’s family is considered to be of modest means, and he received a significant amount of finan-cial aid to help cover the costs of attending the University of North Carolina. [...truncated] Drake Maye is a college foot-ball player who currently plays as a quarterback for the North Carolina Hurricanes. During his college career, Maye was a key player and a rising star in the ACC. Here’s an analysis of the economic nuance and im-pact of his career: **Economic Nuance:** 1. **Marketing and Brand-ing**: Maye’s college football career generated significant at-tention and media coverage, which led to increased brand awareness and exposure for the Carolina brand. [...truncated] economics, sports 
+
+[art_software] Explain how software has transformed the art world. Software has significantly transformed the art world in various ways, revolutionizing the way artists create, exhibit, and interact with their work. Here are some key ways software has impacted the art world: 1. **Digital Art Creation**: Software has enabled artists to create digital artworks that can be easily shared, printed, and displayed. Digital art has opened up new possibilities for artists to experiment with dif-ferent styles, techniques, and mediums. [...truncated] Software has revolutionized the art world in several ways, transforming the way artists create, collaborate, and exhibit their work. Here are some key ways software has impacted the art world: 1. **Digital Artistic Tools**: Software has enabled artists to create digital art, which can be easily shared and exhibited. Tools like Adobe Photoshop, Corel Painter, and Clip Studio Paint allow artists to manip-ulate and edit digital images, creating new and innovative forms of art. [...truncated] art, software 
+
+[medicine_software] Ex-plain how software has transformed the practice of medicine. Software has revolutionized the practice of medicine in numerous ways, transforming the way healthcare profession-als approach diagnosis, treat-ment, and patient care. Here are some key ways software has impacted the practice of medicine: [...truncated] Software has revolutionized the practice of medicine in nu-merous ways, transforming the way healthcare professionals di-agnose, treat, and manage pa-tients. Here are some key ex-amples: [...truncated] medicine, software 
+
+24

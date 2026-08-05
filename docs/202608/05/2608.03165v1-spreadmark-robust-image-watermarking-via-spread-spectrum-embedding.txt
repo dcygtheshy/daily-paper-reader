@@ -1,0 +1,615 @@
+Title: SpreadMark: Robust Image Watermarking via Spread-Spectrum Embedding
+
+URL Source: https://arxiv.org/pdf/2608.03165v1
+
+Published Time: Wed, 05 Aug 2026 00:33:45 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# SpreadMark : Robust Image Watermarking via Spread-Spectrum Embedding 
+
+## Wei Song 1∗, Yuxin Cao 2∗, Zhenchang Xing 3, Liming Zhu 3,Jin Song Dong 2, Yulei Sui 1, Jingling Xue 1
+
+> 1
+
+University of New South Wales, Australia 
+
+> 2
+
+National University of Singapore, Singapore 
+
+> 3
+
+CSIRO’s Data61, Australia 
+
+Abstract 
+
+Invisible image watermarks are increasingly used for deepfake detection and provenance tracking, where they must survive not only incidental distortions but also deliberate removal. We revisit spread-spectrum embedding, a classical watermarking principle, inside a modern neural post-hoc watermarking ar-chitecture. Our starting point is a measurement: in existing encoder–decoder schemes each message bit occupies only a small fraction of the image, a shared contributing factor to their fragility, since removal then need only disturb the region a bit occupies. SpreadMark instead spreads each bit as a dense pseudo-random codeword over the whole image and re-covers it by matched-filtering a learned cover-suppressed chip representation, with a parallel convolutional decoding path and sparsification-aware training. A conditional chip-space analysis shows that, under a codeword-independent pertur-bation model, dense spreading increases the budget required to disrupt matched-filter recovery. Evaluated on COCO and DIV2K against nine schemes, SpreadMark is the only eval-uated method retaining high detection under both the regener-ation and the latent-space sparsification settings we test, with competitive JPEG and additive-noise robustness. It keeps the embedded watermark imperceptible, maintaining high per-ceptual quality on both COCO and DIV2K. 
+
+## Introduction 
+
+The deployment of generative models for photorealistic im-age synthesis has made invisible watermarking a frontline tool for provenance and deepfake mitigation (Fernandez et al. 2023; Yang et al. 2024; Wen et al. 2023; Bui, Agarwal, and Collomosse 2023). The dominant paradigm is the encoder– decoder watermarking scheme, in which a learned encoder embeds a message b into a cover image x to produce a visu-ally identical xw = E(x, b ), and a learned decoder recovers 
+
+b from xw or a distorted derivative. Post-hoc schemes (Zhu et al. 2018; Jia, Fang, and Zhang 2021; Ma et al. 2022; Wu, Liao, and Ou 2023; Bui, Agarwal, and Collomosse 2023; Zhang et al. 2019; Sander et al. 2025) all follow this tem-plate, and many generation-time schemes (Yang et al. 2024; Ci et al. 2024; Lu et al. 2025) fold the same encoder–decoder design into the latent space of a generative model. For provenance, a watermark must survive not only in-cidental distortions such as JPEG compression, noise, blur, 
+
+> ∗
+
+These authors contributed equally. 
+
+and cropping, but also deliberate erasure, now both prac-tical and varied: adversarial perturbations optimize against the decoder, regeneration attacks rewrite the image through a generative model (An et al. 2024; Ni et al. 2025), and latent-space sparsification suppresses the watermark in a query-free, black-box manner (Song et al. 2026). A watermark offered as evidence of origin is only as trustworthy as its weakest point under this combined threat. One factor is shared across these attacks: concentrated residual embedding. Trained only to be imperceptible and decodable, the encoder is free to place each bit in a small part of the image, and we measure that it does (Figure 2). Such a footprint is a plausible weak point for every removal attack we consider: a distortion corrupts the local residual, an adversarial step suppresses the decoder-sensitive features, a regeneration pass rewrites the non-semantic trace, and a latent-space sparsification removes the compact subspace, each by disturbing only the small region the bit occupies. We take this as a motivating structural hypothesis, not a demon-strated cause; it suggests distributing each bit as widely across the image as the imperceptibility budget allows. Spreading a message over many dimensions is a classi-cal idea, not a new one: spread-spectrum communication distributes a low-rate message across a wide band through pseudo-random codes and recovers it by correlation (Proakis and Salehi 2008; Viterbi 1995), and classical image water-marking applied the same principle over transform-domain coefficients (Cox et al. 1997). SpreadMark brings this prin-ciple into a neural post-hoc watermarking architecture: each bit is assigned a fixed pseudo-random codeword spanning the image, the message is embedded as the superposition of the selected codewords on top of a learned residual, and the decoder correlates a learned cover-suppressed chip represen-tation against the same codeword bank, retaining a convolu-tional path as a fallback where a fixed spatial code desynchro-nizes. A sparsification-aware training stage further hardens the learned decoder against low-rank feature suppression. We analyze the resulting receiver in chip space. When the perturbation an attack induces there is statistically indepen-dent of the secret codebook, the attacker cannot align it with any codeword, and the budget needed to disrupt matched-filter recovery grows with how widely each bit is spread. Empirically, this dense-spreading design yields strong ro-bustness under regeneration and latent-space sparsification arXiv:2608.03165v1 [cs.CR] 4 Aug 2026 Figure 1: Overview of SpreadMark . The encoder adds to cover image x a learned CNN residual gθ (x, b ) and a spread-spectrum signal s(b) superposing one secret codeword per bit. From a possibly attacked x′, the decoder fuses a learned head hi with a per-bit-gated matched-filter statistic ρi = ⟨ˆz, c i⟩/d on a cover-suppressed chip ˆz. Bottom: under the codeword-independent perturbation model of Theorem 1, broad spreading raises the removal budget to B = Ω( αd/ √K).and remains comparable to the best baselines under JPEG compression and additive noise. In summary, we make four contributions: 
+
+• We measure the image-space per-bit footprint of nine schemes and find it uniformly small, and we advance this as a motivating hypothesis for their fragility rather than a demonstrated cause of it. 
+
+• We propose SpreadMark , combining pseudo-random spread-spectrum injection, sparsification-aware training, and a learned cover-suppressed chip decoded by matched-filter and convolutional paths. 
+
+• We give a conditional chip-space guarantee: under a codeword-independent perturbation model, dense spread-ing increases the budget an attacker needs to disrupt recov-ery by the matched filter. 
+
+• We evaluate SpreadMark on COCO and DIV2K against nine schemes under four attack families, trace its behavior through ablations, and state plainly where it fails. 
+
+## Related Work 
+
+Image Watermarking. Image watermarking has developed along two directions. HiDDeN (Zhu et al. 2018) established the post-hoc encoder–decoder template, embedding a mes-sage and recovering it after a differentiable noise layer; later schemes extend it with mixed real and simulated JPEG (Jia, Fang, and Zhang 2021), attention-based encoding (Zhang et al. 2019), invertible networks (Ma et al. 2022), separable robust and fragile components (Wu, Liao, and Ou 2023), universal pretrained systems (Bui, Agarwal, and Collomosse 2023; Sander et al. 2025), edit localization (Zhang et al. 2024b), provable robustness (Xian et al. 2024), higher ca-pacity (Evennou, Chappelier, and Kijak 2025), and decou-pled defenses (Chen et al. 2026). Generation-time schemes instead embed during synthesis, by fine-tuning the latent de-coder (Fernandez et al. 2023), structuring the initial or sam-pling noise (Wen et al. 2023; Yang et al. 2024; Ci et al. 2024), injecting marks into latents (Zhang et al. 2024a), learning a diffusion prior (Lu et al. 2025), or binding the mark to seman-tics (Arabi et al. 2025; Zhang et al. 2026), the last being vul-nerable to coherence-preserving removal (Gao et al. 2026). 
+
+SpreadMark belongs to the first direction: it watermarks an existing image, independent of how it was produced, so we compare against post-hoc schemes and treat generation-time watermarking as a complementary line that requires control of the synthesis process, and hence a different deployment model from the post-hoc setting we study. 
+
+Watermarking Attacks. We consider four families: standard distortions; white-box adversarial removal, which optimizes a perturbation against the decoder by projected gradient de-scent; regeneration, which rewrites the image through a gen-erative model while preserving content and can substantially weaken a watermark in a single pass (An et al. 2024; Ni et al. 2025); and latent-space sparsification, which suppresses it through low-rank feature projections in a query-free, black-box setting (Song et al. 2026). None of the nine schemes we evaluate withstands all four families. 
+
+Spread-Spectrum Watermarking. Spreading a message across many carriers is a classical principle, not a contri-bution of this work. Cox et al. (1997) brought spread spec-trum (Proakis and Salehi 2008; Viterbi 1995) to multimedia, embedding an i.i.d. Gaussian carrier in perceptually signifi-cant DCT coefficients and detecting it by normalized corre-lation; improved spread spectrum cancels host interference at the correlator (Malvar and Florêncio 2003), and the con-20.00 0.05 0.10 0.15 0.20   
+
+> Per-bit footprint Footprint(∆ i)
+> DwtDctSvd
+> WAM
+> RivaGAN
+> TrustMark
+> HiDDeN
+> SepMark
+> MBRS
+> StegaStamp
+> CIN
+> SpreadMark
+> 0.005
+> 0.027
+> 0.046
+> 0.082
+> 0.090
+> 0.091
+> 0.094
+> 0.105
+> 0.133
+> 0.182
+> more concentrated more spread
+> COCO
+> DIV2K
+
+Figure 2: Image-space per-bit footprint on COCO and DIV2K. For each scheme we flip one bit, forming ∆i (Eq. 1), and compute Footprint(∆ i) (Eq. 2), the effective fraction of image-space coordinates it occupies. struction was carried into video (Hartung and Girod 1998). Learned schemes have also distributed the mark spatially: Plata and Syga (2020) train a CNN encoder to spread the mes-sage over the spatial domain and lower the local bit density, Fernandez et al. (2022) modulate a message into the signs of projections onto random orthogonal carriers in a frozen self-supervised feature space, and dispersed watermarking replicates the message across randomly placed blocks and re-synchronizes them at extraction (Guo et al. 2023). Spread-Mark is therefore not the first scheme to distribute water-mark information spatially. Its novelty is the combination: an explicit pseudo-random codeword per bit injected in the image domain alongside a learned residual, a learned cover-suppressed chip representation on which the matched filter operates, parallel matched-filter and convolutional decod-ing paths under a per-bit gate, sparsification-aware training, and a systematic evaluation against regeneration and latent-space removal. Relative to the classical transform-domain constructions the carrier is dense in the pixel basis and the correlator input is learned rather than fixed; relative to prior neural spatial-spreading schemes the code is explicit and shared by encoder and decoder rather than implicit in the en-coder, which is what makes the matched-filter path separately ablatable and analyzable, unlike an implicit code. 
+
+## Preliminary Analysis 
+
+We first measure, in image space on the watermarked output, how widely existing watermarks distribute a single message bit. We study the nine schemes listed in Table 1, using 300 watermarked images per dataset from COCO and DIV2K. For a fixed image and watermark, we flip the i-th bit and compute the resulting change vector: 
+
+∆i = vec 
+
+
+
+u(x, b (i=1) ) − u(x, b (i=0) )
+
+
+
+∈ Rd, (1) where u(·) is the watermarked output image and vec( ·) flat-tens it. The per-bit footprint is the normalized participation ratio of this change vector: 
+
+Footprint(∆ i) = 1
+
+d ·
+
+Pdj=1 ∆2
+
+> i,j
+
+2
+
+Pdj=1 ∆4
+
+> i,j
+
+. (2) This estimates the effective fraction of image-space coordi-nates carrying the bit-induced change: it approaches 1 for a uniform change and is approximately m/d when the same en-ergy is concentrated in m coordinates, so it measures how far a bit is spread independently of how strongly it is embedded. Figure 2 shows that prior schemes have consistently small image-space per-bit footprints and that SpreadMark yields a substantially larger one. Two qualifications apply. The mea-surement is correlational: a larger footprint is consistent with, but does not establish, greater removal robustness, and these schemes differ in architecture, payload, and embedding strength as well as in footprint. It is also specific to image space; an image-space-dense watermark may still be concen-trated once an encoder maps it into a learned latent, which is where latent-space attacks act. We therefore read Figure 2 as motivating the design principle—spread each bit as widely as the imperceptibility budget allows—and test it empirically. 
+
+## Method 
+
+Figure 1 gives an overview of SpreadMark . The encoder su-perposes an explicit spread-spectrum signal on a standard ad-ditive residual, spreading each message bit across the whole image as a fixed pseudo-random codeword. The decoder re-covers it by matched-filtering a cover-suppressed chip rep-resentation against the shared codeword bank, backed by a convolutional head and a per-bit gate. 
+
+Threat Model 
+
+An encoder E : ( x, b ) 7 → xw embeds a K-bit message 
+
+b into a cover image x, and a decoder D : x′ 7 → ˆb esti-mates it from any, possibly attacked, image x′. The defender wants xw visually close to x and ˆb accurate under attack; the attacker receives xw and outputs xa, reducing message re-covery while preserving visual quality. Our four attack types are standard distortions and regeneration, both oblivious to the watermark; latent-space sparsification, query-free and black-box, with no access to the codewords or decoder; and adversarial removal, white-box, with full gradient access to the decoder and hence the codewords. The codebook is as-sumed secret throughout and is never rotated, an assumption whose consequences the Discussion sets out in full. 
+
+Spread-Spectrum Embedding 
+
+Prior schemes place most of each bit’s energy in a low-dimensional subspace of the d = HW image-space directions (Figure 2). In contrast, SpreadMark adopts the additive-residual design of HiDDeN (Zhu et al. 2018), xw = Π  x +
+
+3gθ (x, b ), with gθ a small CNN and Π a clip to the valid range, and augments it with a parallel spread-spectrum injection. We pre-generate K fixed pseudo-random codewords {ci}Ki=1 ,each a single-channel map ci ∈ RH×W with zero mean and unit per-pixel variance ( 1 
+
+> d
+
+∥ci∥22 = 1 ); being i.i.d. Gaussian, distinct codewords are near-orthogonal, ⟨ci, c j ⟩/d ≈ 0 for 
+
+i̸ = j. The encoder embeds the message as: 
+
+xw = Π 
+
+
+
+x + gθ (x, b ) + α 1√K
+
+PKi=1 (2 bi −1) ci
+
+| {z }
+
+> s(b)
+
+
+
+, (3) with s(b) broadcast across RGB channels. The 1/√K factor keeps s(b) at unit per-pixel variance independent of payload, so the learned gain α, a softplus of a free parameter initialized small, is the per-pixel amplitude of the spread component and sets the bit-recovery and visual-quality trade-off. The decoder D couples a matched-filter receiver with a learned convolutional head. Given a possibly attacked image 
+
+x′, a fully-convolutional backbone yields features ψ(x′); a 
+
+1 × 1 projection W maps them to a single-channel, cover-suppressed “chip” map ˆz = W ψ (x′), correlated against the same codeword bank to form the matched-filter statis-tic ρi = ⟨ˆz, c i⟩/d . The unit-variance normalization makes 
+
+⟨ci, c i⟩/d = 1 , so an ideal chip yields ρi ≈ α(2 bi −1) /√K,the sign of bit i. A pooled head h(x′) = Lin h(GAP( ψ(x′))) ,with GAP global average pooling (Lin, Chen, and Yan 2014) and Lin a linear map to the K bits (Goodfellow, Bengio, and Courville 2016), supplies a parallel convolutional decoder, and a per-bit gate γi = σ(Lin γ (GAP( ψ(x′)))) i weights the matched-filter term: 
+
+ˆbi = σ  hi(x′) + γi (ai ρi + βi) , i = 1 , . . . , K, (4) with learnable per-bit gain ai and bias βi. The ρi term is a correlation receiver against the dense code and dominates recovery where the fixed spatial code is preserved, as under JPEG compression and additive noise; the head h, supervised by an auxiliary bit loss so that it remains a competent decoder on its own, supplies robustness under geometric desynchro-nization and is the more resilient path under white-box adver-sarial removal, which targets the correlation receiver directly. The crucial property of (3)–(4) is that each bit’s contribution is dense in the pixel basis, with non-zero projection on all 
+
+d image-space directions, so a perturbation not aligned with the code must disturb a broad fraction of the image in order to erase it, as the next subsection makes precise. 
+
+Sparsification-Aware Adversarial Training 
+
+Of the four attack types, only standard distortions are ad-dressed by training augmentation, which with probability pd
+
+replaces xw by one operation drawn from JPEG compression, Gaussian blur, additive noise, brightness, or crop-resize. Re-generation and white-box removal are never simulated. A sparsification-aware adversarial training (SA-AT) stage does simulate the sparsification attack; empirically it sharpens re-generation and JPEG robustness rather than sparsification, which the model attains without it (Table 3). The attack drives the image’s deep features into a rank-r
+
+subspace while staying close to xw:
+
+xa = arg min  
+
+> ∥δ∥∞≤ε
+
+(I − Ur U ⊤ 
+
+> r
+
+) f (xw +δ) 22, (5) where f is a frozen feature extractor and Ur collects the top-
+
+r singular vectors of its activations on a clean batch; this is the operator used by latent-space sparsification attacks (Song et al. 2026). With probability ps we simulate it during train-ing: sample r ∼ U{ rmin , r max }, take the rank-r basis Ur ,and run T pixel-space gradient steps of (5), recomputing the decomposition only every 200 steps. The surrogate used at evaluation time is built independently of the training one, so robustness does not come from matching a specific attacker. Writing ℓ(z) = BCE( b, z ) for the bit loss against the true message and A for the composition of the two perturbations, each applied independently with its own probability and A =id if neither fires, we train SpreadMark with: 
+
+L = λa ℓ(D(A(xw))) + λb ℓ(D(xw)) + λh ℓ(h(A(xw))) + λv
+
+∥x − xw∥2 + LPIPS( x, x w), (6) where λa is the robustness objective on the perturbed image, 
+
+λb preserves clean accuracy, λh supervises h, and λv controls visual quality through a combined L2 and LPIPS penalty. 
+
+A Conditional Chip-Space Guarantee 
+
+We now make the design intuition precise for an idealized receiver, and state what the model does and does not cover. The codewords act as a secret key shared by encoder and decoder. The decoder reads bit i from ρi = ⟨ˆz, c i⟩/d on the chip ˆz = α s (b) + ν, where s(b) = 1√K
+
+P 
+
+> j
+
+(2 bj − 1) cj
+
+and the codewords obey 1 
+
+> d
+
+∥ci∥22 = 1 , ⟨ci, c j ⟩/d ≈ 0. The term ν collects the cover-suppression residual and cross-code interference; we idealize it as carrying no systematic component along any secret codeword, so the clean statistic concentrates at margin |E ρi| = α/ √K with sign 2bi − 1.
+
+Theorem 1 (Chip-space budget under a codeword-indepen-dent perturbation) . Let an attack map the chip ˆz 7 → ˆz + ∆ ,and assume the induced perturbation ∆ is statistically inde-pendent of the secret codebook {ci} and satisfies ∥∆∥2 ≤ B.Then the induced shift ∆ρi = ⟨∆, c i⟩/d satisfies E[∆ ρi] = 0 
+
+and Var[∆ ρi] ≤ B2/d 2, and 
+
+Pr bbi̸ = bi
+
+ ≤ exp 
+
+
+
+− α2d2
+
+> 2KB 2
+
+
+
+.
+
+Consequently, any such attack whose expected number of flipped bits reaches a constant fraction ρ0 of the K bits must use B ≥ αd/ p2K ln(1 /ρ 0) = Ω( αd/ √K); in pixel space, with an L-Lipschitz chip map and ∥δ∥∞ ≤ ε, this reads 
+
+ε = Ω( α√d/ (L√K)) .Proof Sketch. Write ∆ρi = 1
+
+> d
+
+P 
+
+> j
+
+∆j ci,j with ci,j zero-mean, unit-variance, independent of ∆. Then E[∆ ρi] = 0, Var[∆ ρi] ≤ B2/d 2, and ∆ρi is sub-Gaussian with this variance proxy (Vershynin 2018). A bit flips only if 
+
+∆ρi cancels the margin α/ √K, with probability at most 
+
+exp( −α2d2/(2 KB 2)) . Summing over i gives the expected flip count, and requiring it to reach ρ0K yields the stated budget; ∥∆∥2 ≤ L√d ε converts chip budget to pixel bud-get. The Appendix gives the full argument. 
+
+Scope. The theorem is conditional and idealized, not a ro-bustness proof for the deployed system: dense spreading 4raises the budget required to disrupt matched-filter recov-ery, and that budget falls by roughly √ϕ when a bit occupies only a fraction ϕ of the coordinates. Three restrictions matter. The independence assumption does not hold automatically against an attack that observes xw, since xw itself depends on the codewords. The bound is a first-moment statement, not a high-probability one. And it covers neither adaptive attack-ers who estimate the code, hold the key, or optimize against the full decoder, nor regeneration, compression, denoising, or sparsification, which we treat empirically below. 
+
+## Experiments 
+
+Experiment Setup 
+
+Datasets. We train on 4,500 images from the COCO (Lin et al. 2014) training split and evaluate on 500 held-out COCO images and 500 images from the DIV2K (Agustsson and Timofte 2017) validation set, none seen in training. 
+
+Baselines. We compare SpreadMark against nine schemes, all run from their public implementations, in two groups. HiDDeN (Zhu et al. 2018), MBRS (Jia, Fang, and Zhang 2021), StegaStamp (Tancik, Mildenhall, and Ng 2020), and SepMark (Wu, Liao, and Ou 2023) are re-trained in our pipeline under conditions matched to SpreadMark : same training images, 128 × 128 resolution, K = 30 bits, opti-mizer, schedule, and distortion augmentation. CIN (Ma et al. 2022), TrustMark (Bui, Agarwal, and Collomosse 2023), Ri-vaGAN (Zhang et al. 2019), WAM (Sander et al. 2025), and DwtDctSvd (Barni et al. 1998) run from the authors’ released checkpoints, which we cannot re-train under our protocol, at their native resolution ( 128 for CIN, 256 for the rest) and native payload ( 30 to 64 bits). Each scheme receives images bilinearly resized to its native resolution and every attack is applied there, so a spatial attack such as an 80% crop is geo-metrically equivalent across schemes. The two groups sit at very different quality operating points (Table 2), so robust-ness and imperceptibility must be read jointly rather than as two independent rankings of the same schemes. 
+
+Attacks. Standard distortions: JPEG at quality 75 , additive Gaussian noise of standard deviation 0.05 on the [−1, 1] 
+
+pixel scale, Gaussian blur of kernel standard deviation 2.0,and an 80% center-crop followed by resizing. Adversarial removal: a white-box projected-gradient attack on the de-coder, 30 steps at step size 0.02 , budget ε = 0 .10 , with an 
+
+ε ∈ [0 .02 , 0.10] sweep in the Appendix (Figure 5). Regener-ation: WAVES (An et al. 2024) img2img with Stable Diffu-sion v1.4 (Rombach et al. 2022) at noise strength 0.25 , run at 512 ×512 and resized back to each scheme’s native res-olution. Latent-space sparsification: a query-free black-box attack (Song et al. 2026) that projects the image toward a low-rank subspace within an L∞ constraint. Every attack is applied identically to all ten schemes at native resolution. 
+
+Metrics. Our primary metric is the detection true-positive rate at 1% false-positive rate, abbreviated DA; it is a detec-tion rate, not a classification accuracy. An image is declared watermarked when its matching-bit count reaches τK , the smallest integer with Pr[Binom( K, 12 ) ≥ τK ] ≤ 0.01 . This threshold is analytic under the unwatermarked null, so it is fixed by K alone, consumes no calibration images, and is comparable across payloads. We also report bit accuracy (BA); since detection thresholds the same match count, the two need not move together. For visual quality we report PSNR, SSIM, and LPIPS (Zhang et al. 2018) between the watermarked and cover images, averaged over the test set. 
+
+Training protocol. We train SpreadMark at 128 ×128 with 
+
+K = 30 bits, using Adam at learning rate 10 −3, batch size 
+
+24 , and 60 epochs. Image-quality losses are disabled for the first 3 epochs and ramped in over the next 6; distortion augmentation ( pd = 0 .6) starts at epoch 8. SA-AT fires with probability ps = 0 .5, sampling rank r ∈ [4 , 32] and running 
+
+T = 3 inner steps at budget 0.05 , the rank-r basis refreshed every 200 steps. Every number comes from a single training run per configuration, so we report no seed variance. All models are evaluated on one NVIDIA RTX 6000 Ada GPU. 
+
+Main Results 
+
+Tables 1 and 2 report robustness and visual quality across the four attack families. We walk through them in turn. Under standard distortions SpreadMark is competitive on the photometric cases and weak on the spatial ones: roughly 0.9 BA under JPEG and 1.00 under additive noise on both datasets, with DA 1.00 in each case, but only 0.59 
+
+BA and 0.12 DA under Gaussian blur and 0.66 and 0.24 
+
+under an 80% crop-and-resize, where a fixed spatial code is attenuated by low-pass filtering and desynchronized by re-sampling. TrustMark and RivaGAN, which operate at twice the resolution, keep a clear advantage here. Regeneration is where SpreadMark separates most clearly from the baselines. A single pass erases the faint, high-PSNR schemes: BA falls to 0.49 for TrustMark, 0.50 
+
+for WAM, 0.53 for DwtDctSvd, and 0.67 for RivaGAN, with DA at or near zero, and no baseline exceeds 0.74 BA. Spread-Mark is the most robust evaluated scheme here, at BA 0.78 
+
+and DA 0.77 on COCO ( 0.73 and 0.60 on DIV2K). Under latent-space sparsification SpreadMark holds BA and DA at 1.00 on both datasets, and the margin does not erode as the attacker raises the projection rank. The most exposed are again the faint, high-PSNR watermarks of Trust-Mark, DwtDctSvd, and WAM, whose DA falls to 0.33 , 0.14 ,and 0.20 , while the re-trained baselines and RivaGAN hold their clean detection level. Combining the two, SpreadMark 
+
+is the only evaluated method achieving high detection under both the selected regeneration and sparsification settings. Adversarial removal is the weakest case. Under an ε = 0 .10 
+
+white-box attack SpreadMark reaches BA 0.32 and DA 0
+
+at the reported 30 dB setting, comparable to the gradient-accessible WAM ( 0.16 ). Raising the embedding gain to 24 dB recovers BA 0.86 and DA 0.98 , so robustness here is set by the embedding energy rather than the receiver; the Discussion returns to what this implies for deployment. These results are consistent with the footprint hypothesis of Figure 2, though suggestive rather than conclusive, since 
+
+SpreadMark also differs from the baselines in decoder and training procedure. The clearest available control is embed-ding strength: SpreadMark embeds a fainter watermark than the re-trained baselines ( 30 versus 24 dB, Table 2) yet 5Dataset Method Clean Sparsif. Regen. JPEG Noise Blur Crop Adv. BA ↑ DA ↑ BA ↑ DA ↑ BA ↑ DA ↑ BA ↑ DA ↑ BA ↑ DA ↑ BA ↑ DA ↑ BA ↑ DA ↑ BA ↑ DA ↑                                                                                                                                                                                                                                                                                                                                
+
+> COCO HiDDeN 0.83 0.98 0.82 0.95 0.69 0.40 0.67 0.33 0.82 0.96 0.56 0.06 0.78 0.83 0.49 0.01 MBRS 0.82 0.94 0.80 0.94 0.69 0.33 0.70 0.40 0.81 0.94 0.57 0.04 0.78 0.84 0.48 0.01 StegaStamp 0.74 0.64 0.75 0.66 0.74 0.61 0.74 0.65 0.74 0.67 0.67 0.23 0.74 0.65 0.52 0.02 SepMark 0.84 0.99 0.81 0.94 0.66 0.22 0.63 0.15 0.83 0.99 0.53 0.01 0.74 0.61 0.48 0.01 CIN 0.77 0.63 0.71 0.45 0.52 0.02 0.52 0.00 0.68 0.37 0.49 0.01 0.51 0.01 0.51 0.00 TrustMark 1.00 1.00 0.66 0.33 0.49 0.00 0.97 0.94 1.00 1.00 0.98 0.96 0.99 0.99 0.50 0.01 RivaGAN 0.99 1.00 0.96 0.99 0.67 0.32 0.98 1.00 0.99 1.00 0.99 1.00 0.96 0.98 0.41 0.00 WAM 0.89 0.86 0.65 0.20 0.50 0.00 0.55 0.03 0.83 0.82 0.83 0.82 0.52 0.00 0.16 0.00 DwtDctSvd 1.00 1.00 0.53 0.14 0.53 0.07 0.91 1.00 0.99 1.00 0.87 1.00 0.53 0.02 ––
+> SpreadMark 1.00 1.00 1.00 1.00 0.78 0.77 0.93 1.00 1.00 1.00 0.59 0.12 0.66 0.24 0.32 0.00 DIV2K HiDDeN 0.83 0.98 0.82 0.94 0.68 0.33 0.66 0.32 0.84 0.98 0.56 0.00 0.78 0.78 0.51 0.02 MBRS 0.81 0.96 0.79 0.87 0.69 0.40 0.70 0.45 0.81 0.91 0.58 0.03 0.77 0.76 0.51 0.03 StegaStamp 0.74 0.66 0.75 0.65 0.74 0.66 0.73 0.58 0.75 0.69 0.66 0.21 0.74 0.62 0.53 0.01 SepMark 0.83 0.99 0.82 0.97 0.67 0.30 0.61 0.09 0.84 0.99 0.54 0.06 0.75 0.70 0.50 0.00 CIN 0.74 0.64 0.69 0.42 0.51 0.01 0.50 0.00 0.69 0.39 0.52 0.01 0.49 0.02 0.50 0.01 TrustMark 1.00 1.00 0.61 0.22 0.51 0.01 0.92 0.84 0.98 0.97 0.93 0.87 0.99 0.99 0.50 0.02 RivaGAN 0.99 0.99 0.94 0.99 0.66 0.24 0.96 0.97 0.98 0.99 0.97 0.98 0.93 0.93 0.43 0.00 WAM 0.88 0.84 0.66 0.23 0.51 0.01 0.57 0.07 0.84 0.83 0.83 0.81 0.51 0.00 0.15 0.00 DwtDctSvd 1.00 1.00 0.54 0.11 0.54 0.09 0.91 0.99 0.99 0.99 0.86 0.97 0.52 0.04 ––
+> SpreadMark 1.00 1.00 1.00 1.00 0.73 0.60 0.89 1.00 1.00 1.00 0.58 0.05 0.67 0.31 0.33 0.00
+
+Table 1: Robustness on COCO and DIV2K, reported as bit accuracy (BA) and detection TPR at 1% FPR (DA). Clean is the unattacked watermark, and the attack columns are latent-space sparsification (Sparsif.), regeneration (Regen.), JPEG, noise, blur, crop, and white-box adversarial removal (Adv.). COCO DIV2K PSNR ↑ SSIM ↑ LPIPS ↓ PSNR ↑ SSIM ↑ LPIPS ↓                                                            
+
+> HiDDeN 24.1 0.641 0.102 24.1 0.703 0.091 MBRS 24.1 0.636 0.103 24.1 0.698 0.087 StegaStamp 24.3 0.679 0.152 24.0 0.723 0.142 SepMark 24.3 0.647 0.108 24.2 0.705 0.093 CIN 41.5 0.984 0.001 41.1 0.986 0.001 TrustMark 41.2 0.985 0.001 40.4 0.987 0.001 RivaGAN 40.1 0.980 0.024 40.1 0.985 0.020 WAM 49.7 0.999 0.001 49.1 0.999 0.001 DwtDctSvd 36.9 0.972 0.012 36.0 0.973 0.012
+> SpreadMark 30.1 0.874 0.014 29.4 0.891 0.012
+
+Table 2: Comparing SpreadMark with the nine schemes in visual quality by PSNR, SSIM, and LPIPS. holds regeneration DA at 0.77 where they fall to 0.22 –0.61 ,so the gap is not explained by embedding energy alone. Ta-ble 2 also shows how far apart the quality points are, from 
+
+24 .1 to 49 .7 dB with SpreadMark at 30 .1 dB: more imper-ceptible than the re-trained baselines and markedly less so than all five deployed checkpoints. The robustness columns should be read against that quality difference. 
+
+Ablation Studies 
+
+We ablate SpreadMark along four axes on COCO under the four attack families (Figure 4). These vary components of 
+
+SpreadMark and do not isolate the causal effect of spread-ing relative to the baselines, since SpreadMark also changes the decoder and the training procedure at the same time. 
+
+Operating Point. The embedding gain trades imperceptibil-ity for robustness. From 24 to 38 dB, sparsification stays at 
+
+1.00 in BA and DA, while the others weaken: regeneration BA falls from 0.94 to 0.72 , distortion from 0.84 to 0.74 , and adversarial removal from 0.86 to 0.10 , with DA following. Our 30 dB setting is a deliberate bias toward imperceptibility, and is why adversarial removal is our weakest column. 
+
+Image Resolution. Our primary evaluation is at 128 ×128 ,and behavior is not uniform across scale. Across 64 , 128 ,and 256 pixels, sparsification stays at 1.00 and distortion holds near 0.80 BA and 0.60 DA, but regeneration degrades sharply: BA weakens from 0.93 to 0.57 and DA collapses from 1.00 to near zero, as a fixed-length code spreads more thinly over a larger image. High-resolution regeneration is therefore a genuine limitation of the present design, and we do not claim this result transfers to full-resolution imagery. 
+
+Watermark Payload. Raising the payload from 16 to 64 
+
+bits leaves BA for sparsification, regeneration, and distortion essentially unchanged, while adversarial BA falls from 0.55 
+
+to 0.22 , as each added bit divides a fixed energy budget. DA mirrors this, except that a longer code sharpens the separation from the binomial null, raising regeneration DA from 0.33 
+
+to 0.99 while its bit accuracy stays essentially flat. 
+
+Decoder Path. This ablation speaks most directly to the spreading mechanism, since the two paths share one trained model and differ only in which statistic is read out. The matched filter alone reproduces the full decoder under sparsi-fication ( 1.00 BA), regeneration ( 0.85 ), and distortion ( 0.78 ), so the correlation receiver, not the convolutional head, sup-plies robustness in those three families. The head trails there but overtakes the matched filter under adversarial removal (0.61 versus 0.35 BA), which targets the correlation receiver directly, and is the fallback where the code desynchronizes. This localizes robustness within SpreadMark but does not show that spreading is what distinguishes it from the base-lines; the roles of embedding gain and SA-AT are given by the operating-point ablation and Table 3. 6Cover x Watermarked xw Residual ( ×20 )    
+
+> BA = 1 .00
+> Distortion
+> BA = 0 .50
+> Adversarial
+> BA = 0 .93
+> Regeneration
+> BA = 1 .00
+> Sparsification
+
+Figure 3: Qualitative example for SpreadMark : the cover image, the watermarked image xw, the embedding residual scaled by 20 ×, and xw under the four attack families, each annotated with the BA recovered for this example. 25 30 35             
+
+> PSNR (dB)
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Accuracy
+> (a) Operating point
+> 64 128 256
+> Image size (px)
+> (b) Image resolution
+> 16 30 48 64
+> Payload K(bits)
+> (c) Payload
+> Sparsif.
+> Regen.
+> Distort.
+> Adv.
+> (d) Decoder path
+> Full
+> Matched filter
+> Conv. head
+> Sparsif. Regen. Distort. Adv. BA (bit accuracy) DA (detection accuracy)
+
+Figure 4: Ablations for SpreadMark on COCO under the four attack families. (a) Operating Point: embedding gain sweeping imperceptibility from 24 to 38 dB PSNR. (b) Image Resolution: 64 , 128 , and 256 pixels. (c) Watermark Payload: message length from 16 to 64 bits. (d) Decoder Path: the full decoder versus the matched filter or the convolutional head alone. 
+
+## Discussion and Limitations 
+
+Codebook Secrecy. SpreadMark uses one secret code-book, fixed at training and reused for every image, and our threat model assumes it stays secret and is never statisti-cally estimated. We do not test that assumption: we evaluate no known-message or chosen-message attack, no codeword estimation across images, no collusion, no watermark-copy attack, and no adaptive key recovery. A fixed dense code is a natural target for all of these; none of our results are evidence of security against them, and Theorem 1 does not apply, since its independence assumption is what such attacks violate. Dense spreading cuts both ways here: each marked image exposes more of the code than a concentrated resid-ual would, so the property that resists oblivious removal may also ease code estimation. How many marked images such an estimator needs is the open question. Codebook rotation and multiple simultaneous keys are the most important directions for future work. 
+
+Adversarial Removal. The DA of 0 that SpreadMark 
+
+records under white-box removal at 30 dB is an energy mis-match, not a failure of the receiver: an ε = 0 .10 perturbation can carry more energy than a 30 dB watermark. The same decoder at the 24 dB point recovers BA 0.86 and DA 0.98 ,and Figure 5 shows it holding detection above 0.98 across the whole budget range while every other scheme, SpreadMark 
+
+at 30 dB included, has lost detection by ε = 0 .06 . The attack therefore fixes where on the gain curve a deployment should sit, at a cost in visible quality, rather than bounding the de-sign; it also presumes an attacker with the decoder gradients and hence the secret codewords, access a deployed detector does not expose (Song et al. 2026). 
+
+## Conclusion 
+
+SpreadMark revisits spread-spectrum embedding in a neu-ral post-hoc watermarking architecture, prompted by the measurement that existing encoder–decoder schemes con-centrate each message bit in a small image-space footprint. It instead spreads every bit across the whole image as an ex-plicit dense pseudo-random codeword, recovered by matched filtering with a convolutional fallback and sparsification-aware training. On COCO and DIV2K it uniquely retains high detection under both regeneration and latent-space spar-sification, while remaining among the most imperceptible schemes. A conditional chip-space analysis explains why a dense code resists codeword-independent perturbations, though not the regeneration, compression, or code-estimating attacks we assess empirically; synchronization, scale, and codebook security remain future work. 
+
+## References 
+
+Agustsson, E.; and Timofte, R. 2017. NTIRE 2017 chal-lenge on single image super-resolution: Dataset and study. In IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPR-W) , 126–135. 7An, B.; Ding, M.; Rabbani, T.; Agrawal, A.; Xu, Y.; Deng, C.; Zhu, S.; Mohamed, A.; Wen, Y.; Goldstein, T.; and Huang, F. 2024. WAVES: Benchmarking the robustness of image wa-termarks. In International Conference on Machine Learning (ICML) , volume 235 of Proceedings of Machine Learning Research , 1456–1492. Arabi, K.; Witter, R. T.; Hegde, C.; and Cohen, N. 2025. SEAL: Semantic aware image watermarking. In IEEE/CVF International Conference on Computer Vision (ICCV) ,16196–16205. Barni, M.; Bartolini, F.; Cappellini, V.; and Piva, A. 1998. A DCT-domain system for robust image watermarking. Signal Processing , 66(3): 357–372. Bui, T.; Agarwal, S.; and Collomosse, J. 2023. Trust-Mark: Universal watermarking for arbitrary resolution im-ages. arXiv preprint arXiv:2311.18297 .Chen, J.; Deng, Z.; Zhang, Z.; Li, C.; Jia, L.; and Sun, L. 2026. Decoupling defense strategies for robust image water-marking. In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) .Ci, H.; Yang, P.; Song, Y.; and Shou, M. Z. 2024. Rethinking tree-ring watermarking for enhanced multi-key identifica-tion. In European Conference on Computer Vision (ECCV) .Cox, I. J.; Kilian, J.; Leighton, F. T.; and Shamoon, T. 1997. Secure spread spectrum watermarking for multimedia. IEEE Transactions on Image Processing , 6(12): 1673–1687. Evennou, G.; Chappelier, V.; and Kijak, E. 2025. Fast, secure, and high-capacity image watermarking with autoencoded text vectors. arXiv preprint arXiv:2510.00799 .Fernandez, P.; Couairon, G.; Jégou, H.; Douze, M.; and Furon, T. 2023. The stable signature: Rooting watermarks in latent diffusion models. In IEEE/CVF International Confer-ence on Computer Vision (ICCV) , 22466–22477. Fernandez, P.; Sablayrolles, A.; Furon, T.; Jégou, H.; and Douze, M. 2022. Watermarking images in self-supervised latent spaces. In IEEE International Conference on Acous-tics, Speech and Signal Processing (ICASSP) , 3054–3058. Gao, Z.; Li, X.; Bao, Z.; Feng, X.; and Jiang, J. 2026. Breaking semantic-aware watermarks via LLM-guided coherence-preserving semantic injection. arXiv preprint arXiv:2602.21593 .Goodfellow, I.; Bengio, Y.; and Courville, A. 2016. Deep Learning . MIT Press. Guo, H.; Zhang, Q.; Luo, J.; Guo, F.; Zhang, W.; Su, X.; and Li, M. 2023. Practical deep dispersed watermarking with synchronization and fusion. In ACM International Confer-ence on Multimedia (MM) , 7922–7932. Hartung, F.; and Girod, B. 1998. Watermarking of uncom-pressed and compressed video. Signal Processing , 66(3): 283–301. Jia, Z.; Fang, H.; and Zhang, W. 2021. MBRS: Enhancing robustness of DNN-based watermarking by mini-batch of real and simulated JPEG compression. In ACM International Conference on Multimedia (MM) , 41–49. Lin, M.; Chen, Q.; and Yan, S. 2014. Network in network. In International Conference on Learning Representations (ICLR) .Lin, T.-Y.; Maire, M.; Belongie, S.; Hays, J.; Perona, P.; Ramanan, D.; Dollár, P.; and Zitnick, C. L. 2014. Microsoft COCO: Common objects in context. In European Conference on Computer Vision (ECCV) , 740–755. Lu, S.; Zhou, Z.; Lu, J.; Zhu, Y.; and Kong, A. W.-K. 2025. Robust watermarking using generative priors against image editing: From benchmarking to advances. In International Conference on Learning Representations (ICLR) .Ma, R.; Guo, M.; Hou, Y.; Yang, F.; Li, Y.; Jia, H.; and Xie, X. 2022. Towards blind watermarking: Combining invert-ible and non-invertible mechanisms. In ACM International Conference on Multimedia (MM) , 1532–1542. Malvar, H. S.; and Florêncio, D. A. F. 2003. Improved spread spectrum: A new modulation technique for robust water-marking. IEEE Transactions on Signal Processing , 51(4): 898–905. Ni, Y.; Carter, F.; Niu, Z.; Davis, E.; and Zhang, B. 2025. Diffusion-based image editing for breaking robust water-marks. arXiv preprint arXiv:2510.05978 .Plata, M.; and Syga, P. 2020. Robust spatial-spread deep neu-ral image watermarking. In IEEE International Conference on Trust, Security and Privacy in Computing and Communi-cations (TrustCom) , 62–70. Proakis, J. G.; and Salehi, M. 2008. Digital Communications .McGraw-Hill, 5 edition. Rombach, R.; Blattmann, A.; Lorenz, D.; Esser, P.; and Om-mer, B. 2022. High-resolution image synthesis with latent diffusion models. In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 10684–10695. Sander, T.; Fernandez, P.; Durmus, A.; Furon, T.; and Douze, M. 2025. Watermark Anything with localized messages. In International Conference on Learning Representations (ICLR) .Song, W.; Xing, Z.; Zhu, L.; Sui, Y.; and Xue, J. 2026. DeMark: A query-free black-box attack on deepfake water-marking defenses. arXiv preprint arXiv:2601.16473 .Tancik, M.; Mildenhall, B.; and Ng, R. 2020. StegaStamp: Invisible hyperlinks in physical photographs. In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2117–2126. Vershynin, R. 2018. High-Dimensional Probability: An In-troduction with Applications in Data Science . Cambridge University Press. Viterbi, A. J. 1995. CDMA: Principles of spread spectrum communication . Addison-Wesley. Wen, Y.; Kirchenbauer, J.; Geiping, J.; and Goldstein, T. 2023. Tree-Rings watermarks: Invisible fingerprints for dif-fusion images. In Advances in Neural Information Process-ing Systems (NeurIPS) .Wu, X.; Liao, X.; and Ou, B. 2023. SepMark: Deep sepa-rable watermarking for unified source tracing and deepfake detection. In ACM International Conference on Multimedia (MM) , 1190–1201. 8Xian, X.; Wang, G.; Bi, X.; Srinivasa, J.; Kundu, A.; Hong, M.; and Ding, J. 2024. RAW: A robust and agile plug-and-play watermark framework for AI-generated images with provable guarantees. In Advances in Neural Information Processing Systems (NeurIPS) .Yang, Z.; Zeng, K.; Chen, K.; Fang, H.; Zhang, W.; and Yu, N. 2024. Gaussian Shading: Provable performance-lossless image watermarking for diffusion models. In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 12162–12171. Zhang, K. A.; Xu, L.; Cuesta-Infante, A.; and Veeramacha-neni, K. 2019. Robust invisible video watermarking with attention. arXiv preprint arXiv:1909.01285 .Zhang, L.; Liu, X.; Viros Martin, A.; Bearfield, C. X.; Brun, Y.; and Guan, H. 2024a. Attack-resilient image watermarking using stable diffusion. In Advances in Neural Information Processing Systems (NeurIPS) .Zhang, R.; Isola, P.; Efros, A. A.; Shechtman, E.; and Wang, O. 2018. The unreasonable effectiveness of deep features as a perceptual metric. In IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 586–595. Zhang, X.; Li, R.; Yu, J.; Xu, Y.; Li, W.; and Zhang, J. 2024b. EditGuard: Versatile image watermarking for tamper localization and copyright protection. In IEEE/CVF Confer-ence on Computer Vision and Pattern Recognition (CVPR) ,11964–11974. Zhang, X.; Yang, Z.; Chen, K.; Ma, L.; Zhang, W.; and Yu, N. 2026. SemBind: Binding diffusion watermarks to semantics against black-box forgery attacks. arXiv preprint arXiv:2601.20310 .Zhu, J.; Kaplan, R.; Johnson, J.; and Fei-Fei, L. 2018. HiD-DeN: Hiding data with deep networks. In European Confer-ence on Computer Vision (ECCV) , 657–672. 9Appendix 
+
+Implementation Details 
+
+Encoder and decoder share the HiDDeN backbone (Zhu et al. 2018) so that any robustness gain isolates to the spread-spectrum embedding and matched-filter receiver. The encoder applies four 3 × 3 convolutional blocks (Conv– BatchNorm–ReLU, 64 channels) to the cover image, con-catenates the resulting features with the input image and the 
+
+K message bits broadcast as constant spatial maps, passes them through two further convolutional blocks, and maps the result to a three-channel residual bounded by a tanh of peak amplitude 0.15 . When spreading is enabled the dense signal α s (b) of Eq. (3) is added to this residual, with α pa-rameterized as the softplus of a free scalar initialized so that 
+
+α = 0 .06 . The decoder applies seven convolutional blocks ( 64 
+
+channels), global average pooling, and a linear head to K bit logits; the spread path adds a 1×1 convolution to a single-channel chip map, the normalized correlation ρi against the shared bank, a per-bit affine gain and bias, and a per-bit sig-moid gate whose bias is initialized to 2.0 so the matched filter is trusted at the start of training. The codewords are drawn once as i.i.d. Gaussian spatial maps with a fixed seed, normalized to unit per-pixel variance, and stored identically in the encoder and decoder. 
+
+Proof of Theorem 1 
+
+We restate the assumptions and give the argument in full. Theorem 1 is an idealized, conditional statement about the matched-filter path of the decoder; the assumptions below are modeling choices, and the Scope paragraph at the end of this section states what they exclude. 
+
+(A1) Codewords. The codewords {ci}Ki=1 , with ci ∈ Rd
+
+and d = HW , have entries ci,j that are independent, zero-mean, and unit-variance after the per-pixel normalization  
+
+> 1
+> d
+
+∥ci∥22 = 1 , and are sub-Gaussian with variance proxy 1.This holds exactly for the Gaussian codewords we use and, by Hoeffding’s lemma, for the symmetric ±1 codewords examined in our codeword-design ablation (Table 4). 
+
+(A2) Idealized Residual. The decoder reads bit i from the matched-filter statistic ρi = ⟨ˆz, c i⟩/d on the recovered chip 
+
+ˆz = α s (b) + ν, where s(b) = 1√K
+
+P 
+
+> j
+
+(2 bj − 1) cj and ν col-lects the cover-suppression residual and the cross-code inter-ference. We idealize ν as carrying no systematic component along any secret codeword, that is E[⟨ν, c i⟩] = 0 for every i.In the deployed system ν is produced by a learned projection of a real image and this is an approximation, not a property we establish. With (A1), (A2), and the near-orthogonality 
+
+⟨ci, c j ⟩/d → 0 for i̸ = j, the clean statistic concentrates at margin |E ρi| = α/ √K with sign 2bi − 1.
+
+(A3) Codeword-independent Perturbation. The chip-space perturbation ∆ induced by the attack is statistically independent of the codebook {ci}. This is the load-bearing assumption. It does not follow automatically for an attacker that observes xw, because xw is itself a function of the code-words, so any attack that extracts code-correlated structure from the watermarked image falls outside the model. 
+
+Proof. Let the attack map ˆz 7 → ˆz +∆ with ∆ satisfying (A3) and ∥∆∥2 ≤ B. The induced shift on bit i is: 
+
+∆ρi = ⟨∆, c i⟩
+
+d = 1
+
+d
+
+> d
+
+X
+
+> j=1
+
+∆j ci,j . (7) Because ∆ is fixed independently of the codewords and each 
+
+ci,j is zero-mean and unit-variance: 
+
+E[∆ ρi] = 0 , Var[∆ ρi] = 1
+
+d2
+
+> d
+
+X
+
+> j=1
+
+∆2 
+
+> j
+
+= ∥∆∥22
+
+d2 ≤ B2
+
+d2 .
+
+(8) As a fixed linear combination of independent sub-Gaussian variables, ∆ρi is itself sub-Gaussian with variance proxy 
+
+σ2 = ∥∆∥22/d 2 ≤ B2/d 2. The decoder errs on bit i only if the shift cancels the margin, that is if ∆ρi has sign opposite to 2bi − 1 and magnitude at least α/ √K; the sub-Gaussian tail bound therefore gives 
+
+Pr[ bbi̸ = bi] ≤ Pr 
+
+h
+
+|∆ρi| ≥ α√K
+
+i
+
+≤ exp 
+
+
+
+− (α/ √K)2
+
+2σ2
+
+
+
+≤ exp 
+
+
+
+− α2d2
+
+2KB 2
+
+
+
+,
+
+(9) which is the stated per-bit bound. The counting step is a first-moment argument and yields an expected-budget statement, not a high-probability one: for the expected number of flips 
+
+P 
+
+> i
+
+Pr[ bbi̸ = bi] ≤ K exp( −α2d2/(2 KB 2)) to reach a con-stant fraction ρ0K we need exp( −α2d2/(2 KB 2)) ≥ ρ0, i.e. 
+
+α2d2/(2 KB 2) ≤ ln(1 /ρ 0), which rearranges to 
+
+B ≥ αd 
+
+p2K ln(1 /ρ 0) = Ω 
+
+ αd 
+
+√K
+
+
+
+. (10) Finally, the attacker acts in pixel space through a perturbation 
+
+δ, and the chip map is L-Lipschitz, so ∥∆∥2 = ∥ chip( xw +
+
+δ)−chip( xw)∥2 ≤ L∥δ∥2 ≤ L√d ∥δ∥∞. Requiring the chip budget B = Ω( αd/ √K) to be reachable under ∥δ∥∞ ≤ ε
+
+gives L√d ε = Ω( αd/ √K), that is 
+
+ε = Ω 
+
+ α√dL√K
+
+
+
+, (11) so under (A1)–(A3) the pixel budget needed to disrupt matched-filter recovery of a dense code grows as √d.The √d scaling is the formal content of the design prin-ciple: unable to align ∆ with any codeword, the attack must spend energy spread over all d coordinates. When instead each bit occupies only an effective fraction ϕ of the coordi-nates, its energy lies in a small distinctive subspace that a generic operation can suppress without the code, lowering the required budget by roughly √ϕ.
+
+Scope. Three limitations follow directly from (A1)–(A3). First, the result is a statement about the matched-filter statis-tic under a codeword-independent perturbation; it is not a robustness proof for the deployed decoder, which also con-tains a convolutional head and a per-bit gate, and it does not 10 0.00 0.02 0.04 0.06 0.08 0.10        
+
+> Perturbation budget ε
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Bit accuracy
+> (a) Bit accuracy
+> 0.00 0.02 0.04 0.06 0.08 0.10
+> Perturbation budget ε
+> Detection accuracy
+> (b) Detection accuracy
+> SpreadMark
+> SpreadMark (24 dB)
+> HiDDeN
+> MBRS
+> StegaStamp
+> SepMark
+> WAM
+
+Figure 5: White-box adversarial removal versus the perturba-tion budget ε on COCO, as (a) bit accuracy and (b) detection accuracy, for SpreadMark at 30 and 24 dB and the baselines with a differentiable decoder. establish robustness to regeneration, compression, denoising, or latent-space sparsification, all of which we treat as empir-ical questions. Second, it is an expected-budget argument: it lower-bounds the budget an attack needs for its expected flip count to reach a constant fraction, and says nothing about the tail of that count. Third, (A3) excludes exactly the adaptive threats that matter most for a fixed codebook, namely attacks that estimate the code from one or many watermarked im-ages, known-message and chosen-message attacks, known-key attacks, and any perturbation whose statistics depend on the embedded code. We regard the theorem as an explanation of a design choice, not as a security guarantee. 
+
+Robustness Versus Attack Strength 
+
+Adversarial Removal. Figure 5 sweeps the white-box budget 
+
+ε for SpreadMark at two quality settings and for the base-lines that expose a differentiable decoder. At a matched bud-get the 24 dB SpreadMark holds detection at or above 0.98 
+
+across the whole range, whereas every other scheme, includ-ing the 30 dB SpreadMark , has lost detection by ε = 0 .06 ;bit accuracy follows the same separation. The gap between the two SpreadMark points, against an unchanged decoder, confirms that robustness in this regime is governed by the embedding gain and not by the receiver, consistent with the energy argument of Theorem 1. 
+
+Distortion and Regeneration Strength. Figure 6 sweeps the strength of each oblivious attack for all schemes at the 30 dB quality setting. SpreadMark retains full bit accuracy under additive noise across the tested range and degrades gracefully under JPEG compression. Blur is the sharp case: past kernel standard deviation 2 the low-pass filter desynchronizes the fixed spatial code, the geometric weakness discussed in the main text. Under regeneration SpreadMark decays more slowly than every baseline at each strength. 
+
+Effect of Sparsification-Aware Training 
+
+Table 3 separates the contribution of the SA-AT stage from that of the dense embedding, by retraining SpreadMark 
+
+with SA-AT disabled and everything else unchanged. The two properties we emphasize in the main text behave dif-ferently. Latent-space sparsification and clean recovery are already at 1.00 in both BA and DA without SA-AT, so they 
+
+SpreadMark w/o SA-AT Attack BA ↑ DA ↑ BA ↑ DA ↑
+
+Clean 1.00 1.00 1.00 1.00 Sparsif. 1.00 1.00 1.00 1.00 Regen 0.79 0.81 0.72 0.51 JPEG 0.92 1.00 0.84 0.95 Noise 1.00 1.00 1.00 1.00 Blur 0.59 0.09 0.58 0.06 Crop 0.67 0.25 0.69 0.40 Adv. 0.32 0.00 0.31 0.00 PSNR (dB) 30.1 28.7 
+
+Table 3: Effect of sparsification-aware adversarial training (SA-AT) at the 30 dB operating point on COCO, as BA and DA per attack for SpreadMark with and without SA-AT.                                                               
+
+> Variant Clean Sparsif. Regen JPEG Noise Blur Crop Adv.
+> Bit accuracy (BA)
+> Gaussian, learnable α(SpreadMark )1.00 1.00 0.79 0.92 1.00 0.59 0.67 0.32 Bernoulli codewords 1.00 1.00 0.70 0.77 1.00 0.57 0.69 0.32 Fixed α1.00 1.00 0.86 0.94 1.00 0.61 0.68 0.35
+> Detection accuracy (DA)
+> Gaussian, learnable α(SpreadMark )1.00 1.00 0.81 1.00 1.00 0.09 0.25 0.00 Bernoulli codewords 1.00 1.00 0.44 0.73 1.00 0.05 0.37 0.00 Fixed α1.00 1.00 0.94 1.00 1.00 0.14 0.36 0.00
+
+Table 4: Codeword-design ablation near 30 dB on COCO, as BA and DA per attack, for Gaussian codewords with learned 
+
+α (SpreadMark ), Bernoulli ±1 codewords, and fixed α.are attributable to the embedding rather than to the training stage. Regeneration and JPEG are where SA-AT contributes, raising regeneration DA from 0.51 to 0.81 and JPEG DA from 
+
+0.95 to 1.00 . Blur, crop, and adversarial removal are essen-tially unaffected. The comparison is not perfectly matched in quality, since the model without SA-AT converges to 28 .7 dB against 30 .1 dB for the full model, and the direction of that gap favors the ablated model; the regeneration difference is therefore, if anything, understated. 
+
+Codeword Design 
+
+Theorem 1 depends on the codewords only through their near-orthogonality, not through any particular distribution, and treats the embedding gain α as a fixed scalar. Table 4 tests both assumptions by retraining SpreadMark with two design changes at the 30 dB quality setting: drawing the code-words from a symmetric ±1 (Bernoulli) distribution instead of a Gaussian, and freezing α at the value the learned model converges to rather than training it. The properties the theo-rem governs are untouched: clean recovery and latent-space sparsification stay at 1.00 in both BA and DA for every vari-ant, and additive noise is likewise unaffected, which confirms that the sparsification robustness is a property of the dense code and not of how it is generated. Fixing α matches the learned model across the board and even improves regen-eration slightly, so learning the amplitude end-to-end is a convenience rather than a necessity. Bernoulli codewords match on every column except regeneration, where they trail by a few points at a marginally lower quality setting. The 11 20 40 60 80 
+
+JPEG quality 
+
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Bit accuracy
+
+(a) JPEG     
+
+> 0.025 0.050 0.075 0.100 0.125
+
+Noise σ
+
+(b) Gaussian noise    
+
+> 1234
+
+Blur σ
+
+(c) Gaussian blur     
+
+> 0.1 0.2 0.3 0.4 0.5
+
+Regeneration strength 
+
+(d) Regeneration          
+
+> SpreadMark HiDDeN MBRS StegaStamp SepMark CIN TrustMark RivaGAN WAM DwtDctSvd
+
+Figure 6: Robustness versus attack strength on COCO for every scheme, reported as bit accuracy: (a) JPEG quality, (b) Gaussian noise, (c) Gaussian blur, and (d) Regeneration strength. SpreadMark is drawn in bold. spread-spectrum mechanism is thus robust to the codeword family and to whether the amplitude is learned, which sup-ports reading Theorem 1 as a design principle that holds across reasonable codeword choices. 12
