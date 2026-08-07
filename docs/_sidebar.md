@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-08-07 <!--dpr-date:20260807-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/07/2608.00382v1-ti-stegoalign-channel-guided-post-training-for-generative-text-steganography-under-tokenization-inconsistency" data-sidebar-item="{&quot;title&quot;: &quot;TI-StegoAlign: Channel-Guided Post-Training for Generative Text Steganography under Tokenization Inconsistency&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2608.00382v1-ti-stegoalign-channel-guided-post-training-for-generative-text-steganography-under-tokenization-inconsistency&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;面向分词不一致的稳健文本信息嵌入，与鲁棒水印技术相关。&quot;}">TI-StegoAlign: Channel-Guided Post-Training for Generative Text Steganography under Tokenization Inconsistency</a>
   * 2026-08-05 <!--dpr-date:20260805-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/05/2608.03539v1-iris-visual-semantic-binding-for-forgery-resistant-watermarking-of-diffusion-images" data-sidebar-item="{&quot;title&quot;: &quot;IRIS: Visual-Semantic Binding for Forgery-Resistant Watermarking of Diffusion Images&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2608.03539v1-iris-visual-semantic-binding-for-forgery-resistant-watermarking-of-diffusion-images&quot;, &quot;score&quot;: &quot;10.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;扩散图像水印及视觉语义绑定&quot;}">IRIS: Visual-Semantic Binding for Forgery-Resistant Watermarking of Diffusion Images</a>
