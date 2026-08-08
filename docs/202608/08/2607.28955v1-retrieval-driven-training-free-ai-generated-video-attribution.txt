@@ -1,0 +1,311 @@
+Title: Retrieval-Driven Training-Free AI-Generated Video Attribution
+
+URL Source: https://arxiv.org/pdf/2607.28955v1
+
+Published Time: Mon, 03 Aug 2026 00:20:47 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Retrieval-Driven Training-Free AI-Generated Video Attribution 
+
+Renxi Cheng 1, Chaolei Han 1, Jie Gui 1,2,3 , Hongsong Wang 4,5 
+
+> 1
+
+School of Cyber Science and Engineering, Southeast University, Nanjing 210096, China 
+
+> 2
+
+Purple Mountain Laboratories, Nanjing 210000, China 
+
+> 3
+
+Engineering Research Center of Blockchain Application, Supervision And Management (Southeast University), Ministry of Education, China 
+
+> 4
+
+School of Computer Science and Engineering, Southeast University, Nanjing 210096, China 
+
+> 5
+
+Key Laboratory of New Generation Artificial Intelligence Technology and Its Interdisciplinary Applications (Southeast University), Ministry of Education, China 
+
+{renxi, chaoleihan, guijie, hongsongwang }@seu.edu.cn 
+
+Abstract 
+
+AI-generated videos are becoming increasingly realistic and difficult to distinguish from authentic ones, which facil-itates malicious misuse and poses growing threats to cyber-security and social governance. Attributing AI-generated videos to their specific generative sources is therefore of critical importance for forensic investigation and legal reg-ulation. However, most existing visual attribution meth-ods focus on images and particularly rely on the im-age generation model, thereby lacking the ability to gen-eralize to large-scale AI-generated video data. To ad-dress these limitations, we introduce an training-free AI-generated video attribution paradigm. Specifically, we formulates AI-generated video attribution as an instance retrieval task, and design a generative fingerprint-based pipeline. This pipeline consists of an adapted orthogonal color transformation, multi-scale quantized residual gen-eration, and temporal-semantic aggregation, progressively capturing and integrating artifacts introduced by genera-tive models across video frames. Extensive experiments on the GenVidBench benchmark demonstrate that our method achieves strong performance in both AI-generated video de-tection and attribution, outperforming existing state-of-the-art methods with a Rank-1 accuracy of 20.5 % and a mean Average Precision of 16.6 %. The code is at https:// github.com/renxi-seu/Video_Attribution .
+
+1. Introduction 
+
+With the rapid evolution of video generative models [7, 12, 13, 22, 28, 38, 42, 49, 56], AI-generated videos are ap-proaching real videos in both visual quality and perceptual realism, making low-cost video synthesis increasingly ac-Retrival Model       
+
+> 0.6 0.7 0.9 ……
+> Classification Model 0.1 0.1 0.7 ……
+> (a) Existing methods (b) Our paradigm Input Video Database
+> Categories Probabilities Categories Similarities
+
+Figure 1. Comparison between existing AI-generated video attri-bution methods and our training-free retrieval-based framework. Our method is highly scalable, as new generators can be accom-modated by simply registering reference samples without model retraining. 
+
+cessible. However, this also makes forged content more prone to misuse in disinformation, identity impersonation, and malicious manipulation [20, 33, 37], posing growing threats to cybersecurity and social governance. Therefore, there is an urgent need to develop effective defensive mech-anisms to mitigate these potential risks. As a fundamental and easily deployable passive de-fense, AI-generated video detection receives extensive at-tention. Existing methods mainly focus on AI-generated image detection [5, 30], or exploit video artifacts from spa-tial [9, 25, 26, 35] and temporal [19, 29, 50] perspectives, achieving strong performance in distinguishing real videos from generated ones. However, such methods remain lim-ited to binary authenticity classification and fail to iden-tify the underlying generative source, which constrains their practical value in forensic and regulatory scenarios. Conse-quently, AI-generated video attribution has become increas-ingly important; however, it remains underexplored so far. arXiv:2607.28955v1 [cs.CV] 31 Jul 2026 A few existing video attribution methods [23, 32, 41] adopt a supervised classification paradigm, where models are trained to learn source-discriminative artifacts and as-sign each video to a predefined set of generative sources. While these approaches can achieve promising performance when candidate generators are known and sufficiently rep-resented during training, they still suffer from two funda-mental limitations. First, they rely heavily on large-scale labeled datasets with source annotations, which are costly to collect and maintain as generation models evolve rapidly. Second, these models are restricted to closed-set scenarios and tend to overfit to a limited number of video generators. Motivated by these limitations, we revisit the nature of the attribution task itself. We argue that attribution is more naturally formulated as a source matching problem than a closed-set classification problem: a query video should be attributed to the generative source whose fingerprint it most closely resembles. Under this view, if generator-specific artifacts can be effectively exposed, attribution can be re-formulated as retrieval over a reference database, avoiding the need to learn source-specific classifiers. Based on this insight, we propose a training-free retrieval-driven framework for AI-generated video attribu-tion, as shown in Fig. 1. Since retrieval performance criti-cally depends on the quality of the representation, the cen-tral challenge is to construct video features that can re-liably expose and preserve generator-specific fingerprints. We observe that although modern video generative mod-els achieve high semantic fidelity, they often fail to fully maintain the consistency of low-level statistical patterns during synthesis, leaving behind subtle yet stable artifacts. Such artifacts are closely related to the underlying gen-eration mechanisms and therefore provide a natural basis for source attribution. To capture these signals, we de-sign a fingerprint-aware representation pipeline that pro-gressively enhances and aggregates generator-specific ar-tifacts from spatial and temporal perspectives. In partic-ular, we first introduce an adapted orthogonal color trans-formation to expose informative channel-wise variations. We then perform multi-scale quantized residual generation to amplify fine-grained discrepancies that are difficult to observe in the original frame space. Finally, we employ temporal-semantic aggregation to integrate frame-level ar-tifacts into a coherent video-level fingerprint representa-tion. Based on the resulting representations, we lever-age a pre-trained video encoder to extract feature embed-dings and perform similarity-based retrieval over the refer-ence database. Moreover, beyond attribution, the proposed framework naturally supports AI-generated video detection, as real videos tend to remain dissimilar to the fingerprints of registered generators. Extensive experiments on GenVid-Bench demonstrate that our method achieves strong perfor-mance on both attribution and detection tasks. Our contributions are summarized as follows: • Open-set paradigm for AI-generated video attribu-tion: We study AI-generated video attribution in an open-set scenario by formulating it as an instance retrieval task. • Training-free generative fingerprint-based pipeline: 
+
+We present a training-free pipeline that leverages model-specific generative artifacts by projecting video frames into an adaptive color space for residual computation. • Few-shot benchmarks for detection and attribution: 
+
+We establish benchmarks for few-shot AI-generated video detection and attribution, and our approach outper-forms baselines by 20.5% in Rank-1 accuracy and 16.6% in mAP. 
+
+2. Related Work 
+
+2.1. AI-Generated Video Detection 
+
+Existing methods for AI-generated video detection initially focus on static spatial features, including traditional im-age processing techniques [25], CNN-based models [35], and frequency-domain analysis [9]. To address the lack of temporal dynamics, researchers develop a pipeline to combine spatial and temporal information, including sin-gle branch serial structure and dual branch parallel struc-ture. For single branch serial structure, Sabir et al. [36] pioneer the use of recurrent convolutional networks to ex-ploit temporal discrepancies across frames. Similarly, Vah-dati et al. [41] and Ma et al. [29] focus on firstly extract-ing spatial artifacts and subsequently modeling their tem-poral evolution to detect inconsistencies. Other advance-ments like DeMamba [3] further refines this serial process by utilizing state space models for efficient long-range de-pendency modeling, and UNITE [24] employs uncertainty-aware representation learning to robustly integrate visual and temporal clues. Beyond standard convolution-based se-quences, FAST [52] is the first transformer-based frame-work designed to simultaneously exploit spatial, tempo-ral, and frequency-aware manipulation traces. For dual branch parallel structure, AIGVDet [1] employs two sub-detectors to independently identify anomalies in spatial and optical flow domains, while DuB3D [19] utilizes a dual-branch 3-D Transformer to adaptively fuse spatio-temporal data and dense optical flow. He et al. [15] fuses local motion and global appearance to expose defects at differ-ent scales, which improves the performance and robustness. Xue et al. [50] employ second-order optical flow residuals to amplify subtle, high-frequency motion anomalies, result-ing in higher discriminative sensitivity across diverse text-to-video and image-to-video tasks. However, these meth-ods remain limited to distinguishing real from AI-generated videos, without identifying the specific generative source behind them. Asymmetric Quantization Quantization Factor 1.0 1.5 Multi-Scale Quantized Residual Inversion   
+
+> 0.5 Mapping Video Frame RGB Stream Residual Stream Temporal Stream Multi-Scale Residual Local Average 3×3High-Frequency Image Flatten RGBCovariance Matrix max
+
+v      
+
+> RGBRGBRGB
+
+w w wx x xy y y
+
+     
+
+> Transformation Matrix Adaptive Orthogonal Color Transformation
+> Video-wise Average Gram-Schmidt Orthogonalization
+> Fusin Difference Figure 2. Overview of our fingerprint-aware representation pipeline. (1) The input video frames are first computed with an error map to generate the transformation matrix of the adaptive color space. (2) In the adaptive color space, multi-scale and channel-asymmetric quantization is performed on input video frames. Afterwards, the residual frames are generated. (3) RGB frames, residual frames, and a temporal stream derived from the residual frames are fused through weighted aggregation.
+
+2.2. AI-Generated Visual Attribution 
+
+The research of generative model attribution mainly focuses on the field of images. RONAN [47] proposes a universal attribution method that utilizes reverse-engineering and re-construction loss to determine the source of images. This ar-chitecture solves the limitation of previous attribution meth-ods that rely on specific generative models. In response to the problem that traditional attribution methods are limited by close-set scenarios and cannot recognize new models, many attribution works based on open-set scenarios begin to emerge. Girish et al. [11] propose an iterative frame-work that successfully solves the identification of unknown source models in open-set scenarios. Yang et al. [51] fur-ther propose a progressive open-space expansion scheme to better distinguish known and unknown models in open-set scenarios. However, these methods cannot be directly ex-tended to video attribution, as videos involve not only richer spatial structures but also complex temporal dynamics and inter-frame dependencies. For AI-generated video attribution, mainstream methods generally cover two categories, including active and pas-sive attribution. Active attribution methods [8, 17, 18, 27, 54, 55] embed the model’s ownership information into the video, which is a watermark-based method. Although this is effective for video attribution, it requires complex oper-ations during watermark embedding, which may affect the visual quality of the video, and not all models will respon-sibly embed identification watermarks, thus showing sig-nificant limitations. The vast majority of passive attribu-tion methods are based on training. VGMShield [32] uti-lizes a masked autoencoder as the backbone network to capture spatial-temporal dynamic inconsistencies between video frames, significantly improving attribution perfor-mance. Vahdati et al. [41] deeply reveal the fundamental reason why AI-generated image detectors are not suitable for detecting AI-generated videos: there is an essential dif-ference in the forensic traces exposed by images and videos, and complete the video attribution in close-set scenarios by learning the unique traces of videos. SAGA [23] pioneers a multi-granularity attribution system that includes five di-mensions, which solves the problem of precise video attri-bution where annotated data is extremely scarce. Though several works [43] begin to focus on training-free video at-tribution tasks, they still have limitations in terms of appli-cable models and robustness to interferences. In contrast, we propose a training-free video attribution method with strong capabilities of generalization and robustness. 
+
+3. Method 
+
+We view AI-generated video attribution as a retrieval task rather than a traditional classification task, which naturally supports open-set scenarios. This paradigm offers two key advantages. First, it is highly scalable, as newly emerg-ing generators can be incorporated by simply registering new samples without retraining the model. Second, it en-ables evidence-based attribution, where retrieved reference videos provide intuitive support for the predicted results and thus enhance their interpretability and reliability. An overview of our approach is shown in Fig. 2. Specifically, we maintain a reference database of AI-generated videos, denoted as D = {vj
+
+> 1
+
+, . . . , v ji , . . . , v JN }, where j denotes the index of generator Gj and i denotes the index of a video sample. We regard generator-specific fingerprints embed-ded in video frames as the key basis for video attribution. Accordingly, each video in the database is processed to ex-tract fingerprint-aware features, as detailed in Secs. 3.1–3.3, which are then projected into a unified feature space by a pre-trained video encoder. For a query video, we apply the same processing pipeline and perform attribution via re-trieval in the reference database. 
+
+3.1. Adapted Orthogonal Color Transformation 
+
+Image color space transformation applies a mapping from the RGB space to a new coordinate system, where different axes correspond to interpretable or task-relevant color com-ponents. Unlike fixed color spaces that rely on predefined coefficients, we introduce an adaptive color transformation that adjusts to the video frame. However, an RGB video frame is dominated by low-frequency components and fails to capture informative local structures. To address this limitation, we propose comput-ing the transformation based on high-frequency residuals, obtained by subtracting a local average from the frame. Fur-thermore, we impose simplex and channel-wise constraints on the transformation to ensure perceptual consistency and stability, leading to the Adapted Orthogonal Color Trans-formation (AOCT) that balances adaptivity and robustness. The AOCT is formulated as: 
+
+max  
+
+> M∈R3×3
+
+f (I, M ) =  I − I ∗ K ×3 M ⊤ 2 
+
+> F
+
+(1) s.t. M M ⊤ = I3×3, (2) 
+
+m1 ∈ { w ∈ R3 | wi ≥ 0,
+
+> 3
+
+X
+
+> i=1
+
+wi = 1 }, (3) 
+
+m1,G ≥ τ. (4) where I ∈ RH×W ×3 denotes the input RGB video frame, 
+
+K = 19 13×3 denotes a 3 × 3 mean filter applied channel-wise, ∗ denotes channel-wise convolution, ×3 represents the mode-3 tensor-matrix product along the channel dimen-sion, M ∈ R3×3 is the learnable transformation matrix, and 
+
+∥ · ∥ F denotes the Frobenius norm of a tensor. Although the transformation matrix M contains nine pa-rameters, it has only two independent degrees of freedom under the imposed constraints. The objective function in Eq. (1) admits a closed-form solution, and the correspond-ing independent parameter m1 can be computed as follows: 
+
+E = I − I ∗ K, (5) 
+
+Σ = 1
+
+N E♭(E♭)⊤, (6) 
+
+m⋆ 
+
+> 1
+
+= arg max  
+
+> ∥m∥2=1
+
+m⊤Σm = vmax (Σ) , (7) where E is the intermediate residual image, E♭ denotes the flattened residual matrix, obtained by reshaping the E such that each column corresponds to the RGB vector of a single pixel. After obtaining the independent parameter m1, the trans-formation matrix M is computed as: 
+
+˜m1 = Π C (m⋆
+
+> 1
+
+) , (8) 
+
+M ⋆ = GS ( ˜ m1) . (9) where ˜m1 denotes the projected independent vector under imposed constraints, and GS represents the Gram-Schmidt orthogonalization that constructs an orthonormal basis. The proof of related theories and propositions can be found in the Supplementary Material .Given the input frame I, the AOCT-transformed frame 
+
+Y is: 
+
+Y = I ×3 M. (10) 
+
+3.2. Multi-Scale Quantized Residual 
+
+An RGB video frame is typically dominated by low-frequency components, which can obscure informative lo-cal structures. To effectively capture informative local structures in RGB images while suppressing redundant low-frequency components, we propose the Multi-Scale Quan-tization Residual (MSQR) of the color-transformed frame. At quantization scale i, we quantize each channel as: 
+
+ˆY(i) = round 
+
+
+
+Y ⊘ S(i)
+
+⊙ S(i), (11) where S(i) ∈ R1×1×3 is the scale vector for each channel, ⊘
+
+denotes element-wise division, and ⊙ denotes element-wise multiplication. This operation discretizes the transformed image at multiple scales, thereby preserving both coarse and fine structures. To extract informative differences between the original and quantized frames, we compute the residual at each scale by inverting the color transformation: 
+
+R(i) = I − M −1 ˆY(i). (12) Finally, the multi-scale residual is obtained by averaging over all n quantization scales: 
+
+R = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+R(i). (13) By performing multi-scale quantization, we isolate high-frequency details across different resolutions, enabling more robust residual extraction. The resulting multi-scale frame residual highlights informative variations while sup-pressing redundant low-frequency content, thereby improv-ing the stability and effectiveness of subsequent color and structural transformations. 
+
+3.3. Temporal-Semantic Aggregation 
+
+For the residual sequence R = {r1, r 2, . . . , r T } gener-ated by the MSQG module, where T is the total number SVD MuseV Mora CogVideo Video Frames Spatial Residuals Temporal  Residuals    
+
+> T2V-Zero ModelScope VideoCrafter2 Pika
+
+Figure 3. Visualizations of residual frames from different generative models. We visualize the raw video frames, spatial residual frames, and temporal residual frames from eight generative models. From the first column to the eighth column, the first four groups and the last four groups of video frames are each generated from the same semantic information. (a) R3D -18    
+
+> (h) Ours (e) ResNet -50 (f) DeMamba
+> (d) PiD
+> (g) UNITE
+> (b) ESSP (c) LOTA
+
+Figure 4. Visualization of video features distribution from real and eight generative sources by using our approach and other main-stream methods. 
+
+of frames, we compute adjacent frame differences ∆R =
+
+{∆r1, ∆r2, . . . , ∆rT } to capture the instantaneous tempo-ral changes in the residuals across frames: 
+
+∆R =
+
+(
+
+rt+1 − rt, 1 ≤ t < T, rT − rT −1, t = T. (14) We finally utilize spatial residual stream ( R) to cap-ture generative artifacts in spatial domain, employ temporal residual stream ( ∆R) to focus on unnatural fluctuations in the temporal dimension, and introduce RGB context stream (I) to take global semantic backgrounds into account. The final discriminative feature F is obtained by weighted fu-sion of three streams: 
+
+F = ws · R + wt · ∆R + wrgb · I (15) where ws, wt and wrgb are different weights of spatial residual stream, temporal residual stream, and RGB context stream. Additionally, ∆R is the first-order temporal dif-ference of the sequence R, with end-frame repeat-padding applied. Fig. 3 presents the raw video frames, spatial residual frames, and temporal residual frames sampled from videos of eight generative models. The former four sets (1) ∼(4) shares the same semantic information ” A white plate topped with an orange squash ”, and the latter four sets (5) ∼(8) are generated by the same semantic prompts ” A car speeding on a wilderness road ”. Despite their similar visual content, videos generated by the eight models exhibit distinct model-specific fingerprints in both spatial and temporal residu-als. For example, MuseV tends to leave fingerprint patterns along contour boundaries, whereas Mora more commonly reveals such patterns in intricate texture regions. Pika of-ten induces unnatural fluctuations in background color gra-dients, while ModelScope is characterized by conspicuous pixelation blocks. These distinctive residual patterns are strongly model-dependent and therefore highly informative for video attribution. By extracting features from our pro-posed residuals using a feature extractor, we observe that most categories are clearly separated (Fig. 4 (h)), whereas features from the original RGB frames remain mixed (Fig. 4 (e)). 
+
+4. Experiments 
+
+4.1. Experimental Setup 
+
+Dataset: GenVidBench [31] is a comprehensive and re-cently introduced benchmark for AI-generated video de-tection. It contains 100,000 semantic labels, along with the original prompts and images used during the genera-Shot Method Real T2VZ MS VC2 Pika SVD MuseV Mora CogV Avg. Rank-1 mAP Rank-1 mAP Rank-1 mAP Rank-1 mAP Rank-1 mAP Rank-1 mAP Rank-1 mAP Rank-1 mAP Rank-1 mAP Rank-1 mAP 1-shot ResNet-50 [14] 10.8 15.2 8.0 9.1 23.6 26.5 29.2 29.1 39.7 34.5 36.7 30.1 6.0 8.5 3.5 6.8 6.0 8.7 17.4 18.4 R3D-18 [39] 65.8 78.8 29.6 50.4 12.6 31.7 28.6 50.3 23.1 46.5 36.7 58.8 1.5 24.1 7.0 24.2 52.3 71.1 28.6 48.4 ESSP [6] 9.6 5.0 3.5 5.3 39.2 36.8 42.7 42.1 7.0 9.4 8.5 8.2 4.0 2.8 42.7 46.1 8.5 21.7 18.4 19.7 LOTA [44] 30.2 43.9 13.6 24.6 96.5 87.9 59.3 63.9 11.1 20.6 1.6 7.5 4.0 8.4 21.6 36.5 27.6 39.6 29.5 37.0 PiD [10] 9.1 10.9 13.6 14.5 6.0 9.2 26.6 45.9 36.7 45.5 22.6 38.8 8.5 19.6 31.7 42.6 62.8 69.7 24.2 32.9 DeMamba [3] 2.0 - 66.3 - 9.6 - 16.8 - 33.7 - 22.1 - 5.5 - 32.2 - 29.2 - 24.1 -UNITE [24] 2.8 - 0.5 - 0.5 - 1.0 - 0.2 - 52.3 - 62. 8 - 3.0 - 1.5 - 13.8 -Ours 8.5 28.2 56.3 66.1 20.6 36.1 28.6 56.0 11.6 42.1 40.7 61.9 52.3 69.4 54.3 66.0 22.1 42.3 32.8 52.0 
+
+> 10-shot
+
+ResNet-50 [14] 33.4 28.9 13.6 14.8 26.1 20.7 15.6 18.6 29.2 23.0 15.6 17.3 16.1 18.7 17.1 17.6 41.7 31.5 24.2 32.0 R3D-18 [39] 17.1 25.5 45.2 45.8 28.1 34.6 30.2 37.3 43.7 44.1 21.6 31.5 65.3 63.1 12.6 22.5 84.4 76.6 38.7 42.3 ESSP [6] 18.6 16.2 16.1 16.8 59.8 50.0 31.2 25.3 27.6 20.5 10.1 12.8 19.1 19.9 12.6 18.0 37.2 30.4 25.8 23.3 LOTA [44] 34.2 38.0 52.8 48.1 78.4 74.9 51.3 51.5 41.2 42.2 38.2 35.9 40.2 44.4 29.6 32.0 81.4 63.5 49.7 47.8 PiD [10] 34.2 37.4 43.7 44.5 38.7 39.1 26.6 28.6 50.3 44.8 36.2 39.4 40.7 41.8 38.7 38.3 67.8 52.6 41.9 40.7 DeMamba [3] 12.6 - 60.8 - 22.6 - 24.6 - 27.1 - 22.6 - 14.1 - 11.6 - 29.6 - 25.1 -UNITE [24] 47.0 - 48.2 - 26.1 - 27.1 - 18.6 - 14.1 - 72.9 - 37.2 - 76.5 - 40.8 -Ours 61.8 57.3 99.0 94.8 50.7 54.7 54.7 57.8 41.2 50.3 76.4 73.4 84.9 76.8 61.8 58.8 80.9 81.6 68.0 67.3 
+
+> 100-shot
+
+ResNet-50 [14] 34.4 32.9 22.6 21.5 39.2 31.4 27.6 24.2 27.6 24.7 23.1 19.6 12.6 14.8 22.1 20.6 45.7 34.8 28.9 25.8 R3D-18 [39] 43.0 45.4 73.4 66.1 47.7 48.9 42.7 42.9 53.8 53.4 21.1 27.2 48.7 49.6 36.2 38.4 92.0 87.8 50.9 51.1 ESSP [6] 21.6 20.2 14.6 15.6 55.3 49.4 28.6 26.1 14.1 18.1 21.6 20.4 18.1 18.2 23.1 22.6 38.7 34.6 26.2 25.0 LOTA [44] 59.3 54.9 79.0 70.3 96.0 92.9 64.3 58.9 55.8 57.6 46.2 46.5 50.3 51.3 40.7 41.9 85.9 81.2 64.1 61.7 PiD [10] 44.2 45.2 70.4 63.5 58.3 54.7 39.7 42.8 55.8 54.6 54.3 51.3 51.3 52.8 42.2 43.9 88.9 81.1 56.1 54.4 DeMamba [3] 17.6 - 61.3 - 35.7 - 36.7 - 40.7 - 21.1 - 28.6 - 23.1 - 37.7 - 33.6 -UNITE [24] 5.3 - 88.9 - 79.4 - 15.6 - 66.3 - 8.0 - 56.3 - 85.4 - 85.4 - 49.6 -Ours 60.5 58.1 97.5 96.7 82.9 76.2 91.5 77.5 73.4 65.7 82.9 78.1 91.9 86.0 80.9 71.4 99.5 95.0 84.6 78.3 
+
+Table 1. Comparison of attribution performance of our approach against competing methods under 1-shot, 10-shot and 100-shot, respec-tively. The best results are highlighted in bold, and the second-best results are underlined.                                                                                                                                                                                                                                                                                     
+
+> Shot Method HD-VG Vript T2VZ MS VC2 Pika SVD MuseV Mora CogV Avg. 1-shot ResNet-50 [14] 33.1 52.4 52.3 59.3 43.2 43.2 59.8 63.8 41.7 50.8 50.8 R3D-18 [39] 70.4 67.3 97.5 91.4 74.9 44.7 52.7 27.6 32.2 99.5 65.8 ESSP [6] 11.1 10.6 84.4 85.4 79.9 96.0 93.4 94.0 92.4 89.5 71.7 LOTA [44] 10.5 16.6 99.5 100.0 100.0 89.4 95.6 98.5 95.0 99.3 80.4 PiD [10] 20.1 10.6 100.0 99.6 100.0 96.8 99.4 98.1 96.0 99.0 82.0 DeMamba [3] 67.8 46.7 63.3 65.8 61.3 56.3 32.2 36.7 48.2 31.2 50.9 UNITE [24] 00100.0 99.3 99.2 100.0 99.0 99.6 100.0 99.9 79.7 Ours 15.1 12.6 100.0 100.0 100.0 100.0 99.0 99.5 100.0 98.8 82.5
+> 10-shot ResNet-50 [14] 34.0 41.4 86.4 83.4 88.4 74.9 65.8 69.4 83.4 89.5 75.4 R3D-18 [39] 23.6 25.1 96.5 86.9 83.4 85.4 71.9 83.4 89.5 98.5 74.4 ESSP [6] 20.6 17.1 93.5 92.9 86.9 83.8 95.1 87.4 94.5 88.4 76.0 LOTA [44] 36.2 41.2 100.0 99.0 99.5 88.4 89.4 84.9 96.8 100.0 83.5 PiD [10] 33.7 42.7 99.6 99.4 99.5 90.9 96.1 97.2 98.8 98.5 85.7 DeMamba [3] 36.7 35.2 99.1 98.8 91.9 88.0 64.8 58.3 86.4 94.0 75.3 UNITE [24] 2.0 0.5 100.0 100.0 100.0 100.0 99.4 99.1 98.6 99.4 79.9 Ours 49.3 54.8 100.0 100.0 100.0 79.0 97.5 95.6 90.4 100.0 86.6
+> 100-shot ResNet-50 [14] 19.0 35.4 88.9 84.8 87.7 86.6 83.0 82.4 87.9 90.9 80.0 R3D-18 [39] 32.2 42.2 96.5 92.0 88.9 86.4 68.3 79.4 77.8 100.0 76.4 ESSP [6] 26.1 21.6 85.9 92.3 86.1 83.4 85.9 82.4 90.4 81.4 73.6 LOTA [44] 57.8 53.8 99.5 100.0 99.4 87.4 94.0 91.9 89.1 100.0 87.3 PiD [10] 50.7 65.3 100.0 100.0 100.0 93.0 99.1 98.4 95.3 99.8 90.2 DeMamba [3] 54.8 59.3 94.0 96.1 95.4 96.5 62.7 41.2 82.9 90.9 76.4 UNITE [24] 13.6 12.6 100.0 100.0 100.0 100.0 98.5 99.0 99.4 98.6 82.2 Ours 55.3 67.8 100.0 100.0 100.0 93.0 99.5 96.1 98.9 99.5 91.0
+
+Table 2. Comparison of detection accuracy of our approach against competing methods under 1-shot, 10-shot and 100-shot, respec-tively. 
+
+tion process. The dataset combines real-world videos from HD-VG [46] and Vript [40] with synthetic videos produced by eight generators: T2V-Zero (T2VZ) [21], ModelScope (MS) [45], VideoCrafter2 (VC2) [4], Pika [34], SVD [2], MuseV [48], Mora [53], and CogVideo (CogV) [16]. Since it covers both AI-generated videos from diverse mainstream generators and semantically related real videos, it is well suited for AI-generated video attribution. In our setting, we combine HD-VG [46] and Vript [40] into a single Real cat-egory. 
+
+Evaluation Metrics: For AI-generated video attribution, we report Rank-1 and mean Average Precision (mAP). Rank-1 measures the proportion of query videos whose top prediction matches the ground-truth source, while mAP computes the mean average precision over all query videos. For AI-generated video detection, we use accuracy as the evaluation metric. 
+
+Implementation Details: We sample 64 consecutive frames from each video and resize them to 224×224. Videos with fewer than 64 frames are padded by temporal loop-ing. In the adaptive color space, the quantization factors for the first channel are set to [0.50, 1.20, 1.90, 2.60], while those for remaining channels are set to [0.40, 1.00, 1.60, 2.20]. The resulting frames obtained under different quan-tization factors are then averaged. During feature fusion, the weights of the spatial residual, temporal residual, and RGB context streams are set to 0.6, 0.3, and 0.1, respec-tively. The fused features are then fed into an R3D-18 backbone pre-trained on Kinetics-400 for feature extraction. The extracted features are subsequently stored in a refer-ence database. During retrieval, query videos undergo the same process, and cosine similarity is computed against all stored features for source attribution or deepfake detection. 
+
+4.2. Experimental Results 
+
+To comprehensively evaluate our approach, we compare it against baselines of AI-generated image detection and attribution: (1) Constructed baselines : We employ ResNet-50 [14], a CNN-based model designed for im-ages, to process each frame of a video, and the features generated from all frames are averaged to construct the database. We also utilize R3D-18 [39], a CNN-based model designed for videos, to process a series of frames to generate features for the database. (2) AI-generated image detection methods : The input frames are first processed by the image processing method proposed in ESSP [6], LOTA [44] or PiD [10], and then are input into R3D-18 to obtain features for constructing the database. Row AOCT MSQR Temporal RGB Real T2VZ MS VC2 Pika SVD MuseV Mora CogV Avg. 1 ✗ ✗ ✗ ✗ 45.4 66.1 48.9 42.9 53.4 27.2 49.6 38.4 87.8 51.1 2 ✓ ✗ ✗ ✗ 49.6 77.3 68.1 59.1 55.7 54.1 65.3 47.8 80.6 62.0 3 ✓ ✓ ✗ ✗ 51.4 86.9 72.1 56.3 60.9 59.6 73.7 49.7 90.9 66.8 4 ✓ ✗ ✓ ✗ 53.5 93.7 75.0 66.3 66.6 76.1 77.8 66.3 88.9 73.8 5 ✓ ✓ ✓ ✗ 55.9 97.4 80.2 71.8 60.7 82.1 85.7 65.9 92.8 76.9 6 ✓ ✓ ✓ ✓ 58.1 96.7 76.2 77.5 65.7 78.1 86.0 71.4 95.0 78.3 
+
+Table 3. Ablation studies on effectiveness of each module of our apporach, including AOCT, MSQR, temporal stream (Temporal), and RGB stream (RGB).                                         
+
+> Method H.264-0 H.264-12 H.264-18 H.264-24 Crop-100 Crop-90 Crop-70 Crop-50 Ours 84.6 72.7 71.8 71.1 84.6 76.8 73.9 67.8
+> ESSP [6] 26.2 19.8 18.6 17.4 26.2 19.0 17.8 17.3 LOTA [44] 64.1 56.8 52.4 36.8 64.1 60.7 52.3 37.7 DeMamba [3] 33.6 20.8 17.7 12.7 33.6 31.8 32.1 29.8
+
+Table 4. Analysis of robustness to video degradation under H.264 compression (CRF = 12, 18, 24) and central cropping (retaining 90%, 70%, and 50% of the frame).                                                                       
+
+> Weight Real T2VZ MS VC2 Pika SVD MuseV Mora CogV Avg. 0.1 51.3 98.6 76.1 71.2 62.4 80.2 85.5 61.3 92.3 75.4 0.2 59.7 98.5 79.6 64.3 64.8 80.2 83.2 64.8 94.9 76.7 0.3 58.1 96.7 76.2 77.5 65.7 78.1 86.0 71.4 95.0 78.3
+> 0.4 57.4 96.0 77.0 68.1 63.5 78.2 83.3 67.1 92.5 75.9 0.5 56.4 97.2 76.1 66.8 61.6 73.5 81.9 62.4 93.8 74.4 0.6 52.0 93.8 77.3 61.8 64.8 75.4 83.6 61.1 92.6 73.6
+
+Table 5. Analysis of the temporal residual stream weight under different settings (0.1–0.6).                                                                       
+
+> Weight Real T2VZ MS VC2 Pika SVD MuseV Mora CogV Avg. 0.05 58.0 97.6 77.8 70.5 61.5 81.1 86.9 63.1 94.5 76.8 0.10 58.1 96.7 76.2 77.5 65.7 78.1 86.0 71.4 95.0 78.3
+> 0.15 58.6 96.6 72.7 73.7 61.9 77.5 84.0 67.1 93.4 76.2 0.20 56.2 95.3 73.2 72.6 64.2 73.6 84.0 65.9 93.5 75.4 0.25 59.0 97.0 71.5 73.5 65.4 71.3 83.9 63.5 96.2 75.7 0.30 52.6 95.1 67.1 65.5 66.3 66.9 79.8 63.0 93.8 72.2
+
+Table 6. Analysis of the RGB context stream weight under differ-ent settings (0.05–0.30).                                                                                         
+
+> Order Matrix Real T2VZ MS VC2 Pika SVD MuseV Mora CogV Avg. (1) UDM 55.7 95.4 77.8 80.1 63.7 75.4 77.2 62.8 89.2 75.2 (2) DCT 53.6 96.1 68.7 67.7 74.2 77.2 84.3 67.6 89.8 75.5 (3) YCbCr 56.5 96.0 71.8 72.3 76.0 73.2 83.4 65.5 93.2 76.4 (4) YUV 53.9 95.2 72.8 74.6 73.8 79.4 84.7 64.1 94.0 76.9 (5) R-Adaptive 52.3 96.5 76.2 80.2 59.7 81.8 84.0 69.3 93.1 77.0 (6) B-Adaptive 54.6 96.0 82.1 80.1 58.9 79.7 85.0 71.2 94.0 78.0 (7) Ours 58.1 96.7 76.2 77.5 65.7 78.1 86.0 71.4 95.0 78.3
+
+Table 7. Analysis of the transformation matrix. We compare our adaptive matrix with predefined and alternative adaptive ma-trices, including UDM, DCT, YCbCr, YUV, R-Adaptive, and B-Adaptive. 
+
+Method Preparation Time Attribution Time Total Time ESSP [6] 1392.25 s 1422.76 s 2815.01 s LOTA [44] 999.71 s 1018.14 s 2017.85 s DeMamba [3] 2167.39 s 1706.85 s 3874.24 s UNITE [24] 1483.46 s 1681.33 s 3164.79 s Ours 659.73 s 672.57 s 1332.30 s 
+
+Table 8. Analysis of the efficiency of video attribution. We com-pare the time consumption of our approach with mainstream meth-ods, including both preparation time (database construction or training) and attribution time. 
+
+(3) AI-generated video attribution methods : We train DeMamba [3] and UNITE [24] with the classifier replaced by a nine-class classifier on randomly selected videos from subsets of GenVidBench, and evaluate them on all videos of GenVidBench. 
+
+Attribution Performance: We evaluate the attribution performance of our approach under three settings: 1-shot, 10-shot, and 100-shot, corresponding to registering 1, 10, and 100 video features per source in the database, respectively. Results in Tab. 1 show that our approach outperforms all competing methods. In particular, in the 100-shot setting, it achieves 84.6% Rank-1 and 78.3% mAP, surpassing competitors by over 20.5% Rank-1 and 16.6% mAP. Even in the case of 1-shot, our approach maintains a reasonable mAP of 52.0 %. It should be noted that other methods struggle with a huge decline on certain classes, while our approach achieves consistently excellent results in various classes. As shown in Fig. 4, deepfake detetcion methods (ResNet-50 [14], ESSP [6], LOTA [44], PiD [10]) are difficult to generalize to video attribution tasks, while deepfake video detection methods (R3D-18 [39], DeMamba [3], UNITE [24]) tend to underfit with many classes intermingled. Notably, our approach separates multiple classes well. 
+
+Detection Performance: For AI-generated video detec-tion, our approach comprehensively surpasses other strong baselines and competitive methods. In the 100-shot sce-nario, it achieves the highest average detection accuracy of 91.0 %, outperforming the state-of-the-art AI-generated video detection method UNITE [24] by 8.8 %. Though all methods achieve an average detection accuracy of over 70 %, it should be emphasized that other methods tend to predict all videos as fake videos, thus achieving extremely low detection accuracy on the real subset (HD-VG and Vript). In contrast, our approach maintains a balance and achieves reasonable performance across all subsets. Even in the 10-shot or 1-shot scenario, our approach consistently outperforms all other mainstream methods. 
+
+4.3. Ablations and Analysis 
+
+Ablation Studies: We conduct ablation studies on the key components of our approach, including AOCT, MSQR, the temporal stream (Temporal), and the RGB stream (RGB). The results are shown in Tab. 3. (1) Effectiveness of AOCT : Comparing rows 1 and 2, quantization in the adaptive color space significantly improves mAP by 10.9%, indicating that it helps expose artifacts hidden in RGB frames. (2) Effectiveness of MSQR : Comparing rows 2 and 3, multi-scale quantization brings an additional 4.8% improvement in mAP, demonstrating the benefit of Scheme Row Quantization Scale Real T2VZ MS VC2 Pika SVD MuseV Mora CogV Avg. Ours 1 s1 = [0 .50 , 1.20 , 1.90 , 2.60] , s 2,3 = [0 .40 , 1.00 , 1.60 , 2.20] 58.1 96.7 76.2 77.5 65.7 78.1 86.0 71.4 95.0 78.3                                                                                                                                                                                        
+
+> Channel Disparity 2s1= [0 .50 ,1.20 ,1.90 ,2.60] , s 2,3= [0 .48 ,1.15 ,1.85 ,2.55] 56.4 98.7 75.4 74.3 66.2 78.6 79.8 68.3 93.5 76.8 3s1= [0 .50 ,1.20 ,1.90 ,2.60] , s 2,3= [0 .20 ,0.60 ,1.00 ,1.40] 60.1 98.8 75.0 75.2 62.8 73.6 83.6 70.1 82.2 75.7 Range Shift 4s1= [0 .20 ,0.40 ,0.60 ,0.80] , s 2,3= [0 .10 ,0.30 ,0.50 ,0.70] 55.7 98.0 70.3 71.3 62.9 81.3 86.2 73.1 91.1 76.8 5s1= [2 .00 ,3.00 ,4.00 ,5.00] , s 2,3= [1 .80 ,2.70 ,3.60 ,4.50] 56.5 96.1 77.1 68.6 65.3 74.3 77.8 62.6 89.1 74.2 Channel Symmetry 6s1= [0 .40 ,1.00 ,1.60 ,2.20] , s 2,3= [0 .40 ,1.00 ,1.60 ,2.20] 56.5 96.7 73.1 63.0 65.5 77.4 85.6 70.4 92.3 75.6 7s1= [0 .50 ,1.20 ,1.90 ,2.60] , s 2,3= [0 .50 ,1.20 ,1.90 ,2.60] 55.8 97.4 74.5 70.7 62.2 78.0 85.2 71.3 93.0 76.5 Scale Cardinality 8s1= [1 .00] , s 2,3= [1 .00] 58.0 92.1 72.7 68.1 57.9 75.2 84.5 69.9 89.1 74.2 9s1= [0 .50 ,1.50] , s 2,3= [0 .40 ,1.30] 57.3 97.3 75.2 66.8 61.0 80.8 83.2 65.8 93.0 75.6 10 s1= [0 .50 ,1.50 ,2.50] , s 2,3= [0 .40 ,1.30 ,2.10] 56.7 97.6 78.4 75.8 61.9 80.8 86.4 70.2 95.3 78.1 11 s1= [0 .50 ,1.00 ,1.50 ,2.00 ,2.50] , s 2,3= [0 .40 ,0.80 ,1.30 ,1.70 ,2.10] 56.3 99.2 78.7 75.6 60.8 78.3 84.2 70.3 94.3 77.5
+
+Table 9. Analysis of quantization scale settings from four perspectives: channel disparity, range shift, channel symmetry, and scale cardinality. 
+
+using multiple quantization scales and channel-specific quantization factors. (3) Effectiveness of the temporal stream : Comparing rows 3 and 5, adding the temporal stream yields a significant 10.1% improvement in mAP, highlighting the importance of temporal information for video attribution. (4) Effectiveness of the RGB stream :Comparing rows 5 and 6, introducing the RGB stream leads to a modest 1.4% improvement in mAP, indicating that the original RGB information also provides useful cues for attribution. 
+
+Analysis of Fusion Weights: In Sec. 3.3, we employ a triple-stream feature fusion, and assign different weights to spatial residual stream ( wspatial ), temporal residual stream ( wtemporal ) and RGB context stream ( wRGB ). (1) 
+
+Selection of ( wtemporal ): We first set the RGB weight to 0.1, and vary the temporal weights wtemporal from 0.1 to 0.6, maintaining the sum of wspatial , wtemporal , and 
+
+wRGB equal to 1. Results in Tab. 5 show that our approach is robust to different temporal weights wtemporal , and it achieves the maximum mAP when the temporal weight 
+
+wtemporal is set to 0.3. (2) Selection of ( wRGB ): We subsequently set wtemporal : wspatial to 1:2, and vary the RGB weight wRGB from 0.05 to 0.30, maintaining the sum of wspatial , wtemporal and wRGB as 1. It is evident in Tab. 6 that our approach is also robust to different RGB weights wRGB , and the RGB weight wRGB of 0.10 facilitates the approach in achieving the optimal mAP of 78.3 %.
+
+Analysis of the Transformation Matrix: Our approach projects video frames into an adaptive color space via a transformation matrix. To evaluate its effectiveness in exposing artifacts, we compare it with several predefined and adaptive alternatives, including the Uniform Difference Matrix (UDM), DCT matrix, YCbCr matrix, YUV matrix, and R/B-channel-dominated adaptive matrices (obtained by replacing the constraint in Eq. 4 with m1,R (B) ≥ τ ). Detailed formulations are provided in the Supplementary Material . As shown in Tab. 7, the UDM and DCT matrix perform the worst, highlighting the importance of a suitable color space. Moreover, adaptive matrices consistently outperform predefined ones, with the G-channel-dominated variant performing best. 
+
+Analysis of Quantization Scales: We compare our selection of quantization scales with other choices from four perspectives, and the results of attribution mAP are reported in Tab. 9. (1) Channel disparity : To investigate the channel disparity sensitivity, the difference between 
+
+s1 and s2,3 increases in row (2) and decreases in row (3), and both of them reduce performance. The results indicate that an excessively large difference can lead to excessive information loss, while an excessively small difference can make the method degenerate into symmetric quantization, making it impossible to fully utilize the channel characteristics. Our selection achieves the best balance. (2) Range shift : To study the impacts of the range of quantization factors, we narrow down (row 4) or expand (row 5) the range of factors as a whole. Clearly, fine-grained quantization captures minor pixel jitter, while coarse-grained quantization captures structural generation artifacts, and our selection strikes an equilibrium between them. (3) Channel symmetry : To verify the effectiveness of asymmetric quantization factors for different chan-nels, we compare asymmetric quantization (row 1) with symmetric quantization (row 6 and row 7), and find that our selection achieves the best performance. This can be ascribed to the different sensitivities of human eyes and generative models to luminance artifacts, and an asymmet-ric design can more accurately strip away the generation traces of different channels. (4) Scale cardinality : When we scale the number of factors from one to five, the mAP increases and then decreases, and it reaches the peak of 78.3 % when we utilize four factors. 
+
+Analysis of Robustness to Video Degradation: To assess the robustness against common video processing Figure 5. Visualization of video attribution results on hard cases for AI-generated video detection. We select videos misclassified by other detection methods and visualize the attribution results of our approach on these challenging examples. 
+
+operations, we apply H.264 compression (CRF=12, 18, and 24) and central crop (maintain 90 %, 70 %, and 50 % of the whole frame). We evaluate mAP of our approach and other mainstream methods on the video attribution task, which is shown in Tab. 4. As the degree of video degradation intensifies, the mAP of other methods drops significantly, even below 20 %, which indicates that video compression can cause artifacts left by generative models to deform or disappear, and center crop may miss some artifacts. Nevertheless, even in the most severe cases, our approach maintains strong robustness, with the mAP remaining above 65 %, suggesting that the fingerprints identified by our approach are the essential artifacts that are not easily disturbed. 
+
+Analysis of Computational Efficiency: We compare the time consumption for video attribution between other mainstream methods and our approach. For ESSP [6], LOTA [44] and our approach, we compute the time for constructing the 100-shot database as Preparation Time, and compute the time for retrieving 1000 videos as Attribu-tion Time. For DeMamba [3] and UNITE [24], the time for 100-shot training to convergence and for classifying 1000 videos are regarded as Preparation Time and Attribution Time , respectively. Results in Tab. 8 demonstrate that our approach requires the least total time for attribution, only 1332.30 seconds, outperforming all other methods by more than 685.55 seconds. 
+
+Visualization of Attribution in Hard Cases: We apply current AI-generated video detection methods to GenVid-Bench and collect the videos misclassified by these detec-tors as hard cases. We then apply our approach to these samples and report the feature similarities between query features and database features in Fig. 5. Our approach not only correctly classifies them as real or fake, but also accu-rately attributes the fake videos to their corresponding gen-erative models. 
+
+5. Conclusion 
+
+We propose a training-free and efficient framework for AI-generated video attribution by formulating attribution as an instance retrieval task. Through adapted orthogonal color transformation, multi-scale quantized residual, and temporal-semantic aggregation, our method effectively ex-poses subtle generation artifacts and learns robust video rep-resentations. Extensive experiments on GenVidBench show that our approach consistently outperforms existing base-lines in both source attribution (with a Rank-1 accuracy of 20.5 % and a mean Average Precision of 16.6 %) and deep-fake detection, while maintaining favorable computational efficiency. Extensive ablation studies and additional analy-ses further validate the effectiveness of each proposed mod-ule and strong robustness of our design to video degrada-tions. 
+
+References 
+
+> [1] Jianfa Bai, Man Lin, and Gang Cao. Ai-generated video de-tection via spatio-temporal anomaly learning, 2024. 2
+
+[2] Andreas Blattmann, Tim Dockhorn, Sumith Kulal, Daniel Mendelevitch, Maciej Kilian, Dominik Lorenz, Yam Levi, Zion English, Vikram Voleti, Adam Letts, et al. Stable video diffusion: Scaling latent video diffusion models to large datasets. arXiv preprint arXiv:2311.15127 , 2023. 6 [3] Haoxing Chen, Yan Hong, Zizheng Huang, Zhuoer Xu, Zhangxuan Gu, Yaohui Li, Jun Lan, Huijia Zhu, Jianfu Zhang, Weiqiang Wang, and Huaxiong Li. Demamba: Ai-generated video detection on million-scale genvideo bench-mark. arXiv preprint arXiv:2405.19707 , 2024. 2, 6, 7, 9 [4] Haoxin Chen, Yong Zhang, Xiaodong Cun, Menghan Xia, Xintao Wang, Chao Weng, and Ying Shan. Videocrafter2: Overcoming data limitations for high-quality video diffusion models. arXiv preprint arXiv:2401.09047 , 2024. 6 [5] Haipeng Chen, Yixin Jia, Zenan Shi, and Dong Zhang. Adnet: Delving into generalizable deepfake detection via adaptive expert selection and discrepancy learning. Pattern Recognition , 173:112755, 2026. 1 [6] Jiaxuan Chen, Jieteng Yao, and Li Niu. A single simple patch is all you need for ai-generated image detection. arXiv preprint arXiv:2402.01123 , 2024. 6, 7, 9 [7] Xinyuan Chen, Yaohui Wang, Lingjun Zhang, Shaobin Zhuang, Xin Ma, Jiashuo Yu, Yali Wang, Dahua Lin, Yu Qiao, and Ziwei Liu. Seine: Short-to-long video diffu-sion model for generative transition and prediction. In The Twelfth International Conference on Learning Representa-tions , 2023. 1 [8] Pierre Fernandez, Hady Elsahar, I Zeki Yalniz, and Alexan-dre Mourachko. Video Seal: Open and Efficient Video Wa-termarking. arXiv preprint arXiv:2412.09492 , 2024. 3 [9] Joel Frank, Thorsten Eisenhofer, Lea Sch¨ onherr, Asja Fis-cher, Dorothea Kolossa, and Thorsten Holz. Leveraging fre-quency analysis for deep fake image recognition. In Interna-tional Conference on Machine Learning , pages 3247–3258. PMLR, 2020. 1, 2 [10] Xinghe Fu, Zhiyuan Yan, Zheng Yang, Taiping Yao, Yan-dan Zhao, Shouhong Ding, and Xi Li. Pid: Generalized ai-generated images detection with pixelwise decomposition residuals. In International Conference on Machine Learning ,2025. 6, 7 [11] Sharath Girish, Saksham Suri, Sai Saketh Rambhatla, and Abhinav Shrivastava. Towards discovery and attribution of open-world gan generated images. In Proceedings of the IEEE/CVF international conference on computer vision ,pages 14094–14103, 2021. 3 [12] Yuwei Guo, Ceyuan Yang, Anyi Rao, Zhengyang Liang, Yaohui Wang, Yu Qiao, Maneesh Agrawala, Dahua Lin, and Bo Dai. AnimateDiff: Animate Your Personalized Text-to-Image Diffusion Models without Specific Tuning. In Inter-national Conference on Learning Representations , 2024. 1 [13] Yoav HaCohen, Nisan Chiprut, Benny Brazowski, Daniel Shalem, Dudu Moshe, Eitan Richardson, Eran Levin, Guy Shiran, Nir Zabari, Ori Gordon, et al. LTX-Video: Realtime Video Latent Diffusion. arXiv preprint arXiv:2501.00103 ,2024. 1 [14] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. In Proceed-ings of the IEEE Conference on Computer Vision and Pattern Recognition , pages 770–778, 2016. 6, 7 [15] Peisong He, Leyao Zhu, Jiaxing Li, Shiqi Wang, and Hao-liang Li. Exposing ai-generated videos: A benchmark dataset and a local-and-global temporal defect based detec-tion method, 2024. 2 [16] Wenyi Hong, Ming Ding, Wendi Zheng, Xinghan Liu, and Jie Tang. Cogvideo: Large-scale pretraining for text-to-video generation via transformers. arXiv preprint arXiv:2205.15868 , 2022. 6 [17] Runyi Hu, Jie Zhang, Yiming Li, Jiwei Li, Qing Guo, Han Qiu, and Tianwei Zhang. VideoShield: Regulating Diffusion-based Video Generation Models via Watermark-ing. In International Conference on Learning Representa-tions , 2025. 3 [18] Xuming Hu, Hanqian Li, Jungang Li, Yu Huang, Shuliang Liu, Qi Zheng, Junhao Chen, and Aiwei Liu. VideoMark: A Distortion-Free Robust Watermarking Framework for Video Diffusion Models. arXiv preprint arXiv:2504.16359 , 2025. 3[19] Lichuan Ji, Yingqi Lin, Zhenhua Huang, Yan Han, Xiaogang Xu, Jiafei Wu, Chong Wang, and Zhe Liu. Distinguish any fake videos: Unleashing the power of large-scale data and motion features, 2024. 1, 2 [20] Gopalakrishna Karamchand. Detecting the Abuse of Genera-tive AI in Cybersecurity Contexts: Challenges, Frameworks, and Solutions. Journal of Data Analysis and Critical Man-agement , 1(03):1–12, 2025. 1 [21] Levon Khachatryan, Andranik Movsisyan, Vahram Tade-vosyan, Roberto Henschel, Zhangyang Wang, Shant Navasardyan, and Humphrey Shi. Text2video-zero: Text-to-image diffusion models are zero-shot video generators. In 
+
+Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 15954–15964, 2023. 6 [22] Weijie Kong, Qi Tian, Zijian Zhang, Rox Min, Zuozhuo Dai, Jin Zhou, Jiangfeng Xiong, Xin Li, Bo Wu, Jianwei Zhang, et al. HunyuanVideo: A Systematic Framework For Large Video Generative Models. arXiv preprint arXiv:2412.03603 ,2024. 1 [23] Rohit Kundu, Vishal Mohanty, Hao Xiong, Shan Jia, Athula Balachandran, and Amit K. Roy-Chowdhury. Saga: Source attribution of generative ai videos, 2025. 2, 3 [24] Rohit Kundu, Hao Xiong, Vishal Mohanty, Athula Balachan-dran, and Amit K. Roy-Chowdhury. Towards a universal synthetic video detector: From face or background manip-ulations to fully ai-generated content, 2025. 2, 6, 7, 9 [25] Yuezun Li and Siwei Lyu. Exposing deepfake videos by detecting face warping artifacts. arXiv preprint arXiv:1811.00656 , 2018. 1, 2 [26] Zinian Liu, Xiaofeng Wang, Qin Wang, Ningning Bai, Ruidong Han, and Shanmin Pang. Structure searchable net-work model for deepfake image detection. Pattern Recogni-tion , 179:113813, 2026. 1 [27] Xiyang Luo, Yinxiao Li, Huiwen Chang, Ce Liu, Peyman Milanfar, and Feng Yang. DVMark: A Deep Multiscale Framework for Video Watermarking. IEEE Transactions on Image Processing , 2023. 3 [28] Guoqing Ma, Haoyang Huang, Kun Yan, Liangyu Chen, Nan Duan, Shengming Yin, Changyi Wan, Ranchen Ming, Xiao-niu Song, Xing Chen, et al. Step-Video-T2V Technical Re-port: The Practice, Challenges, and Future of Video Founda-tion Model. arXiv preprint arXiv:2502.10248 , 2025. 1 [29] Long Ma, Zhiyuan Yan, Qinglang Guo, Yong Liao, Haiyang Yu, and Pengyuan Zhou. Detecting ai-generated video via frame consistency, 2025. 1, 2 [30] Liyue Ming, Peisong He, Beibei Li, Haoliang Li, and Xing-hao Jiang. Exploring transferable inconsistencies with re-gional guidance for reference-based deepfake detection. Pat-tern Recognition , 179:113795, 2026. 1 [31] Zhenliang Ni, Qiangyu Yan, Mouxiao Huang, Tianning Yuan, Yehui Tang, Hailin Hu, Xinghao Chen, and Yunhe Wang. Genvidbench: A challenging benchmark for detecting ai-generated video, 2025. 5 [32] Yan Pang, Baicheng Chen, Yang Zhang, and Tianhao Wang. VGMShield: Mitigating Misuse of Video Generative Mod-els. arXiv preprint arXiv:2402.13126 , 2024. 2, 3 [33] Yan Pang, Aiping Xiong, Yang Zhang, and Tianhao Wang. Towards Understanding Unsafe Video Generation. arXiv preprint arXiv:2407.12581 , 2024. 1 [34] pika. Pika. Online, 2024. Available: https://pika. art/home . 6 [35] Andreas Rossler, Davide Cozzolino, Luisa Verdoliva, Chris-tian Riess, Justus Thies, and Matthias Nießner. Faceforen-sics++: Learning to detect manipulated facial images. In 
+
+Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 1–11, 2019. 1, 2 [36] Ekraam Sabir, Jiaxin Cheng, Ayush Jaiswal, Wael AbdAl-mageed, Iacopo Masi, and Prem Natarajan. Recurrent convo-lutional strategies for face manipulation detection in videos. 
+
+Interfaces (GUI) , 3(1):80–87, 2019. 2 [37] Spotlight. AI-generated footage falsely used to show ’af-termath’ of Philippines earthquake. https://spotlight.ebu.ch/ ,2025. 1 [38] Morph Studio. Morph studio. https : / / www . morphstudio.com/ , 2024. 1 [39] Du Tran, Heng Wang, Lorenzo Torresani, Jamie Ray, Yann LeCun, and Manohar Paluri. A closer look at spatiotemporal convolutions for action recognition. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recogni-tion , 2018. 6, 7 [40] Shanghai Jiao Tong University. Vript: A video is worth thousands of words. Online, 2024. Available: https: //github.com/mutonix/Vript . 6 [41] Danial Samadi Vahdati, Tai D Nguyen, Aref Azizpour, and Matthew C Stamm. Beyond deepfake images: Detecting ai-generated videos. In Proceedings of the IEEE/CVF Con-ference on Computer Vision and Pattern Recognition , pages 4397–4408, 2024. 2, 3 [42] Team Wan, Ang Wang, Baole Ai, Bin Wen, Chaojie Mao, Chen-Wei Xie, Di Chen, Feiwu Yu, Haiming Zhao, Jianxiao Yang, et al. Wan: Open and Advanced Large-Scale Video Generative Models. arXiv preprint arXiv:2503.20314 , 2025. 1[43] Chao Wang, Zijin Yang, Yaofei Wang, Yuang Qi, Weim-ing Zhang, Nenghai Yu, and Kejiang Chen. Swift: Sliding window reconstruction for few-shot training-free generated video attribution, 2026. 3 [44] Hongsong Wang, Renxi Cheng, Yang Zhang, Chaolei Han, and Jie Gui. Lota: Bit-planes guided ai-generated image de-tection. In Proceedings of the IEEE/CVF International Con-ference on Computer Vision (ICCV) , pages 17246–17255, 2025. 6, 7, 9 [45] Jiuniu Wang, Hangjie Yuan, Dayou Chen, Yingya Zhang, Xiang Wang, and Shiwei Zhang. Modelscope text-to-video technical report. arXiv preprint arXiv:2308.06571 , 2023. 6 [46] Wenjing Wang, Huan Yang, Zixi Tuo, Huiguo He, Junchen Zhu, Jianlong Fu, and Jiaying Liu. Videofactory: Swap at-tention in spatiotemporal diffusions for text-to-video gener-ation. arXiv preprint arXiv:2305.10874 , 2023. 6 [47] Zhenting Wang, Chen Chen, Yi Zeng, Lingjuan Lyu, and Shiqing Ma. Where did i come from? origin attribution of ai-generated images. Advances in neural information pro-cessing systems , 36:74478–74500, 2023. 3 [48] Zhiqiang Xia, Zhaokang Chen, Bin Wu, Chao Li, Kwok-Wai Hung, Chao Zhan, Yingjie He, and Wenjiang Zhou. Musev: Infinite-length and high fidelity virtual human video genera-tion with visual conditioned parallel denoising. arxiv , 2024. 6[49] Jinbo Xing, Menghan Xia, Yong Zhang, Haoxin Chen, Wangbo Yu, Hanyuan Liu, Gongye Liu, Xintao Wang, Ying Shan, and Tien-Tsin Wong. Dynamicrafter: Animating open-domain images with video diffusion priors. In Eu-ropean Conference on Computer Vision , pages 399–417. Springer, 2024. 1 [50] Xi Xue, Kunio Suzuki, Nabarun Goswami, and Takuya Shin-tate. Video forgery detection with optical flow residuals and spatial-temporal consistency, 2025. 1, 2 [51] Tianyun Yang, Danding Wang, Fan Tang, Xinying Zhao, Juan Cao, and Sheng Tang. Progressive open space ex-pansion for open-set model attribution. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 15856–15865, 2023. 3 [52] Bingyao Yu, Wanhua Li, Xiu Li, Jiwen Lu, and Jie Zhou. Frequency-aware spatiotemporal transformers for video in-painting detection. In Proceedings of the IEEE/CVF Inter-national Conference on Computer Vision , pages 8188–8197, 2021. 2 [53] Zhengqing Yuan, Ruoxi Chen, Zhaoxu Li, Haolong Jia, Li-fang He, Chi Wang, and Lichao Sun. Mora: Enabling gen-eralist video generation via a multi-agent framework, 2024. 6[54] Kevin Alex Zhang, Lei Xu, Alfredo Cuesta-Infante, and Kalyan Veeramachaneni. Robust Invisible Video Water-marking with Attention. arXiv preprint arXiv:1909.01285 ,2019. 3 [55] Yulin Zhang, Jiangqun Ni, Wenkang Su, and Xin Liao. ANovel Deep Video Watermarking Framework with Enhanced Robustness to H. 264/AVC Compression. In Proceedings of the 31st ACM International Conference on Multimedia ,pages 8095–8104, 2023. 3 [56] Zangwei Zheng, Xiangyu Peng, Tianji Yang, Chenhui Shen, Shenggui Li, Hongxin Liu, Yukun Zhou, Tianyi Li, and Yang You. Open-Sora: Democratizing Efficient Video Production for All. arXiv preprint arXiv:2412.20404 , 2024. 1

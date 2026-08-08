@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-08T20:34:15.947013+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.28955v1",
+      "source": "arxiv",
+      "title": "Retrieval-Driven Training-Free AI-Generated Video Attribution",
+      "abstract": "AI-generated videos are becoming increasingly realistic and difficult to distinguish from authentic ones, which facilitates malicious misuse and poses growing threats to cybersecurity and social governance. Attributing AI-generated videos to their specific generative sources is therefore of critical importance for forensic investigation and legal regulation. However, most existing visual attribution methods focus on images and particularly rely on the image generation model, thereby lacking the ability to generalize to large-scale AI-generated video data. To address these limitations, we introduce an training-free AI-generated video attribution paradigm. Specifically, we formulates AI-generated video attribution as an instance retrieval task, and design a generative fingerprint-based pipeline. This pipeline consists of an adapted orthogonal color transformation, multi-scale quantized residual generation, and temporal-semantic aggregation, progressively capturing and integrating artifacts introduced by generative models across video frames. Extensive experiments on the GenVidBench benchmark demonstrate that our method achieves strong performance in both AI-generated video detection and attribution, outperforming existing state-of-the-art methods with a Rank-1 accuracy of 20.5% and a mean Average Precision of 16.6%. The code is at https://github.com/renxi-seu/Video_Attribution.",
+      "authors": [
+        "Renxi Cheng",
+        "Chaolei Han",
+        "Jie Gui",
+        "Hongsong Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-07-31T02:19:25+00:00",
+      "link": "https://arxiv.org/pdf/2607.28955v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "training-free retrieval-based attribution of AI-generated videos to generator source",
+      "llm_evidence_cn": "基于检索的无训练生成视频溯源/指纹识别",
+      "llm_evidence": "基于检索的无训练生成视频溯源/指纹识别",
+      "canonical_evidence": "基于检索的无训练生成视频溯源/指纹识别",
+      "llm_tldr_en": "Introduces a training-free retrieval-based paradigm for attributing AI-generated videos to their source generative models, addressing limitations of image-centric attribution methods.",
+      "llm_tldr_cn": "现有AI生成视频溯源方法多直接沿用图像生成模型，难以泛化到大尺度视频数据。该工作提出无训练的检索驱动溯源范式，将AI生成视频归属建模为实例检索任务，通过设计生成式检索策略直接匹配生成源。实验结果表明该方法无需任何训练即可有效识别视频来源，并具有较好的跨域泛化能力，为生成视频的来源指纹识别与版权监管提供了可扩展的解决方案。",
+      "llm_tldr": "现有AI生成视频溯源方法多直接沿用图像生成模型，难以泛化到大尺度视频数据。该工作提出无训练的检索驱动溯源范式，将AI生成视频归属建模为实例检索任务，通过设计生成式检索策略直接匹配生成源。实验结果表明该方法无需任何训练即可有效识别视频来源，并具有较好的跨域泛化能力，为生成视频的来源指纹识别与版权监管提供了可扩展的解决方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

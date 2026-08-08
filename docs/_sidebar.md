@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-08-08 <!--dpr-date:20260808-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/08/2607.28955v1-retrieval-driven-training-free-ai-generated-video-attribution" data-sidebar-item="{&quot;title&quot;: &quot;Retrieval-Driven Training-Free AI-Generated Video Attribution&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.28955v1-retrieval-driven-training-free-ai-generated-video-attribution&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;基于检索的无训练生成视频溯源/指纹识别&quot;}">Retrieval-Driven Training-Free AI-Generated Video Attribution</a>
   * 2026-08-07 <!--dpr-date:20260807-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/07/2608.00382v1-ti-stegoalign-channel-guided-post-training-for-generative-text-steganography-under-tokenization-inconsistency" data-sidebar-item="{&quot;title&quot;: &quot;TI-StegoAlign: Channel-Guided Post-Training for Generative Text Steganography under Tokenization Inconsistency&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2608.00382v1-ti-stegoalign-channel-guided-post-training-for-generative-text-steganography-under-tokenization-inconsistency&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;面向分词不一致的稳健文本信息嵌入，与鲁棒水印技术相关。&quot;}">TI-StegoAlign: Channel-Guided Post-Training for Generative Text Steganography under Tokenization Inconsistency</a>
