@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-09T20:44:16.194190+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2608.03101v1",
+      "source": "arxiv",
+      "title": "Double Down on Defense: Strengthening Deep Perceptual Hashes against Evasion Attacks without Retraining",
+      "abstract": "Near-duplicate image matching is crucial for trust and safety, provenance verification, copyright enforcement, and large-scale visual search. Modern platforms increasingly rely on deep perceptual hashes, which map visually similar images to nearby representations despite common image transformations. However, adversarial perturbations can cause near-duplicates to evade matching. We present DualShield, a plug-in defense that improves the robustness of existing deep perceptual hashes without retraining or modifying their underlying models. DualShield combines matching-time randomized smoothing, which aggregates decisions over perturbed reference-query pairs, with publication-time hardening, which adds an optimized imperceptible perturbation to each reference image before publication. Together, these mechanisms provide certified and empirical robustness. DualShield achieves a certified $\\ell_2$ radius of approximately 0.3, guaranteeing that query perturbations within this radius cannot evade matching. We further evaluate it against adaptive white-box, black-box, and image-transformation attacks. Across eight deep perceptual hashes and three datasets, DualShield substantially reduces attack success rates while preserving low collision rates. These results show that deep perceptual hashes can be strengthened without costly retraining by improving the matching procedure and hardening reference images before publication.",
+      "authors": [
+        "Bangjie Sun",
+        "Nayoung Kim",
+        "Mun Choon Chan",
+        "Jun Han"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-08-04T04:18:56+00:00",
+      "link": "https://arxiv.org/pdf/2608.03101v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "defense strengthens deep perceptual hashes against adversarial perturbations; relevant to robust watermarking",
+      "llm_evidence_cn": "强化深度感知哈希的鲁棒性，与水印抗扰动需求相关",
+      "llm_evidence": "强化深度感知哈希的鲁棒性，与水印抗扰动需求相关",
+      "canonical_evidence": "强化深度感知哈希的鲁棒性，与水印抗扰动需求相关",
+      "llm_tldr_en": "DualShield defends deep perceptual hashes against adversarial evasion without retraining by combining randomized smoothing and publication-time hardening, improving robustness and preserving near-duplicate matching.",
+      "llm_tldr_cn": "针对深度感知哈希在对抗扰动下可能被规避、而重训练成本高昂的问题，该文提出即插即用防御DualShield。该方法在匹配阶段采用随机平滑聚合多个扰动参考-查询对的判定，同时在发布阶段加入不可感知硬化扰动，无需重训练或改动底层模型。实验显示该方法能大幅提升既有感知哈希对规避攻击的鲁棒性，并保持正常近重复匹配准确率。该防御可直接迁移至鲁棒水印验证等版权保护场景，提升其抗扰动能力。",
+      "llm_tldr": "针对深度感知哈希在对抗扰动下可能被规避、而重训练成本高昂的问题，该文提出即插即用防御DualShield。该方法在匹配阶段采用随机平滑聚合多个扰动参考-查询对的判定，同时在发布阶段加入不可感知硬化扰动，无需重训练或改动底层模型。实验显示该方法能大幅提升既有感知哈希对规避攻击的鲁棒性，并保持正常近重复匹配准确率。该防御可直接迁移至鲁棒水印验证等版权保护场景，提升其抗扰动能力。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

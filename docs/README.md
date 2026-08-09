@@ -6,26 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-08
-- 运行时间：2026-08-08 20:35:53 UTC
+- 最新运行日期：2026-08-09
+- 运行时间：2026-08-09 20:45:14 UTC
 - 运行状态：成功
 - 本次总论文数：1
-- 精读区：1
-- 速读区：0
+- 精读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-今日精读1篇AI生成视频归因研究，聚焦检索驱动的无训练检测方法，评分8.0/10。  
-核心看点是无需额外训练即可追溯视频来源，为鉴别AI生成内容提供高效新思路。  
-建议普通读者关注该技术的实用化进展，未来或可嵌入视频平台用于内容溯源。
-- 详情：[/202608/08/README](/202608/08/README)
+今日速读1篇论文，聚焦深度感知哈希的对抗鲁棒性。亮点：无需重训练即可强化哈希防御，得分7.0，适合关注规避攻击场景。建议进一步精读方法细节，或对比其他防御策略。
+- 详情：[/202608/09/README](/202608/09/README)
 
 ### 精读区论文标签
-1. [Retrieval-Driven Training-Free AI-Generated Video Attribution](/202608/08/2607.28955v1-retrieval-driven-training-free-ai-generated-video-attribution)  
-   标签：评分：8.0/10、query:watermarking
-   evidence：基于检索的无训练生成视频溯源/指纹识别
+- 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Double Down on Defense: Strengthening Deep Perceptual Hashes against Evasion Attacks without Retraining](/202608/09/2608.03101v1-double-down-on-defense-strengthening-deep-perceptual-hashes-against-evasion-attacks-without-retraining)  
+   标签：评分：7.0/10、query:watermarking
+   evidence：强化深度感知哈希的鲁棒性，与水印抗扰动需求相关
 
 
 <div class="dpr-home-promo-card">

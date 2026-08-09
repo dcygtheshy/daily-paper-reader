@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-08-09 <!--dpr-date:20260809-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/09/2608.03101v1-double-down-on-defense-strengthening-deep-perceptual-hashes-against-evasion-attacks-without-retraining" data-sidebar-item="{&quot;title&quot;: &quot;Double Down on Defense: Strengthening Deep Perceptual Hashes against Evasion Attacks without Retraining&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2608.03101v1-double-down-on-defense-strengthening-deep-perceptual-hashes-against-evasion-attacks-without-retraining&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;强化深度感知哈希的鲁棒性，与水印抗扰动需求相关&quot;}">Double Down on Defense: Strengthening Deep Perceptual Hashes against Evasion Attacks without Retraining</a>
   * 2026-08-08 <!--dpr-date:20260808-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/08/2607.28955v1-retrieval-driven-training-free-ai-generated-video-attribution" data-sidebar-item="{&quot;title&quot;: &quot;Retrieval-Driven Training-Free AI-Generated Video Attribution&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.28955v1-retrieval-driven-training-free-ai-generated-video-attribution&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;基于检索的无训练生成视频溯源/指纹识别&quot;}">Retrieval-Driven Training-Free AI-Generated Video Attribution</a>

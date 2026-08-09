@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-09",
+  "date": "2026-08-09",
+  "generated_at": "2026-08-09T20:45:20",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/09/2608.03101v1-double-down-on-defense-strengthening-deep-perceptual-hashes-against-evasion-attacks-without-retraining",
+      "section": "quick",
+      "title_en": "Double Down on Defense: Strengthening Deep Perceptual Hashes against Evasion Attacks without Retraining",
+      "authors": "Bangjie Sun, Nayoung Kim, Mun Choon Chan, Jun Han",
+      "date": "2026-08-04",
+      "pdf": "https://arxiv.org/pdf/2608.03101v1",
+      "score": "7.0",
+      "evidence": "强化深度感知哈希的鲁棒性，与水印抗扰动需求相关",
+      "tldr": "深度感知哈希易受对抗扰动攻击导致近重复图像逃逸匹配。提出DualShield插件防御，无需重训练，通过匹配时随机平滑聚合决策与发布时对参考图添加优化扰动双重机制，实现认证与经验鲁棒性。在ℓ2半径0.3内保证匹配，并在8个哈希、3个数据集上显著降低攻击成功率，同时保持低碰撞率。该工作为增强哈希鲁棒性提供了高效即插即用方案。",
+      "tags": "query:watermarking",
+      "abstract_en": "Near-duplicate image matching is crucial for trust and safety, provenance verification, copyright enforcement, and large-scale visual search. Modern platforms increasingly rely on deep perceptual hashes, which map visually similar images to nearby representations despite common image transformations. However, adversarial perturbations can cause near-duplicates to evade matching. We present DualShield, a plug-in defense that improves the robustness of existing deep perceptual hashes without retraining or modifying their underlying models. DualShield combines matching-time randomized smoothing, which aggregates decisions over perturbed reference-query pairs, with publication-time hardening, which adds an optimized imperceptible perturbation to each reference image before publication. Together, these mechanisms provide certified and empirical robustness. DualShield achieves a certified $\\ell_2$ radius of approximately 0.3, guaranteeing that query perturbations within this radius cannot evade matching. We further evaluate it against adaptive white-box, black-box, and image-transformation attacks. Across eight deep perceptual hashes and three datasets, DualShield substantially reduces attack success rates while preserving low collision rates. These results show that deep perceptual hashes can be strengthened without costly retraining by improving the matching procedure and hardening reference images before publication.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
