@@ -1,0 +1,39 @@
+{
+  "label": "2026-08-10",
+  "date": "2026-08-10",
+  "generated_at": "2026-08-10T20:19:41",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202608/10/2608.06416v1-worldmark-a-plug-and-play-world-knowledge-interface-for-cross-host-language-model-watermarking",
+      "section": "deep",
+      "title_en": "WorldMark: A Plug-and-Play World Knowledge Interface for Cross-Host Language Model Watermarking",
+      "authors": "Song Xiao, Yuqi Yuan, Yanshuo Zhang, Kejun Zhang",
+      "date": "2026-08-05",
+      "pdf": "https://arxiv.org/pdf/2608.06416v1",
+      "score": "8.0",
+      "evidence": "基于世界知识引导的鲁棒水印放置",
+      "tldr": "现有大模型水印依赖局部token统计，在开放文本生成中难以放置稳健信号。WorldMark提出即插即用接口，通过世界知识记忆图检索语义和情景知识，转化为token级显著性分数，并用非对称知识调制调整宿主水印强度。在C4上显著提升多个自适应水印变体的干净与攻击检测，同时略微降低困惑度，且无需重训练或额外检测端模型。该工作为水印信号提供全局知识引导，具有通用性和低开销。",
+      "tags": "query:watermarking",
+      "abstract_en": "Watermarking traces the provenance of text produced by large language models by embedding statistically detectable signals during decoding. Existing schemes fall into logits-based, sampling-based, entropy-aware, and adaptive-strength families, yet all of them place watermark signals according to local token statistics. In the open-ended text-generation settings evaluated in this work, local statistics may provide insufficient guidance for placing robust watermark signals. We introduce WorldMark, a plug-and-play interface that uses World Knowledge Memory (WKM) to organize semantic and episodic knowledge in a memory graph, converts the retrieved knowledge into a token-level knowledge saliency score, and adjusts the strength of a host watermark through Asymmetric Knowledge Modulation (AKM). WorldMark requires no backbone retraining and introduces no additional detector-side model or parameter. On the primary C4 evaluation, the complete WorldMark interface improves clean and attacked detection across three adaptive-strength host variants while slightly reducing perplexity. Additional pilot experiments on C4 and OpenGen show that direct memory conditioning transfers across multiple watermark families but can be unstable without saliency-aware modulation. WorldMark requires no additional detector-side model or parameter and introduces negligible overhead under the primary protocol.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/10/2608.07337v1-from-forensics-to-ecosystems-rethinking-watermarks-for-generative-ai-oversight",
+      "section": "deep",
+      "title_en": "From Forensics to Ecosystems: Rethinking Watermarks for Generative AI Oversight",
+      "authors": "Daniel Susser, John Thickstun, Gili Vidan",
+      "date": "2026-08-07",
+      "pdf": "https://arxiv.org/pdf/2608.07337v1",
+      "score": "8.0",
+      "evidence": "讨论生成式AI监管中水印的脆弱性及攻防问题",
+      "tldr": "生成式AI的普及引发监管难题，数字水印被视为有前景的治理工具，但批评者认为其技术上脆弱、认知上模糊、政治上无效。本文审视文本水印的挑战与机遇，主张将水印从孤立取证工具重新构想为理解合成内容对媒体生态系统影响的工具。这种生态系统方法更充分利用水印特性，其治理挑战虽存但比数字取证更易处理。",
+      "tags": "query:watermarking",
+      "abstract_en": "The arrival of generative AI as a cheap, widely accessible commercial service, and the tidal wave of AI-generated synthetic content it has unleashed, have provoked deep epistemic and social anxieties and raised difficult governance questions that policymakers are struggling to address. One approach that has attracted both enthusiasm from regulators and skepticism from researchers is digital watermarking. Signals embedded in a synthetically-generated piece of content indicating that it was AI-generated---possibly even identifying the specific systems that generated it---appear to offer a path toward mitigating risks of genAI that avoids the downsides of more interventionist strategies. But critics warn that watermarks may prove technically brittle, epistemically ambiguous, and politically ineffectual tools. In this paper, we explore the challenges and opportunities of using digital watermarking for AI governance, paying special attention to the specific problem of watermarking AI-generated text. We argue that such critiques often treat the problem of identifying synthetic content as an isolated forensic question. Instead, we propose reconceptualizing digital watermarks as tools for understanding the impacts of synthetic content on media ecosystems, rather than reliably identifying individual pieces of synthetic content. Such an ``ecosystems approach'' more effectively utilizes the features of watermarks. And while this approach raises its own governance challenges, we argue that they are more tractable than the challenges of using watermarks for digital forensics.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

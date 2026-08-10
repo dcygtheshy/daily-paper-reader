@@ -1,0 +1,91 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-10T20:15:51.113219+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2608.06416v1",
+      "source": "arxiv",
+      "title": "WorldMark: A Plug-and-Play World Knowledge Interface for Cross-Host Language Model Watermarking",
+      "abstract": "Watermarking traces the provenance of text produced by large language models by embedding statistically detectable signals during decoding. Existing schemes fall into logits-based, sampling-based, entropy-aware, and adaptive-strength families, yet all of them place watermark signals according to local token statistics. In the open-ended text-generation settings evaluated in this work, local statistics may provide insufficient guidance for placing robust watermark signals. We introduce WorldMark, a plug-and-play interface that uses World Knowledge Memory (WKM) to organize semantic and episodic knowledge in a memory graph, converts the retrieved knowledge into a token-level knowledge saliency score, and adjusts the strength of a host watermark through Asymmetric Knowledge Modulation (AKM). WorldMark requires no backbone retraining and introduces no additional detector-side model or parameter. On the primary C4 evaluation, the complete WorldMark interface improves clean and attacked detection across three adaptive-strength host variants while slightly reducing perplexity. Additional pilot experiments on C4 and OpenGen show that direct memory conditioning transfers across multiple watermark families but can be unstable without saliency-aware modulation. WorldMark requires no additional detector-side model or parameter and introduces negligible overhead under the primary protocol.",
+      "authors": [
+        "Song Xiao",
+        "Yuqi Yuan",
+        "Yanshuo Zhang",
+        "Kejun Zhang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-08-05T16:34:32+00:00",
+      "link": "https://arxiv.org/pdf/2608.06416v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "robust watermarking via world-knowledge-guided signal placement",
+      "llm_evidence_cn": "基于世界知识引导的鲁棒水印放置",
+      "llm_evidence": "基于世界知识引导的鲁棒水印放置",
+      "canonical_evidence": "基于世界知识引导的鲁棒水印放置",
+      "llm_tldr_en": "WorldMark presents a plug-and-play interface using a World Knowledge Memory to compute token-level knowledge saliency and adaptively adjust watermark strength in LLM decoding, improving robustness for open-ended text generation.",
+      "llm_tldr_cn": "现有大语言模型水印方法大多依据局部token统计决定信号强度，在开放式文本生成等场景下因缺乏全局语义指导而不够鲁棒。WorldMark提出一种即插即用的世界知识接口，通过世界知识记忆构建语义与情景知识图谱，为每个token计算知识显著性分数并据此动态调整水印嵌入强度，从而在解码阶段将水印信号放置在语义更关键的位置。实验表明该方法可有效提高长文本、开放域生成时水印的鲁棒性和可检测性，为语言模型输出溯源提供更稳定的方案。",
+      "llm_tldr": "现有大语言模型水印方法大多依据局部token统计决定信号强度，在开放式文本生成等场景下因缺乏全局语义指导而不够鲁棒。WorldMark提出一种即插即用的世界知识接口，通过世界知识记忆构建语义与情景知识图谱，为每个token计算知识显著性分数并据此动态调整水印嵌入强度，从而在解码阶段将水印信号放置在语义更关键的位置。实验表明该方法可有效提高长文本、开放域生成时水印的鲁棒性和可检测性，为语言模型输出溯源提供更稳定的方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.07337v1",
+      "source": "arxiv",
+      "title": "From Forensics to Ecosystems: Rethinking Watermarks for Generative AI Oversight",
+      "abstract": "The arrival of generative AI as a cheap, widely accessible commercial service, and the tidal wave of AI-generated synthetic content it has unleashed, have provoked deep epistemic and social anxieties and raised difficult governance questions that policymakers are struggling to address. One approach that has attracted both enthusiasm from regulators and skepticism from researchers is digital watermarking. Signals embedded in a synthetically-generated piece of content indicating that it was AI-generated---possibly even identifying the specific systems that generated it---appear to offer a path toward mitigating risks of genAI that avoids the downsides of more interventionist strategies. But critics warn that watermarks may prove technically brittle, epistemically ambiguous, and politically ineffectual tools. In this paper, we explore the challenges and opportunities of using digital watermarking for AI governance, paying special attention to the specific problem of watermarking AI-generated text. We argue that such critiques often treat the problem of identifying synthetic content as an isolated forensic question. Instead, we propose reconceptualizing digital watermarks as tools for understanding the impacts of synthetic content on media ecosystems, rather than reliably identifying individual pieces of synthetic content. Such an ``ecosystems approach'' more effectively utilizes the features of watermarks. And while this approach raises its own governance challenges, we argue that they are more tractable than the challenges of using watermarks for digital forensics.",
+      "authors": [
+        "Daniel Susser",
+        "John Thickstun",
+        "Gili Vidan"
+      ],
+      "primary_category": "cs.CY",
+      "categories": [
+        "cs.CY"
+      ],
+      "published": "2026-08-07T15:32:04+00:00",
+      "link": "https://arxiv.org/pdf/2608.07337v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Discusses watermark brittleness and attacks/defenses in generative AI oversight",
+      "llm_evidence_cn": "讨论生成式AI监管中水印的脆弱性及攻防问题",
+      "llm_evidence": "讨论生成式AI监管中水印的脆弱性及攻防问题",
+      "canonical_evidence": "讨论生成式AI监管中水印的脆弱性及攻防问题",
+      "llm_tldr_en": "A conceptual paper rethinking digital watermarks for generative AI governance, analyzing their technical brittleness and arguing for ecosystem-level oversight mechanisms that combine detection, provenance and authentication.",
+      "llm_tldr_cn": "本文重新审视生成式AI治理中的数字水印作用，指出水印作为一种轻量级监管手段受到政策制定者青睐，但技术上可能脆弱，存在被移除或伪造的风险。作者主张从取证视角转向更广泛的生态系统视角，考虑水印与检测、认证、溯源等机制的整体设计。文章分析了水印在治理框架中的机遇与局限，为生成内容监管与鲁棒水印研究提供了重要的概念性指导。",
+      "llm_tldr": "本文重新审视生成式AI治理中的数字水印作用，指出水印作为一种轻量级监管手段受到政策制定者青睐，但技术上可能脆弱，存在被移除或伪造的风险。作者主张从取证视角转向更广泛的生态系统视角，考虑水印与检测、认证、溯源等机制的整体设计。文章分析了水印在治理框架中的机遇与局限，为生成内容监管与鲁棒水印研究提供了重要的概念性指导。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

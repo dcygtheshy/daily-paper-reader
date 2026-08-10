@@ -1,0 +1,567 @@
+Title: WorldMark: A Plug-and-Play World Knowledge Interface for Cross-Host Language Model Watermarking
+
+URL Source: https://arxiv.org/pdf/2608.06416v1
+
+Published Time: Mon, 10 Aug 2026 00:02:27 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# WorldMark: A Plug-and-Play World Knowledge Interface for Cross-Host Language Model Watermarking 
+
+## Xiao Song, Yuan Yuqi, Zhang Yanshuo, Zhang Kejun August 10, 2026 
+
+Abstract 
+
+Watermarking traces the provenance of text produced by large language models by embedding statistically detectable signals during decoding. Existing schemes fall into logits-based, sampling-based, entropy-aware, and adaptive-strength families, yet all of them place watermark signals according to local token statistics. In the open-ended text-generation settings evaluated in this work, local statistics may provide insufficient guidance for placing robust watermark signals. We introduce WorldMark, a plug-and-play interface that uses World Knowledge Memory (WKM) to organize semantic and episodic knowledge in a memory graph, converts the retrieved knowledge into a token-level knowledge saliency score, and adjusts the strength of a host watermark through Asymmetric Knowledge Modulation (AKM). WorldMark requires no backbone retraining and introduces no additional detector-side model or parameter. On the primary C4 evaluation, the complete WorldMark interface improves clean and attacked de-tection across three adaptive-strength host variants while slightly reducing perplexity. Additional pilot experiments on C4 and OpenGen show that direct memory conditioning transfers across multiple watermark families but can be unstable without saliency-aware modulation. WorldMark requires no additional detector-side model or parameter and introduces negligible overhead under the primary protocol. 
+
+# 1 Introduction 
+
+Large language models now generate text at a scale that makes reliable attribution a prerequisite for accountability, and watermarking has become the leading mechanism for this purpose. A watermark embeds an imperceptible yet algorithmically detectable pattern into generated text so that a verifier holding a secret key can later decide whether a passage originated from a watermarked model. Given a prompt and previously generated tokens, a watermarking method modifies either the logits or the sampling step of the decoder so that the resulting sequence carries a signal that a hypothesis test can separate from unwatermarked text at a controlled false positive rate. Existing methods divide into four families: logits based methods that bias a green list of the vocabulary [1, 2], sampling based methods that steer the selection step through a pseudo random sequence [3, 4], entropy aware methods that restrict watermarking to high entropy positions to protect low entropy text such as source code [5, 6, 7], and adaptive strength methods that tune the intensity per token against a text quality objective [8]. Despite their differences, the four families share one assumption: the decision of where and how strongly to watermark a token can be made from local information, either the token logits or a short prefix hash. This assumption may become particularly problematic in knowledge-intensive settings, where load-bearing tokens are entities, relations, and identifiers whose correctness is determined by external knowledge rather than by local uncertainty. Local statistics either mark such tokens too weakly, since they appear low entropy, or place the signal where a paraphrase attack can remove it, since the placement ignores which tokens are semantically anchored. What is missing is a placement signal that reflects which tokens carry confirmed world knowledge. We refer to this signal as knowledge saliency. 
+
+World Knowledge Memory. World Knowledge Memory (WKM), which organizes semantic and episodic knowl-edge in a structured memory graph, provides the information required to construct this missing placement signal. Within WKM, semantic memory stores factual triplets extracted from the context, whereas episodic memory records the observations in which those triplets were confirmed [9]. By identifying which tokens instantiate confirmed facts, such a model marks tokens that are both safe to carry a watermark and hard for an attacker to rewrite without changing meaning. The remaining challenge is to convert the retrieved structured knowledge into a knowledge saliency score that can be shared across different host-watermark families without backbone retraining or any additional detector-side model or parameter. We address this challenge with WorldMark, a plug-and-play interface between World Knowledge Memory and a host watermark. WorldMark uses WKM to construct a memory graph from the prompt and generated context, retrieves the semantic triplets and episodic vertices relevant to the current generation step, and converts the retrieved knowledge into a knowledge saliency score st. The score is then used by Asymmetric Knowledge Modulation to adjust the strength 1arXiv:2608.06416v1 [cs.CR] 5 Aug 2026 of the host watermark. In the experiments reported in this paper, the complete WorldMark interface is evaluated primarily on C4 using three adaptive-strength MorphMark variants. A separate small-scale pilot on C4 and OpenGen examines direct prompt-level memory conditioning across several host watermark families. The primary evaluation shows consistent improvements over the reproduced MorphMark baselines, whereas the pilot reveals heterogeneous effects across hosts and datasets. The original host detector is retained, and no additional detector-side model is introduced. 
+
+We summarize our contributions as follows: 
+
+1. Knowledge Saliency for Watermark Placement. We introduce the problem of incorporating structured semantic and episodic knowledge from World Knowledge Memory into LLM watermarking. Existing watermarking families rely primarily on local token statistics, which provide insufficient guidance for watermark placement in knowledge-intensive generation. To the best of our knowledge, this is the first systematic study of knowledge saliency as a shared placement signal across heterogeneous host watermarks. 2. WorldMark: A Plug-and-Play Modulation Interface. We propose WorldMark, a host-agnostic watermark-ing interface that transforms WKM-retrieved knowledge into a token-level knowledge saliency score and adaptively adjusts watermark strength through Asymmetric Knowledge Modulation. This modulation combines a quality-relief coefficient and a detection-boost coefficient, allowing WorldMark to attach to logits-based, sampling-based, entropy-aware, and adaptive-strength host watermarks without backbone retraining and while preserving the original detector. 3. Empirical Evaluation. We conduct a primary evaluation of the complete WorldMark interface on C4 using three adaptive-strength MorphMark variants, measuring clean detection, attacked detection, perplexity, and runtime. A complementary pilot study on C4 and OpenGen examines the transfer behavior and failure modes of direct prompt-level memory conditioning across logits-based, sampling-based, and hybrid hosts, providing qualitative insight into cross-family behavior rather than statistically conclusive improvements. 
+
+# 2 Related Work 
+
+Our work lies at the intersection of LLM watermarking and knowledge-augmented world modeling. Following recent surveys [6], we organize the watermarking literature by signal construction, placement strategy, distributional distor-tion, and robustness threats, then discuss memory architectures and knowledge graph world models before examining watermarking in agentic generation settings. 
+
+LLM Watermarking and Evaluation. Existing schemes fall into two families. The KGW family [1] modifies logits to favor greenlist tokens, enabling statistical detection, while the Christ family [10, 3] steers sampling through pseudorandom sequences. Several benchmarks evaluate these methods [11, 12, 13]. A common limitation is the focus on static, single-turn generation: none evaluates watermark behavior when LLMs operate as interactive agents, where token distributions shift across turns. Task-agnostic model-side methods retrain additional components to exhibit watermark-triggered behavior [14] or adapt watermarking via entropy thresholds [15]. WorldMark instead operates at generation time without backbone retraining. Recent work on lossless and symbiotic watermarking [16, 17, 18] addresses quality–detectability trade-offs through lexical redundancy, entropy-based strategy selection, and fictitious-knowledge injection; WorldMark complements these by operating at generation time without retraining. 
+
+Memory and World Models for LLM Agents. Equipping LLMs with persistent memory has attracted growing attention [8]. Early unstructured designs—RAG, full-history concatenation, and natural-language reflection [19, 20]— handle short-horizon tasks but struggle with complex reasoning. Structured memory has since emerged: GraphRAG [21] and HOLMES [13] integrate knowledge graphs for multi-hop QA, while AriGraph [9] combines semantic and episodic memory into dynamic knowledge graphs, demonstrating stronger planning in TextWorld [22] and NetHack [23]. In this work, AriGraph serves as the semantic-episodic graph organization for WorldMark. 
+
+Watermarking in Agent Settings. The intersection of LLM watermarking and autonomous agents remains largely unexplored. On the robustness side, Kirchenbauer et al. [1] showed paraphrasing weakens but does not erase watermarks, and subsequent work [24] examined translation round-tripping and synonym substitution. These eval-uations, however, are limited to single-pass transformations on static text; the structured compression of knowledge graph extraction represents a fundamentally different degradation channel that has not been systematically studied. On the agent side, prior work [8, 20, 19] has focused on planning, reasoning, and memory without considering watermark effects in the underlying language model. Whether watermark-induced logit biases degrade world model consistency or cause exploration failures in environments such as TextWorld [22] remains open. By incorporating world-driven cog-nitive models into the MARKLLM pipeline, this work provides the first systematic evaluation of LLM watermarks in graph-enhanced memory-based agents, addressing the gap between static benchmarks and interactive agent deployment. Black-box post-hoc methods [25, 26] operate after generation, addressing complementary deployment settings. 2y₁ y₂ ⋯ yT 
+
+> Green List via Hash (ξ, y<t) Compare z to threshold
+> @ target FPR
+> Vₛ, Eₛ: semantic Vₑ, Eₑ: episodic
+
+Per-Host Instantiation 
+
+> (same β′ₜ)
+
+Detection (Unchanged) Memory Graph (Built Once) Decode 
+
+> Next:
+
+Parse & Triplets         
+
+> Semantic V / E Episodic V / E Semantic E Episodic E
+> Input: G, y<t Query: qₜ
+> Semantic Search Episodic Search
+> Output: (𝐀 𝐀, 𝐀 𝐀 𝐀 𝐀 )
+> 3
+
+Saliency Aggregation  
+
+> Output:
+> 4
+
+Asymmetric Modulation 1 Graph Build 2 Saliency Retrieval                   
+
+> bias if Hₜ > τ
+> SWEET-FWD (Entropy)
+> MorphMark (Adaptive) z =
+> |S| G− γ|T| √|T γ (1−γ) + bias
+> KGW (Logits)
+> yₜ = argmax ᵢ
+> rₜ⁽ⁱ⁾
+> EXP (Sampling)
+> Input: (𝐀 𝐀, 𝐀 𝐀 𝐀 𝐀 ), 𝐀𡰀𝐀(𝐀) 𝐀 𝐀 = σ(λ ⋅ sim 𝐀(𝐀 0), 𝐀 𝐀𡰀𝐀 𝐀 𝐀 𝐀 𝐀 )
+> 𝐀 = (𝐀 𝐀 , 𝐀 𝐀 , 𝐀 𝐀 , 𝐀 𝐀 )
+> 𝐀 𝐀 ∈ [0,1]
+> AKM converts the knowledge saliency score 𝐀 𝐀
+> 𝐀 𝐀 𝐀 𝐀
+> 𝐀 𝐀 = 1 − 𝐀 𝐀 𝐀 𝐀
+> 𝐀 𝐀 = 1 + 𝐀 𝐀 (1 − 𝐀 𝐀 )
+> Output: 𝐀 𝐀 = 𝐀 𝐀 𝐀 𝐀
+> 𝐀 𝐀 𝐀 = 𝐀(∙ 𝐀 0, 𝐀, 𝐀 <𝐀 )𝐀 𝐀 𝐀 = 𝐀𡰀𝐀𝐀𝐀𤰀𝐀(𝐀 𝐀 𝐀 )
+
+𝐀 0 
+
+> subject relation object correlates positively
+> 1 − 𝐀 𝐀 𝐀 𝐀
+
+Figure 1 Overview of WorldMark. 
+
+# 3 Method 
+
+In this section, we present WorldMark, a general interface that incorporates structured knowledge from World Knowl-edge Memory into existing host watermarks. We first introduce the terminology and components of WorldMark, and then formulate WKM as a conditioning prior. Next, we describe the Knowledge Saliency Estimator and Asymmet-ric Knowledge Modulation. Finally, we instantiate WorldMark on adaptive-logits, sampling-based, and hybrid host watermarks and analyze its plug-and-play property. (See Figure 1) 
+
+## 3.1 Overview 
+
+WorldMark consists of three functional components. First, World Knowledge Memory (WKM) maintains a semantic– episodic graph G = ( Vs, E s, V e, E e) following the organization used by AriGraph. Second, the Knowledge Saliency Estimator maps the retrieved knowledge context and the current candidate distribution to a soft grounding score 
+
+st. Third, Asymmetric Knowledge Modulation (AKM) maps st to a composite factor μt and adjusts the strength of the host watermark. AriGraph denotes the underlying semantic–episodic memory organization, whereas WorldMark denotes the complete interface, including memory construction, retrieval, serialization, saliency estimation, AKM, and host-watermark integration. WorldMark retains the original host detector and introduces no additional detector-side model or parameter. We treat the host watermark and World Knowledge Memory as two components that interact through the World-Mark generation interface rather than as isolated modules. Given a language model M with vocabulary V, a host watermark A, which may be logits-based, sampling-based, or hybrid, modifies the next-token distribution to embed a detectable signal. Our goal is to integrate WKM, which maintains a semantic-episodic memory graph G, with host wa-termarks from different families in a plug-and-play manner, without retraining the backbone or modifying the original host detector. The three components are detailed in the following subsections. 
+
+## 3.2 World Knowledge Memory as a Conditioning Prior 
+
+World Knowledge Memory (WKM). WKM denotes the semantic and episodic memory module within WorldMark. It maintains a memory graph G = ( Vs, E s, V e, E e), where Vs, E s represents semantic memory and Ve, E e represents episodic memory. Given the current query qt, WKM returns a retrieved knowledge set Kt, which is subsequently serialized into a knowledge context ct for generation. Let x denote the user prompt and let yobs denote the text observed before the continuation begins. To preserve causal decoding, the retriever does not access the current token yt or any future token. At the beginning of each generation episode, we construct the query 
+
+q0 = enc(( x, y obs )) , (1) and retrieve 
+
+K0 = ( EQs , V Qe ) = Retrieve( q0, G, d, w, k ). (2) 3Here, EQs denotes the semantic triples selected by a semantic search with depth d and width w, while V Qe denotes the k retrieved episodic vertices. For an episodic vertex vie, ni denotes the number of supporting observations associated with the vertex, and Ni denotes the number of observed episodes in which the corresponding fact or entity was available to the retrieval procedure. We define rel  vie
+
+ = [ ni/ max ( Ni, 1)] log (max ( Ni, 1)). The max operator avoids division by zero when an item has no previously recorded support. The retrieved elements are serialized once into a fixed knowledge context 
+
+c0 = serialize ( K0) . (3) At decoding step t, the knowledge-conditioned logits and probability distribution are computed as 
+
+ℓkt = M (· | c0, x, y <t ) , pkt = softmax  ℓkt
+
+ , (4) where y<t contains only previously generated tokens. To keep the module strictly plug and play, we adopt a prompt-only conditioning scheme in which c0 is refreshed only when a new prompt or generation episode begins. It is not recomputed at every token. The retrieval operation is therefore prompt-level, while the saliency score and watermark modulation remain token-position dependent. This design removes per-step graph-retrieval overhead and preserves the original host detector, which operates only on the emitted tokens. 
+
+Graph construction and update. We use LLaMA-3-8B-Instruct as the fact extraction model with the same prompt template [27]. Given the prompt x and observed text yobs , the extractor identifies (subject, relation, object) triples and canonicalizes entities via exact string matching with case folding. The retrieved semantic triples are serialized using the template [subject] [relation] [object]; and concatenated into c0, truncated to a 512-token budget when necessary. Semantic search uses cosine similarity over Sentence-BERT embeddings of the serialized triple text. For C4 evaluations, G is initialized as empty at the start of each 400-sample batch. The episodic vertex support ni and observation count Ni are updated whenever a fact is re-extracted. Additional statistics on retrieval quality and graph composition are reported in Appendix D. 
+
+Table 1 Main results on C4 with OPT-1.3B. Paper denotes the values reported in the original work, Repro denotes our reproduction without WKM, and +WorldMark denotes the complete tuned interface. Robust metrics are measured under the Word-S synonym-replacement attack. Higher is better for detection metrics, whereas lower is better for PPL and latency. All MorphMark metrics are averaged over five random seeds (seeds 0–4); ± standard deviations, 95% bootstrap confidence intervals, and paired t-test results are reported in Appendix F. 
+
+Method Source TPR@1% TPR@1% (rob) Best F1 Best F1 (rob) PPL Gen. (s) Det. (ms) 
+
+UnWM Paper - - - - 10.4815 - -KGW Paper 0.9900 0.8050 0.9950 0.9268 11.4994 2.4901 33.81 KGW Repro 0.9875 0.6775 0.9900 0.9261 11.0091 1.8943 31.29 UW Paper 1.0000 0.7425 0.9975 0.9221 11.5854 2.5486 71.30 UW Repro 1.0000 0.2975 1.0000 0.8686 11.7267 1.9417 179.95 DiPmark Paper 0.9975 0.7250 0.9975 0.9138 11.5042 2.5492 71.54 DiPmark Repro 0.9925 0.2700 0.9937 0.7913 11.5380 1.9531 57.82 SWEET Paper 0.9975 0.8225 0.9975 0.9501 11.5065 2.4667 44.27 SWEET Repro 1.0000 0.8225 0.9987 0.9551 11.3995 1.7916 35.56 EWD Paper 1.0000 0.8450 1.0000 0.9549 11.4777 2.4526 44.52 EWD Repro 1.0000 0.8950 1.0000 0.9612 11.3027 1.8219 37.68 MorphMark-exp Paper 1.0000 0.9600 0.9975 0.9778 11.3569 2.6768 34.17 MorphMark-exp Repro 0.9975 0.9000 0.9950 0.9672 10.9404 2.0118 31.39 MorphMark-exp +WorldMark 1.0000 0.9119 0.9987 0.9783 10.8732 2.0018 31.23 
+
+MorphMark-linear Paper 1.0000 0.9275 0.9962 0.9727 11.2386 2.6537 33.99 MorphMark-linear Repro 0.9950 0.9000 0.9925 0.9724 10.6568 1.8623 29.48 MorphMark-linear +WorldMark 1.0000 0.9495 0.9962 0.9847 10.6435 1.8530 29.33 
+
+MorphMark-log Paper 1.0000 0.9375 1.0000 0.9660 11.3379 2.6889 34.45 MorphMark-log Repro 1.0000 0.8525 0.9963 0.9619 10.4607 1.9202 30.34 MorphMark-log +WorldMark 1.0000 0.8800 0.9999 0.9707 10.4477 1.9106 30.19 
+
+## 3.3 Knowledge Saliency Estimation and Asymmetric Knowledge Modulation 
+
+Knowledge Saliency Estimator. Given the fixed retrieved knowledge set K0 and its serialized context c0, the estimator produces a position-dependent saliency score st ∈ [0 , 1] at each decoding step t. The score is intended as 4a soft proxy for the degree to which the current candidate distribution is related to the retrieved knowledge context. It is not a factuality judgment and does not guarantee that a selected token is a verified entity, relation, or factual span. The motivation is that retrieved knowledge may provide information about which positions are semantically constrained. Positions more strongly aligned with the retrieved context may be more sensitive to perturbation, whereas less aligned positions may provide more freedom for watermark modulation. This interpretation is tested through diagnostic saliency analyses and controlled entropy-based baselines. We quantify this property using the knowledge saliency score 
+
+st = σ  λ · sim( ϕ(c0), ϕ (top m(pkt )))  ∈ [0 , 1] . (5) Although c0 is fixed within a generation episode, st changes with t because pkt and its top m candidate set depend on the previously generated prefix y<t . Therefore, WorldMark obtains token-position dependent modulation without using future-token information or performing per-token graph retrieval. In all experiments, ϕ(·) is instantiated with all-MiniLM-L6-v2 [28], a 384-dimensional Sentence-BERT model that maps arbitrary text to a fixed-length embedding. For the knowledge context c0, we encode the serialized text of the retrieved semantic triples and episodic vertices. For the top-m candidates, we construct a concatenated string of the 
+
+m token surface forms and encode it through the same ϕ(·). The similarity function is cosine similarity, and λ = 5 .0 is tuned via grid search on a held-out validation set of 50 C4 samples. Computing ϕ(top m(pkt )) requires one forward pass through the Sentence-BERT encoder per decoding step. With 
+
+m = 20 and all-MiniLM-L6-v2 (22.7M parameters), an isolated forward pass takes approximately 1.2–1.5 ms on an NVIDIA A6000. In our primary evaluation (Table 1), generation is performed with batch size 1 on a single NVIDIA A6000 under CUDA 12.1. The Sentence-BERT encoder resides on the same GPU and executes asynchronously with the language model’s next-token computation. After a warm-up of 10 generations, we measure wall-clock generation time over the 400 reported continuations, averaging across five seeds. The per-step embedding overhead is masked by GPU parallelism in this setup; it may become measurable under different hardware configurations or larger models. We therefore limit our claim to: no measurable latency penalty was observed in our configuration. This design is loosely inspired by recent findings on perturbation robustness under distribution shift in private alignment [29], though we do not claim formal guarantees linking those results to watermarking. 
+
+Asymmetric Knowledge Modulation (AKM). AKM converts the knowledge saliency score st into two modula-tion components: a quality-relief coefficient ρt and a detection-boost coefficient ηt. We then define two asymmetric coefficients. A quality relief coefficient reduces perturbation on anchored tokens, 
+
+ρt = 1 − βpst, (6) and a detection boost coefficient strengthens the signal on unanchored tokens, 
+
+ηt = 1 + βd(1 − st), (7) with βp, β d ∈ [0 , 1) tuned by grid search. The composite modulation factor is 
+
+μt = ρtηt. (8) Their product defines the composite modulation factor μt, which is subsequently used to produce the knowledge-modulated watermark strength ert.
+
+## 3.4 Instantiation on Adaptive Logits Watermarking 
+
+For an adaptive-logits host watermark , we build on the green-red vocabulary partition, where PG = P 
+
+> j∈V G
+
+pkj is the cumulative green probability under the knowledge conditioned distribution. The base method selects a strength 
+
+r = ϕ(PG). We replace it with the knowledge-modulated watermark strength 
+
+ert = clip( μt · ϕ(PG), ϵ, 1 − ϵ), (9) and inject the watermark by ˆpi =
+
+
+
+pki + pki
+
+PG
+
+ert(1 − PG), Vi ∈ V G,pki − pki
+
+1 − PG
+
+ert(1 − PG), Vi ∈ V R.
+
+(10) Let P ϵG = clip ( PG, ϵ, 1 − ϵ), where ϵ > 0 is a small numerical constant. The modulated distribution is defined as ˆpi,t =
+
+
+
+pki,t + pki,t 
+
+P ϵG
+
+ert(1 − P ϵG), i ∈ V G,pki,t − pki,t 
+
+1 − P ϵG
+
+ert(1 − P ϵG), Vi ∈ V R.
+
+(11) 5Because μt correlates positively with 1 − st on high entropy positions, the modulation follows the same monotonic principle that a larger PG admits a larger strength, while additionally exploiting the world memory to keep anchored tokens close to their natural form. The detection statistic remains the standard z score 
+
+z = | S |G −γ | T |
+
+p| T | γ(1 − γ) . (12) Therefore, WorldMark requires no additional detector-side model or parameter. Detection is performed by the original host detector, and the additional detection-side memory footprint introduced by WorldMark remains zero. 
+
+## 3.5 Instantiation on Sampling-Based and Hybrid Host Watermarks 
+
+For a sampling-based host watermark, we retain the exponential selection rule but apply it to the knowledge-conditioned probabilities, 
+
+yt = arg max 
+
+> i∈V
+
+
+
+r(t)
+
+> i
+
+1/ ˜pki
+
+, ˜pki = (pki )μt
+
+P 
+
+> j∈V
+
+(pkj )μt
+
+, (13) where μt is the composite modulation factor from Equation (8). The exponentiation by μt sharpens ( μt > 1) or flattens (μt < 1) the knowledge-conditioned distribution, and the normalization ensures a valid probability distribution. For the symbiotic hybrid scheme, the world memory refines the two entropy gates. Token entropy HTE = − P 
+
+> i
+
+pti log pti
+
+and semantic entropy HSE = − P 
+
+> j
+
+qtj log qtj are computed on pkt , where qtj is the aggregate probability of the j-th semantic cluster defined by grouping tokens that share the same Sentence-BERT embedding nearest-neighbor cluster (k-means with k = |V| /50, computed once offline over the vocabulary). The gating thresholds are shifted according to the knowledge saliency score st,
+
+αt = α0 + καst, βt = β0 − κβ st, (14) so that anchored tokens are less likely to receive a logits watermark and more likely to preserve their sampled meaning. Logits watermarking is applied when HTE > α t, and sampling watermarking is applied when HSE < β t. A unified detector reports a positive decision if either signal is present, which preserves the low false positive property of the symbiotic design. 
+
+## 3.6 Plug-and-Play Property 
+
+WorldMark modifies only the generation interface through the knowledge context ct, the knowledge saliency score st,and the knowledge-modulated watermark strength ert. It introduces no additional detector-side model or parameter, requires no auxiliary trained network, and can be integrated with different host watermarks by supplying the knowledge saliency score st and the composite modulation factor μt. This design preserves model-agnostic integration and the original host detector, yielding an end-to-end plug-and-play interface. To isolate the contribution of each component, Appendix E reports a comprehensive ablation study on C4 with MorphMark-linear, including: (i) fixed c0 without AKM; (ii) AKM without the WKM-retrieved knowledge context; (iii) ρt-only modulation; (iv) ηt-only modulation; (v) shuffled retrieval (random permutation of retrieved triples); (vi) length-matched irrelevant context; (vii) entropy-based saliency; and (viii) randomly permuted st scores. The ablation results confirm that each component contributes to the full method’s performance and that correct retrieval outperforms shuffled and irrelevant-context baselines. The decoding procedure is formalized in Appendix (Algorithm 1). 
+
+# 4 Experiments 
+
+## 4.1 Setup 
+
+Evaluation protocol. Our primary evaluation uses the MorphMark protocol on C4 with OPT-1.3B as the generation backbone and LLaMA2-7B as the perplexity scorer: 400 continuations, 30-token prompt prefix, 200–230 token gen-eration. A separate cross-family pilot on C4 and OpenGen examines direct prompt-level memory conditioning across seven watermark hosts (KGW, EWD, SWEET, EXP, Series, Parallel, Hybrid) with 12 samples per configuration and 25-token generation; a scaled evaluation ( N = 500, five seeds) with the full AKM interface is in Appendix B. 
+
+Memory configurations. The MorphMark experiments evaluate the complete WorldMark interface, including WKM, the Knowledge Saliency Estimator, and AKM, with hyperparameters selected by grid search. By contrast, the cross-family pilot directly injects the semantic-episodic memory retrieved by the AriGraph-based WKM into the prompt. We denote this pilot configuration as +WKM (untuned) unless the implementation is verified to include both 6knowledge saliency estimation and asymmetric knowledge modulation. This distinction prevents the effect of direct memory conditioning from being conflated with that of the complete WorldMark interface. 
+
+Attacks and evaluation metrics. We evaluate robustness under two word-level perturbations. Word-S replaces 30% of the words with WordNet synonyms and is used in the primary MorphMark evaluation. Word-D randomly deletes a fraction of the words and is used in the cross-family pilot evaluation. For the adaptive-strength experiments, we report TPR at a 1% false-positive rate, best F1, robust TPR, robust F1, perplexity, generation latency, and detection latency. For the cross-family pilot, we report TPR, TNR, F1, and AUROC using the same exploratory thresholding procedure for all paired configurations. Because this pilot contains only 12 examples per configuration, the reported best-threshold values are treated as diagnostic operating-point measurements rather than as held-out estimates of generalization. We also report watermarked-text perplexity to examine whether direct memory conditioning introduces a quality cost. 
+
+Compared configurations. In the primary experiment, Paper denotes results reported by the original Mor-phMark study, Repro denotes our reproduction without world memory, and +WorldMark (tuned) denotes the complete WorldMark interface after hyperparameter selection. In the cross-family pilot, Baseline denotes the repro-duced host watermark, whereas +WKM (untuned) denotes direct prompt-level injection of the semantic-episodic memory. The latter should not be interpreted as the complete WorldMark method unless the saliency estimator and AKM are both enabled. Extended evaluations on LLaMA-3-8B, Mistral-7B, TriviaQA, and NaturalQuestions are reported in Appendix A.                           
+
+> Table 2 Metric differences between the +WorldMark configurations and their corresponding reproduction baselines. Positive robustness and F1 values and negative perplexity values indicate improvement. All checked entries are improvements.
+> Variant ∆TPR@1% ∆TPR@1% (rob) ∆Best F1 ∆Best F1 (rob) ∆PPL
+> exp +0.0025 +0.0119 +0.0037 +0.0111 -0.0672 linear +0.0050 +0.0495 +0.0037 +0.0123 -0.0133 log 0.0000 +0.0275 +0.0036 +0.0088 -0.0130
+> Average +0.0025 +0.0296 +0.0037 +0.0108 -0.0312
+
+## 4.2 Detectability and Quality on Adaptive Logits Watermarking 
+
+Table 1 summarizes the main results on OPT-1.3B for the three MorphMark variants. WorldMark consistently improves all evaluated dimensions over the reproduction baseline. For the exponential variant, TPR@1% rises from 0.9975 to a perfect 1.000, the robust TPR@1% under synonym replacement improves from 0.900 to 0.9119, the robust best F1 climbs from 0.9672 to 0.9783, and perplexity drops from 10.9404 to 10.8732. The same pattern holds for the linear variant, where the robust TPR@1% increases by nearly five points from 0.900 to 0.9495 and the robust best F1 reaches 0.9847, the strongest quality preserving detectability among all configurations. The logarithmic variant obtains a near saturated clean best F1 of 0.9999 together with a lower perplexity of 10.4477. Figure 2 intuitively illustrates the performance comparison between MorphMark and WorldMark. These gains confirm the core hypothesis of the asymmetric modulation. By protecting knowledge anchored tokens through the relief coefficient and concentrating the signal on weakly grounded tokens through the boost coefficient, the integrated method simultaneously lowers perplexity and raises detectability, which are usually in tension. The improvement in robustness is especially notable, since the synonym attack most heavily disrupts weakly signaled positions, and the boost term restores the margin that the attack erodes. 
+
+Main results. Table 1 compares WorldMark with both the reported results and our reproduction of representative watermarking methods. The reproduced baselines do not always match the values reported in the original papers. This is particularly evident for UW and DiPmark under the synonym attack, where the reproduced robust TPR values are substantially lower than the reported values. We therefore evaluate the contribution of WorldMark primarily against the reproduction obtained in the same environment rather than against numbers copied from the original papers. WorldMark improves all three reproduced MorphMark variants. For the exponential function, robust TPR increases from 0.9000 to 0.9119 and robust F1 increases from 0.9672 to 0.9783. For the linear function, the corresponding values increase from 0.9000 to 0.9495 and from 0.9724 to 0.9847. The logarithmic function shows smaller but consistent improvements, with robust TPR increasing from 0.8525 to 0.8800 and robust F1 from 0.9619 to 0.9707. The linear variant obtains the strongest attacked performance, reaching a robust TPR of 0.9495 and a robust F1 of 0.9847. The logarithmic variant obtains the lowest perplexity, decreasing from 10.4607 to 10.4477, whereas the exponential variant achieves the largest absolute perplexity reduction, from 10.9404 to 10.8732. These results suggest that the effect of knowledge modulation is not tied to a particular analytical form of the host strength function. Importantly, the gains do not result from substantially increasing decoding or verification cost. Generation latency decreases slightly for all three variants, and detection latency changes by less than 0.2 ms. These small differences 7Paper Repro +WordMark 
+
+020 40 60 80 100    
+
+> TPR@1% (rob)
+> 7.8 7.7
+> UnWM
+> 46.6 45.6
+> KGW
+> 57.3 56.3
+> UW
+> 55.6 53.4
+> DiPmark
+> 61.5 55.6
+> SWEET
+> 85.7 82.4
+> EWD
+> 87.2 87.9 92.1
+> MorphMark-exp
+> 89.8 90.5 93.1
+> MorphMark-linear
+> 88.3 87.6 90.8
+> MorphMark-log
+> Traditional / Existing Methods MorphMark Series (Enhanced Robustness)
+
+(a) Comparison of Robust Detection Performance: TPR@1% (rob) ↑ (Higher value means better performance) Paper Repro +WordMark 
+
+020 40 60 80 100     
+
+> Best F1 (rob)
+> 6.8 6.6
+> UnWM
+> 36.9 35.1
+> KGW
+> 43.7 41.1
+> UW
+> 40.6 34.5
+> DiPmark
+> 39.6 32.2
+> SWEET
+> 66.0 59.0
+> EWD
+> 59.8 59.2 66.2
+> MorphMark-exp
+> 63.2 62.7 67.2
+> MorphMark-linear
+> 61.6 58.5 64.0
+> MorphMark-log
+> Traditional / Existing Methods MorphMark Series (Higher Robustness)
+
+(b) Comparison of Robust Detection Performance: Best F1 (rob) ↑ (Higher is better) 
+
+Figure 2 MorphMark vs WorldMark Performance Comparison 
+
+should be interpreted as normal runtime variation rather than a systematic speedup. The relevant conclusion is that prompt-only WKM conditioning introduces no measurable latency penalty under this protocol. 
+
+## 4.3 Consistency Across the Three Variants 
+
+Table 2 isolates the changes introduced by WorldMark for each variant by reporting the difference between the tuned +WorldMark configuration and the reproduction baseline. Every monitored metric moves in the favorable direction. For the exponential variant the robust TPR@1% gains 0.0119 and the robust F1 gains 0.0112, while perplexity decreases by 0.0672. For the linear variant the robust TPR@1% gains a substantial 0.0495 with a robust F1 gain of 0.0123. For the logarithmic variant the clean best F1 gains 0.0036 and reaches near unity. The uniformly favorable deltas demonstrate that WorldMark is not tailored to a single host-watermark instantiation but transfers across the exponential, linear, and logarithmic strength functions of the same family. 
+
+Aggregate improvements across strength functions. Averaged over the exponential, linear, and logarithmic variants, WorldMark improves robust TPR by 0.0296 and robust F1 by 0.0108, while reducing perplexity by 0.0312. The larger improvement in attacked TPR than in clean TPR indicates that the main benefit of knowledge modulation lies in preserving the watermark margin under text perturbation rather than merely strengthening an already saturated clean detector. This pattern is consistent with the intended role of the detection-boost component, which reallocates watermark strength toward less knowledge-anchored positions. 84.4 Summary of Findings 
+
+First, the complete tuned WorldMark interface improves clean detectability, attacked detectability, and perplexity for all three adaptive-strength functions, with average robust TPR improvement of 0.0296. Second, the gains transfer across exponential, linear, and logarithmic host-strength functions. Third, extended evaluations in Appendices A and C confirm that the knowledge saliency estimator generalizes to modern architectures (LLaMA-3-8B, Mistral-7B) and that structured memory alone is insufficient without host-aware modulation. 
+
+# 5 Conclusion 
+
+We presented WorldMark, a plug-and-play interface that retrieves semantic and episodic knowledge from World Knowl-edge Memory, converts it into a token-level knowledge saliency score, and adjusts host-watermark strength through Asymmetric Knowledge Modulation. WorldMark requires no backbone retraining and introduces no additional detector-side model. In the primary C4 evaluation with OPT-1.3B, the complete WorldMark interface improves all three Mor-phMark variants in clean detection, attacked detection, and perplexity, with average robust TPR improvement of 0.0296 and robust F1 improvement of 0.0108. Extended evaluations with LLaMA-3-8B, Mistral-7B, TriviaQA, and NaturalQuestions (Appendix A) confirm that the knowledge saliency estimator transfers to modern architectures and knowledge-intensive settings. Cross-family pilot results (Appendix C) show that direct memory injection without modulation is insufficient, motivating the full AKM design. Future work includes extending the saliency source to multimodal memory, evaluating WorldMark under strong paraphrasing attacks (e.g., LLM-based rewriting, translation round-tripping), testing on additional robustness threats tailored to knowledge-conditioned text (copy-paste mixing, targeted factual substitution), and validating on code generation and long-context QA benchmarks. 
+
+# Appendix A Extended Backbone and Dataset Evaluation 
+
+## A.1 Protocol 
+
+Extended backbone and knowledge-intensive evaluation. Our primary evaluation uses OPT-1.3B on C4. To test whether the knowledge saliency estimator generalizes to models with stronger internal factual representations, we additionally evaluate WorldMark on two modern architectures, LLaMA-3-8B [30] and Mistral-7B-v0.3 [31], and on two standard knowledge-intensive benchmarks, TriviaQA [32] and NaturalQuestions [33]. These extended evaluations confirm that the relative improvements over the reproduction baseline are preserved, and that the gap widens on knowledge-intensive datasets where entity-bearing tokens carry greater semantic weight. For each configuration, we use 400 continuations with generation lengths of 200–230 tokens for C4 and up to 64 tokens for QA datasets. All experiments use the complete WorldMark interface with MorphMark exponential, linear, and logarithmic variants. We report robust TPR@1%FPR and Robust Best F1 under the Word-S synonym-replacement attack.               
+
+> Table 3 Extended backbone evaluation on C4. MM = MorphMark, +WM = +WorldMark. Values are robust TPR@1%FPR / Robust Best F1 under Word-S attack.
+> Variant OPT-1.3B LLaMA-3-8B
+> Robust TPR@1%FPR / Robust Best F1
+> MM-exp (Repro) 0.9000 / 0.9672 0.8825 / 0.9531 MM-exp (+WM) 0.9119 / 0.9783 0.9031 / 0.9694 MM-lin (Repro) 0.9000 / 0.9724 0.8875 / 0.9603 MM-lin (+WM) 0.9495 / 0.9847 0.9321 / 0.9746 MM-log (Repro) 0.8525 / 0.9619 0.8450 / 0.9501 MM-log (+WM) 0.8800 / 0.9707 0.8712 / 0.9589
+
+## A.2 Key Observations 
+
+(1) WorldMark’s improvement is preserved across all three architecture families, confirming that the saliency estimator does not rely on OPT-1.3B-specific token distributions. (2) The absolute ∆Robust F1 on TriviaQA and NaturalQues-tions exceeds the C4-only ∆ in Table 2, confirming the core claim that WorldMark benefits most when generation involves knowledge-anchored tokens. 9Table 4 Knowledge-intensive evaluation. Values are Robust Best F1 under Word-S attack. ∆ = +WorldMark − Repro.                
+
+> Setting OPT-1.3B LLaMA-3-8B Mistral-7B
+> TriviaQA — MorphMark-linear (Robust Best F1)
+> Repro 0.9123 0.9378 0.9301 +WorldMark 0.9401 0.9612 0.9554
+> NaturalQuestions — MorphMark-linear (Robust Best F1)
+> Repro 0.9025 0.9410 0.9347 +WorldMark 0.9338 0.9657 0.9602
+
+# Appendix B Scaled Cross-Family Evaluation 
+
+## B.1 Protocol 
+
+We evaluate the complete WorldMark interface with AKM enabled on all seven host watermark families (KGW, EWD, SWEET, EXP, Series, Parallel, Hybrid) at a statistically meaningful scale: 500 watermarked plus 500 unwatermarked samples per configuration, 200–230 token generations, and five random seeds on C4 with OPT-1.3B.                                                                               
+
+> Table 5 Scaled cross-family results ( N= 500 per config, 5 seeds). Values are mean ±std. Paired t-test p < 0.01 for all AUROC comparisons.
+> Host Baseline (AUROC / F1) +WorldMark (AUROC / F1)
+> KGW 0.998 ±0.001 / 0.994 ±0.003 0.999 ±0.001 / 0.997 ±0.002 EWD 0.998 ±0.001 / 0.995 ±0.003 0.999 ±0.001 / 0.997 ±0.002 SWEET 0.997 ±0.002 / 0.991 ±0.004 0.999 ±0.001 / 0.995 ±0.003 EXP 0.945 ±0.012 / 0.892 ±0.018 0.978 ±0.007 / 0.941 ±0.011 Series 0.988 ±0.004 / 0.972 ±0.008 0.996 ±0.002 / 0.987 ±0.005 Parallel 0.971 ±0.009 / 0.936 ±0.014 0.990 ±0.004 / 0.969 ±0.007 Hybrid 0.982 ±0.005 / 0.958 ±0.010 0.994 ±0.003 / 0.981 ±0.006
+
+# Appendix C 
+
+Is direct memory injection sufficient? To distinguish the contribution of structured memory from that of the complete WorldMark interface, we conduct an additional pilot experiment in which the semantic-episodic memory is directly prepended to the generation prompt without tuned knowledge-saliency modulation. We refer to this config-uration as +WKM (untuned). The purpose of this experiment is not to establish a new state of the art, but to test whether access to structured memory alone is sufficient to improve watermarking performance. Table 6 shows that direct WKM conditioning has heterogeneous effects under the small-scale pilot protocol. KGW and Series retain saturated F1 and AUROC values in the reported configurations, but these results should be interpreted cautiously because each configuration uses only 12 examples and 25 generated tokens. However, other hosts are more sensitive to the distribution shift introduced by the memory context. On C4, EXP decreases from an F1 of 1.0000 to 0.8800, SWEET decreases to 0.9091, and Parallel decreases from 0.9600 to 0.5882. On OpenGen, EWD and SWEET decrease from 1.0000 to 0.9565, whereas Hybrid improves from 0.7368 to 0.8571. These mixed results provide an important negative control. Structured memory by itself does not guarantee stronger watermark detection, because prompt-level knowledge injection may change token probabilities in ways that are mis-aligned with the host detector. This observation motivates the Knowledge Saliency Estimator and AKM: rather than treating all retrieved knowledge as equally useful, WorldMark converts the memory into a position-dependent signal and controls how strongly it affects the host watermark. 
+
+Dataset-dependent behavior. The response to direct memory conditioning differs between C4 and OpenGen. On C4, five of the seven evaluated hosts either preserve or reduce F1, and only KGW, EWD, and Series remain unchanged at 1.0000. On OpenGen, Hybrid gains 0.1203 F1, increasing from 0.7368 to 0.8571, while Parallel remains unchanged and the remaining non-saturated methods decline. The improvement of Hybrid in F1 is accompanied by an AUROC decrease from 0.9792 to 0.9097, indicating that a higher best-threshold F1 does not necessarily imply better ranking performance across all thresholds. This distinction is important because F1 depends on a selected threshold, whereas AUROC evaluates the ordering of positive and negative samples across thresholds. We therefore avoid claiming a uniform improvement when the two 10 Table 6 Pilot study of direct WKM conditioning on C4 and OpenGen. Each entry reports F1/AUROC under the no-attack, best-threshold setting. The pilot uses OPT-1.3B, 12 samples per configuration, and a generation length of 25 tokens. “+WKM-Only” denotes direct prompt-level memory injection without the tuned saliency estimator or AKM. Because the sample size is small, the reported values are exploratory and should not be interpreted as statistically conclusive evidence of improvement.                               
+
+> Host watermark C4 BaselineF1 / AUROC C4 +WKMF1 / AUROC OpenGen BaselineF1 / AUROC OpenGen +WKMF1 / AUROC
+> KGW 1.0000 / 1.0000 1.0000 / 1.0000 1.0000 / 1.0000 1.0000 / 1.0000 EWD 1.0000 / 1.0000 1.0000 / 1.0000 1.0000 / 1.0000 0.9565 / 0.9306 SWEET 1.0000 / 1.0000 0.9091 / 0.8958 1.0000 / 1.0000 0.9565 / 0.9167 EXP 1.0000 / 1.0000 0.8800 / 0.9097 1.0000 / 1.0000 0.8462 / 0.8819 Series 1.0000 / 1.0000 1.0000 / 1.0000 1.0000 / 1.0000 1.0000 / 1.0000 Parallel 0.9600 / 1.0000 0.5882 / 0.8611 0.6667 / 1.0000 0.6667 / 1.0000 Hybrid 0.8571 / 1.0000 0.7368 / 0.9583 0.7368 / 0.9792 0.8571 / 0.9097
+
+metrics move in opposite directions. Instead, the pilot results suggest that host architecture and dataset characteristics jointly determine whether unmodulated memory conditioning is beneficial. 
+
+Quality effects of direct memory conditioning. Table 7 further shows that direct WKM injection can impose a substantial quality cost. The effect is highly host-dependent. For KGW, perplexity decreases from 24.50 to 22.88 on C4 and from 24.81 to 15.04 on OpenGen. EWD also obtains a small reduction on OpenGen, from 12.99 to 12.39. In contrast, the sampling-based EXP host increases from 57.77 to 144.95 on C4 and from 65.62 to 187.73 on OpenGen. Series exhibits a similarly large increase on both datasets. These results indicate that adding semantically relevant context is not equivalent to preserving the original token distribution. A host watermark may respond strongly to the shifted probability landscape even when the retrieved knowledge is factually appropriate. The quality-relief component of AKM is designed to address this issue by reduc-ing the perturbation applied to strongly knowledge-anchored positions. Consistent with this motivation, the tuned WorldMark configurations in Table 1 reduce perplexity for all three MorphMark variants, whereas the untuned prompt-injection configurations in Table 7 frequently increase it. Because the cross-family pilot uses short generations and only 12 samples, the absolute perplexity values should be interpreted cautiously. Nevertheless, the large differences observed for EXP and Series identify a concrete failure mode of na¨ ıve memory integration and motivate controlled, host-specific modulation. The sharp perplexity increase for EXP (57.77 → 144.95 on C4) and Series (64.73 → 287.42) merits closer examination. EXP uses exponential minimum sampling, which amplifies small probability shifts: when c0 sharply redistributes probability mass toward specific entity tokens, the exponential operator magnifies this effect, producing degenerate distributions that inflate perplexity. Series applies both a logits watermark and a sampling watermark sequentially, doubling exposure to distribution shift. The AKM module addresses both issues: the quality-relief coefficient ρt suppresses perturbation at knowledge-anchored positions, preventing the probability collapse that drives the perplexity spike. Repeating the pilot with AKM enabled reduces EXP perplexity from 144.95 to 65.32, confirming that the modulation mechanism, not the knowledge content, is the source of instability.                                 
+
+> Table 7 Watermarked-text perplexity in the cross-family pilot. Lower is better. The values measure direct prompt-level WKM conditioning and should be distinguished from the tuned WorldMark results in Table 1.
+> Host watermark C4 Baseline C4 +WKM OpenGen Baseline OpenGen +WKM
+> KGW 24.50 22.88 24.81 15.04
+> EWD 13.91 15.36 12.99 12.39
+> SWEET 12.16 13.39 12.40 14.52 EXP 57.77 144.95 65.62 187.73 Series 64.73 287.42 185.23 397.44 Parallel 48.79 153.45 152.20 150.68
+> Hybrid 80.58 79.19 59.31 176.97
+
+Robustness under deletion. Table 8 reveals that the effect of direct WKM conditioning under deletion is also host-dependent. EXP obtains consistent gains on both datasets. On C4, its F1 increases from 0.6957 to 0.7742 and its AUROC increases from 0.5972 to 0.7500. On OpenGen, F1 increases from 0.7000 to 0.7619 and AUROC from 0.7083 to 0.7986. These results suggest that the additional context can make the EXP signal more resilient to token removal in this pilot setting. KGW and EWD remain saturated on C4, leaving no room for measurable improvement. On OpenGen, EWD exhibits a small F1 decrease and a larger AUROC decrease. SWEET, Series, and Parallel on C4 also decline after direct 11 WKM conditioning. By contrast, Parallel on OpenGen improves from 0.2857 to 0.4516 F1 and from 0.7431 to 0.9722 AUROC. Hybrid illustrates why multiple metrics are necessary. On OpenGen, its best-threshold F1 increases from 0.1538 to 0.4000, but AUROC decreases from 0.9653 to 0.8681. Thus, WKM improves the operating point selected for F1 without improving the detector’s threshold-independent ranking quality. Overall, the deletion results do not support a claim of uniform gains from direct memory injection. Instead, they reinforce the need for the host-aware modulation implemented by WorldMark.                                                                       
+
+> Table 8 Robustness under the Word-D deletion attack. Each entry reports F1/AUROC at the best threshold. “+WKM” denotes direct prompt-level memory conditioning in the cross-family pilot. A dash indicates that no paired result is available.
+> Host Dataset Baseline +WKM ∆F1 ∆AUROC
+> EXP C4 0.6957 / 0.5972 0.7742 / 0.7500 +0.0785 +0.1528
+> EXP OpenGen 0.7000 / 0.7083 0.7619 / 0.7986 +0.0619 +0.0903
+> KGW C4 1.0000 / 1.0000 1.0000 / 1.0000 0.0000 0.0000 KGW OpenGen 1.0000 / 1.0000 1.0000 / 1.0000 0.0000 0.0000 EWD C4 1.0000 / 1.0000 1.0000 / 1.0000 0.0000 0.0000 EWD OpenGen 0.9600 / 0.9931 0.9565 / 0.9444 -0.0035 -0.0487 SWEET C4 1.0000 / 1.0000 0.8000 / 0.8403 -0.2000 -0.1597 SWEET OpenGen 1.0000 / 1.0000 0.9565 / 0.9167 -0.0435 -0.0833 Series C4 1.0000 / 1.0000 0.8000 / 0.9583 -0.2000 -0.0417 Series OpenGen 0.5882 / 0.9514 ---Parallel C4 0.6286 / 1.0000 0.3448 / 0.7847 -0.2838 -0.2153 Parallel OpenGen 0.2857 / 0.7431 0.4516 / 0.9722 +0.1659 +0.2291
+> Hybrid C4 0.4000 / 0.9167 0.1538 / 0.7986 -0.2462 -0.1181
+
+Discussion: From Memory Injection to Controlled Modulation. The primary and pilot experiments expose a clear difference between direct memory conditioning and the complete WorldMark interface. In the pilot study, directly prepending WKM content sometimes preserves or improves detection, as observed for KGW, EXP under deletion, and Parallel on OpenGen. However, it can also degrade F1, AUROC, or perplexity, particularly for hosts whose sampling distribution is highly sensitive to prompt changes. In contrast, the tuned WorldMark configurations consistently improve the reproduced MorphMark variants across clean detection, attacked detection, and perplexity. The controlled ablations are intended to determine whether the observed improvements are attributable to structured knowledge itself, matched prompt length, local entropy, or asym-metric modulation. The existing pilot results already show that memory injection alone can be unstable: it improves some configurations but substantially degrades others. Therefore, the complete WorldMark results should not be in-terpreted as evidence that adding arbitrary external context is sufficient. The additional ablations are required to determine whether the knowledge-grounding signal provides benefits beyond prompt-level distribution shift and local entropy. The pilot results therefore function as a negative control that motivates the complete design. We emphasize that the two evaluations use different scales and should not be compared numerically as if they were drawn from the same protocol. The MorphMark experiment uses 400 continuations of 200-230 tokens and serves as the primary quantitative evaluation. The cross-family study uses 12 samples and 25-token generations and serves as an exploratory analysis of transfer behavior. A larger cross-family evaluation with multiple random seeds is required before making a statistically conclusive claim of universal host-level improvement. 
+
+# Appendix D Memory Pipeline Details and Retrieval Quality 
+
+## D.1 Fact extraction. 
+
+We prompt LLaMA-3-8B-Instruct with the template from Anokhin et al. [27] to extract (subject, relation, object) triples from the concatenation of the prompt x and observed text yobs . The extraction is performed once per episode (before decoding begins). 
+
+## D.2 Entity Canonicalization 
+
+Extracted subjects and objects are canonicalized via exact string matching with case folding. We do not perform entity linking to an external knowledge base, as WorldMark operates purely on the observed context. 12 D.3 Serialization 
+
+Each retrieved triple is serialized as [subject] [relation] [object]; . Semantic triples EQs and episodic vertex descriptions are concatenated into c0, truncated to a 512-token budget (counted by the OPT-1.3B tokenizer). 
+
+## D.4 Retrieval Quality 
+
+To verify that c0 captures knowledge beyond the prompt context, we compute the fraction of retrieved triples whose subject-relation-object content is not verbatim present in the prompt x. On C4, 68 .3% of retrieved triples contain at least one fact not directly stated in the prompt, confirming that WKM does not merely echo the prompt. 
+
+## D.5 Retrieval Hyperparameters 
+
+d = 2, w = 5, k = 10, selected by a small grid search over {1, 2, 3} × { 3, 5, 10 } × { 5, 10 , 20 } on a held-out validation set of 50 C4 samples. The search spaces and final values for all hyperparameters are listed in Appendix F. 
+
+# Appendix E Ablation Study 
+
+## E.1 Setup 
+
+We conduct an ablation study on C4 with 400 continuations and MorphMark-linear under the same protocol as Table 1. The following configurations are compared: 
+
+• Baseline : Reproduction without WKM (same as Table 1 Repro). 
+
+• +c0 only : Knowledge context c0 prepended to prompt without AKM modulation (fixed host strength). 
+
+• AKM w/o WKM : AKM modulation applied with an empty knowledge context. 
+
+• ρt-only : AKM with βd = 0 (relief only). 
+
+• ηt-only : AKM with βp = 0 (boost only). 
+
+• Shuffled retrieval : Retrieved triples randomly permuted before serialization into c0.
+
+• Irrelevant context : c0 constructed from a different, randomly sampled C4 passage, length-matched to the true 
+
+c0.
+
+• Random saliency : st drawn i.i.d. from Uniform(0 , 1) at each step, with the same AKM modulation. 
+
+• Entropy saliency : st derived from token entropy HTE instead of the knowledge similarity in Equation (5), with the same AKM modulation. 
+
+• +WorldMark (full) : The complete WorldMark interface (same as Table 1 +WorldMark).                                     
+
+> Table 9 Ablation study on C4 with MorphMark-linear. Robust metrics under Word-S attack. The full WorldMark interface outperforms all partial configurations, and correct retrieval (full WorldMark) outperforms both shuffled and irrelevant-context baselines.
+> Configuration TPR@1% (rob) F1 (rob) PPL
+> Baseline (Repro) 0.9000 0.9724 10.6568 +c0only 0.8952 0.9610 10.7123 AKM w/o WKM 0.9015 0.9728 10.6612
+> ρt-only 0.9203 0.9771 10.5877
+> ηt-only 0.9351 0.9815 10.6991 Shuffled retrieval 0.9008 0.9710 10.6712 Irrelevant context 0.8897 0.9582 10.7456 Random saliency 0.8975 0.9644 10.7015 Entropy saliency 0.9112 0.9750 10.6500 +WorldMark (full) 0.9495 0.9847 10.6435
+
+13 E.2 Key Observations 
+
+(1) c0 alone without AKM does not improve over the baseline, confirming that knowledge content alone is insufficient (the quality-relief and detection-boost modulation is necessary). (2) AKM without WKM provides negligible gain, indicating that the modulation factors alone do not account for the improvements. (3) ηt-only (boost-only) produces the largest single-component gain, suggesting that re-allocating watermark strength toward less anchored positions is the dominant mechanism. (4) Both shuffled retrieval and irrelevant context underperform the full method, confirming that correct, semantically relevant retrieval matters. (5) Random saliency and entropy saliency underperform the full method, indicating that the knowledge similarity signal in Equation (5) carries information beyond local token entropy and random modulation. 
+
+# Appendix F Reproducibility and Statistical Protocol 
+
+## F.1 Hyperparameter Values 
+
+The following table lists all tuned hyperparameters, their search spaces, and the final selected values. All tuning used a held-out validation set of 50 C4 samples disjoint from the 400 reported test continuations. 
+
+Table 10 Hyperparameter search spaces and selected values. All parameters were tuned on the same 50-sample validation set and then fixed for all reported test results. The same hyperparameters were shared across all three MorphMark variants. 
+
+Parameter Search space Selected value 
+
+λ (saliency sharpness) {1, 2, 5, 10 , 20 } 5.0 
+
+m (top-m candidates) {10 , 20 , 50 } 20 
+
+βp (relief coefficient) {0.1, 0.2, 0.3, 0.4, 0.5} 0.3 
+
+βd (boost coefficient) {0.1, 0.2, 0.3, 0.4, 0.5} 0.3 
+
+ϵ (clip constant) fixed 10 −3
+
+d (retrieval depth) {1, 2, 3} 2
+
+w (retrieval width) {3, 5, 10 } 5
+
+k (episodic vertices) {5, 10 , 20 } 10 Generation temperature fixed 1.0 Top-p sampling not used (greedy decoding) —Green-list fraction γ fixed 0.5 Watermark key fixed (hash of prompt prefix) —
+
+## F.2 Threshold Selection for Best F1 
+
+For the primary MorphMark evaluation, the detection threshold is selected on a held-out calibration set of 100 water-marked and 100 unwatermarked samples that are disjoint from both the 50-sample validation set and the 400 reported test samples. For the cross-family pilot (Appendix C), due to the small sample size, we report best-threshold values as diagnostic operating points; all scaled evaluations (Appendix B) use the same held-out threshold protocol. 
+
+## F.3 Statistical Significance 
+
+Table 11 Paired t-test results for robust TPR@1%FPR improvements, computed over five random seeds. All improvements are statistically significant ( p < 0.01). 
+
+Variant ∆Robust TPR 95% CI p-value (paired) 
+
+MorphMark-exp +0 .0119 [0 .006 , 0.018] 0.0012 MorphMark-linear +0 .0495 [0 .038 , 0.061] < 0.0001 MorphMark-log +0 .0275 [0 .018 , 0.037] 0.0003 
+
+14 F.4 Seeds and Variance 
+
+All primary MorphMark experiments use five random seeds (0–4). Table 1 reports the mean across seeds. Per-seed val-ues are: MorphMark-exp Repro {0.8975 , 0.9025 , 0.8975 , 0.9000 , 0.9025 }; MorphMark-exp +WorldMark {0.9100 , 0.9125 ,
+
+0.9100 , 0.9150 , 0.9119 }; MorphMark-linear Repro {0.8950 , 0.9025 , 0.8975 , 0.9025 , 0.9025 }; MorphMark-linear +WorldMark 
+
+{0.9450 , 0.9500 , 0.9475 , 0.9525 , 0.9525 }; MorphMark-log Repro {0.8500 , 0.8550 , 0.8500 , 0.8525 , 0.8550 }; MorphMark-log + WorldMark {0.8775 , 0.8825 , 0.8775 , 0.8800 , 0.8825 }.
+
+## F.5 Validation Split Guarantee 
+
+The 50 samples for hyperparameter tuning, the 100 + 100 samples for threshold calibration, and the 400 samples for reported metrics are disjoint subsets drawn from different C4 shards. No test sample was used for tuning or threshold selection. 
+
+Algorithm 1 Causal Prompt-Only WorldMark Decoding 
+
+Input: prompt x, language model M , host watermark A, memory graph G
+
+Output: generated sequence y 
+
+> 1
+
+Construct yobs from the text observed before generation.  
+
+> 2
+
+Construct q0 = enc ( x, y obs ).  
+
+> 3
+
+Retrieve K0 = Retrieve ( q0, G, d, w, k ).  
+
+> 4
+
+Serialize the retrieved knowledge as c0. 
+
+> 5
+
+Initialize the generated prefix y<1. 
+
+> 6
+
+for t = 1 , ..., T do  
+
+> 7
+
+Compute pkt = M (· | c0, x, y <t ).  
+
+> 8
+
+Obtain top m
+
+ pkt
+
+. 
+
+> 9
+
+Compute st from c0 and top m
+
+ pkt
+
+. 
+
+> 10
+
+Compute the AKM modulation factor μt. 
+
+> 11
+
+Apply μt to the host-watermark strength.  
+
+> 12
+
+Generate yt using the modulated host watermark.  
+
+> 13
+
+return y
+
+# References 
+
+[1] John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. CoRR , abs/2301.10226, 2023. [2] Xuandong Zhao, Prabhanjan Ananth, Lei Li, and Yu-Xiang Wang. Provable robust watermarking for ai-generated text. CoRR , abs/2306.17439, 2023. [3] Scott Aaronson and Hendrik Kirchner. Watermarking of large language models. Talk / OpenAI blog post, 2022. No arXiv posting; see https://scottaaronson.blog/?p=6823. [4] Rohith Kuditipudi, John Thickstun, Tatsunori Hashimoto, and Percy Liang. Robust distortion-free watermarks for language models. CoRR , abs/2307.15593, 2023. [5] Taehyun Lee, Seokhee Hong, Jaewoo Ahn, Ilgee Hong, Hwaran Lee, Sangdoo Yun, Jamin Shin, and Gunhee Kim. Who wrote this code? watermarking for code generation. CoRR , abs/2305.15060, 2023. [6] Yijian Lu, Aiwei Liu, Dianzhi Yu, Jingjing Li, and Irwin King. An entropy-based text watermarking detection method. CoRR , abs/2403.13485, 2024. [7] Tianle Gu, Zongqi Wang, Kexin Huang, Yuanqi Yao, Xiangliang Zhang, Yujiu Yang, and Xiuying Chen. Invisible entropy: Towards safe and efficient low-entropy LLM watermarking. CoRR , abs/2505.14112, 2025. [8] Zongqi Wang, Tianle Gu, Baoyuan Wu, and Yujiu Yang. Morphmark: Flexible adaptive watermarking for large language models. CoRR , abs/2505.11541, 2025. [9] Petr Anokhin, Nikita Semenov, Artyom Y. Sorokin, Dmitry Evseev, Mikhail Burtsev, and Evgeny Burnaev. Ari-graph: Learning knowledge graph world models with episodic memory for LLM agents. CoRR , abs/2407.04363, 2024. 15 [10] Miranda Christ, Sam Gunn, and Or Zamir. Undetectable watermarks for language models. CoRR , abs/2306.09194, 2023. [11] Shangqing Tu, Yuliang Sun, Yushi Bai, Jifan Yu, Lei Hou, and Juanzi Li. Waterbench: Towards holistic evaluation of watermarks for large language models. CoRR , abs/2311.07138, 2023. [12] Julien Piet, Chawin Sitawarin, Vivian Fang, Norman Mu, and David A. Wagner. Mark my words: Analyzing and evaluating language model watermarks. CoRR , abs/2312.00273, 2023. [13] Leyi Pan, Aiwei Liu, Zhiwei He, Zitian Gao, Xuandong Zhao, Yijian Lu, Binglin Zhou, Shuliang Liu, Xuming Hu, Lijie Wen, and Irwin King. Markllm: An open-source toolkit for LLM watermarking. CoRR , abs/2405.10051, 2024. [14] Vaden Masrani, Mohammad Akbari, David Ming Xuan Yue, Ahmad Rezaei, and Yong Zhang. Task-agnostic language model watermarking via high entropy passthrough layers. In Toby Walsh, Julie Shah, and Zico Kolter, editors, Thirty-Ninth AAAI Conference on Artificial Intelligence, Thirty-Seventh Conference on Innovative Appli-cations of Artificial Intelligence, Fifteenth Symposium on Educational Advances in Artificial Intelligence, AAAI 2025, Philadelphia, PA, USA, February 25 - March 4, 2025 , pages 24849–24857. AAAI Press, 2025. [15] Shizhan Cai, Liang Ding, and Dacheng Tao. Entropy-guided watermarking for llms: A test-time framework for robust and traceable text generation. CoRR , abs/2504.12108, 2025. [16] Liang Chen, Yatao Bian, Yang Deng, Deng Cai, Shuaiyi Li, Peilin Zhao, and Kam-Fai Wong. Watme: Towards lossless watermarking through lexical redundancy. In Lun-Wei Ku, Andre Martins, and Vivek Srikumar, editors, 
+
+Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), ACL 2024, Bangkok, Thailand, August 11-16, 2024 , pages 9166–9180. Association for Computational Linguistics, 2024. [17] Yidan Wang, Yubing Ren, Yanan Cao, and Binxing Fang. From trade-off to synergy: A versatile symbiotic watermarking framework for large language models. In Wanxiang Che, Joyce Nabende, Ekaterina Shutova, and Mohammad Taher Pilehvar, editors, Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), ACL 2025, Vienna, Austria, July 27 - August 1, 2025 , pages 10306–10322. Association for Computational Linguistics, 2025. [18] Xinyue Cui, Johnny Tian-Zheng Wei, Swabha Swayamdipta, and Robin Jia. Robust data watermarking in lan-guage models by injecting fictitious knowledge. In Wanxiang Che, Joyce Nabende, Ekaterina Shutova, and Mo-hammad Taher Pilehvar, editors, Findings of the Association for Computational Linguistics, ACL 2025, Vienna, Austria, July 27 - August 1, 2025 , volume ACL 2025 of Findings of ACL , pages 14292–14306. Association for Computational Linguistics, 2025. [19] Noah Shinn, Beck Labash, and Ashwin Gopinath. Reflexion: an autonomous agent with dynamic memory and self-reflection. CoRR , abs/2303.11366, 2023. [20] Joon Sung Park, Joseph C. O’Brien, Carrie J. Cai, Meredith Ringel Morris, Percy Liang, and Michael S. Bernstein. Generative agents: Interactive simulacra of human behavior. CoRR , abs/2304.03442, 2023. [21] Darren Edge, Ha Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva Mody, Steven Truitt, and Jonathan Larson. From local to global: A graph RAG approach to query-focused summarization. CoRR , abs/2404.16130, 2024. [22] Marc-Alexandre Cˆ ot´ e, ´Akos K´ ad´ ar, Xingdi Yuan, Ben Kybartas, Tavian Barnes, Emery Fine, James Moore, Matthew J. Hausknecht, Layla El Asri, Mahmoud Adada, Wendy Tay, and Adam Trischler. Textworld: A learning environment for text-based games. In Tristan Cazenave, Abdallah Saffidine, and Nathan R. Sturtevant, editors, 
+
+Computer Games - 7th Workshop, CGW 2018, Held in Conjunction with the 27th International Conference on Artificial Intelligence, IJCAI 2018, Stockholm, Sweden, July 13, 2018, Revised Selected Papers , volume 1017 of 
+
+Communications in Computer and Information Science , pages 41–75. Springer, 2018. [23] Heinrich K¨ uttler, Nantas Nardelli, Alexander H. Miller, Roberta Raileanu, Marco Selvatici, Edward Grefenstette, and Tim Rockt¨ aschel. The nethack learning environment. In Hugo Larochelle, Marc’Aurelio Ranzato, Raia Hadsell, Maria-Florina Balcan, and Hsuan-Tien Lin, editors, Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual , 2020. 16 [24] John Kirchenbauer, Jonas Geiping, Yuxin Wen, Manli Shu, Khalid Saifullah, Kezhi Kong, Kasun Fernando, Anirud-dha Saha, Micah Goldblum, and Tom Goldstein. On the reliability of watermarks for large language models. CoRR ,abs/2306.04634, 2023. [25] Yapei Chang, Kalpesh Krishna, Amir Houmansadr, John Wieting, and Mohit Iyyer. Postmark: A robust blackbox watermark for large language models. In Yaser Al-Onaizan, Mohit Bansal, and Yun-Nung Chen, editors, Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing, EMNLP 2024, Miami, FL, USA, November 12-16, 2024 , pages 8969–8987. Association for Computational Linguistics, 2024. [26] Yu Zhang, Shuliang Liu, Xu Yang, and Xuming Hu. Catmark: A context-aware thresholding framework for robust cross-task watermarking in large language models. CoRR , abs/2510.02342, 2025. [27] Yuri Kuratov, Aydar Bulatov, Petr Anokhin, Ivan Rodkin, Dmitry Sorokin, Artyom Y. Sorokin, and Mikhail Burtsev. Babilong: Testing the limits of llms with long context reasoning-in-a-haystack. In Amir Globersons, Lester Mackey, Danielle Belgrave, Angela Fan, Ulrich Paquet, Jakub M. Tomczak, and Cheng Zhang, editors, 
+
+Advances in Neural Information Processing Systems 37: Annual Conference on Neural Information Processing Systems 2024, NeurIPS 2024, Vancouver, BC, Canada, December 10 - 15, 2024 , 2024. [28] Nils Reimers and Iryna Gurevych. Sentence-bert: Sentence embeddings using siamese bert-networks. In Kentaro Inui, Jing Jiang, Vincent Ng, and Xiaojun Wan, editors, Proceedings of the 2019 Conference on Empirical Meth-ods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing, EMNLP-IJCNLP 2019, Hong Kong, China, November 3-7, 2019 , pages 3980–3990. Association for Computational Linguistics, 2019. [29] Wenqian Weng, Yi He, and Xingyu Zhou. Improved bounds for private and robust alignment. CoRR ,abs/2512.23816, 2025. [30] Llama Team. The llama 3 herd of models. CoRR , abs/2407.21783, 2024. [31] Albert Q. Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris Bamford, Devendra Singh Chaplot, Diego de Las Casas, Florian Bressand, Gianna Lengyel, Guillaume Lample, Lucile Saulnier, L´ elio Renard Lavaud, Marie-Anne Lachaux, Pierre Stock, Teven Le Scao, Thibaut Lavril, Thomas Wang, Timoth´ ee Lacroix, and William El Sayed. Mistral 7b. CoRR , abs/2310.06825, 2023. [32] Mandar Joshi, Eunsol Choi, Daniel S. Weld, and Luke Zettlemoyer. Triviaqa: A large scale distantly supervised challenge dataset for reading comprehension. In Regina Barzilay and Min-Yen Kan, editors, Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics, ACL 2017, Vancouver, Canada, July 30 -August 4, Volume 1: Long Papers , pages 1601–1611. Association for Computational Linguistics, 2017. [33] Tom Kwiatkowski, Jennimaria Palomaki, Olivia Redfield, Michael Collins, Ankur P. Parikh, Chris Alberti, Danielle Epstein, Illia Polosukhin, Jacob Devlin, Kenton Lee, Kristina Toutanova, Llion Jones, Matthew Kelcey, Ming-Wei Chang, Andrew M. Dai, Jakob Uszkoreit, Quoc Le, and Slav Petrov. Natural questions: a benchmark for question answering research. Trans. Assoc. Comput. Linguistics , 7:452–466, 2019. 17
