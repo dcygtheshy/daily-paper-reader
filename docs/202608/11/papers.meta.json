@@ -1,0 +1,69 @@
+{
+  "label": "2026-08-11",
+  "date": "2026-08-11",
+  "generated_at": "2026-08-11T21:19:24",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202608/11/2608.08999v1-deepfreqmark-end-to-end-learnable-frequency-domain-watermarking-with-spherical-attack-simulation-for-latent-diffusion-models",
+      "section": "deep",
+      "title_en": "DeepFreqMark: End-To-End Learnable Frequency-Domain Watermarking with Spherical Attack Simulation for Latent Diffusion Models",
+      "authors": "Chen-Hsiu Huang, Mario Köppen, Ja-Ling Wu",
+      "date": "2026-08-10",
+      "pdf": "https://arxiv.org/pdf/2608.08999v1",
+      "score": "10.0",
+      "evidence": "面向潜在扩散模型的端到端可学习频域水印",
+      "tldr": "针对潜扩散模型(LDM)生成图像频域水印依赖手工几何图案、容量小且设计僵硬的问题，提出DeepFreqMark端到端可学习频域水印框架，以神经消息编码器/解码器替代人工模式工程。为绕开训练中DDIM反演的计算瓶颈，引入基于球面线性插值(Slerp)的攻击模拟，直接在噪声潜变量上操作并严格保持高斯方差。实验表明该方法在真实攻击下比特错误率(BER)显著低于基线，且可扩展至256比特消息容量，为AI生成图像版权保护提供了高效可学习的解决方案。",
+      "tags": "query:watermarking",
+      "abstract_en": "The proliferation of AI-generated images produced by Latent Diffusion Models (LDMs) has raised critical concerns regarding copyright infringement and misinformation. Although existing frequency-domain watermarking methods embed handcrafted geometric patterns into the initial latent noise prior to generation, they suffer from limited capacity and rigid pattern designs. We propose DeepFreqMark, an end-to-end learnable frequency-domain watermarking framework that replaces manual pattern engineering with a neural message encoder and decoder. To circumvent the computational bottleneck caused by Denoising Diffusion Implicit Model (DDIM) inversion during training, we introduce a Spherical Linear Interpolation (Slerp)-based attack simulation. This approach operates directly on the noise latent while strictly preserving the Gaussian variance. Extensive experiments demonstrate that DeepFreqMark achieves significantly lower Bit Error Rates (BER) than baseline methods under real-world attacks and scales to 256 bits message capacity. Our source code is available at https://github.com/chenhsiu48/DeepFreqMark.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/11/2608.08195v1-targeted-counterfactual-fingerprinting-for-black-box-llm-ownership-verification",
+      "section": "deep",
+      "title_en": "Targeted Counterfactual Fingerprinting for Black-Box LLM Ownership Verification",
+      "authors": "Yutong Wu, Xiaofan Bai, Shixin Li, Pingyi Hu, Ziqi Zhou, Zilong Wang, Xiaojing Ma, Songfeng Lu, Yuhong Li, Jin Xuan, Yi Wang, Dongmei Zhang, Bin Benjamin Zhu",
+      "date": "2026-08-08",
+      "pdf": "https://arxiv.org/pdf/2608.08195v1",
+      "score": "8.0",
+      "evidence": "针对黑盒大模型所有权的反事实指纹技术，与生成式模型指纹识别相关",
+      "tldr": "大语言模型通过重部署、微调、量化等方式被衍生时，所有权验证常需在仅开放文本查询接口的黑盒下进行。现有指纹方法在开放生成和最终响应接口下信号脆弱。本文提出TCF框架，将开放生成比较转化为受限答案空间的定向反事实迁移，优化提示扰动使模型输出转向反事实目标，并基于源模型反事实边际筛选与验证。在四个LLM家族上平均AUC达0.9861，较TRAP、ProFLingo和ZeroPrint提升0.07至0.19。",
+      "tags": "query:watermarking",
+      "abstract_en": "Large language models (LLMs) are high-value assets that can be derived through redeployment, fine-tuning, quantization, or further alignment. Because deployed LLMs are commonly exposed only through query APIs, ownership verification must often rely on black-box text responses. This setting is difficult: generations are open-ended and can vary across repeated queries, while existing black-box fingerprints rely on signals that are fragile under a final-response interface, including full-text matching, soft behavioral features, or model-specific prompts designed not to transfer. We propose TCF (Targeted Counterfactual Fingerprinting), a black-box LLM fingerprinting framework that converts open-ended generation comparison into constrained-answer targeted counterfactual transfer. TCF restricts each verification query to a finite answer space, reducing the surface-form ambiguity that enters the verification score, and optimizes a prompt perturbation toward a counterfactual target different from the protected model's clean answer on the original prompt. Verification reduces to checking whether the suspect model's parsed final answer matches the recorded target. We introduce the source-model counterfactual margin (SCM), a protected-model-only quantity that certifies the target is unlikely before the perturbation and likely after it; SCM controls target selection, perturbation stopping, and fingerprint filtering. Under explicit derived-preservation and independent-transfer budgets motivated by local behavioral closeness, we derive a target-accuracy gap between derived and independent models. Across four LLM families, TCF achieves an average AUC of 0.9861, improving over TRAP, ProFLingo, and ZeroPrint by 0.07 to 0.19.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/11/2608.08645v1-halomark-a-spectral-threshold-for-embedding-vector-watermarking-under-c2pa",
+      "section": "deep",
+      "title_en": "HaloMark: A Spectral Threshold for Embedding-Vector Watermarking under C2PA",
+      "authors": "Tarun Sharma",
+      "date": "2026-08-09",
+      "pdf": "https://arxiv.org/pdf/2608.08645v1",
+      "score": "8.0",
+      "evidence": "基于密码学原语的嵌入向量水印，并与C2PA清单绑定",
+      "tldr": "C2PA内容溯源机制无法直接用于嵌入向量，因为量化、投影、微调等常规操作会改变其形态，固定哈希不再稳定。HaloMark提出由块对角正交旋转、公共白化、输入依赖LSH承诺和每向量nonce组成的水印方案，关键改进是将承诺签名写入C2PA侧车，验证时直接读取而非重新计算，规避白化导致的承诺翻转。安全强度归结为单个标量β，对线性和非自适应攻击者给出严格上界。在维度有效秩阈值0.19以上，所有攻击下AUROC不低于0.965，验证仅需284微秒和24字节侧车开销，并已在三个C2PA参考SDK中端到端验证。",
+      "tags": "query:watermarking",
+      "abstract_en": "Foundation-model embeddings are now a primary data asset, but the content-provenance machinery built for images and audio does not transfer to them. C2PA binds to an asset with a stable bit-level or perceptual identity; embeddings have neither, since quantisation, projection, fine-tuning, and windowed averaging reshape them in normal use and break any fixed hash.   We present HaloMark, a watermark for embedding vectors cryptographically bound to a C2PA manifest. It composes four standard primitives -- a block-diagonal orthogonal rotation, public whitening, an input-dependent LSH commitment, and a per-vector nonce -- around one protocol change: the producer signs the LSH commitment c into the C2PA sidecar, and the verifier reads c from the manifest instead of recomputing it. Recomputing is fragile under whitening, which flips the commitment bucket on 62% of inputs at cos = 0.96; reading the signed c reduces the verifier's score to T = T_null + beta(A)*epsilon, so security turns on a single scalar beta, which we bound rigorously for linear and non-adaptive attackers and characterise empirically for the adaptive case.   We evaluate against an adversary holding polynomially many clean/watermarked pairs under one key with full sidecar visibility, across eight baselines and ten adaptive attackers including denoising-autoencoder removal. The eleven encoders separate at an empirical threshold eff_rank(Sigma)/d ~= 0.19: above it, detection AUROC stays at 0.98 or higher across every in-budget attack on the three encoders we sweep in full, and at 0.965 or higher under single-seed DAE removal on the rest; below it every variant we tested fails. Why the threshold is dimension-uniform is left open. Deployed as a Qdrant admission filter, the verifier runs at 284 us and 24 bytes of sidecar per vector, validated end-to-end against three C2PA reference-SDK bindings.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/11/2608.08129v1-understanding-security-and-privacy-perceptions-of-content-creators-regarding-ai-labels-of-ai-generated-content",
+      "section": "quick",
+      "title_en": "Understanding Security and Privacy Perceptions of Content Creators Regarding AI Labels of AI-Generated Content",
+      "authors": "Shuning Zhang, Hui Wang, Rongjun Ma, Xin Yi, Kanye Ye Wang, Robert Xiao, Hewu Li",
+      "date": "2026-08-08",
+      "pdf": "https://arxiv.org/pdf/2608.08129v1",
+      "score": "6.0",
+      "evidence": "研究水印与元数据实现的AI标签，创作者规避行为影响溯源",
+      "tldr": "AI标签通过水印与元数据追踪AIGC，但创作者因贬值担忧不愿披露并主动去除痕迹。通过访谈21位创作者及6平台16种操纵测试，发现创作者混淆AI标签与精细追踪，担心去匿名化与算法限流。实证表明粗量化等修改明显降低检测，且跨平台不一致甚至误报人类图片。建议设计工作流弹性隐式标签，使技术保障与创作者激励对齐。",
+      "tags": "query:watermarking",
+      "abstract_en": "AI labels, typically implemented via underlying tracing mechanisms such as watermarks and metadata, are crucial for protecting Artificial Intelligence-Generated Content (AIGC) against security threats like disinformation and evasion. However, the perceived devaluation of AI-assisted work discourages creators from disclosing AI use, incentivizing efforts to bypass labeling and compromising downstream traceability. Yet, how AIGC creators perceive the security and privacy (S\\&P) implications of these labels, and how their behaviors impact technical resilience remain underexplored. To this end, we conducted semi-structured interviews with 21 AIGC creators and measured images across 6 image generation platforms against 16 self-reported manipulation settings. Our findings reveal that creators conflate binary AI labels with granular traceability, and express strong fears of de-anonymization via platform identifiers. Driven by fears of algorithmic traffic suppression and reputational risks, they defensively removed digital traces. Through empirical tests, we show that targeted modifications like coarse quantization significantly degrade detection. AI detection capabilities are also inconsistent across platforms, and suffer from false positives even for human-authored images. Based on these insights, we advocate for workflow-resilient implicit AI labels that align technical guarantees with creators' incentives.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
