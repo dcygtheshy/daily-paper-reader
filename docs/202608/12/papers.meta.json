@@ -1,0 +1,54 @@
+{
+  "label": "2026-08-12",
+  "date": "2026-08-12",
+  "generated_at": "2026-08-12T20:58:46",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202608/12/2608.10166v1-marknull-model-agnostic-watermark-removal-in-ai-generated-images-via-on-manifold-latent-manipulation",
+      "section": "deep",
+      "title_en": "MarkNull: Model-Agnostic Watermark Removal in AI-Generated Images via On-Manifold Latent Manipulation",
+      "authors": "Jie Cao, Qi Li, Zelin Zhang, Xiaodong Wu, Lingshuang Liu, Xiangman Li, Jianbing Ni",
+      "date": "2026-08-10",
+      "pdf": "https://arxiv.org/pdf/2608.10166v1",
+      "score": "9.0",
+      "evidence": "面向AI生成图像水印的模型无关去除攻击，通过流形潜在操纵",
+      "tldr": "现有水印移除攻击常受限于特定生成模型或伴随严重视觉退化。MarkNull利用水印图像中潜在表示与初始噪声的统计依赖，提出噪声-潜在对齐分数作为量化指标，并通过流形上的潜在操作选择性去相关该依赖，同时保持语义。实验显示，该方法将水印比特准确率降至53.14%，接近随机猜测，且无感知退化，成功攻破SynthID-Image及视频水印。该工作揭示了模型无关潜在空间攻击的可行性，并配套检测机制以推动更鲁棒的水印设计。",
+      "tags": "query:watermarking",
+      "abstract_en": "Digital watermarking has emerged as a critical technique for provenance and copyright attribution in AI-generated imagery, yet its robustness against realistic, model-agnostic removal attacks remains poorly explored. Existing attacks either succeed only against specific generative models or achieve removal at the cost of severe visual degradation. In this paper, we propose MarkNull, a model-agnostic watermark removal attack via on-manifold latent manipulation. MarkNull is grounded in a key observation: watermarked images exhibit a strong statistical dependency between the generated latent representation and the embedded initial noise. To quantify this dependency, we introduce the Noise-Latent Alignment Score (NLAS) and formulate an optimization objective that selectively decorrelates the latent representation from the embedded watermark while preserving semantic fidelity. Extensive evaluations across different categories of watermarking paradigms, including post-hoc, fine-tuning-based, and initial-noise-based schemes, demonstrate that MarkNull reduces average bit accuracy to 53.14%, approaching random-guessing (50%), without perceptible image degradation. To further improve scalability, we propose MarkNull-A, an amortized, optimization-free variant that distills the attack into a single forward pass, achieving 0.50 s/image with modest computational overhead. Notably, our attacks successfully compromise Google's SynthID-Image system while preserving high visual quality and transfer effectively to video watermarking. Finally, we present an attack detection mechanism as a defensive counterpart to MarkNull and MarkNull-A, highlighting the necessity of developing watermark designs resilient to model-agnostic latent-space attacks.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/12/2608.10091v1-signpost-watermarking-joint-optimization-for-visual-watermark-coexistence",
+      "section": "deep",
+      "title_en": "Signpost Watermarking: Joint Optimization for Visual Watermark Coexistence",
+      "authors": "Shruti Agarwal, Vishal Asnani, John Collomosse",
+      "date": "2026-08-10",
+      "pdf": "https://arxiv.org/pdf/2608.10091v1",
+      "score": "8.0",
+      "evidence": "面向图像与视频的视觉水印训练，可直接应用于文本到图像模型的输出",
+      "tldr": "视觉水印通常独立部署，已有研究发现独立训练的水印模型间可意外共存，但该性质非优化目标，干扰不受控。本文提出解码器感知的联合优化方法，显式训练水印与其他水印共存，并首次验证视频水印也具备这种共存性。实验显示，所提方法在图像和视频水印场景均能减少相互干扰，提升解码鲁棒性。此工作为路标水印奠定基础，用于指示其他来源水印系统，支持分层认证。",
+      "tags": "query:watermarking",
+      "abstract_en": "We present a method for training imperceptible visual watermarks to coexist with other such watermarks. Recent work has shown that independently trained image watermarking models can coexist with surprisingly limited interference, enabling watermark ensembling. However, this coexistence is a serendipitous property rather than an explicit optimization objective, leaving interference uncontrolled and potentially reducing decoding robustness or visual quality. We first show empirically that the same coexistence property extends to video watermarking. We then show that both image and video watermarks can be trained with a decoder-aware objective to improve coexistence. Our results suggest a practical path to signpost watermarks that indicate the presence of independently deployed provenance watermarking systems, supporting layered provenance signaling for content authenticity and rights.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/12/2608.09452v1-a-content-aware-pure-permutation-with-intrinsic-avalanche-effect-breaking-the-diffusion-permutation-dichotomy",
+      "section": "quick",
+      "title_en": "A Content-Aware Pure Permutation with Intrinsic Avalanche Effect: Breaking the Diffusion-Permutation Dichotomy",
+      "authors": "Zahra Ghoraeian, Mohammad-Reza Sadeghi, Samaneh Mashhadi",
+      "date": "2026-08-10",
+      "pdf": "https://arxiv.org/pdf/2608.09452v1",
+      "score": "6.0",
+      "evidence": "具有固有雪崩效应的内容感知纯置换，面向图像数据隐藏与水印",
+      "tldr": "传统像素置换只是重排像素位置，无法产生差分敏感性与雪崩效应。本文提出内容感知三角置换（TCA）算法：先通过Canny算子提取边缘，再对边缘与角点应用Delaunay三角剖分，得到与图像内容强相关的分区；因剖分对像素变化高度敏感，单像素改变会让边缘图、剖分和全局置换模式完全改变。在50张图像上，TCA仅靠像素重排就使NPCR达到97.10%，UACI达到20.06%，平均需迭代14.81次；而传统方法NPCR近零。该工作打破了置换与扩散的二分法，为参考式加密、脆弱水印等提供了新途径。",
+      "tags": "query:watermarking",
+      "abstract_en": "Pixel permutation is a fundamental tool in image processing, image encryption, and data hiding (including watermarking and steganography) that rearranges pixels without changing their values. A common assumption in the literature is that permutation alone cannot create differential sensitivity; changing one pixel merely relocates that pixel in the output, producing no avalanche effect. This paper challenges this by introducing the Triangular Content-Aware Permutation (TCA) algorithm.   The method extracts edge points using Canny and applies Delaunay Triangulation to edges and corners, creating a unique partition. Since triangulation is highly sensitive to image geometry, changing a single pixel alters the edge map, resulting in a completely different triangulation and global permutation pattern. Unlike classical dimension-based permutations and advanced content-aware methods (2025-2026), which lack differential sensitivity, TCA increases NPCR from near-zero to 97.10% solely through pixel relocation.   Experiments on 50 images show that TCA, with an average of 14.81 iterations, achieves NPCR = 97.10% and UACI = 20.06%, proving pure permutation can create significant differential sensitivity. Conventional methods maintain near-zero NPCR. The iteration threshold varies from 6.4 to 30.7 based on content complexity. Low PSNR (11.93 dB) and near-zero correlation (~10^-3) confirm superior statistical performance. Although slower than classical methods due to triangulation, this is a deliberate trade-off for stronger security. Given the non-analytic, content-dependent nature of the pattern, TCA is ideal for reference-based encryption, fragile watermarking, and non-blind steganography.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

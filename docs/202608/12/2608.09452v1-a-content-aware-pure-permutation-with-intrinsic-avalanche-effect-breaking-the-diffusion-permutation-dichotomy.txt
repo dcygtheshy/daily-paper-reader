@@ -1,0 +1,391 @@
+Title: A Content-Aware Pure Permutation with Intrinsic Avalanche Effect: Breaking the Diffusion-Permutation Dichotomy
+
+URL Source: https://arxiv.org/pdf/2608.09452v1
+
+Published Time: Tue, 11 Aug 2026 02:12:28 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+> ARXIV 1
+
+# A Content-Aware Pure Permutation with Intrinsic Avalanche Effect: Breaking the Diffusion-Permutation Dichotomy 
+
+Zahra Ghoraeian, Mohammad-Reza Sadeghi, and Samaneh Mashhadi, 
+
+Abstract —Pixel permutation is a fundamental tool in image processing, image encryption, and data hiding (including water-marking and steganography) that transforms spatial arrange-ment solely by relocating pixels without altering their numerical values. A common assumption in the technical literature holds that permutation alone cannot create differential sensitivity; that is, changing a single pixel in the input, after applying permuta-tion, merely relocates that same pixel in the output, producing no avalanche effect. This paper challenges this assumption by introducing the Triangular Content-Aware Permutation (TCA) algorithm. The proposed method creates a unique image partitioning by extracting edge points using the Canny operator and applying Delaunay Triangulation to a set comprising edges and corners, then uses this partitioning to construct the permutation pattern. Since the triangulation structure is highly sensitive to image geometry and topology, changing even a single pixel alters the edge map, resulting in a fundamentally different triangulation and an entirely new global permutation pattern. Unlike classical dimension-based permutations-which are still currently used in the permutation stage of data hiding systems-and advanced content-aware modern permutations (2025–2026) employed in the permutation stage of image encryption systems, all of which lack differential sensitivity at this stage-TCA dramatically increases NPCR from near-zero values (in static-formula permutations) to 97.10% solely through pixel relocation. Experimental results on 50 standard images demonstrate that TCA, with an average of 14.81 iterations, achieves NPCR = 97.10% and UACI = 20.06%, proving that a pure permuta-tion can exhibit significant differential sensitivity. In contrast, conventional methods maintain near-zero NPCR under identical conditions. The number of iterations required to reach the chaos threshold varies from 6.4 to 30.7 depending on content complexity, rooted in deep geometric dependency that renders the algorithm’s behavior unpredictable. Low PSNR values (11.93 dB) and near-zero correlation coefficients ( ∼10 -3 ) confirm the algorithm’s superior statistical performance between two images initially differing by only one pixel. Although execution speed is slower than classical methods due to triangulation complexity, this represents a deliberate trade-off between speed and supe-rior qualitative security. Given the non-analytic and content-dependent nature of the permutation pattern-which makes reconstructing the mapping impossible without access to the reference image-the algorithm is well-suited for applications in reference-based encryption, fragile watermarking, and non-blind steganography. 
+
+Index Terms —Content-aware permutation, pure permuta-
+
+Z. Ghoraeian is with the Department of Mathematics and Computer Science, Amirkabir University of Technology (Tehran Polytechnic), Tehran, Iran (e-mail: zahra.ghoraeian@aut.ac.ir). ORCID: 0009-0009-3547-4437. M.-R. Sadeghi is with the Department of Mathematics and Computer Science, Amirkabir University of Technology (Tehran Polytechnic), Tehran, Iran (e-mail: msadeghi@aut.ac.ir). ORCID: 0000-0002-7676-4168. S. Mashhadi is with the School of Mathematics and Computer Science, Iran University of Science and Technology, Narmak, Tehran, 1684613114, Iran (e-mail: smashhadi@iust.ac.ir). ORCID: 0000-0001-9191-1376. Corresponding author: Mohammad-Reza Sadeghi (e-mail: msadeghi@aut.ac.ir). 
+
+tion, avalanche effect, Delaunay triangulation, watermarking, steganography. 
+
+I. I NTRODUCTION 
+
+# THE increasing use of images in sensitive domains such as healthcare, surveillance, and military communications has drawn widespread attention to the security of visual data [1], [2]. Medical, satellite, and personal images all contain valuable information that requires protection during storage and transmission [3], [4], consequently making the assurance of security, integrity, and confidentiality of image data a critical area of research [5], [6]. Many image processing and security applications-including encryption, digital watermarking, steganography, content au-thentication, and secure image transmission-rely on pixel permutation as a fundamental operation [1]–[3], [7]–[9]. This operation rearranges the spatial arrangement of pixels without altering their numerical values, thereby breaking spatial cor-relations. For instance, in encryption it acts as a confusion layer for decorrelating pixels [1], [2], [6], [10], [11]; in robust watermarking it disperses the watermark to enhance resilience against attacks [3]; in steganography it conceals the presence of hidden data [7]; and in authentication and fragile watermarking it increases tampering sensitivity by distributing authentication data [3]. Traditional permutation algorithms (Arnold, Zigzag, Spiral) continue to be used in recent research (2024–2025) due to their simplicity and efficiency in hybrid methods [4]–[8]. However, these methods suffer from a fundamental limitation: they are dimension-dependent and content-independent, thus generating identical permutation patterns for all images and rendering them vulnerable to KPA and statistical analysis [2]. Furthermore, results from Section V show that even after 100 iterations, changing a single pixel yields NPCR ≈ 0.0004% and PSNR > 100 dB, indicating the absence of differential sensitivity and avalanche effect in content-independent per-mutations. Recently, content-aware methods such as block permutation with feedback [1] or adaptive scrambling [10] have been proposed, but they either involve explicit diffusion or modify pixel values, thus departing from pure permutation. A review of advanced schemes (2024–2026) in Table I shows that none have evaluated or claimed an avalanche effect in the permutation stage alone [1], [2], [6], [10]–[16]. As observed in Table I, none of the advanced methods published in recent years (2024–2026) claim differential sen-sitivity or avalanche effect for their permutation layer. For instance, the content-aware scrambling method in [2] enters the diffusion domain by modifying pixel values. Content-arXiv:2608.09452v1 [cs.CV] 10 Aug 2026 ARXIV 2                                                                    
+
+> TABLE I INVESTIGATION OF THE PERMUTATION PHASE ’S ROLE IN CREATING THE AVALANCHE EFFECT IN ADVANCED IMAGE ENCRYPTION ALGORITHMS
+> (2024–2026)
+> Ref. (Year) Algorithm / Approach Architecture Separate Diffusion Phase? Avalanche Effect in Permutation Phase Investigated/Claimed?
+> [1] (2025) MIE-SPD (Simultaneous Permutation-Diffusion) Multi-image encryption with SPD
+> ✓Simultaneous ×
+> [2] (2024) Block permutation +weighted bit-plane chain diffusion Two-phase encryption ✓Yes ×
+> [10] (2025) Bit-level and pixel-level permutation with improved hyperchaotic system Three-phase encryption ✓Yes ×
+> [11] (2024) 1D-CwS +pixel-level permutation with unique numbers Medical image encryption ✓Yes ×
+> [6] (2024) Block permutation + LIS with 2D-HSCM map Color image encryption ✓Yes ×
+> [13] (2024) Dynamic Josephus scrambling +cross-diffusion Medical image encryption ✓Yes ×
+> [14] (2026) SCD-CHAOS (Dynamic S-box + Tent and Henon maps) Hybrid encryption ✓Yes ×
+> [15] (2025) 2D-SQICS + random area permutation Encryption with new hyperchaotic system
+> ✓Yes ×
+> [16] (2026) SQMCML +random-trajectory Josephus permutation Encryption with CML and CA ✓Yes ×
+> [17] (2026) 1D-PCQM + dynamic sequence selection (D3CM-IES) Encryption with powered Cheby-shev map
+> ✓Yes ×
+> [Proposed] (2026) Triangular Content-Aware Permutation Content-dependent pure per-mutation
+> ×No ✓Yes (Intrinsic)
+
+independent permutations also produce fixed patterns for iden-tical dimensions [8], [17] and remain vulnerable to statistical and structural attacks [2]. Our experimental results show near-zero NPCR (0.0004%) for Arnold transform as a representative of content-independent permutations. The TCA algorithm, by introducing a dynamic content-aware permutation, provides a unique dispersion map based on the image’s topological features and, for the first time, realizes an intrinsic avalanche effect within a pure permutation layer. 
+
+A. Proposed Method 
+
+This paper challenges the assumption that permutation alone cannot create differential sensitivity by introducing the Triangular Content-Aware Permutation (TCA) algorithm. The key idea is to make the permutation pattern dependent on the image topology, so that a change in a single pixel transforms the entire structure. TCA achieves this in three steps: edge extraction with Canny, Delaunay triangulation of points, and pixel rearrangement based on triangle traversal. Since Delaunay triangulation depends on point geometry, any image change completely alters the permutation pattern. This geometric dependency creates a unique, analytically unrecon-structable pattern, making pattern recovery impossible without the reference image and rendering the algorithm ideal for fragile watermarking and non-blind steganography. The main contributions of this work are: 1) Conceptual Innovation: Introduction of the first content-dependent permutation function that, unlike content-independent methods, generates unique and un-predictable permutation patterns for each image and, unlike both classical and modern methods, possesses avalanche effect and differential sensitivity. 2) Quantitative Validation: We demonstrate that TCA achieves NPCR = 97.1% with an average of 14.81 iterations-a value currently assumed to be near zero for permutations. Although the computational cost of TCA to reach this level of differential sensitivity (4.54 seconds for 512 × 512 images, equivalent to approximately 15 iterations) is higher, this cost is fully justified by achieving unparalleled security features such as KPA resistance and over 97% improvement in permutation differential sensitivity. It is worth noting that the number of iterations is tunable depending on the user’s require-ments; for instance, only 5 iterations (1.49 seconds) are sufficient to break spatial correlation, and even a single iteration (0.298 seconds) suffices to guarantee the uniqueness of the permutation pattern for each image. Moreover, for non-real-time applications (such as water-marking and authentication) where security takes prece-dence over speed, this cost is acceptable. It should be noted that TCA is the first algorithm to introduce a pure permutation with intrinsic avalanche effect, challenging a long-standing assumption in the technical literature. As a pioneering work, it is not expected to achieve absolute optimality in all dimensions; rather, its value lies in opening a new path and proving the feasibility of what was previously considered impossible. This paper provides a foundation for future research that will further optimize execution speed. 3) Comprehensive Security Analysis: We provide a com-plete evaluation including correlation analysis, differen-tial attack resistance, and Known-Plaintext Attack (KPA) analysis, confirming that TCA effectively breaks pixel correlations and resists KPA. The remainder of this paper is organized as follows: Sec-ARXIV 3 
+
+> Fig. 1. Zigzag scrambling pattern
+
+tion II presents the theoretical foundations, Section III reviews related work, Section IV details the proposed TCA algorithm, Section V presents experimental results, Section VI discusses limitations and future work, and Section VII concludes the paper. II. T HEORETICAL FOUNDATIONS 
+
+The proposed algorithm is designed based on the integration of several fundamental concepts in image processing and data hiding. In this section, we first introduce traditional scrambling methods that are still widely used in watermarking and steganography applications, serving as a background to demonstrate the existing limitations. We then examine the foundations of edge extraction and Delaunay triangulation as the core components of the new method. The goal is to provide the necessary theoretical framework for a better understanding of the proposed scheme’s mechanism. 
+
+A. Common Image Pixel Permutation Algorithms in Water-marking and Steganography 
+
+Image scrambling is a key step in watermarking and steganography algorithms. Three common algorithms in this field are the Arnold, Spiral, and Zigzag transforms. 
+
+1) Arnold Transform: The Arnold transform is one of the mappings used for image pixel permutation. The 2D Arnold map moves a pixel at coordinates (x, y ) to new coordinates 
+
+(x′, y ′) using the following equation, where N is the image dimension. This map is reversible and applicable only to square images. 
+
+x′
+
+y′
+
+
+
+=
+
+1 11 2
+
+  xy
+
+
+
+(mod N ) (1) This map depends solely on the image dimensions and acts identically on all images of the same size. An important characteristic of this map is its periodicity, meaning that after a finite number of iterations, the image returns to its original state [18], [19]. 
+
+2) Zigzag Transform: In the Zigzag transform, image pixels are scanned sequentially based on a “Z”-shaped path. This method is also only defined for square images and is reversible. The scrambling pattern generated by this transform is indepen-dent of the image content and depends only on its dimensions [20]. Figure 1 shows an example of this scanning pattern.  
+
+> Fig. 2. Spiral scrambling pattern
+
+3) Spiral Transform: The Spiral transform scrambles the image by scanning pixels from a starting point (usually a corner of the image) in a specific direction. This method is also limited to square images, and its pattern is identical and predictable for same-sized images [17]. Figure 2 depicts an example of the spiral scanning pattern. A critical criterion for evaluating the security of these algo-rithms is their resistance to Known-Plaintext Attacks (KPA). Since the scrambling pattern in Arnold, Zigzag, and Spiral transforms depends only on the image dimensions and is the same for all same-sized images, if this map is revealed for one image, the security of all other images of that size is completely compromised. This inherent weakness exacerbates the vulnerability of these algorithms to this attack. As observed, conventional scrambling algorithms suffer from common limitations, the most important of which is their exclusive reliance on image dimensions and the generation of an identical, predictable pattern for same-sized images. Our proposed algorithm addresses these weaknesses with a novel approach using Delaunay triangulation and edge detection, creating a unique and content-dependent scrambling pattern that significantly increases its security. 
+
+B. Foundations of Feature Extraction and Triangulation 1) Image Edges and the Canny Algorithm: Image edges are points with sudden changes in brightness intensity that define the boundaries between different regions. These points are used as key features for image processing. The Canny algorithm is a common method for extracting edges with the following steps: 1) Applying a Gaussian filter to reduce noise. 2) Calculating the image gradient to identify points with sharp changes. 3) Performing Non-Maximum Suppression to thin the edges. 4) Applying double thresholding to separate strong edges from weak ones. The edge points extracted by the Canny algorithm are used as the initial input for the Delaunay triangulation process to create a content-dependent triangular mesh for the image. Figure 3 shows an example of an image (a) and its edge points extracted by the Canny algorithm (b) [21]. 
+
+2) Delaunay Triangulation (DT): Triangulation is a funda-mental technique in computational geometry. Delaunay Trian-gulation (DT) is an optimal partitioning method that divides ARXIV 4 
+
+> Fig. 3. (a) Original image; (b) Edge points extracted by Canny algorithm
+
+the convex hull of points into non-overlapping triangles. This method is based on the “empty circumcircle criterion” (no other point exists inside the circumcircle of any triangle). This unique property ensures that the internal angles of the triangles are maximized, preventing the formation of long, narrow triangles. The vital point for the TCA algorithm is that the partitioning nature of DT guarantees that every image pixel belongs to exactly one region [22]. 
+
+C. Scrambling Evaluation Metrics 
+
+Various metrics are used to quantitatively evaluate the per-formance of a scrambling algorithm. A successful scrambling algorithm is characterized by the following criteria:  
+
+> •
+
+Low PSNR and SSIM: Indicating a severe lack of visual and structural similarity between the original and scrambled images [23], [24].  
+
+> •
+
+High MSE and BER: Indicating extensive changes at the numerical and bit levels [23].  
+
+> •
+
+Low Absolute NCC and Autocorrelation (AC): Show-ing the successful elimination of any linear statistical relationship and spatial correlation between neighboring pixels, respectively [23], [24]. 
+
+1) Differential Sensitivity Metrics: NPCR and UACI: The standard metrics for measuring differential sensitivity are NPCR (percentage of different pixels) and UACI (average intensity difference), calculated between two images differing by one pixel after applying the algorithm. The theoretical ideal values for these metrics in a complete encryption system are 99.61% and 33.46%, respectively [24]. However, these values are defined for complete encryption algorithms that include both permutation and diffusion stages. It is worth noting that content-independent permutations (such as the Arnold transform) inherently lack the avalanche effect, because changing one pixel in the original image only results in the relocation of two pixels in the output image. Consequently, NPCR equals 2/(M × N ) and UACI equals 
+
+2d/ (M × N × 255) (where d is the pixel intensity difference and M × N is the image size), which for images of typical dimensions are negligible (near zero) [1]. Although the common assumption is that permutations in general (even content-aware ones) lack differential sen-sitivity, the proposed TCA algorithm fundamentally differs from existing permutations. Its iterative and content-dependent mechanism-based on edge points and Delaunay triangulation-creates a powerful dynamic diffusion effect that is absent in existing permutations and leads to differential sensitivity. Therefore, differential metrics like NPCR and UACI are not only applicable but are crucial for quantifying TCA’s superior differential resistance against Known-Plaintext Attacks (KPA). This unique behavior elevates TCA beyond the scope of simple existing methods. 
+
+D. Entropy and Histogram in the TCA Mechanism 
+
+By definition, permutations only relocate pixels and do not change their values. Therefore, statistical properties such as entropy and histogram remain constant. In TCA, these properties also remain unchanged; hence, analyzing these metrics, unlike encryption algorithms that also modify pixel values, is ineffective. III. R ELATED WORK 
+
+To articulate the research gap that this study intends to fill, the literature review is structured around two main axes: (1) the established permutation-diffusion paradigm and the passive role of permutation in image encryption, and (2) the continued use of classical scramblers in recent publications. Finally, by synthesizing these two axes, the innovation and distinction of the proposed Triangular Content-Aware (TCA) algorithm will be clearly defined. 
+
+A. The Permutation-Diffusion Paradigm and the Passive Role of Permutation in Image Encryption 
+
+Since Fridrich’s seminal work in 1998 [25], the two-stage permutation-diffusion architecture has become the dominant paradigm in chaos-based image encryption. In the first stage, pixel positions are rearranged to break spatial correlations, and in the second stage, pixel values are modified to achieve the avalanche effect-a phenomenon in complete cryptographic systems where a single-bit change in the input propagates to approximately half of the output bits [26], [27]. Numerous studies have improved this framework through various innovations, including new chaotic maps [28], [29], bit-level operations [30], [31], DNA coding [32], [33], and plaintext-dependent key generation mechanisms [34], [35]. However, a rigorous review of these schemes reveals a consis-tent assumption: the avalanche effect is exclusively the domain of the diffusion phase, while permutation is regarded merely as a “passive layer.” Table I (in the Introduction) provides an overview of prominent and up-to-date algorithms (2024–2026). This review demonstrates that in all investigated schemes-whether they utilize separate diffusion phases [2], [10], [11], [26], employ simultaneous permutation-diffusion operations [1], or even pure permutation methods [36]-the permutation layer alone lacks an intrinsic avalanche effect. It is evident that a purely geometric and content-independent permutation, due to its lack of dependence on pixel informa-tion, cannot respond to changes in the input image (such as a single-pixel change) and consequently lacks any differential sensitivity or avalanche effect. In other words, as long as the pixel rearrangement pattern is not a function of the image content, changes in the input will have no effect on the ARXIV 5     
+
+> Fig. 4. Visual example of the TCA algorithm’s stages on a 463 ×858 pixel image. (a) Original image. (b) Image after edge detection and key point identification. (c) Image with Delaunay triangulation on key points. (d) Final scrambled image after 10 algorithm iterations.
+
+permutation output, and NPCR will remain near zero at best, as confirmed by the examination of the Arnold transform as a representative of content-independent permutations (Table ?? ). These findings align with comparative studies in the field [37], which focus on quality metrics rather than differential secu-rity measures. These permutations also lack security against Known-Plaintext Attacks (KPA), because if the permutation pattern is content-independent (i.e., depends only on image di-mensions), having one pair (original image, scrambled image) allows an attacker to easily reconstruct the permutation pattern for all images of the same size. Nevertheless, the construction of such permutations with novel ideas is still prevalent [6], [8], [9], [12], [24]. These fundamental limitations have driven researchers to-ward designing “content-aware” permutations. In this direc-tion, Wen et al. [2], by proposing block permutation based on plaintext feedback, took a step toward making the permutation pattern dependent on image content; however, this method, by modifying pixel values at the bit level, goes beyond the boundaries of pure permutation and effectively enters the diffusion domain. Similarly, Zhang and Zhang [10], by introducing bit-level and pixel-level permutation in an im-proved hyperchaotic system, attempted to increase permutation complexity, but again deferred the avalanche effect to the bidirectional diffusion phase. In the domain of medical images, Zhang et al. [12] utilized dynamic Josephus scrambling, and Yogi et al. [13], by presenting SCD-CHAOS, combined Tent permutation with a dynamic S-box; however, in all these cases, pixel value modification and avalanche effect creation are still performed in a separate diffusion phase. Likewise, Li et al. [14] with the 2D-SQICS hyperchaotic system, Wang et al. [15] with the SQMCML model and random-trajectory Josephus permutation, and Sarra et al. [16] with the 1D-PCQM powered Chebyshev map, have all maintained the permutation-diffusion architecture with a separate diffusion phase. Therefore, despite the remarkable diversity in chaotic sequence generation methods and dynamic permutation mech-anisms, none of these approaches have succeeded in creating differential sensitivity within the permutation phase itself, and the avalanche effect remains exclusively within the domain of the diffusion phase. This gap is the primary motivation for presenting the TCA algorithm as the first pure permutation with an intrinsic avalanche effect. 
+
+B. Continued Use of Classical Scramblers in Recent Publica-tions 
+
+Despite vulnerability to Known-Plaintext Attacks (KPA) due to their sole dependence on image dimensions, classical scramblers like Arnold, Zigzag, and Spiral transforms remain widely used as the primary basis for permutation construc-tion in recent research (2024–2025) [4]–[8], [24], [38]–[41]; however, all these methods, due to their static nature, produce identical and predictable permutation patterns for all images of the same size and lack differential sensitivity, highlighting the urgent need for a more secure, content-aware alternative. ARXIV 6
+
+C. Final Synthesis and Research Gap Statement 
+
+The comprehensive review of related work reveals several critical insights: 1) Passive Permutation Paradigm: Permutation (confu-sion) is one of the main stages of image encryption. Yet in current encryption schemes, it is considered a passive layer incapable of creating an avalanche effect. Even advanced algorithms from 2024–2026 [1], [2], [6], [10]–[16] either rely on a separate diffusion phase or, in the case of pure permutations, exhibit NPCR values near zero. 2) Persistence of Vulnerable Classic Methods: Classi-cal scramblers, despite having static and dimension-dependent formulas and known weaknesses, remain prevalent in recent publications. 
+
+Research Gap and TCA Innovation: It should be noted that the aim of this paper is not to present a complete encryption system, but rather to introduce a novel permutation function applicable to various image security applications-including the permutation stage in encryption, watermarking, and steganog-raphy. By intelligently synthesizing these concepts, this paper introduces a new paradigm. The proposed Triangular Content-Aware (TCA) algorithm utilizes the fusion of the Canny edge detector and Delaunay triangulation-not for data embedding or feature extraction, but to generate a unique, unpredictable, and content-dependent pixel permutation map that possesses an intrinsic avalanche effect without any separate diffusion phase. As shown in Table I and our experimental results (Sec-tion V), TCA alone, within a pure permutation layer, elevates NPCR from near 0% to 97.10%, challenging the long-standing assumption that permutation must be passive. This map serves as an intelligent and secure scrambler that can replace classic methods in watermarking, steganography, and the permuta-tion stage of encryption systems, solving the fundamental problem of KPA vulnerability in these applications. Thus, TCA represents a fundamental shift in conceptualizing “pixel permutation” as an active security element. IV. P ROPOSED TRIANGULAR CONTENT -A WARE 
+
+PERMUTATION (TCA) A LGORITHM 
+
+The Triangular Content-Aware Permutation (TCA) algo-rithm is a novel method for pixel permutation that utilizes image edge points and Delaunay triangulation to generate a unique, non-analytic permutation map for each image. This approach directly addresses the primary vulnerability of con-ventional algorithms to Known-Plaintext Attacks (KPA) and provides a secure alternative. 
+
+A. Algorithm Overview 
+
+The TCA algorithm operates in three main stages: 1) Content Feature Extraction (Edge Detection): The algorithm extracts the content-dependent features of the image, specifically the edge points, using the Canny algorithm. 2) Geometric Partitioning (Delaunay Triangulation): 
+
+The extracted edge points are used as the seeds for 
+
+Algorithm 1 Content-Aware Pure Permutation Algorithm (TCA)                                                                                            
+
+> Require: I: Input grayscale image of size M×N
+> Ensure: Iscrambled : Scrambled image 1: num iterations: Number of scrambling iterations 2: Icurrent ←I
+> 3: for iter = 1 to num iterations do
+> 4: Step 1: Detect edge points
+> 5: edge points ←CannyEdgeDetector (Icurrent )
+> 6: Step 2: Add image corners and form the point set
+> 7: corners ← { (1 ,1) ,(1 , N ),(M, 1) ,(M, N )}
+> 8: all points ←edge points ∪corners 9: Step 3: Perform Delaunay triangulation {Output: A set of triangles partitioning the convex hull of all points }
+> 10: triangles ←DelaunayTriangulation (all points )
+> 11: Step 4: Number the triangles (e.g., by creation order)
+> 12: numbered triangles ←SortTrianglesByOrder (triangles )
+> 13: Step 5: Traverse triangles and store pixel order
+> 14: pixel order list ←[ ] {List to store the new order of all pixels }
+> 15: for each triangle in numbered triangles do
+> 16: pixels in triangle ←GetPixelsInsideTriangle (triangle , I current )
+> 17: sorted pixels ←SortPixelsColumnMajor (pixels in triangle )
+> 18: Append sorted pixels to pixel order list 19: end for {Since Delaunay triangulation is a partition, each pixel belongs to exactly one triangle }
+> 20: Step 6: Generate the scrambled image
+> 21: Iscrambled ←CreateEmptyMatrix (M, N )
+> 22: for linear index = 1 to M×Ndo
+> 23: original value ←pixel order list [linear index ].value 24: (inew , j new )←ConvertLinearIndexToCoordinates (linear index , M, N )
+> 25: Iscrambled [inew , j new ]←original value 26: end for
+> 27: Icurrent ←Iscrambled {Prepare for the next iteration }
+> 28: end for
+> 29: return Iscrambled
+
+the Delaunay Triangulation process. This step divides the image plane into a unique set of non-overlapping triangles. 3) Pixel Permutation (Scrambling): The pixels are then permuted based on the geometric properties of the gen-erated triangles. The unique permutation map is created by traversing the list of triangles and then performing an internal shuffling of the pixels within each triangle region. The detailed workflow and main mechanism of the proposed algorithm are provided in the comprehensive flowchart in Figure 5 and summarized in Algorithm 1. 
+
+B. Simulation and Real-World Output 
+
+In this section, a step-by-step example on a small 4 × 4
+
+image and a visual simulation on a real image are provided to operationally validate the TCA algorithm. 
+
+1) Step-by-Step Numerical Example on a 4 × 4 Image: 
+
+1) Original Input Image 
+
+The intensity matrix of the original image Icurrent is as follows: 
+
+Icurrent =
+
+
+
+1 2 3 45 6 7 89 10 11 12 13 14 15 16 
+
+
+
+2) Point Extraction and Delaunay Triangulation ARXIV 7
+
+Fig. 5. Detailed flowchart of the proposed Triangular Content-Dependent Scrambling Algorithm (TCA) ARXIV 8 
+
+> •
+
+Edge points: (2 , 2) , (3 , 2) , (2 , 3) , (3 , 3) (Values: 6, 10, 7, 11)  
+
+> •
+
+Corner points: (1 , 1) , (1 , 4) , (4 , 1) , (4 , 4) (Values: 1, 4, 13, 16)  
+
+> •
+
+All points: The union of the two sets above After applying the DelaunayTriangulation function to all points, 10 triangles are generated. The output is shown in Table II.             
+
+> TABLE II PIXELS INSIDE EACH TRIANGLE AFTER DELAUNAY TRIANGULATION
+> Triangle Pixels inside the triangle (coordinates) 1(1,1) 2(2,1), (3,1) 3-4-5(3,2) 6(1,2), (1,3) 7(3,3) 8(2,2) 9(1,4), (2,3), (2,4), (3,4), (4,4) 10 (4,1), (4,2), (4,3)
+
+3) Constructing the Final pixel order list 
+
+The sorted pixel order for each triangle is shown in Table III.            
+
+> TABLE III SORTED PIXEL ORDER FOR EACH TRIANGLE
+> Triangle Sorted List (sorted pixels) 1[1] 2[5, 9] 3[] 4[] 5[10] 6[2, 3] 7[11] 8[6] 9[7, 4, 8, 12, 16] 10 [13, 14, 15]
+
+The final pixel order list is obtained as: pixel order list = [1 , 5, 9, 10 , 2, 3, 11 , 6, 7, 4, 8, 12 , 16 , 13 , 14 , 15] 
+
+4) Generating the Scrambled Image 
+
+The resulting final scrambled image Iscrambled is as fol-lows: 
+
+Iscrambled =
+
+
+
+1 5 9 10 2 3 11 67 4 8 12 16 13 14 15 
+
+
+
+2) Visual Example of Algorithm Execution: To opera-tionally validate the proposed algorithm, TCA was imple-mented on a sample image of 463 × 858 pixels (Figure ?? ). It is noteworthy that the scrambling algorithm was executed ten consecutive times to obtain the final image. 
+
+C. The Fundamental Property of Delaunay Triangulation: Partitioning 
+
+The Delaunay triangulation algorithm inherently partitions the convex hull of its input points [22]; that is, every pixel belongs to exactly one triangle, the triangles have no over-laps, and their union covers the entire region. This property guarantees that during the permutation process, no pixel is lost or duplicated. Consequently, the final pixel list at the end of step 6 contains all and exactly all pixels of the original image, only once, and in a completely new, content-dependent order. 
+
+D. Addressing Concerns about Small Triangles 
+
+A potential concern is that very small triangles in the Delaunay triangulation might suggest that pixel relocation is only local; however, it must be emphasized that the proposed algorithm uses a global rearrangement mechanism. Since De-launay triangulation partitions the entire image, the pixels of all triangles are extracted sequentially and merged into a single one-dimensional list, and then all pixels are rearranged to form the final image. Therefore, the size of the triangles does not impair the algorithm’s performance; rather, the variety in their sizes enhances the unpredictability of the permutation pattern. V. E XPERIMENTAL RESULTS AND COMPARISON 
+
+A. Test Environment Settings 
+
+The experiments were conducted on a computer with Win-dows 11 Pro, Intel Core i5-1335U processor (1.30 GHz, 10 cores, 12 logical threads), 16 GB RAM, and MATLAB R2021b. The dataset includes 50 grayscale images of size 
+
+512 × 512 : 48 images from the UGR database (available at https://ccia.ugr.es/cvg/CG/base.htm) and two additional images from USC-SIPI (converted to grayscale) and the de-fault MATLAB image (converted to grayscale and resized to 
+
+512 × 512 ). 
+
+B. Performance Metrics Analysis 
+
+In this section, the performance of TCA is evaluated and compared with three algorithms: Arnold, Zigzag, and Spiral transforms, in terms of their ability to effectively relocate pixels and create spatial disorder. The evaluation metrics focus on measuring the statistical degradation resulting from the pure relocation operation: PSNR, SSIM, BER, NCC, and AC. Desirable outcomes include low values for PSNR, SSIM, NCC, and AC, and high values for BER. MSE is related to PSNR; to avoid redundancy, only PSNR is reported. Entropy and histogram metrics are not used, as they remain constant in pure permutation. NPCR and UACI analysis is performed in Section V-E. Each algorithm was run 10 times on each of the 50 images, and the mean and standard deviation values are reported in Table IV. The 10 repetitions were performed to increase sta-tistical stability and should not be confused with the minimum number of iterations required for chaos ( Tmin ) in Section V-E. 
+
+Analysis of Statistical Metrics: All four algorithms achieve a similar degree of visual and statistical disruption. The very low PSNR and SSIM values confirm the success of all ARXIV 9                                                    
+
+> TABLE IV COMPARISON OF MEAN PERFORMANCE METRICS FOR FOUR SCRAMBLING ALGORITHMS (B ASED ON 50 I MAGES , 10 R UNS )
+> Metric Arnold Zigzag Spiral TCA (Proposed)
+> Avg PSNR (dB) 11.933 11.937 11.931 11.933 Std PSNR 2.2530 2.2519 2.2554 2.2523 Avg SSIM 0.0269 0.0275 0.0277 0.0278 Std SSIM 0.0167 0.0171 0.0172 0.0175 Avg Abs NCC ( ×10 −3)1.13 2.34 1.87 2.49 Std Abs NCC ( ×10 −3)0.76 2.04 1.44 2.08 Avg Abs AC ( ×10 −3)54.3 2.37 2.96 3.10 Std Abs AC ( ×10 −3)92.14 12.35 10.59 11.01 Avg BER 0.4361 0.4358 0.4363 0.4361 Std BER 0.0799 0.0798 0.0800 0.0802
+
+algorithms in eliminating structural similarities. Autocorre-lation (AC) analysis shows that TCA achieves low average correlation ( 3.10 × 10 −3) with strong stability (Std = 11 .01 ×
+
+10 −3), significantly outperforming the Arnold transform (Std = 92 .14 × 10 −3). The Arnold transform exhibits significantly higher residual AC ( ∼ 54 .3 × 10 −3) compared to the other three methods. 
+
+C. Computational Cost Analysis 
+
+The average execution time of TCA for a 512 × 512 
+
+image is 4.536 seconds, mainly due to edge detection and Delaunay triangulation. However, this value corresponds to the number of iterations required to achieve high differential sensitivity. Specifically, this execution time (4.536 seconds) is for approximately 15 iterations (average of 14.81), which is necessary to reach NPCR ≈ 97.10% and the avalanche effect (as reported in Table VI). In contrast, if the goal is solely to break spatial correlation, only 5 iterations are sufficient to reduce autocorrelation in all directions to below 0.05 (AC H = 0 .0189 , AC V = 0 .0042 ,AC D = 0.0038 ), resulting in an execution time of 1.490 seconds. Furthermore, if the only requirement is to guarantee bijectivity and generate a unique, content-dependent permu-tation pattern for each image (without needing to maximize diffusion or minimize correlation), a single iteration is suffi-cient, requiring only 0.298 seconds. Thus, the iteration count of TCA is tunable and depends on the desired security level. Although slower than classical methods (Arnold under 0.1 seconds), this cost is fully justified by opening a new path in permutation layer design and achiev-ing differential sensitivity (NPCR = 97.1% versus near zero for conventional permutations)-a feature completely absent in existing methods. In target applications like watermarking and non-blind steganography, operations are not real-time and embedding is performed once on the server; priority is given to KPA resistance and tampering sensitivity. Moreover, the implementation is in MATLAB on a standard laptop without optimization; with C/C++, parallelization, or GPU acceleration, execution time can be significantly reduced. It should also be noted that in Section III, despite re-viewing modern and advanced methods, execution time was not reported for any of them (whether in full encryption or permutation-only mode). Therefore, a precise quantitative comparison in this regard is not possible.                 
+
+> TABLE V TWO -P HASE STOPPING CRITERION FOR CHAOS CONVERGENCE
+> Absolute Security Criterion Chaotic Stability Criterion
+> NPCR >99.6% OR PSNR <
+> 15 dB If PSNR <20 dB AND the integer parts of both PSNR and NPCR remain un-changed for 3 consecutive iterations.
+
+D. Qualitative Analysis and Security Superiority 
+
+Although the statistical results (Section V) show similar per-formance levels, the main security superiority of the proposed algorithm lies in its fundamental content-dependent approach. While classical methods use fixed and predictable patterns, our algorithm bases its pattern on actual image data. This feature provides a critical advantage: content dependency and unpredictability. This is the key mechanism that allows TCA (a pure permutation scheme) to exhibit the pseudo-diffusion property required for modern security systems. This qualitative superiority is quantitatively proven in the following analysis. 
+
+E. Differential Sensitivity Analysis and Diffusion 
+
+In the existing literature, the inability of permutations to create an avalanche effect is accepted as a given assumption. In this section, we show that a content-dependent pure permu-tation can exhibit a strong pseudo-diffusion effect with NPCR and UACI metrics, which are critical for resistance against differential attacks and KPA. 
+
+1) The Diffusion Mechanism in TCA: Unlike fixed-pattern permutations, TCA exhibits powerful diffusion due to its plaintext dependency. A single-unit change in one pixel can alter the edge detection phase, leading to a different Delaunay triangulation and a distinct permutation pattern. 
+
+2) Experimental Methodology and Convergence Criterion: 
+
+The analysis was conducted on 50 grayscale images of size 
+
+512 × 512 . Each experiment was repeated 10 times. To determine the minimum number of iterations ( Tmin ) required to reach maximum chaos, a two-phase stopping criterion was employed: 
+
+3) Sensitivity and Efficiency Results: The mean results for all 50 images are summarized in Table VI. The “Avg TCA Threshold” column reports the minimum average number of iterations ( Tmin ) required. 
+
+Analysis of Results and Comparison: The Arnold transform, as a representative of content-independent permutations, fails to demonstrate diffusion; its final NPCR remains ≈ 0.0004% ARXIV 10                  
+
+> TABLE VI AVERAGE RESULTS OF DIFFERENTIAL SENSITIVITY ANALYSIS
+> (O NE -P IXEL CHANGE )
+> Metric Arnold (Comparison) TCA
+> Final PSNR (dB) 102.32 12.42 Final NPCR (%) ≈0.0004 97.10 Final UACI (%) ≈0.000037 20.06 Chaos Threshold (Iterations) N/A (Failure) 14.81
+
+and PSNR > 100 dB even after 100 iterations. In contrast, TCA achieves PSNR = 12.42 dB and NPCR = 97.10%, an unprecedented achievement for a pure permutation layer. The algorithm converges rapidly to a stable chaotic state with an average threshold of 14.81 iterations. Images with less complex content may require more iterations, but the high NPCR ( ∼98%) is maintained. 
+
+4) Interpretation of Differential Results: Content-independent permutations with fixed formulas (like Arnold) inherently produce NPCR and UACI values near zero, as they merely relocate pixels without any diffusion effect. Our experimental results confirm this with NPCR ≈ 0.0004% even after 100 iterations. In contrast, TCA achieves NPCR = 97.10% and UACI = 20.06% with an average of 14.81 iterations. These values are achieved by a pure permutation layer without any separate diffusion stage. While content-independent permutations yield NPCR and UACI near zero, TCA, through “Geometric Diffusion,” elevates these metrics to 97.10% and 20.06%, respectively, redefining the traditional boundary between permutation and diffusion. 
+
+5) Qualitative Superiority and KPA Resistance: The ro-bustness of TCA against Known-Plaintext Attack (KPA) is fundamentally guaranteed by its content-dependent nature. This superiority can be examined both quantitatively and analytically. First, the algorithm’s dynamic and powerful diffusion, ex-perimentally confirmed by NPCR = 97.10% and UACI = 20.06%, demonstrates that changing even a single pixel by one unit leads to widespread and unpredictable changes in the scrambled image. This high differential sensitivity makes sta-tistically reconstructing the original image from the scrambled version impossible, even if the histogram is known. To formulate this mathematically, consider a scenario where an attacker knows the histogram of the original image (since histograms remain constant in pure permutations) but does not know the spatial arrangement of pixels. For a standard 
+
+512 × 512 grayscale image with a roughly uniform histogram, the number of possible permutations N that yield the same histogram is: 
+
+N = 262144! 
+
+Q255  
+
+> i=0
+
+ni! (2) For the perfectly uniform case ( ni ≈ 1024 for each of the 256 gray levels), using Stirling’s approximation: 
+
+log 10 N ≈ 262144 × (log 10 262144 − log 10 1024) 
+
+≈ 262144 × (5 .4185 − 3.0103) 
+
+≈ 631 , 000 
+
+(3) Therefore, the probability of an attacker guessing the exact pixel arrangement in a single random attempt is: 
+
+P ≈ 10 −631000 (4) which is effectively zero. Of course, histograms of natural images are not perfectly uniform and typically have a near-Gaussian distribution, but even in this case, the number of possible permutations remains extremely large. For example, if the pixel distribution of a natural image is modeled with a standard deviation of σ ≈ 60 , then log 10 N ≈ 627 , 000 is ob-tained, reducing the correct guess probability to approximately 
+
+10 −627 ,000 .Second and more importantly, the permutation map gener-ated by TCA is non-transferable. Consequently, even if an attacker can extract the permutation pattern for a specific image pair (P1, C 1), this pattern is inherently tied to the unique topology of P1 and provides no usable information about another image P2, even if P2 differs from P1 by only one pixel. This intrinsic irreversibility and non-transferability of the content-dependent permutation map conclusively proves TCA’s robust resistance to Known-Plaintext Attacks (KPA)-a feature that is absent in content-independent permutations and has not been claimed even in modern content-aware permutations. VI. L IMITATIONS AND FUTURE WORK 
+
+The TCA algorithm presents a novel approach to pixel permutation and, for the first time, demonstrates that a pure permutation layer, when properly made content-dependent, can inherently exhibit the avalanche effect. The results are highly promising, but this pioneering approach naturally comes with challenges that will themselves guide future research. 
+
+A. Current Limitations  
+
+> •
+
+Sensitivity to noise and alterations: Since the permuta-tion map is directly extracted from the geometric features (edges) of the original image, any noise or manipulation in the transmission channel can challenge the accurate reconstruction of this map. Consequently, flawless inver-sion at the receiver’s end becomes difficult. However, in target applications such as fragile watermarking or non-blind steganography, this very sensitivity is considered a security advantage.  
+
+> •
+
+Focus on grayscale images: The current study focuses on grayscale images to prove the initial concept and ensure analytical clarity. This overlooks the complexities arising from inter-channel color correlations and the extraction of meaningful features from them.  
+
+> •
+
+Computational complexity: A limitation of the pro-posed method is its execution time compared to classical methods. This cost is the price paid for achieving supe-rior qualitative security (resistance to KPA and content-dependent diffusion). However, this time remains within an acceptable range for TCA’s target applications (such as digital watermarking and steganography), but is not suitable for real-time applications. ARXIV 11 
+
+B. Future Research Directions 
+
+1) Extension to color images: Adapting the algorithm for color and multispectral images using integrated strate-gies or independent channel processing. 2) Integration with cryptographic frameworks: Combin-ing TCA with lightweight diffusion layers to approach ideal NPCR values and using it as a replacement for existing permutation layers. 3) Performance optimization for real-time applications: 
+
+Investigating strategies to reduce execution time through C/C++ implementation, hardware acceleration (GPU), optimized Delaunay triangulation algorithms, faster edge detectors like Sobel, and reducing edge points through thresholding or random selection. 
+
+Summary: The present study has opened a new direction in designing permutation layers for secure image processing sys-tems. Although TCA is computationally heavier than classical methods, this reflects the complex mechanisms that enable its unique content-dependent security. Future research aimed at performance optimization and expanding its application scope will enhance the practicality and impact of this novel paradigm while preserving its innovative conceptual core. VII. C ONCLUSION 
+
+This paper introduced the Triangular Content-Aware Per-mutation (TCA) algorithm, which, contrary to the common assumption in the technical literature, is independently ca-pable of creating differential sensitivity and redefines the traditional boundary between permutation and diffusion stages. The findings of this study demonstrate that by leveraging the topological features of an image and employing Delaunay triangulation, the permutation layer can be transformed from a passive component into an active contributor to achieving the avalanche effect. Experimental results on standard test images confirm that the proposed method not only minimizes pixel correlation but also elevates the NPCR metric within the permutation layer from near zero (in content-independent methods) to 97.1Although the computational cost of triangu-lation increases execution time compared to simpler methods like Arnold transforms, it remains well within a practical range for non-real-time applications such as digital watermarking, authentication, and non-blind steganography. Moreover, this cost represents a strategic trade-off for achieving stronger resistance against Known-Plaintext Attacks (KPA). Ultimately, TCA demonstrates that content dependency is the key to designing a new generation of permutation functions for image security applications. In these functions, differential security emerges from the earliest stages of the scrambling process, ele-vating permutation from a simple shuffling operation to a form of ”geometric diffusion.” The present research has charted a new path in designing permutation layers for secure image processing applications. In subsequent steps, researchers, by optimizing performance and expanding its scope of use while preserving the pioneering nature of this approach, will pave the way for greater applicability and impact. ACKNOWLEDGMENTS 
+
+The authors would like to thank the anonymous reviewers for their valuable comments and suggestions. AUTHOR CONTRIBUTIONS 
+
+Zahra Ghoraeian: Conceptualization, Methodology, Soft-ware, Data Curation, Formal analysis, Visualization, Writing– original draft. 
+
+Mohammad-Reza Sadeghi: Supervision, Validation, Re-sources, Writing–review & editing, Project administration. 
+
+Samaneh Mashhadi: Methodology, Validation, Formal anal-ysis, Visualization, Writing–review & editing. FUNDING 
+
+This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors. CONFLICT OF INTEREST 
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. DATA AVAILABILITY STATEMENT 
+
+REFERENCES [1] B. Acharya, J. V. Sravan, D. J. R. Potnuru, and K. A. K. Patro, “Mie-spd: A new and highly efficient chaos-based multiple image encryption technique with synchronous permutation diffusion,” IEEE Access , vol. 13, pp. 62 773–62 796, 2025. [2] H. Wen, Y. Lin, S. Kang, X. Zhang, and K. Zou, “Secure image encryption algorithm using chaos-based block permutation and weighted bit planes chain diffusion,” iScience , vol. 27, no. 1, p. 108610, Jan. 2024. [3] H. Ozkaya and V. Aslantas, “A triple self-embedding fragile watermark-ing scheme for image tamper detection and recovery,” IEEE Access ,vol. 12, pp. 140 082–140 100, 2024. [4] B. Yang et al. , “Zero watermarking algorithm for hyperspectral remote sensing images considering spectral and spatial features,” IEEE J. Sel. Topics Appl. Earth Observ. Remote Sens. , vol. 18, pp. 10 882–10 895, 2025. [5] G. Wang, X. Ye, and B. Zhao, “A novel remote sensing image encryption scheme based on block period arnold scrambling,” Nonlinear Dyn. , vol. 112, pp. 17 477–17 507, 2024. [6] T. Chen, T. Huang, Z. Zhang, M. Lu, and J. Tang, “Color image encryp-tion based on 2d hyperchaotic sine couple map and block scrambling,”                
+
+> IEEE Access , vol. 12, pp. 167 201–167 223, 2024. [7] Z. A. Yakoob, “Embedding a robust secret data using image steganogra-phy with segmentation and zigzag,” Iraqi J. Comput., Commun., Control Syst. Eng. (IJCCCE) , vol. 25, no. 1, pp. 68–82, Apr. 2025. [8] S. Thomas M Y and A. V. N. Krishna, “A hybrid grayscale image scrambling framework using block minimization and arnold transform,” in Proc. 11th Int. Conf. Rel., Infocom Technol. Optim. (ICRITO) , Noida, India, Mar. 2024, pp. 1–6. [9] H. A.-J. Al-Asady, O. Q. J. Al-Thahab, and S. S. Hreshee, “Robust en-cryption system based watermarking theory by using chaotic algorithms: A reviewer paper,” J. Phys.: Conf. Ser. , vol. 1818, no. 1, p. 012086, 2021. [10] X. Zhang and H. Zhang, “A novel image encryption scheme using both pixel-level and bit-level permutations with an improved hyperchaotic system,” Cluster Comput. , 2025. [11] N. Khurana and M. Dua, “A novel one-dimensional cosine within sine chaotic map and novel permutation–diffusion based medical image encryption,” Nonlinear Dyn. , vol. 113, pp. 4839–4859, 2025. [12] Z. Zhang, J. Tang, F. Zhang, T. Huang, and M. Lu, “Medical image encryption based on josephus scrambling and dynamic cross-diffusion for patient privacy security,” IEEE Trans. Circuits Syst. Video Technol. ,vol. 34, no. 10, pp. 9931–9945, Oct. 2024. [13] B. Yogi, R. Majumdar, P. Ghosh, L. Sharma, and S. Roy, “Scd-chaos: Dynamic s-box and chaotic hybrid adaptive image encryption using multi-map diffusion,” Sci. Rep. , vol. 16, p. 15818, 2026. ARXIV 12
+
+[14] Z. Li, S. Zhang, W. Tan, and X. Wu, “A novel image encryption scheme using a new hyperchaotic 2d-sqics model and random area selected permutation,” Phys. Scr. , vol. 100, p. 075213, 2025. [15] J. Wang, Z. Li, W. Tan, and X. Wu, “Plaintext-related image encryption scheme based on a new sinusoidal-quadratic map cml and random-trajectory josephus permutation,” Phys. Scr. , vol. 101, p. 015213, 2026. [16] B. Sarra, H. Sun, M. Dua, S. Dua, and D. Dhingra, “A novel 1d pow-ered chebyshev quadratic map-based image encryption using dynamic permutation-diffusion,” Sci. Rep. , vol. 16, p. 9469, 2026. [17] X. Zhang, M. Liu, and X. Yang, “Color image encryption algorithm based on cross-spiral transformation and zone diffusion,” Mathematics ,vol. 11, no. 14, p. 3228, 2023. [18] G. K. Soni, H. Arora, and B. Jain, “A novel image encryption technique using arnold transform and asymmetric rsa algorithm,” in International Conference on Artificial Intelligence: Advances and Applications 2019 (ICAIAA 2019) . Springer, 2020, pp. 83–90. [19] C. Zhang, J. Wang, and X. Wang, “Digital image watermarking al-gorithm with double encryption by arnold transform and logistic,” in 
+
+2008 Fourth International Conference on Networked Computing and Advanced Information Management , vol. 1. IEEE, 2008, pp. 329–334. [20] W. Xingyuan, Z. Junjian, and C. Guanghui, “An image encryption algorithm based on zigzag transform and ll compound chaotic system,” 
+
+Optics & Laser Technology , vol. 119, p. 105581, 2019. [21] W. Rong, Z. Li, W. Zhang, and L. Sun, “An improved canny edge detec-tion algorithm,” in 2014 IEEE International Conference on Mechatronics and Automation . IEEE, 2014, pp. 577–582. [22] D. T. Lee and B. J. Schachter, “Two algorithms for constructing a de-launay triangulation,” International Journal of Computer & Information Sciences , vol. 9, no. 3, pp. 219–242, 1980. [23] S. Sharma, J. J. Zou, G. Fang, P. Shukla, and W. Cai, “A review of image watermarking for identity protection and verification,” Multimedia Tools and Applications , vol. 83, no. 11, pp. 31 829–31 891, 2024. [24] C. Ince, K. Ince, and D. Hanbay, “Novel image pixel scrambling technique for efficient color image encryption in resource-constrained iot devices,” Multimedia Tools and Applications , vol. 83, no. 29, pp. 72 789–72 817, 2024. [25] J. Fridrich, “Symmetric ciphers based on two-dimensional chaotic maps,” International Journal of Bifurcation and Chaos , vol. 8, no. 6, pp. 1259–1284, 1998. [26] C. Pak and L. Huang, “A new color image encryption using combination of the 1d chaotic map,” Signal Processing , vol. 138, pp. 129–137, Sep. 2017. [27] H. Wang, D. Xiao, X. Chen, and H. Huang, “Cryptanalysis and enhance-ments of image encryption using combination of the 1d chaotic map,” 
+
+Signal Processing , vol. 144, pp. 444–452, Mar. 2018. [28] Z. Hua, F. Jin, B. Xu, and H. Huang, “2d logistic-sine-coupling map for image encryption,” Signal Processing , vol. 149, pp. 148–161, Aug. 2018. [29] C. Cao, K. Sun, and W. Liu, “A novel bit-level image encryption algorithm based on 2d-licm hyperchaotic map,” Signal Processing , vol. 142, pp. 122–133, Jan. 2018. [30] Y. Zhang and D. Xiao, “An image encryption scheme based on rotation matrix bit-level permutation and block diffusion,” Communications in Nonlinear Science and Numerical Simulation , vol. 19, pp. 74–82, Jan. 2014. [31] Y. Li, C. Wang, and H. Chen, “A hyper-chaos-based image encryption algorithm using pixel-level permutation and bit-level permutation,” Op-tics and Lasers in Engineering , vol. 90, pp. 238–246, Mar. 2017. [32] X. Chai, Y. Chen, and L. Broyde, “A novel chaos-based image encryp-tion algorithm using dna sequence operations,” Optics and Lasers in Engineering , vol. 88, pp. 197–213, Jan. 2017. [33] L. M. Zhang, K. H. Sun, W. H. Liu, and S. B. He, “A novel color image encryption scheme using fractional-order hyperchaotic system and dna sequence operations,” Chinese Physics B , vol. 26, p. 100504, Oct. 2017. [34] Y. Zhang and Y. Tang, “A plaintext-related image encryption algorithm based on chaos,” Multimedia Tools and Applications , vol. 77, pp. 6647– 6669, 2018. [35] G. Ye and X. Huang, “A secure image encryption algorithm based on chaotic maps and sha-3,” Security and Communication Networks , vol. 9, pp. 2015–2023, Sep. 2016. [36] A. Ravankar, A. Ravankar, and A. A. Ravankar, “Target specific multi-image 3d scrambling algorithm for security cameras,” Artificial Life and Robotics , vol. 30, pp. 372–382, 2025. [37] B. S., V. G. Panjatcharam, and S. Saradha, “Performance and security evaluation of chaotic maps for image scrambling in real-time appli-cations,” in 2025 4th International Conference on Advances in IoT, Security and Communication in Intelligent Systems (IATMSI) , 2025. [38] S. Kapoor and S. Shivani, “Robust and high capacity image steganogra-phy technique using spiral walk inter-block dct coefficient differencing,” 
+
+Multimedia Tools and Applications , vol. 83, no. 39, pp. 86 405–86 424, 2024. [39] Z. Zhang and B. Zhao, “Medical image encryption algorithm based on dna and spiral transformation,” 2024, preprint. [40] O. Y. Abdulhammed, “A robust image steganography based on a novel technique by using improved dna and modified chaotic approach,” 
+
+Journal of Supercomputing , vol. 80, no. 1, 2024. [41] H. Chaudhary, P. Garg, and V. P. Vishwakarma, “Enhanced medical image watermarking using hybrid dwt-hmd-svd and arnold scrambling,” 
+
+Scientific Reports , vol. 15, no. 1, p. 9710, 2025.
