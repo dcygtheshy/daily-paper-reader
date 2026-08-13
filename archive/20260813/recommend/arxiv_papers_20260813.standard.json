@@ -1,0 +1,100 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-13T21:13:25.521735+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2608.11732v1",
+      "source": "arxiv",
+      "title": "Fingerprinting Text-to-Image Diffusion Models via Collapsed Generation",
+      "abstract": "Proprietary text-to-image diffusion models are increasingly distributed as hosted services and downloadable checkpoints, making their intellectual property (IP) protection an increasingly critical concern when model leakage, copying, or unauthorized fine-tuning is disputed. In this work, we present a non-invasive model fingerprinting framework based on \\emph{collapsed generation}, a phenomenon where certain input conditions produce highly consistent images across multiple stochastic seeds. We show that collapsed generation is an intrinsic, model-dependent property of the learned generation process. These collapse-prone conditions therefore expose model-specific behavioral signatures, enabling reliable ownership verification without embedding invasive watermarks. After preparing conditions on the source model, the framework verifies a suspect model under two access settings: (1) white-box pipeline access, where optimized continuous embeddings can be injected into the generation process, and (2) black-box API-only access, where natural language prompts are queried through the service interface. In both cases, ownership evidence is measured by whether the suspect model reproduces the source model's collapse behavior across stochastic samplings. Extensive experiments across UNet- and transformer-based diffusion models show that collapsed generation fingerprints can distinguish different source models with low confusion. These fingerprints remain verifiable in fine-tuned derivatives and under common and adaptive model- or query-level obfuscations, while requiring only a modest verification query budget. Together, these results establish collapsed generation as a reliable intrinsic evidence source for non-invasive diffusion model ownership verification.",
+      "authors": [
+        "Yuanmin Huang",
+        "Chen Chen",
+        "Geng Hong",
+        "Xiaoyu You",
+        "Hui Xue",
+        "Zhenxing Qian",
+        "Mi Zhang",
+        "Min Yang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-08-12T07:12:38+00:00",
+      "link": "https://arxiv.org/pdf/2608.11732v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Non-invasive fingerprinting of text-to-image diffusion models via collapsed generation",
+      "llm_evidence_cn": "通过崩溃生成对文本到图像扩散模型进行非侵入式指纹识别",
+      "llm_evidence": "通过崩溃生成对文本到图像扩散模型进行非侵入式指纹识别",
+      "canonical_evidence": "通过崩溃生成对文本到图像扩散模型进行非侵入式指纹识别",
+      "llm_tldr_en": "This paper presents a non-invasive model fingerprinting framework for text-to-image diffusion models based on collapsed generation conditions that yield highly consistent images across seeds, enabling reliable ownership verification without embedding watermarks.",
+      "llm_tldr_cn": "针对文本到图像扩散模型知识产权保护需求，本文提出基于崩溃生成的非侵入式模型指纹框架。该方法利用特定输入条件下模型跨随机种子产生高度一致图像的内在特性，构造模型特有的行为签名，从而实现无需嵌入水印即可验证模型所有权。实验证明该框架在模型泄漏、复制和未授权微调场景下具有可靠性和鲁棒性。",
+      "llm_tldr": "针对文本到图像扩散模型知识产权保护需求，本文提出基于崩溃生成的非侵入式模型指纹框架。该方法利用特定输入条件下模型跨随机种子产生高度一致图像的内在特性，构造模型特有的行为签名，从而实现无需嵌入水印即可验证模型所有权。实验证明该框架在模型泄漏、复制和未授权微调场景下具有可靠性和鲁棒性。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2608.06211v1",
+      "source": "arxiv",
+      "title": "Reversible Unlearnable Examples: Towards the Copyright Protection in Deep Learning Era",
+      "abstract": "Significant advancements in deep learning have been made possible by the utilization of large datasets, underscoring the critical importance of copyright protection. Adding meticulously designed perturbations to examples, making them unlearnable has become a crucial approach for safeguarding data copyright. Existing methods for creating unlearnable examples overlook the risk of data leakage, which can threaten data ownership. Thus, copyright protection in deep learning faces two main threats: illegal model training and malicious data leakage. We investigate that these two threats cannot be solved by straightforwardly combining existing availability attacks and watermarking techniques as their negative interaction effects. Therefore, in this paper, we propose a novel copyright protection mechanism for the aforementioned security concerns. Considering that the prevention of unauthorized model training requires powerful generalizability of unlearnable perturbations, we generate perturbations to induce the model to learn uncorrelated features of input images. It works by minimizing the mutual information of the input and output of the model. On the other hand, to eliminate the side impact of unlearnable perturbations on the watermark extraction, we design a dual extraction strategy by using two distinct watermark extractors. Extensive experiments on the image datasets {ImageNet, CIFAR10, and Pets} show that our proposed method could provide comprehensive copyright protection to images. The code is available at {https://github.com/Yeah21/ReversibleUnlearnableExamples}.",
+      "authors": [
+        "Binze Wang",
+        "Jinyu Tian",
+        "Xingrun Wang",
+        "Xiaochen Yuan",
+        "Jianqing Li"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CV"
+      ],
+      "published": "2026-08-06T16:04:05+00:00",
+      "link": "https://arxiv.org/pdf/2608.06211v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Combines unlearnable perturbations with watermarking to protect copyright",
+      "llm_evidence_cn": "将不可学习扰动与水印结合以保护版权",
+      "llm_evidence": "将不可学习扰动与水印结合以保护版权",
+      "canonical_evidence": "将不可学习扰动与水印结合以保护版权",
+      "llm_tldr_en": "Proposes reversible unlearnable examples that combine availability attacks and watermarking to counter illegal training and data leakage, advancing deep learning copyright protection.",
+      "llm_tldr_cn": "深度学习依赖大规模数据，版权保护日益重要。已有不可学习样例方法易造成数据泄露，且简单组合水印技术会产生负面交互。论文提出可逆不可学习样例方法，通过将可用性攻击与水印结合，同时抵御非法模型训练和恶意数据泄露。实验表明该方法能有效保障数据版权，为深度学习时代的数据保护提供了可逆水印式的新思路。",
+      "llm_tldr": "深度学习依赖大规模数据，版权保护日益重要。已有不可学习样例方法易造成数据泄露，且简单组合水印技术会产生负面交互。论文提出可逆不可学习样例方法，通过将可用性攻击与水印结合，同时抵御非法模型训练和恶意数据泄露。实验表明该方法能有效保障数据版权，为深度学习时代的数据保护提供了可逆水印式的新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
