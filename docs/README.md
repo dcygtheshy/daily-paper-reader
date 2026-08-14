@@ -6,29 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-13
-- 运行时间：2026-08-13 21:17:45 UTC
+- 最新运行日期：2026-08-14
+- 运行时间：2026-08-14 21:23:22 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：0
+- 精读区：0
+- 速读区：0
 
 ### 今日简报（AI）
-- 今日共生成 2 篇推荐（精读 1 篇，速读 1 篇）
-- 精读：《Fingerprinting Text-to-Image Diffusion Models via Collapsed Generation》（9.0/10）
-- 速读：《Reversible Unlearnable Examples: Towards the Copyright Protection in Deep Learning Era》（6.0/10）
-- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202608/13/README](/202608/13/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202608/14/README](/202608/14/README)
 
 ### 精读区论文标签
-1. [Fingerprinting Text-to-Image Diffusion Models via Collapsed Generation](/202608/13/2608.11732v1-fingerprinting-text-to-image-diffusion-models-via-collapsed-generation)  
-   标签：评分：9.0/10、query:watermarking
-   evidence：通过崩溃生成对文本到图像扩散模型进行非侵入式指纹识别
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Reversible Unlearnable Examples: Towards the Copyright Protection in Deep Learning Era](/202608/13/2608.06211v1-reversible-unlearnable-examples-towards-the-copyright-protection-in-deep-learning-era)  
-   标签：评分：6.0/10、query:watermarking
-   evidence：将不可学习扰动与水印结合以保护版权
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
