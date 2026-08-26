@@ -1,0 +1,334 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-26T22:00:41.734113+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 7,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2608.17447v1",
+      "source": "arxiv",
+      "title": "NGS-Marker: Robust Native Watermarking for 3D Gaussian Splatting",
+      "abstract": "With the rapid development and adoption of 3D Gaussian Splatting (3DGS), the need for effective copyright protection has become increasingly critical. Existing watermarking techniques for 3DGS mainly focus on protecting rendered images via pre-trained decoders, leaving the underlying 3D Gaussian primitives vulnerable to misuse. In particular, they are ineffective against Partial Infringement, where an adversary extracts and reuses only a subset of Gaussians. In this paper, we propose NGS-Marker, a novel native watermarking framework for 3DGS. It integrates a jointly trained watermark injector and message decoder, and employs a gradientbased progressive injection strategy to ensure full-scene coverage. This enables robust ownership decoding from any local region. We further extend NGS-Marker with hybrid protection (combining native and indirect watermarks) and support for multimodal watermarking. Extensive experiments demonstrate that NGS-Marker effectively defends against partial infringement while offering practical flexibility for real-world deployment.",
+      "authors": [
+        "Hao Qin",
+        "Yukai Sun",
+        "Luyuan Chen",
+        "Mengxu Lu",
+        "Feng Zhang",
+        "Ming Kong",
+        "Zhenhong Du",
+        "Qiang Zhu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-08-18T07:28:18+00:00",
+      "link": "https://arxiv.org/pdf/2608.17447v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Native watermarking framework for 3D Gaussian Splatting generative model with robust local ownership decoding",
+      "llm_evidence_cn": "面向3D高斯泼溅生成模型的原生水印框架，支持局部区域的鲁棒所有权解码",
+      "llm_evidence": "面向3D高斯泼溅生成模型的原生水印框架，支持局部区域的鲁棒所有权解码",
+      "canonical_evidence": "面向3D高斯泼溅生成模型的原生水印框架，支持局部区域的鲁棒所有权解码",
+      "llm_tldr_en": "NGS-Marker injects native watermarks into 3D Gaussian Splatting via a jointly trained injector-decoder and progressive full-scene coverage, allowing robust ownership decoding from any local subset against partial infringement.",
+      "llm_tldr_cn": "3D高斯泼溅模型的版权保护需求日益迫切，现有方法多只保护渲染图像，难以应对对手提取并复用部分高斯原语的局部侵权。本文提出NGS-Marker，一个面向3DGS的原生水印框架，联合训练水印注入器与消息解码器，并采用基于梯度的渐进注入策略实现全场景覆盖。实验表明，该方法能从任意局部区域鲁棒解码所有权信息，为生成模型版权保护提供了有效的新方案。",
+      "llm_tldr": "3D高斯泼溅模型的版权保护需求日益迫切，现有方法多只保护渲染图像，难以应对对手提取并复用部分高斯原语的局部侵权。本文提出NGS-Marker，一个面向3DGS的原生水印框架，联合训练水印注入器与消息解码器，并采用基于梯度的渐进注入策略实现全场景覆盖。实验表明，该方法能从任意局部区域鲁棒解码所有权信息，为生成模型版权保护提供了有效的新方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.19727v1",
+      "source": "arxiv",
+      "title": "A Locally Tokenized Generative Model for Robust Time-Series Watermarking",
+      "abstract": "Watermarking is a central tool for provenance in generative models, yet its application to multivariate time series remains hindered by reliability failures under post-editing attacks. We show that existing detectors, which rely on globally coupled re-encoding, suffer from bidirectional drift of the null distribution: post-editing attacks can shift the z-score of non-watermarked samples in either direction, invalidating clean-calibrated thresholds. We argue that this instability is a property of the re-encoding, and that reliable detection requires each recovered unit to depend only on a bounded temporal neighborhood. Guided by this principle, we propose L-VQVAE, a generative model in which each discrete token is produced from a short contiguous window, and LVQMark, a watermarking method over this token space that combines logit-bias injection with robust re-encoding for attack-time detection. Experiments on four benchmarks spanning finance, energy, and neuroimaging show that our approach preserves generation quality while stabilizing both detection power and false-positive behavior under post-editing attacks.",
+      "authors": [
+        "Dongbin Kim",
+        "Geonwoo Shin",
+        "Yujin Choi",
+        "Soyeon Park",
+        "Jaewook Lee"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-08-20T07:25:41+00:00",
+      "link": "https://arxiv.org/pdf/2608.19727v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Robust watermarking algorithm for generative models against post-editing perturbations",
+      "llm_evidence_cn": "针对生成模型的后编辑扰动鲁棒水印算法",
+      "llm_evidence": "针对生成模型的后编辑扰动鲁棒水印算法",
+      "canonical_evidence": "针对生成模型的后编辑扰动鲁棒水印算法",
+      "llm_tldr_en": "The paper addresses reliability failures of time-series watermarking under post-editing attacks, proposing a locally tokenized generative model L-VQVAE that makes detection depend only on bounded temporal neighborhoods, improving robustness.",
+      "llm_tldr_cn": "针对多元时间序列生成模型水印在后编辑攻击下检测失效的问题，论文指出现有全局耦合重编码检测器会导致零分布双向漂移。为此提出L-VQVAE局部标记化生成模型，使每个离散token仅由短时间窗口产生，检测只依赖有界时间邻域。实验表明该方法在去噪、平滑等后编辑攻击下显著提升水印检测鲁棒性，为生成模型溯源提供了可靠方案。",
+      "llm_tldr": "针对多元时间序列生成模型水印在后编辑攻击下检测失效的问题，论文指出现有全局耦合重编码检测器会导致零分布双向漂移。为此提出L-VQVAE局部标记化生成模型，使每个离散token仅由短时间窗口产生，检测只依赖有界时间邻域。实验表明该方法在去噪、平滑等后编辑攻击下显著提升水印检测鲁棒性，为生成模型溯源提供了可靠方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.20839v1",
+      "source": "arxiv",
+      "title": "SAC-Copula: Quality-Preserving Watermarking for Diffusion Language Models via Smooth Correlated Gumbel Fields",
+      "abstract": "Watermarking diffusion language models (DLMs) requires mechanisms compatible with iterative parallel unmasking rather than autoregressive decoding. Existing sampling-based watermarking methods typically inject position-wise i.i.d. perturbations, which can be poorly aligned with DLM decoding dynamics and degrade generation quality. We propose SAC-Copula, a quality-preserving watermarking method for DLMs based on smooth, locally correlated Gumbel perturbation fields constructed via a Gaussian copula. We further develop a SAC-aware detector using covariance-aware filtering and native-sample calibration. Mechanism-level analysis shows that local correlation reduces latent perturbation roughness and better matches iterative refinement dynamics. Experiments on LLaDA show that SAC-Copula achieves a favorable quality-detectability trade-off compared with existing baselines. In particular, further evaluations on Dream-7B and additional datasets show that SAC-Copula substantially improves PPL tail stability over the i.i.d. Gumbel baseline, while maintaining strong low-FPR detectability and competitive overall generation quality. Additional token-edit stress tests further assess watermark robustness under controlled synchronization drift.",
+      "authors": [
+        "Baixin Li",
+        "Haiyun He"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-08-21T08:03:18+00:00",
+      "link": "https://arxiv.org/pdf/2608.20839v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "watermarking diffusion language models via smooth correlated Gumbel fields",
+      "llm_evidence_cn": "针对扩散语言模型的水印方法，基于平滑相关Gumbel场",
+      "llm_evidence": "针对扩散语言模型的水印方法，基于平滑相关Gumbel场",
+      "canonical_evidence": "针对扩散语言模型的水印方法，基于平滑相关Gumbel场",
+      "llm_tldr_en": "SAC-Copula embeds quality-preserving watermarks in diffusion language models using smooth locally correlated Gumbel fields from a Gaussian copula, with a covariance-aware detector.",
+      "llm_tldr_cn": "扩散语言模型需要与迭代并行解掩码兼容的水印机制，现有采样方法注入逐位置独立扰动，易降低生成质量并错配解码动态。我们提出SAC-Copula，利用高斯copula构造平滑且局部相关的Gumbel扰动场，并开发协方差感知滤波与本机样本校准的检测器。机制分析表明局部相关降低了潜在扰动的粗糙度，与迭代解码更匹配，从而在保持质量的同时实现稳健的水印检测。该方法为扩散语言模型提供了一种质量友好的水印方案。",
+      "llm_tldr": "扩散语言模型需要与迭代并行解掩码兼容的水印机制，现有采样方法注入逐位置独立扰动，易降低生成质量并错配解码动态。我们提出SAC-Copula，利用高斯copula构造平滑且局部相关的Gumbel扰动场，并开发协方差感知滤波与本机样本校准的检测器。机制分析表明局部相关降低了潜在扰动的粗糙度，与迭代解码更匹配，从而在保持质量的同时实现稳健的水印检测。该方法为扩散语言模型提供了一种质量友好的水印方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking techniques for diffusion models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.22186v1",
+      "source": "arxiv",
+      "title": "AudioNoisePrints: Model-free audio watermarking using spatial correlation in flow matching TTS",
+      "abstract": "We present AudioNoisePrints, a training-free watermarking pipeline for flow matching and diffusion TTS models, which requires minimal extra computation during inference and does not require retraining the TTS model or reducing the generation quality. We exploited the fact that there are strong correlations between the initial Gaussian noises and the generated outputs in diffusion and flow matching models, such that a simple cosine correlation between the initial noise and the generated output can be used to perform watermaking. Moreover, we train a lightweight detector on top for more aggressive augmentations. Our method outperforms AudioSeal, a strong baseline for audio watermarking under strong augmentations. We experimented on F5TTS and other TTS and vocoder models, and concluded that they all exhibit similar spatial correlation properties, suggesting our watermarking scheme can be used for more flow-matching TTS models and even vocoders in the future.",
+      "authors": [
+        "Timothy Tin-Long",
+        "Jian Zhu",
+        "Aidan Pine",
+        "Mengzhe Geng"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.CL"
+      ],
+      "published": "2026-08-23T02:52:37+00:00",
+      "link": "https://arxiv.org/pdf/2608.22186v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Training-free watermarking for diffusion/flow matching TTS via noise-output correlation",
+      "llm_evidence_cn": "利用噪声-输出相关性对扩散/流匹配TTS进行免训练水印",
+      "llm_evidence": "利用噪声-输出相关性对扩散/流匹配TTS进行免训练水印",
+      "canonical_evidence": "利用噪声-输出相关性对扩散/流匹配TTS进行免训练水印",
+      "llm_tldr_en": "AudioNoisePrints watermarks flow-matching/diffusion TTS by correlating initial noise with output, requiring no retraining. A lightweight detector boosts robustness against strong augmentations, outperforming AudioSeal with minimal extra computation.",
+      "llm_tldr_cn": "针对流匹配和扩散TTS模型，现有水印方法往往需要重训练或影响生成质量。本文提出AudioNoisePrints，利用初始高斯噪声与生成输出间的强相关性，仅通过余弦相关即可嵌入手印，无需额外训练。在此基础上训练轻量检测器以应对更强攻击，实验表明在强增广下优于AudioSeal。该方法额外计算开销极小，且不损害生成质量。",
+      "llm_tldr": "针对流匹配和扩散TTS模型，现有水印方法往往需要重训练或影响生成质量。本文提出AudioNoisePrints，利用初始高斯噪声与生成输出间的强相关性，仅通过余弦相关即可嵌入手印，无需额外训练。在此基础上训练轻量检测器以应对更强攻击，实验表明在强增广下优于AudioSeal。该方法额外计算开销极小，且不损害生成质量。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking techniques for diffusion models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.18567v1",
+      "source": "arxiv",
+      "title": "Beyond Distortion Robustness: Rethinking Severe Cropping as Erasure-Resilient Message Embedding",
+      "abstract": "Robust message embedding in images is important for multimedia security applications such as copyright protection and content tracing. Existing methods are largely developed under a distortion robustness paradigm, where the embedded signal remains spatially present but is degraded by noise, blur, or compression. Severe cropping poses a fundamentally different challenge because it removes part of the carrier itself, causing partial payload disappearance rather than mere signal corruption. In this paper, we revisit robust message embedding from an erasure-resilience perspective and present CREST, a proof-of-concept framework for severe-cropping-robust embedding. CREST combines coding-theoretic redundancy with neural embedding and recovery by expanding a compact QR message into a redundant spatial payload via LT fountain coding and coupling it with cropping-aware embedding and fragment recovery. Experiments on COCO, DIV2K, and VOC2012 show that CREST improves recovery under severe cropping while maintaining competitive visual quality. Under mixed distortions with an area retention ratio of 0.7, CREST improves TRA from 18.52% to 68.45% and reduces EMR from 13.88% to 4.21% over the strongest baseline. On COCO2017, CREST still achieves 48.55--65.12% TRA when only 30--50% of the image area is retained, whereas all compared baselines fail to recover the message. These results suggest that severe cropping is better understood as an erasure problem rather than a conventional distortion problem, motivating the joint design of neural embedding and coding-based recovery.",
+      "authors": [
+        "Bo Pang",
+        "Weibin Kong",
+        "Juntu Dong",
+        "Minghan Li",
+        "Zhongping Zhang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-08-19T05:46:29+00:00",
+      "link": "https://arxiv.org/pdf/2608.18567v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "erasure-resilient robust message embedding against severe cropping",
+      "llm_evidence_cn": "面向严重裁剪的抗擦除鲁棒消息嵌入",
+      "llm_evidence": "面向严重裁剪的抗擦除鲁棒消息嵌入",
+      "canonical_evidence": "面向严重裁剪的抗擦除鲁棒消息嵌入",
+      "llm_tldr_en": "Rethinks severe cropping as an erasure-resilience challenge for robust message embedding, combining coding-theoretic redundancy with neural embedding to retain recoverable payload when parts of the carrier are removed.",
+      "llm_tldr_cn": "针对严重裁剪会造成部分载荷消失、超出传统失真鲁棒性范畴的问题，本文提出CREST概念验证框架，将鲁棒消息嵌入重新定义为抗擦除嵌入。框架结合编码理论冗余与神经嵌入，使嵌入信号在载体被大面积剪除时仍可恢复部分载荷，并从擦除弹性角度给出新的建模思路。实验验证了该方法对严重裁剪的鲁棒性，为图像版权保护与内容溯源提供了新范式。",
+      "llm_tldr": "针对严重裁剪会造成部分载荷消失、超出传统失真鲁棒性范畴的问题，本文提出CREST概念验证框架，将鲁棒消息嵌入重新定义为抗擦除嵌入。框架结合编码理论冗余与神经嵌入，使嵌入信号在载体被大面积剪除时仍可恢复部分载荷，并从擦除弹性角度给出新的建模思路。实验验证了该方法对严重裁剪的鲁棒性，为图像版权保护与内容溯源提供了新范式。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.20580v1",
+      "source": "arxiv",
+      "title": "Keyed Provenance Watermarking with Complementary Lattice-Based Secure Aggregation for Federated Learning",
+      "abstract": "Federated learning (FL) is vulnerable to multi-level attacks. However, existing methods address them separately, leaving FL exposed to data leakage, unauthorized reuse, and malicious gradient manipulation. In this work, we propose an FL framework that couples keyed context-provenance watermarking with verifiable lattice-based secure aggregation of Real-World Anchored Watermarking and Lattice-Based Zero-Knowledge Secure Aggregation. At the data layer, we propose a Kerckhoffs-compliant scheme that utilizes Physical Anchor Metadata (PAM) to ensure data provenance. PAM is defined as a context-provenance token derived from trusted infrastructure data (time, location, and server ID) and then subjected to a keyed HMAC-SHA-256 transformation to produce a watermark payload that cannot be generated without the client's secret key. We further design FMGAN, a GAN-based robust image watermarking framework that embeds this transformed payload using a feature fusion module and a Mamba-guided linear attention mechanism. At the computation layer, we adopt a lattice-based zero-knowledge secure aggregation (LZKSA) protocol that verifies key correctness, L2 norm bounds, and cosine similarity constraints over committed gradients without revealing private updates. The RLWE-based design guarantees post-quantum security. Extensive experiments validate the complementary protection of the two layers under composite attack scenarios. To our knowledge, no prior verification workflow has jointly evaluated both layers in a hybrid, end-to-end trustworthy FL framework.",
+      "authors": [
+        "Xinyun Liu",
+        "Zhi Lu",
+        "Yu Chen",
+        "Ronghua Xu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-08-20T21:26:31+00:00",
+      "link": "https://arxiv.org/pdf/2608.20580v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Keyed provenance watermarking combined with lattice-based secure aggregation",
+      "llm_evidence_cn": "密钥来源水印结合格基安全聚合",
+      "llm_evidence": "密钥来源水印结合格基安全聚合",
+      "canonical_evidence": "密钥来源水印结合格基安全聚合",
+      "llm_tldr_en": "A federated learning framework coupling keyed provenance watermarking with lattice-based secure aggregation, using Physical Anchor Metadata and HMAC-SHA-256 to ensure data provenance while defending against gradient manipulation.",
+      "llm_tldr_cn": "联邦学习面临数据泄露、未授权复用与梯度篡改等多层次威胁，现有方法往往独立处理这些风险。本文提出一种将密钥化来源水印与基于格的可验证安全聚合相结合的联邦学习框架，在数据层利用物理锚定元数据（时间、位置、服务器ID）经HMAC-SHA-256生成上下文来源令牌，在聚合层通过格基零知识安全聚合防护梯度操作。该方案同时保障数据来源的真实性与聚合过程的完整性，为联邦学习提供了统一的安全防护思路。",
+      "llm_tldr": "联邦学习面临数据泄露、未授权复用与梯度篡改等多层次威胁，现有方法往往独立处理这些风险。本文提出一种将密钥化来源水印与基于格的可验证安全聚合相结合的联邦学习框架，在数据层利用物理锚定元数据（时间、位置、服务器ID）经HMAC-SHA-256生成上下文来源令牌，在聚合层通过格基零知识安全聚合防护梯度操作。该方案同时保障数据来源的真实性与聚合过程的完整性，为联邦学习提供了统一的安全防护思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2608.22218v2",
+      "source": "arxiv",
+      "title": "PURA: Provably Unbiased and Robust Multi-Bit Watermarking for AI-Generated Text Attribution",
+      "abstract": "Fine-grained attribution of AI-generated text is becoming increasingly important for accountability and auditing, yet existing multi-bit watermarking methods still struggle to simultaneously preserve the base generation distribution, support high-capacity payloads, and remain recoverable after editing. We present PURA, a provably unbiased and robust multi-bit watermarking method for text attribution. Instead of perturbing token probabilities directly, PURA embeds payloads in the latent sampling space via keyed inverse transform sampling, and recovers them by treating observed tokens as soft interval evidence and aggregating such evidence across the sequence. This design preserves the base generation distribution exactly while substantially improving recovery stability under post-editing and channel perturbations. Building on this recovery paradigm, we further develop a unified robustness analysis and show that, under bounded attack strength, the per-bit error probability decays exponentially with sequence length. Extensive experiments show that PURA substantially outperforms existing unbiased baselines in the high-payload regime. For example, when embedding 36 bits in 200 tokens, PURA achieves a 91.7\\% message match rate, more than three times that of the strongest unbiased baseline, while preserving text quality and remaining statistically close to unwatermarked text, and incurring only millisecond-level verification overhead. Our code is available at",
+      "authors": [
+        "Yaofei Wang",
+        "Jinyang Guo",
+        "Shuchao Du",
+        "Chao Wang",
+        "Qiyi Yao",
+        "Donghui Hu",
+        "Weiming Zhang",
+        "Nenghai Yu",
+        "Kejiang Chen"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-08-23T04:44:27+00:00",
+      "link": "https://arxiv.org/pdf/2608.22218v2",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "robust multi-bit watermarking for AI-generated text attribution, recoverable after editing",
+      "llm_evidence_cn": "AI生成文本归属的可证明无偏鲁棒多比特水印，编辑后仍可恢复",
+      "llm_evidence": "AI生成文本归属的可证明无偏鲁棒多比特水印，编辑后仍可恢复",
+      "canonical_evidence": "AI生成文本归属的可证明无偏鲁棒多比特水印，编辑后仍可恢复",
+      "llm_tldr_en": "PURA embeds payloads in latent sampling space via keyed inverse transform sampling, preserving base distribution and achieving robust multi-bit watermark recovery after editing.",
+      "llm_tldr_cn": "AI生成文本的细粒度归属日益重要，但现有水印方法难以同时保留生成分布、支持高容量载荷并在编辑后保持可恢复性。为此我们提出PURA，一种可证明无偏且鲁棒的多比特水印方法：它不直接扰动token概率，而是通过密钥化逆变换采样在潜在采样空间嵌入载荷，解码时将观测token视为软区间证据并跨序列聚合。该方法严格保留基础生成分布，同时在面对编辑扰动时仍能高精度恢复水印，为AI文本的问责与审计提供了一种稳健的工具。",
+      "llm_tldr": "AI生成文本的细粒度归属日益重要，但现有水印方法难以同时保留生成分布、支持高容量载荷并在编辑后保持可恢复性。为此我们提出PURA，一种可证明无偏且鲁棒的多比特水印方法：它不直接扰动token概率，而是通过密钥化逆变换采样在潜在采样空间嵌入载荷，解码时将观测token视为软区间证据并跨序列聚合。该方法严格保留基础生成分布，同时在面对编辑扰动时仍能高精度恢复水印，为AI文本的问责与审计提供了一种稳健的工具。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2608.20047v1",
+      "source": "arxiv",
+      "title": "Auditing Cross-Lingual Fairness in Language Model Watermarking",
+      "abstract": "Watermarking schemes for large language model output are evaluated almost exclusively on English text using each scheme's detection threshold and a narrow set of quality measurements. Multilingual deployment exposes evaluation-design choices that are inconsequential on English but determine conclusions cross-lingually. We propose an evaluation framework with four components: detection thresholds calibrated empirically per deployment context, a threshold-independent companion measurement that distinguishes calibration failures from detection failures, three disjoint quality measurement paradigms (distributional, paired-semantic, and reference-perplexity), and a generalized-entropy decomposition of cross-language disparity over a typological family partition. Applied to six watermarking schemes, three open-weight generators, eleven languages spanning four scripts and eight typological families, and both base and instruction-tuned regimes, the framework reveals failure modes that single-language single-paradigm evaluation cannot surface. Across detection and quality, observed disparity is predominantly between-family on the typological partition, indicating that cross-lingual fairness gaps in watermarking are structural to language properties rather than idiosyncratic to particular languages.",
+      "authors": [
+        "Alexander Nemecek",
+        "Osama Zafar",
+        "Debargha Ganguly",
+        "Vikash Singh",
+        "Vipin Chaudhary",
+        "Erman Ayday"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-08-20T13:48:12+00:00",
+      "link": "https://arxiv.org/pdf/2608.20047v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "watermark evaluation framework for cross-lingual LLM watermarking fairness",
+      "llm_evidence_cn": "面向跨语言大模型水印公平性的水印评估框架",
+      "llm_evidence": "面向跨语言大模型水印公平性的水印评估框架",
+      "canonical_evidence": "面向跨语言大模型水印公平性的水印评估框架",
+      "llm_tldr_en": "Presents a four-component framework to audit cross-lingual fairness in LLM watermarking: context-calibrated thresholds, threshold-independent companion measurement, three quality paradigms, and generalized-entropy decomposition of language disparity.",
+      "llm_tldr_cn": "大型语言模型水印几乎只在英语上评估，跨语言部署时检测阈值与质量测量的选择会改变结论。本文提出四组件评估框架：按部署环境经验校准阈值，用阈值无关伴随测量区分校准失败与检测失败，引入三类质量测量范式，并通过广义熵分解拆解语系间差异。该框架更可靠地揭示多语言水印公平性问题，为多语环境水印评测提供了可复用的审计方法。",
+      "llm_tldr": "大型语言模型水印几乎只在英语上评估，跨语言部署时检测阈值与质量测量的选择会改变结论。本文提出四组件评估框架：按部署环境经验校准阈值，用阈值无关伴随测量区分校准失败与检测失败，引入三类质量测量范式，并通过广义熵分解拆解语系间差异。该框架更可靠地揭示多语言水印公平性问题，为多语环境水印评测提供了可复用的审计方法。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

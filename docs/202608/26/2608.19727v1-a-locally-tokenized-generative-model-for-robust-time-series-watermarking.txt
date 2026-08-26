@@ -1,0 +1,1080 @@
+Title: A Locally Tokenized Generative Model for Robust Time-Series Watermarking
+
+URL Source: https://arxiv.org/pdf/2608.19727v1
+
+Published Time: Fri, 21 Aug 2026 00:37:45 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# A Locally Tokenized Generative Model for Robust Time-Series Watermarking 
+
+Dongbin Kim 1 † , Geonwoo Shin 1 † , Yujin Choi 1 2 , Soyeon Park 1, Jaewook Lee 1 * 
+
+> 1
+
+Seoul National University 2Nanyang Technological University 
+
+{dongbin413,shin0621,uznhigh,soyeon2,jaewook}@snu.ac.kr 
+
+Abstract 
+
+Watermarking is a central tool for provenance in generative models, yet its appli-cation to multivariate time series remains hindered by reliability failures under post-editing attacks. We show that existing detectors, which rely on globally cou-pled re-encoding, suffer from bidirectional drift of the null distribution: post-editing attacks can shift the z-score of non-watermarked samples in either direction, invali-dating clean-calibrated thresholds. We argue that this instability is a property of the re-encoding, and that reliable detection requires each recovered unit to depend only on a bounded temporal neighborhood. Guided by this principle, we propose L-VQVAE, a generative model in which each discrete token is produced from a short contiguous window, and LVQMark, a watermarking method over this token space that combines logit-bias injection with robust re-encoding for attack-time detection. Experiments on four benchmarks spanning finance, energy, and neu-roimaging show that our approach preserves generation quality while stabilizing both detection power and false-positive behavior under post-editing attacks. 
+
+1 Introduction 
+
+Reliable provenance verification is essential as generative models increasingly produce high-quality synthetic data [2, 14, 24]. Among existing approaches—provenance metadata, forensic detection, model fingerprinting, and watermarking [5, 13, 23]—generation-time watermarking is particularly suited to synthetic time series [9, 17]: it embeds verification signals during sampling, requires no retraining or external metadata, and remains detectable under downstream transformations [19, 21]. Despite these advances, most watermarking methods assess robustness through detectability of watermarked samples after post-editing attack, typically reporting true positive rate (TPR) at a fixed false positive rate (FPR) (TPR@X%FPR) calibrated on clean negative samples [26, 19, 17, 15]. Yet for provenance verification, false positives are also critical: attacked non-watermarked samples may be misdetected as watermarked, leading to erroneous attribution and reduced reliability of the provenance guarantee. While recent image watermarking and forgery-aware studies discuss such false-attribution risks [12, 1], they remain largely unexplored in time-series watermarking. We address this gap by enforcing locality in the recovered token representation. We first introduce 
+
+L-VQVAE , a generative model for multivariate time series in which each discrete token is recovered from a bounded temporal neighborhood of the observed signal, rather than through global inversion. L-VQVAE comprises a local tokenizer, a global decoder, and an autoregressive transformer, all sharing a single codebook. We then build LVQMark , a generation-time watermarking method designed over this locally recoverable token interface: it embeds a red–green logit bias during autoregressive sampling, where green-set tokens receive a positive sampling bias at each position, 
+
+> *Equal contribution.
+> †Corresponding author. Preprint. arXiv:2608.19727v1 [cs.LG] 20 Aug 2026
+
+and introduces a robust encoder that maps attacked continuous signals back to their clean token assignments for detection. Because generation, insertion, and detection are all defined over the same locally recoverable token representation, perturbations affect only a bounded subset of recovered evidence, preserving both detection power and false-positive control. We evaluate LVQMark on four time-series datasets under varying sequence lengths and post-editing attacks. Experiments show that LVQMark preserves high generation quality while achieving robust watermark detection and stable false-positive behavior on attacked non-watermarked samples. Our main contributions are summarized as follows: • We formulate false-positive reliability in time-series watermarking as a re-encoding sta-bility problem. We show that when the re-encoding map is globally coupled, post-editing attacks can shift the null distribution of the detection statistic for non-watermarked samples, invalidating clean-calibrated thresholds. • We introduce L-VQVAE, a generative model for multivariate time series in which each token depends only on a short temporal neighborhood, preventing perturbations from inducing global drift in the recovered representation. • We build LVQMark, a generation-time watermarking method over the L-VQVAE token space, combining red–green logit-bias insertion with scheduling modifications tailored to L-VQVAE and robust re-encoding for attack-time detection. 
+
+2 Watermarking in Time Series and Robustness 
+
+Generalized detection framework. Generation-time watermarks [9, 7, 17] share a common statistical template. Let x ∈ RT ×D denote an observed sample, let X denote the space of recovered units (e.g. a finite codebook index set), and let Φ( x) ∈ X N denote the internal representation recovered by the detector. For each position n ∈ { 1, . . . , N }, a secret key κ specifies a position-wise target region Tn ⊂ X . Under the null hypothesis H0, the recovered units {Φ( x)n}Nn=1 are independent across positions and each lies in Tn with probability μ0; watermarking biases the generative process so that this event occurs more frequently. The detector computes the agreement rate and its standardized score 
+
+ˆg(x) = 1
+
+N
+
+> N
+
+X
+
+> n=1
+
+1[Φ( x)n ∈ T n] , z(x) = ˆg(x) − μ0
+
+σ0
+
+, σ0 =
+
+q μ0(1 −μ0) 
+
+> N
+
+, (1) and declares x watermarked whenever z(x) > η for a fixed threshold η > 0. In the balanced setting considered throughout this paper, μ0 = 1 /2, so that σ0 = 12√N . This formulation subsumes both token-level generation-time watermarks for language models, such as KGW [9], and time-series methods such as TimeWak [17]: although these approaches adopt different choices of the recovered representation Φ and target regions Tn, they share an identical statistical structure. 
+
+Red-green watermarking and time-series departure. KGW [9] recovers Φ( x) trivially from the observed token sequence: detection simply reproduces the green list Gn from the secret seed κ and applies Equation (1) directly. Time-series watermarking [17] adheres to the same statistical logic but departs in one essential respect: the detector must first re-encode the continuous signal into Φ( x).This re-encoding step is benign under clean conditions, but, as we show next, becomes the primary source of robustness degradation under post-editing attacks. Table 1: Intended interpretation of z under a clean-calibrated detector. The validity of this interpreta-tion requires re-encoding stability of Φ under the attack family; in its absence, null drift bidirectionally invalidates the threshold. 
+
+z ≫ 0 z ≈ 0 z ≪ 0
+
+Watermarked Correct detection Miss Statistical anomaly Non-watermarked False positive Correct rejection Statistical anomaly 20 20 40 60 80 100 120           
+
+> Feature
+> Non-watermarked + Crop 30% Green 40.6% |Red 59.4%
+> 020 40 60 80 100 120
+> Timestep Feature
+> Non-watermarked + Insert 30% Green 59.9% |Red 40.1%
+
+(a) Recovered green/red assignments. 6 4 2 0 2 4 6 
+
+> Z-score
+> 0510 15 20
+> Count
+> Non-watermarked (TPR=0%, mean=-0.11) Non-watermarked + Crop 30% (TPR=0%, mean=-4.13) Non-watermarked + Insert 30% (TPR=85%, mean=3.80) Threshold (TPR@FPR=0.1%)
+
+(b) z-score distributions. 
+
+Figure 1: Bidirectional drift of the null on non-watermarked samples (TimeWak [17], Stocks). Crop and insert push the recovered tokens (a) and the resulting z-score (b) in opposite directions, with insert crossing the clean-calibrated threshold and yielding an 85% false-positive rate. 
+
+Re-encoding stability. To formalize this failure mode, we call a re-encoding map Φ stable under an attack family F when, for every non-watermarked x and every A ∈ F , the distribution of Φ( A(x)) 
+
+stays close to that of Φ( x), keeping EH0 [ˆ g(A(x))] near μ0. We refer to violations of this property as re-encoding instability . Its observable symptom is the drift of E[ˆ g(A(x))] away from μ0 on non-watermarked samples, which we call null drift . We refer to the property that the clean-calibrated threshold continues to control the FPR under attack as false-positive reliability . Under this view, false-positive reliability is a direct consequence of re-encoding stability. 
+
+Bidirectional null drift under post-editing attacks. Existing methods fail to satisfy this property. As Figure 1 illustrates on a representative method and Table 12 confirms across baselines, ˆg con-centrates near μ0 = 1 /2 in the clean setting (as Equation (1) requires) but drifts away under attack in a method- and attack-dependent manner. Since the drift direction is governed by the interaction between Φ and A rather than by the watermark, attacks can either trigger false positives ( z ≫ 0) or induce severe statistical anomalies (z ≪ 0), and the clean-calibrated threshold loses its intended meaning under both regimes of Table 1. 
+
+A representation-level interpretation. We attribute null drift to Φ rather than to the statistic itself: existing methods instantiate Φ through globally coupled computations, where each recovered position depends on essentially every time step of x, so a localized perturbation propagates to every position. We address this in Section 3 by making each unit of Φ depend only on a bounded temporal neighborhood—a property we call locality —confining attacks to a bounded subset of recovered units. 
+
+3 Proposed Method 
+
+Motivated by the observation that globally coupled representations propagate post-editing attacks beyond the attacked region, we design a generative model with a deliberately local internal represen-tation ( L-VQVAE ) and a watermarking method that exploits this locality ( LVQMark ). A schematic is shown in Figure 2. 
+
+3.1 L-VQVAE: Locally Tokenized Generative Model 
+
+L-VQVAE generates multivariate time series through three stages: a local tokenizer encodes each short temporal window into a discrete codebook entry, a global decoder reconstructs a full time series from the resulting token sequence, and an autoregressive transformer models the distribution over token sequences for sampling. 
+
+3.1.1 Local Tokenization 
+
+Let x ∈ RT ×D denote a multivariate time series with T time steps and D variables. The local tokenizer produces a discrete token sequence s = ( s1, . . . , s N ) ∈ { 1, . . . , K }N from x in three steps: sliding-window decomposition, per-window summarization, and vector quantization against a shared codebook C = {ek}Kk=1 .3Input  time  series              
+
+> 𝑥 ∈ ℝ 𝑇×𝐷
+> ⋯Robust Encoder
+> Post -edit Attack
+> 𝐺 𝑛 = ൝ 𝐺 0(𝑛even) 𝑉 \𝐺 (0) (𝑛odd)
+> (d) Watermark Injection via Scheduled Logit Bias Watermarked
+> generated TS
+> (e) Robust Detection via Token Re -encoding
+> ⋯
+> Reproduce
+> same seed 𝜅 ⋯
+> 𝟏 𝑠 𝑛 ∈ 𝐺 𝑛
+> Compared with 𝐺 𝑛
+> Local window 𝑤 𝑛
+> Shared
+> codebook
+
+L-VQVAE 
+
+𝐸 𝜌 ∗         
+
+> Local VQ tokens
+> ⋯
+> Decoder
+> ⋯
+> ⋯
+> ⋯
+> arg min
+> 𝑘∈ 1,⋯,𝐾 𝐸 𝜙 𝑤 𝑛 − 𝑒 𝑘 22
+> Encoder 𝐸 𝜙 Global
+> decoder Reconstructed
+> time series
+> (b) Global Decoder
+
+𝐺 𝜓     
+
+> (c) Autoregressive Transformer
+> ⋯
+> Nearest
+> neighbor
+> 𝐸 𝜙 ,
+> Codebook
+> ⋯
+> Attacked 𝐴(𝑥)
+> Predicted
+> 𝐸 𝜌 ∗(𝐴 𝑥 ) 𝑛
+> ⋯
+> Target labels 𝑠 𝑛 (𝑥)
+
+𝑝 𝜃 (𝑠)   
+
+> AR Transformer
+> Prefix Prediction
+> Clean signal 𝑥
+
+𝐸 𝜙                         
+
+> Train Robust Encoder
+> 𝐿 robust = 𝔼 𝒙,𝐴 ෍
+> 𝑛=1 𝑁
+> 𝐶𝐸 𝐸 𝜌 ∗𝐴 𝑥 𝑛 ,𝑠 𝑛 (𝑥)
+> (a) Local Tokenizer
+> Unbiased
+> warm -up
+> +𝛿 ∙ 𝟏 𝑘 ∈ 𝐺 𝑛
+> ∙ 𝟏 𝒏 > 𝒎
+> Alternating partition
+> Codebook 123456
+> 246135
+> 135246
+> 𝑚
+> Unbiased
+> ⋯⋯
+> 0.1
+> 0.3
+> 0.1
+> 0.2
+> 0.1
+> 0.2
+> 0.2
+> 0.2
+> 0.1
+> 0.3
+> 0.1
+> 0.1
+> 0.1
+> 0.3
+> 0.2
+> 0.2
+> 0.1
+> 0.1
+> 0.1
+> 0.3
+> 0.2
+> 0.1
+> 0.2
+> 0.1
+> 0.2
+> 0.3
+> 0.1
+> 0.2
+> 0.1
+> 0.2
+> Biased
+> Output logits
+
+LVQMark Figure 2: Overview of L-VQVAE and LVQMark. (a) The local tokenizer encodes each temporal window into a discrete VQ token. (b) The global decoder reconstructs the time series from the token sequence. (c) An autoregressive transformer models the token distribution. (d) Watermark injection via scheduled logit bias with alternating partition and unbiased warm-up. (e) Robust detection via token re-encoding, where E∗
+
+ρ recovers clean token assignments from the attacked signal for the green-ratio test. 
+
+Sliding-window decomposition. We partition x into overlapping local windows with receptive field R and stride s (with s chosen so that (T − R)/s is an integer): 
+
+wn = xtn+1: tn+R ∈ RR×D , tn = ( n − 1) s, n = 1 , . . . , N, (2) where N = ( T − R)/s + 1 is the number of windows. By construction, wn depends only on the time steps within [tn + 1 , t n + R], so a temporal post-editing attack overlaps at most ⌈R/s ⌉ + 1 
+
+consecutive windows and can therefore alter at most that many tokens downstream. 
+
+Window summarization and quantization. Each window is summarized into a single latent vector by a shared cross-attention encoder Eϕ and then quantized against the codebook. We linearly project 
+
+wn to dimension d and add learnable positional embeddings P ∈ RR×d (shared across windows) to obtain Hn ∈ RR×d. A single learnable query vector q0 ∈ R1×d, shared across all windows, is then refined by a stack of L cross-attention blocks: for ℓ = 1 , . . . , L ,
+
+˜q(ℓ)
+
+n = LN 
+
+
+
+q(ℓ−1) 
+
+n + CrossAttn( q(ℓ−1) 
+
+n , Hn, Hn)
+
+
+
+, (3) 
+
+q(ℓ)
+
+n = LN 
+
+
+
+˜q(ℓ)
+
+n + FFN(˜ q(ℓ)
+
+n )
+
+
+
+, (4) with q(0) 
+
+n = q0 for all n. The output q(L)
+
+n ∈ R1×d is squeezed and linearly projected to obtain the window latent Eϕ(wn) ∈ Rdc , which is mapped to its nearest codebook entry: 
+
+sn = arg min 
+
+k∈{ 1,...,K } ∥Eϕ(wn) − ek∥22, zqn = esn , (5) with gradients propagated through the arg min by the straight-through estimator [18]. Because keys and values are derived exclusively from wn, any post-editing attack of x that does not overlap 
+
+wn leaves Eϕ(wn) and sn unchanged. For brevity, we write zn := Eϕ(wn) for the continuous (pre-quantization) encoding of window wn, and zqn for its quantized counterpart. 
+
+Local pretraining. Training (Eϕ, C) jointly with the global decoder from scratch leads to poor codebook utilization: the global decoder can compensate for inaccurate codes by drawing on neigh-boring tokens, weakening the gradient signal to the codebook and undermining the per-token locality on which detection-time recovery relies. We therefore first pretrain (Eϕ, C) together with a local 
+
+decoder Dloc ˜ψ that reconstructs wn from the single code zqn alone. The encoder and local decoder are trained by minimizing 
+
+LVQ = En
+
+ ∥wn − Dloc ˜ψ (zqn)∥22
+
+| {z }
+
+reconstruction 
+
++ β ∥zn − sg[ zqn]∥22
+
+| {z }
+
+commitment 
+
+ , (6) 4where sg[ ·] denotes the stop-gradient operator and zn = Eϕ(wn). The codebook entries {ek}Kk=1 
+
+are not updated by gradient descent; instead, each ek is maintained as an exponential moving average of the encoder outputs zn. Under this local bottleneck, each code must fully describe its window without relying on neighboring context. After pretraining, Dloc ˜ψ is discarded, and (Eϕ, C) are frozen for the subsequent training of the global decoder. 
+
+3.1.2 Global Decoder and Autoregressive Transformer 
+
+Locality is imposed only on the encoding side, which is the sole component re-executed at detection time and therefore exposed to post-editing attacks. Since the decoder and AR Transformer are invoked only during generation, they need not be local and can model long-range dependencies without compromising robustness. 
+
+Global decoder. The decoder Gψ maps the full token sequence to a time series in a single forward pass. Let E ∈ RN ×d denote the embedded token sequence with positional embeddings, and let 
+
+Qt ∈ RT ×d be a learnable set of time-step queries. A stack of cross-attention blocks updates Qt
+
+using E as keys and values, 
+
+Qt ← LN( Qt + CrossAttn( Qt, E, E)) , Qt ← LN( Qt + FFN( Qt)) , (7) and a linear projection yields ˆx = Gψ (s) ∈ RT ×D . Gψ is trained with Eϕ and the codebook frozen, under Ldec = ∥x − Gψ (s(x)) ∥22.
+
+Autoregressive Transformer. The token sequence is modeled by a decoder-only autoregressive transformer, pθ (s) = QNn=1 pθ (sn | s<n ), trained with next-token cross-entropy. Causal self-attention is restricted to a fixed lookback window, consistent with the locality principle of the tokenizer. Together, the local tokenizer, the global decoder, and the autoregressive transformer constitute L-VQVAE as a standalone generative model: sampling from pθ and decoding through Gψ
+
+produces a synthetic time series without any watermark. 
+
+3.2 LVQMark: Watermarking over Local VQ Tokens 
+
+LVQMark embeds a watermark into the L-VQVAE generation process by biasing the autoregressive sampling step, and provides a detection mechanism based on robust re-encoding. 
+
+3.2.1 Watermark Injection via Scheduled Logit Bias Logit-bias watermarking. At each autoregressive position n, a secret seed κ partitions the code-book V = {1, . . . , K } into a green subset Gn ⊆ V and its complementary red subset Rn = V \ Gn,with |Gn| = |Rn| = K/ 2. Let ℓn ∈ RK denote the logits produced by the autoregressive transformer at position n. A positive bias δ > 0 is added to the logits of green tokens before sampling: 
+
+˜ℓn,k = ℓn,k + δ 1[k ∈ Gn], sn ∼ Categorical(softmax( ˜ℓn)) , (8) This adapts the red–green scheme of KGW [9] (Section 2) to the L-VQVAE codebook. At detection time, the observed time series is re-encoded into tokens by the robust encoder E⋆ρ (Section 3.2.2), the green sets {Gn} are reconstructed from the same seed κ, and the green-ratio test of Section 2 is applied with target regions Tn = Gn.
+
+Context-independent partition. In KGW for language models, the green set Gn typically depends on the preceding token sn−1, which diversifies the partition across positions. We instead fix the partition independently of the recovered token context. The reason is locality: if Gn depended on recovered tokens, a single re-encoding error at position n would propagate to the partition at position n+1 , coupling re-encoding instability with watermark scheduling. A context-independent rule confines each re-encoding error to the position where it occurs. 
+
+Failure modes of a naïve fixed partition. A context-independent partition interacts with two structural properties of L-VQVAE token sequences. First, adjacent windows largely overlap, so the AR Transformer frequently emits runs of the same token; a position-invariant Gn then applies +δ
+
+uniformly across the run, driving the green ratio toward 1 or 0 regardless of watermark presence 5(bias accumulation ). Second, at the first few autoregressive steps the context is empty and logits are nearly uniform, so a fixed δ causes near-deterministic selection of the same green token, producing a stereotyped prefix that conditions all subsequent steps ( bias dominance ). 
+
+Alternating partition. To address bias accumulation, we make the partition depend on position parity. Let G(0) ⊂ V be a fixed green set determined by the secret seed κ, with |G(0) | = K/ 2, and define 
+
+Gn =
+
+G(0) , n even ,
+
+V \ G(0) , n odd , Rn = V \ Gn. (9) Under this rule, a token k is biased ( +δ) at one parity and unbiased at the other. Consequently, when the autoregressive model emits a run of identical tokens, the bias is applied at only half of the positions in the run, rather than uniformly across the entire run. This bounds the contribution of any single token value to the green-ratio statistic and prevents repeated-token runs from saturating it toward 1 or 0. Since the detector reconstructs Gn from the same seed and parity rule, no detection power is lost. 
+
+Unbiased warm-up. To address bias dominance at early steps, we suppress the logit bias for the first m positions (we use m = 3 ). Combining this with the alternating partition above, the watermarked logits become 
+
+˜ℓn,k = ℓn,k + δ · 1[k ∈ Gn] · 1[n > m ], sn ∼ Categorical(softmax( ˜ℓn)) , (10) so that positions n ≤ m are sampled from the unmodified autoregressive distribution. The detector excludes these same positions when computing the green-ratio statistic, so no detection signal is lost: at steps where the autoregressive context is empty, δ would have caused near-deterministic selection of a green token regardless of input, providing no usable evidence for the test. 
+
+3.2.2 Robust Detection via Token Re-encoding 
+
+Local tokenization confines the effect of a post-editing attack to a bounded set of tokens, but does not guarantee that those tokens are recovered to their clean codebook entries: the clean encoder Eϕ
+
+may reassign perturbed windows to different codes. We therefore introduce a robust encoder E⋆ρ
+
+whose objective is to recover, from an attacked input A(x), the token assignments that Eϕ would have produced on x. The two components are complementary: without local tokenization, a globally coupled representation propagates the post-editing attack to every recovered token, leaving E⋆ρ no stable reference to recover (Table 5); without E⋆ρ , locally affected tokens remain misclassified. 
+
+E⋆ρ shares the windowed cross-attention architecture of Eϕ but replaces vector quantization with a per-token classifier over the codebook vocabulary. It is trained on pairs (x, A (x)) with x sampled from L-VQVAE and A drawn from a fixed family of attacks (including the identity), excluding pairs in which A removes the entire span of some window: 
+
+Lrobust = Ex,A NX
+
+> n=1
+
+CE  E⋆ρ (A(x)) n, s n(x) , (11) where sn(x) are the codes produced by the frozen Eϕ on the clean input. Joint training over multiple attack types yields a single encoder that recovers clean assignments without specializing to any one perturbation. At detection time, E⋆ρ replaces Eϕ in the green-ratio test of Section 2. 
+
+4 Experiments 
+
+4.1 Experimental Setup Datasets and baselines. We evaluate LVQMark on four multivariate time-series datasets: Stocks [22], ETTh [27], Energy [3], and fMRI [16], allowing us to assess the generality of the proposed method under heterogeneous temporal patterns. We compare against representative water-marking baselines, including Tree-Ring (TR) [19], Gaussian Shading (GS) [21], and TimeWak [17], which cover both context-independent and context-dependent watermarking strategies. To analyze watermarking performance together with backbone choice, we consider diffusion- and VQ-based 6Table 2: Results of synthetic time series watermark detection and quality. Watermarked (TPR) and Non-watermarked (FPR, mean z-score) detections are evaluated under 30% attacks. Quality metrics are for 64-length. Best results are in bold, and second-best are underlined. Z-scores with |z| > 3.09 
+
+are marked in red.                                                                                                                                                                                                                                                                                            
+
+> Setting Watermark (TPR ↑)Non-watermarked (FPR ↓| Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred.
+> Stocks DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .21 1.00 +69 .43 1.00 +8 .11 1.52 0.07 0.15 0.04
+> GS 1.00 0.00 1.00 0.00 −1.40 0.00 −14 .87 0.05 +1 .52 1.50 0.02 0.23 0.04
+> TimeWak 1.00 1.00 1.00 0.00 −0.19 0.00 −4.32 0.05 +1 .35 0.29 0.01 0.13 0.04
+> SDformer LVQMark 0.00 0.01 0.00 0.00 −0.16 0.02 +1 .19 0.00 +0 .31 0.08 0.01 0.01 0.04
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.12 0.01 −0.05 0.01 +0 .35 0.07 0.02 0.06 0.04
+> ETTh DiffusionTS TR 1.00 1.00 1.00 0.00 +0 .89 1.00 +17 .16 1.00 +38 .55 2.17 0.22 0.29 0.14
+> GS 1.00 1.00 1.00 0.00 −1.53 0.00 −5.44 0.00 −5.82 3.43 0.25 0.36 0.16 TimeWak 1.00 0.61 1.00 0.04 +1 .17 0.00 −0.28 0.03 +1 .20 0.37 0.13 0.11 0.12
+> SDformer LVQMark 0.00 0.00 0.00 0.00 −0.94 0.02 +0 .09 0.00 −0.09 0.04 0.05 0.01 0.12
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.01 −0.12 0.00 −0.22 0.00 +0 .35 0.03 0.06 0.01 0.12
+> Energy DiffusionTS TR 0.00 1.00 1.00 0.00 +1 .18 1.00 +53 .73 1.00 +58 .55 0.58 1.98 0.43 0.28
+> GS 1.00 0.38 1.00 1.00 +14 .51 0.00 +0 .87 1.00 +11 .77 1.78 2.72 0.48 0.31 TimeWak 1.00 0.97 1.00 0.00 −9.69 0.00 −0.42 0.00 −1.57 0.14 1.52 0.14 0.25
+> SDformer LVQMark 1.00 0.02 0.58 0.00 −0.02 0.00 +0 .34 0.00 +0 .34 0.04 1.05 0.08 0.25
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.06 0.00 −0.25 0.01 +0 .04 0.04 0.95 0.15 0.25
+> fMRI DiffusionTS TR 1.00 0.02 1.00 0.00 +0 .05 1.00 +2 .27 1.00 +12 .14 3.63 12.83 0.40 0.14 GS 1.00 1.00 1.00 0.00 −1.78 0.00 −32 .25 0.06 −0.01 0.74 8.31 0.50 0.11 TimeWak 1.00 1.00 1.00 0.00 +0 .08 0.00 −2.74 0.00 +0 .18 0.45 1.87 0.25 0.10
+> SDformer LVQMark 0.25 0.02 0.04 0.00 +0 .03 0.02 +0 .51 0.00 −0.40 0.13 1.19 0.12 0.09
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.03 0.00 −0.24 0.00 −0.17 0.13 1.14 0.27 0.09
+
+generative backbones: DiffusionTS [24] for diffusion-based watermarking methods, and TimeVQ-VAE [10] and SDFormer [4] as VQ-based generative baselines. TimeVQVAE uses discrete latent tokens with a transformer prior, while SDFormer is a recent VQ-based model designed for strong time-series generation quality. 
+
+Attack setting and metrics. We evaluate robustness under three post-editing attacks— offset , crop ,and insertion —at two strengths, 5% and 30%. The main paper reports results for the stronger 30% setting, while the 5% results are deferred to Appendix E. We assess generation quality using Context-FID [8], Correlational [11], Discriminative [22], and Predictive score [22]. For watermark reliability, we treat watermarked samples as the positive class and report TPR@0.1%FPR, where the threshold is calibrated on clean non-watermarked samples to yield 0.1% FPR, and TPR is measured on watermarked samples at test time. To directly evaluate false-positive stability under post-editing attack, we additionally report the empirical FPR on attacked non-watermarked samples under the same clean-calibrated detector. All reported results are averaged over five runs conducted with fixed random seeds to ensure re-producibility. Additional details on datasets, preprocessing, attack implementation, metrics, and hyperparameters are deferred to Appendix B. 
+
+4.2 Watermark Detection and Generation Quality Stable false-positive behavior under post-editing attacks. Table 2 reveals two distinct failure modes among existing baselines. Spurious false positives. Tree-Ring under crop produces mean z
+
+values of +69 .4 on Stocks, +17 .2 on ETTh, and +53 .7 on Energy, driving the non-watermarked FPR to 1.00 ; Gaussian Shading shows the same pattern under offset on Energy ( z = +14 .5, FPR = 1 .00 ). The attacked null has drifted past the clean-calibrated threshold η, causing non-watermarked samples to be systematically misattributed. Severe negative drift. Other baselines drift in the opposite direction: Gaussian Shading reaches z = −32 .2 on fMRI under crop, and TimeWak reaches z = −9.7 on Energy under offset. These scores stay below η and yield zero empirical FPR, but the drift magnitude shows the null has been distorted well beyond its nominal scale—calibration here is accidental, not principled. FPR alone is therefore insufficient: a detector can appear calibrated when drift falls on the negative side while remaining unreliable in absolute terms. By contrast, L-VQVAE with LVQMark keeps the mean attacked z within [−0.25 , +0 .35] across all twelve (dataset, attack) configurations, with FPR ≤ 0.01 and TPR = 1 .00 in eleven of twelve cases. 7L-VQVAE matches state-of-the-art generation quality. Table 3 shows that L-VQVAE remains highly competitive in generation quality, achieving the best or second-best result on most metrics across the four datasets. By comparison, TimeVQVAE performs substantially worse on several datasets. TimeVQVAE uses separate pathways to model coarse temporal structure and fine local detail. Although this helps represent different scales of variation, cross-variable interactions are handled less explicitly, which may limit generation quality on datasets with strong inter-variable dependencies, such as Energy and fMRI. Table 3: Results of synthetic time series quality for 64-length sequences. Best results are in bold, and second-best are underlined.                                                                                    
+
+> Stocks Energy ETTh fMRI Model C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred.
+> TimeVQVAE 0.439 0.079 0.368 0.056 5.423 7.189 0.466 0.293 2.432 0.238 0.453 0.244 18.643 38.410 0.275 0.255 DiffusionTS 0.294 0.013 0.126 0.037 0.143 1.519 0.135 0.251 0.370 0.134 0.114 0.117 0.446 1.869 0.253 0.100 SDformer 0.067 0.007 0.043 0.036 0.029 1.009 0.081 0.248 0.030 0.052 0.008 0.112 0.089 1.129 0.114 0.084
+> L-VQVAE 0.039 0.008 0.018 0.036 0.033 0.955 0.127 0.248 0.024 0.062 0.010 0.115 0.096 1.118 0.163 0.083
+
+4.3 Component Analysis and Ablations Both scheduling components are necessary. We ablate the two scheduling modifications intro-duced in Section 3.2.1: the alternating partition and the unbiased warm-up. Figure 3 shows the per-position green-token probability with and without the warm-up. Without it, the first few positions are sampled near-deterministically from the green set, creating a stereotyped prefix that propagates into later steps. The warm-up suppresses the bias during positions n ≤ m, keeping early tokens close to the unbiased baseline and allowing the autoregressive context to diversify before the watermark signal is introduced. 0 2 4 6 8 10 12 14 Token position 0.4 0.5 0.6 0.7 0.8 0.9 1.0 Green-token probability  LVQMark w/o warm-up no bias (raw AR) Warm-up region ( n 3) 
+
+(a) ETTh 0 2 4 6 8 10 12 14 Token position 0.4 0.5 0.6 0.7 0.8 0.9 1.0 Green-token probability  LVQMark w/o warm-up no bias (raw AR) Warm-up region ( n 3) (b) Energy 
+
+Figure 3: Per-position green-token probability ( T =64 , δ=10 ). Shaded region: warm-up positions (n ≤ 3) where the logit bias is suppressed. Table 4 quantifies the impact on generation quality. Removing the warm-up alone degrades Context-FID moderately; removing both modifications together leads to further deterioration across most datasets, confirming that the two components address complementary failure modes. Table 4: Ablation of watermark scheduling components for 64-length sequences (LVQMark). NO -
+
+WARMUP : unbiased warm-up removed. NO -ALT -WARMUP : both alternating partition and unbiased warm-up removed. Best results are in bold, and second-best are underlined. 
+
+Stocks Energy ETTh fMRI Variant C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. 
+
+> NO
+
+-ALT -WARMUP 0.222 0.007 0.094 0.036 0.114 1.060 0.203 0.250 0.172 0.098 0.027 0.119 0.324 1.362 0.199 0.093 
+
+> NO
+
+-WARMUP 0.194 0.020 0.107 0.036 0.071 0.924 0.181 0.248 0.061 0.060 0.007 0.114 0.255 1.186 0.170 0.089 
+
+LVQMark 0.068 0.015 0.055 0 .036 0.035 0.945 0.151 0 .248 0.028 0.061 0.010 0.116 0.133 1.135 0.267 0.086 
+
+Across the four datasets, LVQMark consistently achieves the best or second-best quality on most metrics. Removing the unbiased warm-up alone degrades Context-FID and Correlational scores moderately, while removing both modifications together leads to further deterioration, particularly on ETTh, Energy, and fMRI. This incremental pattern confirms that the two modifications address complementary failure modes: the alternating partition mitigates the statistical artifact induced by repeated-token runs, while the unbiased warm-up prevents the stereotyped prefix from distorting 8downstream generation. We adopt the full configuration as the default in all main experiments. Additional ablations for other sequence lengths are provided in Appendix D.2. 
+
+Robust encoder requires local tokenization. Table 5 compares SDformer and L-VQVAE with and without the attack-augmented robust encoder used in our framework. The robust encoder is itself effective: paired with L-VQVAE, it lifts Crop detection from near-zero to near-perfect across all datasets while preserving Offset and Insert. With SDformer, however, gains are uneven—substantial on Energy, marginal on ETTh, absent on Stocks—and on fMRI the encoder actively degrades 
+
+detection, collapsing Offset from 1.00 to 0.05 and Insert from 1.00 to 0.03 . Robust detection thus hinges not on attack-aware training alone, but on a local representation that supports stable per-region recovery. Additional experiments for other sequence lengths are provided in Appendix D.1. Table 5: Results of watermark detection under attack for 64-length sequences. LVQMark is applied to different variants, and watermark detection performance (TPR) is evaluated under 30% attacks. Best results are in bold, and second-best are underlined. 
+
+Stocks Energy ETTh fMRI Model Type Offset Crop Insert Offset Crop Insert Offset Crop Insert Offset Crop Insert 
+
+SDformer w/o Robust 0.00 0.01 0.00 1.00 0.02 0.58 0.00 0.00 0.00 1.00 0.02 1.00 
+
+w/ Robust 0.00 0.00 0.00 1.00 0.66 0.80 0.13 0.08 0.03 0.05 0.28 0.03 
+
+L-VQVAE w/o Robust 1.00 0.00 1.00 1.00 0.00 1.00 1.00 0.01 1.00 1.00 1.00 1.00 
+
+w/ Robust 1.00 1.00 0.98 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 
+
+Detectability–quality trade-off in δ. Figure 4 shows how watermark strength δ affects the trade-off between watermark detectability and generation quality under our LVQMark, where δ = 0 denotes the non-watermarked baseline. As δ increases, watermark evidence becomes substantially stronger across Energy, ETTh, and fMRI, while Context-FID remains relatively stable at moderate strengths and increases more clearly only at larger values. This pattern indicates a clear trade-off: stronger bias improves detectability, but excessive bias can harm sample quality. 0 2 5 10 15 20 
+
+> Watermark Strength ( δ)Z-score  Z-score Context-FID
+> Context-FID
+
+(a) Stocks 0 2 5 10 15 20  
+
+> Watermark Strength ( δ)Z-score
+> Context-FID
+
+(b) Energy 0 2 5 10 15 20  
+
+> Watermark Strength ( δ)Z-score
+> Context-FID
+
+(c) ETTh 0 2 5 10 15 20  
+
+> Watermark Strength ( δ)Z-score
+> Context-FID
+
+(d) fMRI 
+
+Figure 4: Z-score and Context-FID across watermark strength δ for 64-length 
+
+5 Conclusion and Limitations 
+
+In this work, we argued that false-positive reliability in time-series watermarking is fundamentally a re-encoding stability problem. Under post-editing attacks, watermark detection must first re-encode the observed continuous signal into an internal token representation, and when this re-encoding is globally coupled, post-editing attacks can distort the recovered evidence far beyond the attacked region. Motivated by this failure mode, we introduced L-VQVAE, a generative model in which each token depends only on a short temporal neighborhood, and built LVQMark on top of this locally recoverable interface with robust re-encoding and generation-time watermark injection. Across four datasets, L-VQVAE with LVQMark preserves competitive generation quality while substantially improving false-positive stability under post-editing attacks. 
+
+Limitations. Our experiments cover four multivariate time-series datasets and three sequence lengths; extending the evaluation to additional domains and longer horizons is a natural direction for future work. Robustness is assessed under three representative post-editing attacks—offset, crop, and insertion—at two strength levels. Because the robust encoder is a modular component trained independently of the generative model and the detection framework, accommodating new attack 9types requires only retraining E⋆ρ on updated augmentation sets, without modifying L-VQVAE or the watermark schedule. Finally, the multi-stage training pipeline involves more steps than single-stage baselines, though each stage is standard and can be executed independently. 
+
+References 
+
+[1] Kasra Arabi, R Teal Witter, Chinmay Hegde, and Niv Cohen. Seal: Semantic aware image watermarking. In Proceedings of the IEEE/CVF International Conference on Computer Vision ,pages 16196–16205, 2025. [2] Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. Language models are few-shot learners. Advances in neural information processing systems , 33:1877–1901, 2020. [3] Luis Candanedo. Appliances energy prediction. UCI Machine Learning Repository , 10: C5VC8G, 2017. [4] Zhicheng Chen, Shibo Feng, Zhong Zhang, Xi Xiao, Xingyu Gao, and Peilin Zhao. Sd-former: Similarity-driven discrete transformer for time series generation. Advances in Neural Information Processing Systems , 37:132179–132207, 2024. [5] Paul England, Henrique S Malvar, Eric Horvitz, Jack W Stokes, Cédric Fournet, Rebecca Burke-Aguero, Amaury Chamayou, Sylvan Clebsch, Manuel Costa, John Deutscher, et al. Amp: Authentication of media via provenance. In Proceedings of the 12th ACM Multimedia Systems Conference , pages 108–121, 2021. [6] Zhengmian Hu, Lichang Chen, Xidong Wu, Yihan Wu, Hongyang Zhang, and Heng Huang. Unbiased watermark for large language models. In The Twelfth International Conference on Learning Representations , 2024. URL https://openreview.net/forum?id=uWVC5FVidc .[7] Mingjia Huo, Sai Ashish Somayajula, Youwei Liang, Ruisi Zhang, Farinaz Koushanfar, and Pengtao Xie. Token-specific watermarking with enhanced detectability and semantic coherence for large language models. In Proceedings of the 41st International Conference on Machine Learning , pages 20746–20767, 2024. [8] Paul Jeha, Michael Bohlke-Schneider, Pedro Mercado, Shubham Kapoor, Rajbir Singh Nirwan, Valentin Flunkert, Jan Gasthaus, and Tim Januschowski. Psa-gan: Progressive self attention gans for synthetic time series. In The Tenth International Conference on Learning Representations ,2022. [9] John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In International conference on machine learning ,pages 17061–17084. PMLR, 2023. [10] Daesoo Lee, Sara Malacarne, and Erlend Aune. Vector quantized time series generation with a bidirectional prior model. In International Conference on Artificial Intelligence and Statistics ,pages 7665–7693. PMLR, 2023. [11] Shujian Liao, Hao Ni, Lukasz Szpruch, Magnus Wiese, Marc Sabate-Vidales, and Baoren Xiao. Conditional sig-wasserstein gans for time series generation. arXiv preprint arXiv:2006.05421 ,2020. [12] Andreas Müller, Denis Lukovnikov, Jonas Thietke, Asja Fischer, and Erwin Quiring. Black-box forgery attacks on semantic watermarks for diffusion models. In Proceedings of the Computer Vision and Pattern Recognition Conference , pages 20937–20946, 2025. [13] Jonas Ricker, Denis Lukovnikov, and Asja Fischer. Aeroblade: Training-free detection of latent diffusion images using autoencoder reconstruction error. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 9130–9140, 2024. [14] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 10684–10695, 2022. 10 [15] Tom Sander, Pierre Fernandez, Alain Oliviero Durmus, Teddy Furon, and Matthijs Douze. Watermark anything with localized messages. In The Thirteenth International Conference on Learning Representations , 2025. URL https://openreview.net/forum?id=IkZVDzdC8M .[16] Stephen M Smith, Karla L Miller, Gholamreza Salimi-Khorshidi, Matthew Webster, Christian F Beckmann, Thomas E Nichols, Joseph D Ramsey, and Mark W Woolrich. Network modelling methods for fmri. Neuroimage , 54(2):875–891, 2011. [17] Zhi Wen Soi, Chaoyi Zhu, Fouad Abiad, Aditya Shankar, Jeroen M. Galjaard, Huijuan Wang, and Lydia Y. Chen. Timewak: Temporal chained-hashing watermark for time series data. In 
+
+The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2025. URL 
+
+https://openreview.net/forum?id=akhhwQh6UV .[18] Aaron Van Den Oord, Oriol Vinyals, et al. Neural discrete representation learning. Advances in neural information processing systems , 30, 2017. [19] Yuxin Wen, John Kirchenbauer, Jonas Geiping, and Tom Goldstein. Tree-rings watermarks: Invisible fingerprints for diffusion images. Advances in Neural Information Processing Systems ,36:58047–58063, 2023. [20] Yihan Wu, Ruibo Chen, Georgios Milis, and Heng Huang. An ensemble framework for unbiased language model watermarking. In The Fourteenth International Conference on Learning Representations , 2026. URL https://openreview.net/forum?id=iZ7i2y1YxO .[21] Zijin Yang, Kai Zeng, Kejiang Chen, Han Fang, Weiming Zhang, and Nenghai Yu. Gaussian shading: Provable performance-lossless image watermarking for diffusion models. In Pro-ceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 12162–12171, 2024. [22] Jinsung Yoon, Daniel Jarrett, and Mihaela Van der Schaar. Time-series generative adversarial networks. Advances in neural information processing systems , 32, 2019. [23] Ning Yu, Vladislav Skripniuk, Sahar Abdelnabi, and Mario Fritz. Artificial fingerprinting for generative models: Rooting deepfake attribution in training data. In Proceedings of the IEEE/CVF International conference on computer vision , pages 14448–14457, 2021. [24] Xinyu Yuan and Yan Qiao. Diffusion-TS: Interpretable diffusion for general time series generation. In The Twelfth International Conference on Learning Representations , 2024. URL 
+
+https://openreview.net/forum?id=4h1apFjO99 .[25] Zhihan Yue, Yujing Wang, Juanyong Duan, Tianmeng Yang, Congrui Huang, Yunhai Tong, and Bixiong Xu. Ts2vec: Towards universal representation of time series. In Proceedings of the AAAI conference on artificial intelligence , volume 36, pages 8980–8987, 2022. [26] Xuandong Zhao, Prabhanjan Vijendra Ananth, Lei Li, and Yu-Xiang Wang. Provable robust watermarking for AI-generated text. In The Twelfth International Conference on Learning Representations , 2024. URL https://openreview.net/forum?id=SsmT8aO45L .[27] Haoyi Zhou, Shanghang Zhang, Jieqi Peng, Shuai Zhang, Jianxin Li, Hui Xiong, and Wancai Zhang. Informer: Beyond efficient transformer for long sequence time-series forecasting. In 
+
+Proceedings of the AAAI conference on artificial intelligence , volume 35, pages 11106–11115, 2021. 11 A Related Work 
+
+Discrete interfaces for time-series generation. Vector Quantization (VQ) [18] provides a discrete interface for continuous signals by mapping encoder outputs to entries in a learned codebook. The resulting code indices can be decoded back to the signal domain or modeled by a sequence prior. TimeVQVAE [10] and SDformer [4] show that such discrete token-based generators can be competitive with continuous-domain time-series generators [24] and preserve information useful for downstream classification or forecasting. However, these representations are not designed for re-encoding stability, or robustness to post-processing corruptions. These properties are essential for watermark detection, where a modified continuous signal must be re-encoded into a consistent token sequence before the watermark statistic can be computed. 
+
+Token-level generation-time watermarking. Generation-time watermarking is attractive because it embeds the watermark by steering the sampling process itself, rather than by directly perturbing the generated sample. This distinction is important because post-processing-based watermarking can directly alter generated samples and degrade quality [21]; in time-series generation, such perturbations may further distort temporal or cross-variate dependencies that are central to synthetic-data utility [22, 24]. The red-green watermarking framework [9] is a standard template for token-level generation-time watermarking in language models. At each sampling step, it partitions the vocabulary into a 
+
+green set and its complement red set using a secret key, and adds a positive logit bias to the tokens in green set. This alters the sampling distribution, so that generated token sequences contain a detectable statistical bias. Subsequent methods [7, 6, 20] refine this mechanism by adapting the bias to token-level context or by designing unbiased rules that better preserve the original sampling distribution. We build on this distributional view, but instantiate it for time series over a local VQ token space. In contrast, our work focuses on detector-side re-encoding stability and false-positive behavior on attacked non-watermarked samples. 
+
+B Experiment Details 
+
+B.1 Implementation Details 
+
+Tables 6–7 summarize the hyperparameters used for each model. All models share the same data splits and preprocessing across datasets for fair comparison. Regarding the random replacement probability, during AR Transformer training each input token is independently replaced with a random codebook index with probability p, while ground-truth labels remain unchanged. This forces the model to predict the next token correctly even under corrupted context, preventing over-reliance on preceding tokens and improving generalization. For the standard VQ-VAE, which attends over the full token history, we set p = 0 .3 for ETTh and Stocks — datasets with stronger temporal autocorrelation — and p = 0 .1 for Energy and fMRI. For Local VQ-VAE, the AR Transformer restricts attention to a fixed lookback window of 6 tokens, which structurally limits long-range dependency; accordingly, 
+
+p = 0 .1 suffices across all datasets. 
+
+B.2 Dataset Details 
+
+We use four multivariate time-series datasets spanning diverse domains. All datasets are segmented into overlapping windows of size T ∈ { 24 , 64 , 128 } with stride 1, yielding a set of fixed-length samples. Each sample is normalized per-variable to [−1, 1] via MinMax scaling. The resulting samples split 80%/20% into train and test sets. Table 8 summarizes the dataset statistics. 
+
+B.3 Attack Settings 
+
+We evaluate detection robustness under three post-editing attacks: offset, insert, and crop. Each attack is applied with strength factor α ∈ { 0.05 , 0.30 }.The offset attack shifts each variable by α × ¯xd, where ¯xd is the temporal mean of variable d in the sample. The insert attack replaces ⌊αT ⌋ randomly selected time steps with uniform random values drawn from the observed range of each variable. The crop attack removes a random rectangular region in the (T, D ) space, retaining a window of size (1 − α)T × (1 − α)D at a randomly chosen position. The removed region is filled with the per-variable midpoint, defined as (min + max) /2
+
+12 Table 6: L-VQVAE hyperparameter settings. Stride 2 is used for window T =24 ; stride 4 for 
+
+T =64 , 128 . † Robust encoder is trained with crop var .Parameter Energy ETTh fMRI Stocks 
+
+Encoder / Decoder 
+
+Feature size D 28 7 50 6
+
+dmodel 512 512 512 128 Attention heads 8 8 8 4Encoder layers 5 5 5 5Local decoder layers 5 5 5 5Global decoder layers 5 5 5 5Receptive field r 4 4 4 4Stride ( T =24 ) 2 2 2 2Stride ( T =64 , 128 ) 4 4 4 4Codebook size K 4096 512 1024 1024 Codebook dim 512 512 512 128 Commitment weight 0.25 0.25 0.25 0.25 Dropout 0.0 0.0 0.0 0.0 
+
+AR Transformer 
+
+nembd 1024 1024 1024 1024 
+
+nhead 8 8 8 8
+
+nlayer 2 2 2 2Random replace prob 0.1 Lookback 6Watermark δ 10 10 10 20 
+
+Training 
+
+Optimizer AdamW, β=(0 .9, 0.99) 
+
+Batch size 128 Learning rate 3 × 10 −4
+
+Gradient clip 1.0 Pretrain steps (stage 1) 30,000 Decoder steps (stage 2) 10,000 Transformer steps (stage 3) 30,000 
+
+Robust Encoder †
+
+dmodel 1024 1024 1024 256 Attention heads 16 16 16 4Layers 3Receptive field r 4Optimizer AdamW, β=(0 .9, 0.99) 
+
+Learning rate 1 × 10 −4
+
+Gradient clip 1.0 Training steps 50,000 Val interval 5,000 
+
+Attack augmentation (robust encoder training) 
+
+Clean (no attack) -Offset factor ∈ { 0.05 , 0.30 }
+
+crop var † factor ∈ { 0.05 , 0.30 }
+
+Insertion factor ∈ { 0.05 , 0.30 }
+
+computed over the surviving window. Under standard min-max normalization followed by rescaling to [−1, 1] , this midpoint reduces to zero, making the fill semantically neutral. All model families use the same randomly drawn crop window at evaluation time. For robust encoder training, we use an additional augmentation, crop var , which retains a contiguous block of (1 − α)D variables over the full temporal axis and fills the remaining ⌊αD ⌋ variables with the per-variable midpoint. crop var differs from crop in that it preserves the temporal dimension and 13 Table 7: SDformer hyperparameter settings. Parameter Energy ETTh fMRI Stocks 
+
+Encoder / Decoder 
+
+Feature size D 28 7 50 6Hidden dim 512 512 512 512 Residual blocks 2 2 2 2Downsample rate 4 4 4 4EMA decay 0.99 0.99 0.99 0.99 Embed loss weight 0.01 0.5 0.01 2.0 Quantizer type cosine Codebook size K 512 512 512 512 Codebook dim 512 512 512 256 
+
+AR Transformer 
+
+nembd 1024 1024 1024 1024 
+
+nhead 8 8 8 8
+
+nlayer 2 6 2 2Random replace prob 0.1 0.3 0.1 0.3 Watermark δ 10 
+
+Training 
+
+Optimizer AdamW, β=(0 .9, 0.99) 
+
+Batch size 64 128 64 128 Learning rate 3 × 10 −4
+
+Gradient clip 1.0 VQ-VAE steps (stage 1) 50,000 Transformer steps (stage 2) 50,000 Table 8: Details of datasets used in experiments. Dataset # Timesteps # Features Source Stocks 3,685 6 https://finance.yahoo.com 
+
+ETTh 17,420 7 https://github.com/zhouhaoyi/ETDataset 
+
+Energy 19,735 28 https://archive.ics.uci.edu 
+
+fMRI 10,000 50 https://www.fmrib.ox.ac.uk/datasets 
+
+perturbs only the variable axis, thereby exposing the encoder to feature-level corruption without removing local temporal context entirely. 
+
+B.4 Evaluation Metrics Context-FID Context-FID is an evaluation metric proposed by Jeha et al. [8] to measure the distributional gap between real and generated time series. It can be viewed as a time-series-oriented extension of the conventional Fréchet Inception Distance (FID), which is widely used in image generation tasks. The key difference from image-based FID lies in the feature representation. While standard FID extracts image embeddings using an Inception network, Context-FID employs TS2Vec [25], a repre-sentation model specifically designed for time series. Since TS2Vec captures temporal characteristics of sequential data, the resulting distance is more suitable for assessing synthetic time series quality. Yue et al. [25] further observed that generative models achieving lower Context-FID scores often show stronger downstream forecasting performance. This suggests that Context-FID reflects not only super-ficial similarity but also useful temporal distributional alignment. Accordingly, a smaller Context-FID value indicates that the generated time series more closely match the real data distribution. 
+
+Correlational score The correlational score evaluates whether synthetic time series reproduce the inter-variable dependency patterns observed in real data. To this end, we first compute the covariance 14 between the i-th and j-th variables over the temporal dimension. Following [11], the covariance is defined as: 
+
+Cov i,j = 1
+
+W
+
+> W
+
+X
+
+> t=1
+
+Kti Ktj − 1
+
+W
+
+> W
+
+X
+
+> t=1
+
+Kti
+
+!
+
+1
+
+W
+
+> W
+
+X
+
+> t=1
+
+Ktj
+
+!
+
+.
+
+Here, W is the sequence length, and Kti and Ktj denote the values of the i-th and j-th features at time step t. The covariance is obtained by subtracting the product of the two feature means from the mean of their element-wise products. After computing covariance matrices for both real and synthetic data, we compare their normalized correlation structures using the following discrepancy measure [24]: 
+
+110 
+
+> d
+
+X
+
+> i,j
+
+Cov Ri,j 
+
+q
+
+Cov Ri,i Cov Rj,j 
+
+− Cov Si,j 
+
+q
+
+Cov Si,i Cov Sj,j 
+
+.
+
+In the equation above, superscripts R and S indicate real and synthetic data, respectively, and d
+
+denotes the number of features. The summation is computed over all feature pairs. A smaller correlational score means that the synthetic data better preserves the pairwise correlation structure of the real data. 
+
+Discriminative score The discriminative score measures the distinguishability between real and synthetic time series. Specifically, a classifier is trained to predict whether each sample comes from the real dataset or the generated dataset, and the score is calculated as |accuracy − 0.5|.If the generated samples are highly realistic, the classifier should not be able to reliably distinguish them from real samples, and its accuracy should approach 0.5. Therefore, lower discriminative scores indicate better generation quality. Following the evaluation protocol of TimeGAN [22], we use a two-layer GRU classifier for this evaluation. 
+
+Predictive score The predictive score assesses whether generated time series preserve temporal patterns that are useful for forecasting. Rather than directly measuring visual or statistical similarity, this metric evaluates the utility of generated sequences in a prediction task. Following the evaluation protocol of TimeGAN [22], we use a one-layer GRU-based predictor. We report the mean absolute error (MAE) between the predicted values and the ground-truth values on the test set. A lower predictive score indicates that the synthetic data better preserves the temporal dynamics required for sequence prediction. 
+
+Z-score The Z-score is used to evaluate the detectability of watermarks. It measures how far the detection statistic of watermarked samples deviates from that of non-watermarked samples. This metric is naturally connected to hypothesis testing. The null hypothesis H0 assumes that the sample does not contain a watermark generated by the corresponding watermarking method. When the Z-score is close to zero, the watermarked and non-watermarked samples are statistically difficult to separate. A sufficiently large positive Z-score, in contrast, provides evidence against H0
+
+and supports the conclusion that a watermark is present. We consider methods that produce a scalar per-sample detection statistic xi, such as bit accuracy for TimeWak [17] or green-list ratio for LVQMark. For these methods, the Z-score is computed at the population level via a subsampled-mean construction. Let μN W and σN W denote the mean and standard deviation of xi over a non-watermarked, attack-free reference set generated by the same model. Following TimeWak [17], we draw B = 100 subsamples of size n = 1000 without replacement. For each replicate b, we compute 
+
+Zb = ¯x(b) − μN W 
+
+σN W /√n .
+
+15 We then report Z = mean( Zb), σZ = std( Zb), and the empirical decision threshold 
+
+Pr  Zb > Φ−1(0 .999)  ≈ 3.0902 .
+
+TPR@X%FPR TPR@X%FPR is the true positive rate at a threshold calibrated to yield an X% false positive rate on clean non-watermarked samples. It measures detection power under a fixed false-positive constraint, which is particularly important in provenance verification, where false positives can lead to incorrect attribution of synthetic content. In our setting, this metric allows us to compare how reliably different methods detect watermarked samples when they are required to satisfy the same nominal false-positive budget. 
+
+B.5 Compute Resources 
+
+All experiments were conducted on a server with three GPUs: one NVIDIA H100 PCIe (80 GB) and two NVIDIA RTX PRO 6000 Blackwell Server Edition (96 GB each), an Intel Xeon Gold 6444Y dual-socket CPU (64 logical cores, up to 4.0 GHz). 
+
+C Effect of Partition Rules on Robust Detection 
+
+Tables 9 and 10 compare the context-dependent KGW partition with our context-independent partition under 5% and 30% attacks, respectively. Under the KGW rule, the green set at position n is determined by the recovered token at n−1, so a single re-encoding error can affect the partition at the next position and propagate a local perturbation beyond the attacked region. In contrast, our context-independent partition depends only on the position index and the secret key, eliminating this cross-position coupling and confining each re-encoding error to its originating position. As a result, our partition consistently yields higher watermark Z-scores across datasets and attack types under both attack strengths. This shows that the robustness benefit of preserving locality is systematic rather than specific to the stronger 30% setting. Combined with parity alternation and the bias-free warm-up (Section 3.2.1), the proposed design leads to more stable recovered evidence and stronger overall watermark detectability. Table 9: Partition rule comparison. Z-scores under 30% attacks. Best results are in bold.                                        
+
+> Stocks Energy ETTh fMRI Partition Offset Crop Insert. Offset Crop Insert. Offset Crop Insert. Offset Crop Insert.
+> KGW 14.96 5.38 2.76 14.73 10.06 9.98 10.51 8.14 7.26 12.71 13.12 9.31 Ours 15 .39 16 .19 9.16 17 .30 13 .77 13 .14 17 .10 16 .09 13 .31 14 .55 16 .72 11 .88
+
+Table 10: Partition rule comparison. Z-scores under 5% attacks. Best results are in bold.                                        
+
+> Stocks Energy ETTh fMRI Partition Offset Crop Insert Offset Crop Insert Offset Crop Insert Offset Crop Insert
+> KGW 12.95 8.62 8.44 14.80 13.30 14.27 11.09 9.02 10.55 12.77 13.14 12.66 Ours 19 .51 15 .80 16 .37 17 .35 15 .74 16 .98 17 .65 16 .53 17 .80 14 .68 15 .19 14 .49
+
+D Experimental Results For Other Lengths 
+
+This section provides additional results for other sequence lengths ( T = 24 , 128 ) and complements the main analysis at T = 64 . The overall trend is consistent with the main results. 
+
+D.1 Watermark Detection and Generation Quality False-positive behavior under post-editing attacks Tables 11 and 12 extend the analysis of bidirectional null shift in Section 4.2 to other sequence lengths. Consistent with the main results, the same qualitative pattern persists across other sequence lengths, further supporting that the attacked null remains stable under L-VQVAE with LVQMark while existing baselines exhibit substantial drift. 16 Table 11: Results of synthetic time series watermark detection and quality. Watermarked (TPR) and Non-watermarked (FPR, mean z-score) detections are evaluated under 30% attacks. Quality metrics are for 24-length. Best results are in bold, and second-best are underlined. Z-scores with |z| > 3.09 
+
+are marked in red. 
+
+Setting Watermark (TPR ↑) Non-watermarked (FPR ↓ | Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred. 
+
+Stocks DiffusionTS TR 0.00 1.00 0.00 0.00 +0 .19 1.00 +63 .26 0.00 +1 .91 0.96 0.10 0.20 0.04 
+
+GS 1.00 0.45 1.00 0.00 −1.15 0.00 −6.32 0.00 +0 .16 8.88 0.09 0.43 0.04 
+
+TimeWak 1.00 1.00 1.00 0.00 −0.99 0.02 +1 .39 0.00 −1.77 0.33 0.02 0.16 0.04 
+
+SDformer LVQMark 0.13 0.81 0.22 0.00 +0 .51 0.86 +4 .49 0.01 +1 .33 0.11 0.01 0.02 0.04 
+
+L-VQVAE LVQMark 1.00 0.99 0.98 0.00 −0.25 0.04 +1 .10 0.02 +0 .38 0.07 0.01 0.11 0.04 
+
+ETTh DiffusionTS TR 1.00 1.00 1.00 0.00 +0 .95 1.00 +10 .84 1.00 +15 .97 1.56 0.18 0.27 0.14 
+
+GS 1.00 1.00 1.00 1.00 +12 .01 1.00 +18 .58 1.00 +6 .96 4.66 0.42 0.38 0.19 TimeWak 1.00 0.48 1.00 0.00 −0.34 0.02 +1 .05 0.00 −1.68 0.23 0.21 0.08 0.12 
+
+SDformer LVQMark 0.98 0.03 0.07 0.01 +0 .79 0.01 +0 .18 0.00 +0 .70 0.13 0.08 0.04 0.12 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .03 0.01 +0 .41 0.00 −0.15 0.05 0.05 0.02 0.12 
+
+Energy DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .43 1.00 +39 .25 1.00 +26 .77 0.43 2.66 0.41 0.30 
+
+GS 1.00 1.00 1.00 1.00 +13 .17 1.00 +65 .49 1.00 +14 .31 1.58 3.37 0.49 0.33 TimeWak 1.00 1.00 1.00 0.00 +0 .33 0.99 +6 .03 0.00 −1.22 0.09 1.53 0.14 0.25 
+
+SDformer LVQMark 1.00 0.76 1.00 0.00 +0 .29 0.07 +1 .48 0.00 +0 .32 0.12 1.27 0.23 0.25 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.16 0.00 −0.19 0.00 −0.03 0.03 1.02 0.09 0.25 
+
+fMRI DiffusionTS TR 0.04 0.00 0.00 0.00 +0 .42 0.00 +1 .00 1.00 +4 .89 2.26 13.42 0.50 0.15 GS 1.00 1.00 1.00 0.24 +2 .33 0.00 −2.26 0.00 −6.16 0.71 15.21 0.50 0.11 
+
+TimeWak 1.00 1.00 1.00 0.00 +0 .19 0.22 +2 .39 0.00 +0 .26 0.18 1.98 0.09 0.10 
+
+SDformer LVQMark 1.00 0.99 1.00 0.00 +0 .14 0.01 −0.41 0.01 +0 .01 0.94 3.25 0.21 0.10 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .11 0.02 −0.23 0.00 −0.05 0.20 1.92 0.23 0.10 
+
+Table 12: Results of synthetic time series watermark detection and quality. Watermarked (TPR) and Non-watermarked (FPR, mean z-score) detections are evaluated under 30% attacks. Quality metrics are for 128-length. Best results are in bold, and second-best are underlined. Z-scores with |z| > 3.09 
+
+are marked in red. 
+
+Setting Watermark (TPR ↑) Non-watermarked (FPR ↓ | Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred. 
+
+Stocks DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .30 1.00 +84 .66 1.00 +20 .60 3.05 0.09 0.24 0.04 
+
+GS 1.00 0.04 1.00 0.00 −4.40 0.00 −10 .04 0.00 −5.22 2.63 0.04 0.19 0.04 
+
+TimeWak 1.00 1.00 1.00 0.00 −0.16 0.00 −4.18 0.69 +3 .74 0.34 0.01 0.15 0.04 
+
+SDformer LVQMark 0.00 0.00 0.00 0.00 −0.54 0.00 −0.89 0.00 −1.20 0.12 0.01 0.03 0.04 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .09 0.00 −0.09 0.00 +0 .23 0.08 0.01 0.18 0.04 
+
+ETTh DiffusionTS TR 0.00 1.00 1.00 0.00 +1 .52 1.00 +12 .19 1.00 +36 .77 2.52 0.26 0.30 0.13 
+
+GS 1.00 1.00 1.00 0.00 −6.09 0.00 −13 .71 0.00 −6.37 5.59 0.23 0.39 0.15 TimeWak 1.00 0.92 1.00 0.02 +1 .09 0.00 −1.63 0.00 +0 .77 1.08 0.18 0.15 0.11 
+
+SDformer LVQMark 0.14 0.04 0.04 0.00 +0 .53 0.01 +0 .76 0.00 +1 .01 0.04 0.05 0.03 0.11 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.04 0.00 −0.05 0.00 −0.30 0.04 0.05 0.02 0.11 
+
+Energy DiffusionTS TR 0.00 1.00 1.00 0.00 +2 .20 1.00 +61 .47 1.00 +98 .65 0.50 1.65 0.49 0.28 GS 1.00 1.00 1.00 1.00 +15 .43 1.00 +48 .30 1.00 +27 .89 3.34 3.59 0.48 0.29 TimeWak 1.00 0.10 1.00 0.00 −1.57 0.00 −0.78 0.00 +0 .66 0.17 1.50 0.24 0.25 
+
+SDformer LVQMark 1.00 0.00 0.32 0.00 +0 .06 0.00 −0.65 0.00 −0.08 0.04 0.67 0.05 0.25 
+
+L-VQVAE LVQMark 1.00 0.99 1.00 0.00 −0.03 0.02 +0 .00 0.00 +0 .13 0.03 0.74 0.19 0.24 
+
+fMRI DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .02 1.00 +6 .33 1.00 +21 .25 4.57 14.15 0.45 0.17 GS 1.00 1.00 1.00 0.00 −0.70 0.00 −57 .42 0.07 +0 .52 1.05 5.97 0.50 0.11 TimeWak 1.00 1.00 1.00 0.00 −0.07 0.00 −3.03 0.00 −1.95 0.81 1.81 0.36 0.10 
+
+SDformer LVQMark 0.10 0.02 0.03 0.00 −0.03 0.01 −0.25 0.00 −0.15 0.09 0.84 0.16 0.08 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.09 0.00 +0 .16 0.00 −0.01 0.13 0.90 0.06 0.08 
+
+Generation quality Tables 13 and 14 show the generation quality results for sequence lengths 24 and 128, respectively. L-VQVAE remains competitive in quality while improving watermark reliability under attack. 
+
+D.2 Component Analysis and Ablations Effect of watermark scheduling Tables 15 and 16 extend the scheduling ablation in Section 4.3 to other sequence lengths. We compare the default configuration against variants without unbiased 17 Table 13: Results of synthetic time series quality for 24-length sequences. Best results are in bold, and second-best are underlined.                                                                                    
+
+> Stocks Energy ETTh fMRI Model C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred.
+> TimeVQVAE 0.507 0.049 0.361 0.047 2.527 6.632 0.476 0.383 4.417 0.263 0.415 0.199 12.532 61.599 0.459 0.156 DiffusionTS 0.329 0.022 0.160 0.037 0.087 1.534 0.137 0.253 0.231 0.212 0.078 0.121 0.181 1.976 0.085 0.100 SDformer 0.028 0.009 0.023 0.037 0.030 1.088 0.093 0.252 0.036 0.066 0.010 0.120 0.114 1.833 0.056 0.092
+> L-VQVAE 0.034 0.010 0.140 0.037 0.018 1.008 0.033 0.252 0.029 0.052 0.018 0.117 0.105 1.875 0.209 0.095
+
+Table 14: Results of synthetic time series quality for 128-length sequences. Best results are in bold, and second-best are underlined.                                                                                    
+
+> Stocks Energy ETTh fMRI Model C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred.
+> TimeVQVAE 0.293 0.087 0.135 0.039 7.738 6.631 0.498 0.344 2.205 0.251 0.256 0.143 30.672 45.692 0.250 0.149 DiffusionTS 0.344 0.014 0.152 0.037 0.169 1.505 0.235 0.249 1.075 0.175 0.145 0.113 0.810 1.812 0.357 0.100 SDformer 0.128 0.013 0.032 0.036 0.032 0.708 0.057 0.244 0.032 0.050 0.062 0.113 0.064 0.801 0.176 0.080
+> L-VQVAE 0.038 0.013 0.035 0.036 0.031 0.733 0.155 0.246 0.039 0.052 0.025 0.107 0.096 0.895 0.054 0.082
+
+warm-up ( NO -WARMUP ) and without both alternating partition and unbiased warm-up ( NO -ALT -
+
+WARMUP ). Overall, the default configuration yields the most consistent quality across datasets, and the degradation is typically larger when both components are removed. These trends are broadly consistent with the main results at 64-length. Table 15: Ablation of watermark scheduling components for 24-length sequences (LVQMark). NO -
+
+WARMUP : unbiased warm-up removed. NO -ALT -WARMUP : both alternating partition and unbiased warm-up removed. Best results are in bold, and second-best are underlined. 
+
+Stocks Energy ETTh fMRI Variant C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. 
+
+> NO
+
+-ALT -WARMUP 0.211 0.014 0.141 0.037 0.081 1.172 0.151 0.254 0.180 0.113 0.066 0.123 0.419 2.350 0.298 0.101 
+
+> NO
+
+-WARMUP 0.160 0.013 0.224 0.037 0.060 1.063 0.130 0.253 0.093 0.059 0.039 0.123 0.346 2.067 0.296 0.098 
+
+LVQMark 0.074 0.007 0 .110 0 .037 0.028 1.022 0.090 0.252 0.046 0.048 0.021 0.117 0.200 1.920 0.229 0.097 
+
+Table 16: Ablation of watermark scheduling components for 128-length sequences (LVQMark). NO -
+
+WARMUP : unbiased warm-up removed. NO -ALT -WARMUP : both alternating partition and unbiased warm-up removed. Best results are in bold, and second-best are underlined. 
+
+Stocks Energy ETTh fMRI Variant C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. C-FID Corr. Disc. Pred. 
+
+> NO
+
+-ALT -WARMUP 0.185 0.008 0.148 0.036 0.093 0.869 0.235 0.247 0.166 0.083 0.035 0.111 0.257 1.023 0.134 0.084 
+
+> NO
+
+-WARMUP 0.095 0.007 0 .120 0 .036 0.066 0.774 0.200 0.246 0.073 0.063 0.027 0.108 0.198 0.900 0.086 0.084 
+
+LVQMark 0.079 0.009 0.179 0.036 0.033 0.740 0.190 0.244 0.042 0.050 0.021 0.108 0.127 0.896 0.060 0.082 
+
+Effect of local tokenization on robust detection Tables 17 and 18 extend the analysis of Section 4.3 to other sequence lengths by comparing models with and without robust encoder. These results show that robust re-encoding alone is insufficient without a locally recoverable token representation. Table 17: Results of watermark detection under attack for 24-length sequences. LVQMark is applied to different variants, and watermark detection performance (TPR) is evaluated under 30% attacks. Best results are in bold, and second-best are underlined. 
+
+Stocks Energy ETTh fMRI Model Type Offset Crop Insert Offset Crop Insert Offset Crop Insert Offset Crop Insert 
+
+SDformer w/o Robust 0.13 0.81 0.22 1.00 0.76 1.00 0.98 0.03 0.07 1.00 0.99 1.00 
+
+w/ Robust 0.07 0.20 0.08 1.00 0.68 1.00 1.00 0.57 0.96 1.00 1.00 1.00 
+
+L-VQVAE w/o Robust 1.00 0.21 0.35 1.00 0.00 1.00 1.00 0.01 1.00 1.00 1.00 1.00 
+
+w/ Robust 1.00 0.99 0.98 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 
+
+18 Table 18: Results of watermark detection under attack for 128-length sequences. LVQMark is applied to different variants, and watermark detection performance (TPR) is evaluated under 30% attacks. Best results are in bold, and second-best are underlined. 
+
+Stocks Energy ETTh fMRI Model Type Offset Crop Insert Offset Crop Insert Offset Crop Insert Offset Crop Insert 
+
+SDformer w/o Robust 0.00 0.00 0.00 1.00 0.00 0.32 0.14 0.04 0.04 0.10 0.02 0.03 
+
+w/ Robust 0.00 0.00 0.00 1.00 0.20 0.85 0.41 0.11 0.29 0.05 0.01 0.01 L-VQVAE w/o Robust 1.00 0 0.99 1.00 0.00 0.81 1.00 0.00 1.00 1.00 1.00 0.62 w/ Robust 1.00 1.00 1.00 1.00 0.99 1.00 1.00 1.00 1.00 1.00 1.00 1.00 
+
+E Experimental Results Under Mild Attack 
+
+While the main paper reports results under the stronger 30% attack setting, this section provides the corresponding results under milder 5% attacks. We include the full detection and quality results, the robust-encoder ablations in order to examine whether the main observations are specific to strong perturbations. Overall, the results are broadly consistent with the main findings: although the attack-induced distortion is often smaller than in the 30% setting, the relative pattern across methods remains largely unchanged. 
+
+E.1 Watermark Detection 
+
+Tables 19–21 show that the qualitative conclusions of the main paper remain unchanged under the milder 5% attack setting. Compared with the 30% setting, the attack-induced distortion is generally smaller in magnitude, but the relative pattern across methods remains largely the same. Across sequence lengths, L-VQVAE with LVQMark continues to achieve strong watermark detection on watermarked samples while keeping the false-positive rate on attacked non-watermarked samples consistently low. The corresponding non-watermarked Z-scores also remain close to the intended null region, indicating that the detector also stays well calibrated under mild post-editing attacks. By contrast, the baseline methods still exhibit post-editing-dependent instability, showing that the calibration problem is not limited to severe attacks but can already arise under small perturbations. Overall, these results suggest that mild attacks reduce, but do not eliminate, the robustness gap observed in the 30% setting. Table 19: Results of synthetic time series watermark detection and quality. Watermarked (TPR) and Non-watermarked (FPR, mean z-score) detections are evaluated under 5% attacks. Quality metrics are for 24-length. Best results are in bold, and second-best are underlined. Z-scores with |z| > 3.09 
+
+are marked in red.                                                                                                                                                                                                                                                                                            
+
+> Setting Watermark (TPR ↑)Non-watermarked (FPR ↓| Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred.
+> Stocks DiffusionTS TR 0.00 1.00 0.00 0.00 +0 .06 1.00 +52 .15 0.00 +0 .41 0.96 0.10 0.20 0.04
+> GS 1.00 1.00 1.00 0.00 −0.27 1.00 +22 .14 0.43 +2 .88 8.88 0.09 0.43 0.04
+> TimeWak 1.00 1.00 1.00 0.00 −0.20 1.00 +9 .36 0.00 +0 .58 0.33 0.02 0.16 0.04
+> SDformer LVQMark 0.19 0.44 0.72 0.00 +0 .19 0.53 +3 .11 0.00 +0 .22 0.11 0.01 0.02 0.04
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .11 0.02 +0 .43 0.00 +0 .09 0.07 0.01 0.11 0.04
+> ETTh DiffusionTS TR 1.00 1.00 1.00 0.00 +0 .19 1.00 +10 .11 1.00 +4 .78 1.56 0.18 0.27 0.14
+> GS 1.00 1.00 1.00 0.18 +2 .17 0.00 −10 .53 0.14 +2 .02 4.66 0.42 0.38 0.18 TimeWak 1.00 1.00 1.00 0.00 −0.26 0.00 +0 .77 0.00 −0.34 0.23 0.21 0.08 0.12
+> SDformer LVQMark 1.00 0.01 1.00 0.00 +0 .15 0.00 +0 .10 0.00 +0 .29 0.13 0.08 0.04 0.12
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .28 0.00 +0 .13 0.00 −0.14 0.05 0.05 0.02 0.12
+> Energy DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .03 1.00 +36 .66 1.00 +9 .01 0.43 2.66 0.41 0.30
+> GS 1.00 1.00 1.00 0.59 +3 .33 1.00 +43 .84 0.48 +3 .17 1.58 3.37 0.49 0.33 TimeWak 1.00 1.00 1.00 0.00 −1.43 1.00 +5 .79 0.00 −0.44 0.09 1.53 0.14 0.25
+> SDformer LVQMark 1.00 1.00 1.00 0.00 −0.22 0.00 +0 .15 0.00 +0 .42 0.12 1.27 0.23 0.25
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.11 0.01 −0.02 0.00 −0.05 0.03 1.02 0.09 0.25
+> fMRI DiffusionTS TR 1.00 0.00 0.00 0.00 +0 .06 0.00 +0 .20 0.00 +0 .70 2.26 13.42 0.50 0.15 GS 1.00 1.00 1.00 0.00 +0 .58 0.20 +2 .37 0.00 −0.42 0.71 15.21 0.50 0.11
+> TimeWak 1.00 1.00 1.00 0.00 −0.09 0.00 −1.07 0.00 −0.28 0.18 1.98 0.08 0.10
+> SDformer LVQMark 1.00 1.00 1.00 0.00 −0.08 0.00 −0.36 0.00 −0.07 0.94 3.24 0.21 0.10
+> L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .07 0.00 −0.11 0.00 −0.14 0.20 1.92 0.23 0.10
+
+19 Table 20: Results of synthetic time series watermark detection and quality. Watermarked (TPR) and Non-watermarked (FPR, mean z-score) detections are evaluated under 5% attacks. Quality metrics are for 64-length. Best results are in bold, and second-best are underlined. Z-scores with |z| > 3.09 
+
+are marked in red. 
+
+Setting Watermark (TPR ↑) Non-watermarked (FPR ↓ | Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred. 
+
+Stocks DiffusionTS TR 0.00 1.00 0.00 0.00 +0 .06 1.00 +55 .65 0.00 +2 .06 1.52 0.07 0.15 0.04 
+
+GS 1.00 1.00 1.00 0.00 −0.35 0.00 −4.62 0.05 +1 .55 1.50 0.02 0.22 0.04 
+
+TimeWak 1.00 1.00 1.00 0.00 −0.12 0.29 +2 .56 0.00 +0 .11 0.29 0.01 0.13 0.04 
+
+SDformer LVQMark 0.01 0.03 0.01 0.00 −0.17 0.00 +0 .58 0.01 +0 .32 0.08 0.01 0.01 0.04 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.33 0.00 +0 .08 0.00 +0 .30 0.07 0.01 0.06 0.04 
+
+ETTh DiffusionTS TR 1.00 1.00 1.00 0.00 +0 .21 1.00 +14 .18 1.00 +12 .70 2.17 0.22 0.29 0.14 
+
+GS 1.00 1.00 1.00 0.00 −0.29 0.00 −29 .58 0.00 −1.60 3.43 0.25 0.36 0.16 TimeWak 1.00 1.00 1.00 0.01 +0 .19 0.90 +4 .08 0.00 +0 .23 0.37 0.13 0.11 0.12 
+
+SDformer LVQMark 0.27 0.00 0.06 0.01 +0 .25 0.00 −0.27 0.00 −0.11 0.04 0.05 0.00 0.12 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.17 0.00 −0.07 0.01 +0 .22 0.03 0.06 0.01 0.12 
+
+Energy DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .05 1.00 +50 .50 1.00 +21 .61 0.58 1.98 0.43 0.28 
+
+GS 1.00 1.00 1.00 0.07 +1 .21 1.00 +11 .15 0.37 +2 .71 1.78 2.72 0.48 0.31 TimeWak 1.00 1.00 1.00 0.00 −1.26 0.00 −1.42 0.00 −0.84 0.14 1.52 0.14 0.25 
+
+SDformer LVQMark 1.00 0.46 1.00 0.00 +0 .06 0.00 +0 .23 0.00 +0 .07 0.04 1.04 0.08 0.25 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.06 0.01 +0 .02 0.01 +0 .17 0.04 0.94 0.15 0.25 
+
+fMRI DiffusionTS TR 1.00 1.00 1.00 0.00 +0 .03 0.00 +0 .30 0.00 +2 .25 3.63 12.83 0.40 0.14 GS 1.00 1.00 1.00 0.00 −0.55 1.00 +20 .44 1.00 +8 .32 0.74 8.31 0.50 0.10 
+
+TimeWak 1.00 1.00 1.00 0.00 +0 .09 0.13 +1 .96 0.01 +0 .60 0.45 1.87 0.25 0.10 
+
+SDformer LVQMark 0.24 0.29 0.24 0.00 +0 .04 0.01 +0 .43 0.00 +0 .10 0.13 1.19 0.12 0.09 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.18 0.00 +0 .09 0.00 −0.04 0.13 1.14 0.27 0.09 
+
+Table 21: Results of synthetic time series watermark detection and quality. Watermarked (TPR) and Non-watermarked (FPR, mean z-score) detections are evaluated under 5% attacks. Quality metrics are for 128-length. Best results are in bold, and second-best are underlined. Z-scores with |z| > 3.09 
+
+are marked in red. 
+
+Setting Watermark (TPR ↑) Non-watermarked (FPR ↓ | Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred. 
+
+Stocks DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .09 1.00 +66 .42 1.00 +5 .55 3.05 0.09 0.24 0.04 
+
+GS 1.00 1.00 1.00 0.00 −1.32 0.00 −3.91 0.00 −0.47 2.63 0.04 0.19 0.04 
+
+TimeWak 1.00 1.00 1.00 0.00 −0.17 1.00 +11 .97 0.16 +2 .05 0.34 0.01 0.15 0.04 
+
+SDformer LVQMark 0.00 0.00 0.00 0.00 −0.82 0.00 −0.22 0.00 −0.02 0.12 0.01 0.03 0.04 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .02 0.00 +0 .16 0.01 +0 .15 0.08 0.01 0.18 0.04 
+
+ETTh DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .28 1.00 +11 .00 1.00 +11 .88 2.52 0.26 0.30 0.13 
+
+GS 1.00 1.00 1.00 0.00 −0.93 0.00 −13 .63 0.00 −1.08 5.59 0.23 0.39 0.15 TimeWak 1.00 1.00 1.00 0.00 +0 .03 0.02 +0 .94 0.00 +0 .40 1.08 0.17 0.15 0.11 
+
+SDformer LVQMark 0.52 0.03 0.10 0.00 −0.07 0.03 +1 .19 0.00 +0 .53 0.04 0.05 0.03 0.11 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.10 0.00 +0 .16 0.00 +0 .04 0.04 0.05 0.02 0.11 
+
+Energy DiffusionTS TR 0.00 1.00 1.00 0.00 +0 .04 1.00 +58 .72 1.00 +37 .10 0.50 1.65 0.49 0.28 GS 1.00 1.00 1.00 0.00 +0 .84 1.00 +32 .87 1.00 +6 .63 3.34 3.59 0.48 0.29 TimeWak 1.00 1.00 1.00 0.00 −0.82 0.00 −1.89 0.00 +0 .58 0.17 1.50 0.24 0.25 
+
+SDformer LVQMark 1.00 0.14 1.00 0.00 −0.06 0.00 −0.61 0.00 +0 .28 0.04 0.67 0.05 0.25 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 +0 .15 0.00 −0.09 0.00 −0.01 0.03 0.74 0.19 0.24 
+
+fMRI DiffusionTS TR 0.00 0.00 1.00 0.00 +0 .02 0.00 +1 .37 1.00 +3 .98 4.57 14.15 0.45 0.17 GS 1.00 1.00 1.00 0.00 +0 .04 0.00 −38 .23 0.29 +2 .54 1.05 5.97 0.50 0.11 TimeWak 1.00 1.00 1.00 0.00 −0.08 0.00 −0.90 0.00 −0.47 0.81 1.81 0.36 0.10 
+
+SDformer LVQMark 0.10 0.12 0.11 0.00 +0 .06 0.00 +0 .02 0.00 −0.00 0.09 0.84 0.16 0.08 
+
+L-VQVAE LVQMark 1.00 1.00 1.00 0.00 −0.10 0.00 +0 .25 0.00 −0.03 0.13 0.90 0.06 0.08 
+
+E.2 Effect of Local Tokenization on Robust Detection 
+
+Tables 22–24 further examine whether robust re-encoding alone is sufficient in the mild-attack regime. The results are consistent with the main-paper ablation: adding a robust encoder can partially improve detection in some settings, but the gains remain limited and inconsistent when the underlying representation is not locally recoverable. By contrast, when robust re-encoding is combined with the local tokenization of L-VQVAE, detection performance remains uniformly strong across datasets, attacks, and sequence lengths. This again supports our central claim that robust recovery is not solely 20 a matter of attack-aware training, but depends fundamentally on a representation whose recovered units remain locally stable under perturbation. Table 22: Results of watermark detection under attack for 24-length sequences. LVQMark is applied to different variants, and watermark detection performance (TPR) is evaluated under 5% attacks. Best results are in bold, and second-best are underlined.                                                               
+
+> Stocks Energy ETTh fMRI Model Type Offset Crop Insert Offset Crop Insert Offset Crop Insert Offset Crop Insert
+> SDformer w/o Robust 0.19 0.44 0.72 1.00 1.00 1.00 1.00 0.01 1.00 1.00 1.00 1.00
+> w/ Robust 0.08 0.57 0.24 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> L-VQVAE w/o Robust 1.00 0.78 0.86 1.00 0.76 1.00 1.00 0.90 1.00 1.00 1.00 1.00
+> w/ Robust 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+Table 23: Results of watermark detection under attack for 64-length sequences. LVQMark is applied to different variants, and watermark detection performance (TPR) is evaluated under 5% attacks. Best results are in bold, and second-best are underlined.                                                               
+
+> Stocks Energy ETTh fMRI Model Type Offset Crop Insert Offset Crop Insert Offset Crop Insert Offset Crop Insert
+> SDformer w/o Robust 0.01 0.03 0.01 1.00 0.46 1.00 0.27 0.00 0.06 0.24 0.29 0.24
+> w/ Robust 0.00 0.00 0.00 1.00 0.95 1.00 0.14 0.09 0.10 0.04 0.12 0.10 L-VQVAE w/o Robust 1.00 0.00 1.00 1.00 0.03 1.00 1.00 0.93 1.00 1.00 1.00 1.00
+> w/ Robust 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+Table 24: Results of watermark detection under attack for 128-length sequences. LVQMark is applied to different variants, and watermark detection performance (TPR) is evaluated under 5% attacks. Best results are in bold, and second-best are underlined.                                                               
+
+> Stocks Energy ETTh fMRI Model Type Offset Crop Insert Offset Crop Insert Offset Crop Insert Offset Crop Insert
+> SDformer w/o Robust 0.00 0.00 0.00 1.00 0.14 1.00 0.52 0.03 0.10 0.10 0.12 0.11
+> w/ Robust 0.00 0.00 0.00 1.00 0.85 1.00 0.34 0.31 0.35 0.06 0.04 0.02 L-VQVAE w/o Robust 1.00 0.94 1.00 1.00 0.02 1.00 1.00 0.50 1.00 1.00 1.00 1.00
+> w/ Robust 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+F Detailed Watermark Detection and Quality Statistics 
+
+Tables 25–27 complement the main results by reporting both the mean and the standard deviation of the detection and quality metrics. For detection, the reported standard deviations summarize the spread of sample-level Z-scores under each setting, showing how tightly the detection statistics concentrate around their mean values. For quality, the reported standard deviations reflect variability across the same five-run protocol used in the main experiments. These additional statistics support the same qualitative conclusions as the mean-only results. In particular, L-VQVAE with LVQMark keeps the non-watermarked Z-scores centered near the intended null region across attacks and sequence lengths, while the corresponding standard deviations remain moderate, indicating stable calibration at the sample level rather than a mean obtained from offsetting extreme cases. At the same time, the watermark Z-scores remain clearly positive and well separated from zero, showing that strong detectability is preserved together with null stability. By contrast, several baselines continue to exhibit large mean shifts on attacked non-watermarked samples, and these shifts are typically much larger in magnitude than their corresponding standard deviations, indicating that the observed null drift is systematic rather than attributable to a small subset of atypical samples. Taken together, these results reinforce the main finding of the paper: the advantage of L-VQVAE with LVQMark lies not only in achieving favorable mean performance, but also in maintaining a more stable and interpretable detection behavior under attack. 21 Table 25: Results of synthetic time series watermark detection and quality. Watermark and Non-watermarked detections (Z-score) are evaluated under 30% attacks. Detection and quality metrics (mean ± std) are for 24-length. 
+
+Setting Watermark (Z-score ↑) Non-watermarked (Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred. 
+
+Stocks DiffusionTS TR 0.59 ±0.03 51 .54 ±0.66 0.22 ±0.04 0.19 ±0.03 63 .26 ±0.69 1.91 ±0.09 0.96 ±0.15 0.10 ±0.01 0.20 ±0.02 0.04 ±0.00 
+
+GS 85 .77 ±0.80 3.11 ±0.67 52 .58 ±0.80 −1.15 ±1.22 −6.32 ±0.69 0.16 ±0.81 8.88 ±0.62 0.09 ±0.01 0.43 ±0.01 0.04 ±0.00 
+
+TimeWak 180 .18 ±0.86 11 .24 ±0.94 56 .48 ±1.13 −0.99 ±0.99 1.39 ±0.86 −1.77 ±1.03 0.33 ±0.03 0.02 ±0.01 0.16 ±0.02 0.04 ±0.00 
+
+SDformer LVQMark 2.14 ±0.96 4.21 ±1.19 2.39 ±0.94 0.51 ±0.91 4.49 ±1.28 1.33 ±0.82 0.11 ±0.02 0.01 ±0.00 0.02 ±0.02 0.04 ±0.00 
+
+L-VQVAE LVQMark 11 .16 ±1.12 6.97 ±1.40 5.45 ±0.88 −0.25 ±0.85 1.10 ±1.21 0.38 ±1.18 0.07 ±0.01 0.01 ±0.01 0.11 ±0.09 0.04 ±0.00 
+
+ETTh DiffusionTS TR 3.70 ±0.10 11 .62 ±0.25 18 .23 ±0.32 0.95 ±0.04 10 .84 ±0.22 15 .97 ±0.28 1.56 ±0.16 0.18 ±0.02 0.27 ±0.01 0.14 ±0.00 
+
+GS 53 .08 ±1.14 23 .49 ±1.00 36 .63 ±1.00 12 .01 ±0.79 18 .58 ±1.11 6.96 ±0.94 4.66 ±0.47 0.42 ±0.02 0.38 ±0.02 0.18 ±0.01 
+
+TimeWak 115 .86 ±0.96 3.07 ±0.97 19 .44 ±1.06 −0.34 ±0.97 1.05 ±0.96 −1.68 ±1.00 0.23 ±0.01 0.21 ±0.04 0.08 ±0.03 0.12 ±0.00 
+
+SDformer LVQMark 5.15 ±0.94 0.50 ±1.26 1.82 ±0.89 0.79 ±0.96 0.18 ±1.22 0.70 ±0.85 0.13 ±0.02 0.08 ±0.03 0.04 ±0.02 0.12 ±0.00 
+
+L-VQVAE LVQMark 20 .66 ±1.12 17 .01 ±1.24 13 .48 ±0.95 0.03 ±1.10 0.41 ±1.45 −0.15 ±1.01 0.05 ±0.00 0.05 ±0.01 0.02 ±0.01 0.12 ±0.00 
+
+Energy DiffusionTS TR 0.84 ±0.03 37 .42 ±0.25 26 .12 ±0.16 0.43 ±0.03 39 .25 ±0.32 26 .77 ±0.16 0.43 ±0.03 2.66 ±0.30 0.41 ±0.01 0.30 ±0.00 
+
+GS 53 .58 ±1.00 75 .56 ±1.24 49 .04 ±1.07 13 .17 ±1.19 65 .49 ±1.36 14 .31 ±1.14 1.58 ±0.06 3.37 ±0.13 0.49 ±0.00 0.33 ±0.00 
+
+TimeWak 192 .68 ±1.64 10 .87 ±0.89 55 .08 ±1.08 0.33 ±0.94 6.03 ±1.07 −1.22 ±1.01 0.09 ±0.01 1.53 ±0.19 0.14 ±0.02 0.25 ±0.00 
+
+SDformer LVQMark 24 .84 ±0.84 3.99 ±1.27 14 .32 ±0.90 0.29 ±1.02 1.48 ±0.99 0.32 ±0.95 0.12 ±0.00 1.27 ±0.13 0.23 ±0.01 0.25 ±0.00 
+
+L-VQVAE LVQMark 28 .18 ±1.09 21 .94 ±1.19 21 .55 ±1.00 −0.16 ±0.97 −0.19 ±1.21 −0.03 ±0.99 0.03 ±0.00 1.02 ±0.10 0.09 ±0.01 0.25 ±0.00 
+
+fMRI DiffusionTS TR 2.99 ±0.06 2.47 ±0.05 1.74 ±0.07 0.42 ±0.03 0.55 ±0.04 4.89 ±0.04 2.26 ±0.10 13 .42 ±0.14 0.50 ±0.00 0.15 ±0.00 
+
+GS 418 .07 ±1.19 173 .30 ±0.84 262 .45 ±1.32 2.33 ±0.88 −3.89 ±0.87 −6.16 ±1.01 0.71 ±0.05 15 .21 ±0.06 0.50 ±0.00 0.11 ±0.00 
+
+TimeWak 380 .87 ±0.92 77 .01 ±0.92 134 .32 ±0.87 0.19 ±1.07 2.39 ±0.91 0.26 ±1.04 0.18 ±0.01 1.98 ±0.07 0.08 ±0.02 0.10 ±0.00 
+
+SDformer LVQMark 22 .63 ±0.95 6.01 ±1.23 9.43 ±0.97 0.14 ±0.98 −0.41 ±1.22 0.01 ±0.91 0.94 ±0.07 3.24 ±0.15 0.21 ±0.03 0.10 ±0.00 
+
+L-VQVAE LVQMark 20 .28 ±0.91 24 .23 ±1.32 17 .16 ±0.96 0.11 ±0.91 −0.23 ±1.32 −0.05 ±1.02 0.20 ±0.01 1.92 ±0.03 0.23 ±0.01 0.10 ±0.00 
+
+Table 26: Results of synthetic time series watermark detection and quality. Watermark and Non-watermarked detections (Z-score) are evaluated under 30% attacks. Detection and quality metrics (mean ± std) are for 64-length. 
+
+Setting Watermark (Z-score ↑) Non-watermarked (Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred. 
+
+Stocks DiffusionTS TR 0.88 ±0.03 56 .36 ±0.84 4.60 ±0.17 0.21 ±0.03 69 .43 ±0.77 8.11 ±0.21 1.52 ±0.11 0.07 ±0.02 0.15 ±0.05 0.04 ±0.00 
+
+GS 143 .09 ±1.43 −14 .28 ±0.94 64 .00 ±0.80 −1.40 ±0.78 −14 .87 ±0.92 1.52 ±1.01 1.50 ±0.32 0.02 ±0.01 0.22 ±0.03 0.04 ±0.00 
+
+TimeWak 335 .49 ±0.81 16 .23 ±0.92 79 .44 ±1.28 −0.19 ±0.95 −4.32 ±0.91 1.35 ±0.91 0.29 ±0.03 0.01 ±0.00 0.13 ±0.03 0.04 ±0.00 
+
+SDformer LVQMark 0.59 ±0.81 0.99 ±0.87 0.42 ±0.93 −0.16 ±0.89 1.19 ±1.05 0.31 ±1.04 0.08 ±0.01 0.01 ±0.00 0.01 ±0.01 0.04 ±0.00 
+
+L-VQVAE LVQMark 15 .21 ±1.05 28 .43 ±1.33 8.23 ±0.85 −0.12 ±0.95 −0.05 ±1.28 0.32 ±1.06 0.07 ±0.01 0.01 ±0.01 0.06 ±0.02 0.04 ±0.00 
+
+ETTh DiffusionTS TR 4.69 ±0.09 17 .54 ±0.29 39 .34 ±0.52 0.89 ±0.04 17 .16 ±0.27 38 .55 ±0.60 2.17 ±0.10 0.22 ±0.01 0.29 ±0.01 0.14 ±0.00 
+
+GS 160 .44 ±2.50 56 .44 ±1.67 127 .53 ±1.28 −1.53 ±0.85 −5.44 ±1.43 −5.82 ±1.42 3.43 ±0.24 0.25 ±0.02 0.36 ±0.01 0.16 ±0.00 
+
+TimeWak 194 .83 ±1.53 3.42 ±0.81 25 .92 ±1.13 1.17 ±1.00 −0.28 ±0.85 1.20 ±0.88 0.37 ±0.02 0.13 ±0.01 0.11 ±0.00 0.12 ±0.00 
+
+SDformer LVQMark −0.16 ±0.92 0.03 ±1.16 0.07 ±0.97 −0.94 ±0.83 0.09 ±1.17 −0.09 ±0.98 0.04 ±0.00 0.05 ±0.02 0.00 ±0.01 0.12 ±0.01 
+
+L-VQVAE LVQMark 16 .81 ±0.99 17 .48 ±1.13 14 .46 ±0.97 −0.12 ±1.06 −0.22 ±1.08 0.35 ±0.84 0.03 ±0.00 0.06 ±0.03 0.01 ±0.01 0.12 ±0.01 
+
+Energy DiffusionTS TR 2.14 ±0.04 48 .74 ±0.34 58 .22 ±0.28 1.18 ±0.04 53 .73 ±0.38 58 .55 ±0.29 0.58 ±0.04 1.98 ±0.09 0.43 ±0.02 0.28 ±0.00 
+
+GS 31 .04 ±0.88 2.78 ±1.06 37 .14 ±1.38 14 .51 ±0.86 0.87 ±1.08 11 .77 ±1.18 1.78 ±0.14 2.72 ±0.15 0.48 ±0.01 0.31 ±0.00 
+
+TimeWak 167 .49 ±2.09 5.02 ±0.93 28 .04 ±1.01 −9.69 ±0.82 −0.42 ±0.93 −1.57 ±0.98 0.14 ±0.01 1.52 ±0.24 0.14 ±0.01 0.25 ±0.00 
+
+SDformer LVQMark 7.41 ±0.98 1.14 ±0.87 3.29 ±0.88 −0.02 ±1.10 0.34 ±0.87 0.34 ±0.90 0.04 ±0.00 1.04 ±0.15 0.08 ±0.02 0.25 ±0.00 
+
+L-VQVAE LVQMark 15 .24 ±1.16 13 .22 ±1.12 11 .31 ±1.02 −0.06 ±1.09 −0.25 ±1.14 0.04 ±1.07 0.04 ±0.00 0.94 ±0.34 0.15 ±0.01 0.25 ±0.00 
+
+fMRI DiffusionTS TR 5.25 ±0.05 3.36 ±0.06 20 .02 ±0.11 0.05 ±0.03 2.27 ±0.04 12 .14 ±0.05 3.63 ±0.41 12 .83 ±0.08 0.40 ±0.17 0.14 ±0.00 
+
+GS 543 .72 ±1.11 275 .99 ±1.72 421 .92 ±3.12 −1.78 ±0.91 −38 .77 ±1.70 −0.01 ±2.12 0.74 ±0.05 8.31 ±0.03 0.50 ±0.00 0.10 ±0.00 
+
+TimeWak 574 .43 ±0.98 84 .45 ±0.98 185 .86 ±0.95 0.08 ±0.97 −2.74 ±0.99 0.18 ±0.90 0.45 ±0.01 1.87 ±0.05 0.25 ±0.11 0.10 ±0.00 
+
+SDformer LVQMark 2.39 ±0.97 1.13 ±1.09 1.48 ±0.95 0.03 ±0.86 0.51 ±1.16 −0.40 ±0.85 0.13 ±0.01 1.19 ±0.04 0.12 ±0.02 0.09 ±0.00 
+
+L-VQVAE LVQMark 12 .90 ±0.88 15 .19 ±1.23 10 .45 ±0.97 −0.03 ±0.99 −0.24 ±1.15 −0.17 ±0.99 0.13 ±0.00 1.14 ±0.06 0.27 ±0.11 0.09 ±0.00 
+
+G Visualization of Generation Results 
+
+We provide qualitative visualizations of generation-time watermarked time series data on Stocks, ETTh, Energy, and fMRI for 64-length sequences. Figures 5-8 compare original samples with LVQMark generations. The left column shows original samples, while the middle and right columns show watermarked generations produced with LVQMark and non-watermarked generations produced without watermarking, respectively. Each row corresponds to a different channel, with five representative samples shown in each column. The generated samples capture dataset-specific temporal patterns, and the watermarked samples remain qualitatively similar to the non-watermarked ones, suggesting that LVQMark does not introduce noticeable qualitative degradation. This observation is also consistent with the low Context-FID values reported in Table 2. 22 Table 27: Results of synthetic time series watermark detection and quality. Watermark and Non-watermarked detections (Z-score) are evaluated under 30% attacks. Detection and quality metrics (mean ± std) are for 128-length. 
+
+Setting Watermark (Z-score ↑) Non-watermarked (Z-score) Quality Metric ( ↓)Dataset Model Method Offset Crop Insert Offset Crop Insert C-FID Corr. Disc. Pred. 
+
+Stocks DiffusionTS TR 0.96 ±0.03 60 .85 ±0.68 19 .13 ±0.39 0.30 ±0.03 84 .66 ±0.65 20 .60 ±0.43 3.05 ±0.78 0.09 ±0.01 0.24 ±0.05 0.04 ±0.00 
+
+GS 158 .85 ±1.94 1.08 ±0.95 56 .98 ±0.95 −4.40 ±1.00 −10 .04 ±0.81 −5.22 ±1.01 2.63 ±0.16 0.04 ±0.02 0.19 ±0.03 0.04 ±0.00 
+
+TimeWak 466 .00 ±1.19 10 .37 ±1.01 76 .52 ±1.29 −0.16 ±0.90 −4.18 ±0.93 3.74 ±1.03 0.34 ±0.08 0.01 ±0.00 0.15 ±0.04 0.04 ±0.00 
+
+SDformer LVQMark −0.57 ±0.94 −0.77 ±0.66 −0.78 ±0.95 −0.54 ±0.87 −0.89 ±0.98 −1.20 ±1.10 0.12 ±0.01 0.01 ±0.01 0.03 ±0.03 0.04 ±0.00 
+
+L-VQVAE LVQMark 19 .79 ±1.51 13 .17 ±1.64 13 .82 ±1.20 0.09 ±0.92 −0.09 ±1.24 0.23 ±0.96 0.08 ±0.01 0.01 ±0.01 0.18 ±0.12 0.04 ±0.00 
+
+ETTh DiffusionTS TR 0.61 ±0.04 10 .99 ±0.23 35 .91 ±0.46 1.52 ±0.04 12 .19 ±0.23 36 .77 ±0.38 2.52 ±0.12 0.26 ±0.01 0.30 ±0.01 0.13 ±0.00 
+
+GS 229 .36 ±2.44 51 .50 ±1.15 155 .83 ±1.52 −6.09 ±0.98 −13 .71 ±0.85 −6.37 ±1.18 5.59 ±0.36 0.23 ±0.01 0.39 ±0.00 0.15 ±0.00 
+
+TimeWak 257 .53 ±2.12 4.62 ±1.03 40 .33 ±0.98 1.09 ±0.91 −1.63 ±0.86 0.77 ±0.97 1.08 ±0.08 0.17 ±0.02 0.15 ±0.01 0.11 ±0.00 
+
+SDformer LVQMark 2.01 ±1.01 1.12 ±1.15 1.43 ±0.85 0.53 ±0.85 0.76 ±1.11 1.01 ±0.87 0.04 ±0.00 0.05 ±0.03 0.03 ±0.01 0.11 ±0.01 
+
+L-VQVAE LVQMark 13 .82 ±0.93 13 .76 ±1.07 11 .98 ±1.02 −0.04 ±0.81 −0.05 ±1.09 −0.30 ±0.83 0.04 ±0.00 0.05 ±0.01 0.02 ±0.01 0.11 ±0.01 
+
+Energy DiffusionTS TR 2.34 ±0.04 56 .95 ±0.34 95 .70 ±0.35 2.20 ±0.03 61 .47 ±0.39 98 .65 ±0.37 0.50 ±0.05 1.65 ±0.19 0.49 ±0.00 0.28 ±0.00 
+
+GS 56 .04 ±0.78 61 .55 ±1.05 65 .92 ±1.13 15 .43 ±1.09 48 .30 ±0.98 27 .89 ±1.32 3.34 ±0.25 3.59 ±0.12 0.48 ±0.01 0.29 ±0.01 
+
+TimeWak 172 .41 ±1.57 1.82 ±0.90 18 .91 ±0.96 −1.57 ±0.89 −0.78 ±0.88 0.66 ±0.86 0.17 ±0.01 1.50 ±0.25 0.24 ±0.10 0.25 ±0.00 
+
+SDformer LVQMark 7.48 ±1.03 −0.29 ±0.86 2.74 ±0.89 0.06 ±0.96 −0.65 ±0.69 −0.08 ±0.90 0.04 ±0.00 0.67 ±0.19 0.05 ±0.01 0.25 ±0.00 
+
+L-VQVAE LVQMark 8.48 ±1.01 6.16 ±1.26 6.57 ±1.08 −0.03 ±1.02 0.00 ±1.26 0.13 ±0.82 0.03 ±0.00 0.74 ±0.22 0.19 ±0.02 0.24 ±0.00 
+
+fMRI DiffusionTS TR 0.22 ±0.04 4.73 ±0.05 25 .33 ±0.12 0.02 ±0.02 6.33 ±0.04 21 .25 ±0.06 4.57 ±0.51 14 .15 ±0.05 0.45 ±0.09 0.17 ±0.00 
+
+GS 801 .62 ±0.81 148 .15 ±1.57 499 .87 ±2.71 −0.70 ±0.97 −57 .42 ±0.88 0.52 ±1.78 1.05 ±0.06 5.97 ±0.05 0.50 ±0.00 0.11 ±0.00 
+
+TimeWak 739 .70 ±1.24 97 .66 ±0.98 204 .66 ±0.96 −0.07 ±0.96 −3.03 ±0.95 −1.95 ±1.00 0.81 ±0.04 1.81 ±0.03 0.36 ±0.10 0.10 ±0.00 
+
+SDformer LVQMark 1.95 ±0.94 0.73 ±1.15 0.93 ±0.90 −0.03 ±0.88 −0.25 ±1.11 −0.15 ±0.86 0.09 ±0.01 0.84 ±0.03 0.16 ±0.03 0.08 ±0.00 
+
+L-VQVAE LVQMark 10 .47 ±0.97 10 .75 ±1.25 8.05 ±0.96 −0.09 ±0.87 0.16 ±1.24 −0.01 ±0.96 0.13 ±0.01 0.90 ±0.02 0.06 ±0.05 0.08 ±0.00 0 8 16 24 32 40 48 56 64 
+
+(a) Original 0 8 16 24 32 40 48 56 64 (b) Watermarked 0 8 16 24 32 40 48 56 64 (c) Non-watermarked 
+
+Figure 5: Visualization of original and generated samples on the Stocks dataset with length 64. 23 0 8 16 24 32 40 48 56 64 (a) Original 0 8 16 24 32 40 48 56 64 (b) Watermarked 0 8 16 24 32 40 48 56 64 (c) Non-watermarked 
+
+Figure 6: Visualization of original and generated samples on the ETTh dataset with length 64. 24 0 8 16 24 32 40 48 56 64 (a) Original 0 8 16 24 32 40 48 56 64 (b) Watermarked 0 8 16 24 32 40 48 56 64 (c) Non-watermarked 
+
+Figure 7: Visualization of original and generated samples on the Energy dataset with length 64. 25 0 8 16 24 32 40 48 56 64 (a) Original 0 8 16 24 32 40 48 56 64 (b) Watermarked 0 8 16 24 32 40 48 56 64 (c) Non-watermarked 
+
+Figure 8: Visualization of original and generated samples on the fMRI dataset with length 64. 26

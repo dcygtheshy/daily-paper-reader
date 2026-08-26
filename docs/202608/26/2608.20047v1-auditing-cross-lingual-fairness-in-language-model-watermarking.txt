@@ -1,0 +1,1306 @@
+Title: Auditing Cross-Lingual Fairness in Language Model Watermarking
+
+URL Source: https://arxiv.org/pdf/2608.20047v1
+
+Published Time: Fri, 21 Aug 2026 00:55:00 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# Auditing Cross-Lingual Fairness in Language Model Watermarking 
+
+Alexander Nemecek ∗
+
+, Osama Zafar, Debargha Ganguly, Vikash Singh, Vipin Chaudhary, Erman Ayday 
+
+Case Western Reserve University 
+
+{ajn98,oxz23,dxg512,vxs465,vxc204,exa208}@case.edu 
+
+Abstract 
+
+Watermarking schemes for large language model output are evaluated almost exclu-sively on English text using each scheme’s detection threshold and a narrow set of quality measurements. Multilingual deployment exposes evaluation-design choices that are inconsequential on English but determine conclusions cross-lingually. We propose an evaluation framework with four components: detection thresholds calibrated empirically per deployment context, a threshold-independent compan-ion measurement that distinguishes calibration failures from detection failures, three disjoint quality measurement paradigms (distributional, paired-semantic, and reference-perplexity), and a generalized-entropy decomposition of cross-language disparity over a typological family partition. Applied to six watermarking schemes, three open-weight generators, eleven languages spanning four scripts and eight typological families, and both base and instruction-tuned regimes, the framework re-veals failure modes that single-language single-paradigm evaluation cannot surface. Across detection and quality, observed disparity is predominantly between-family on the typological partition, indicating that cross-lingual fairness gaps in water-marking are structural to language properties rather than idiosyncratic to particular languages. 
+
+1 Introduction 
+
+Recent advances in large language models (LLMs) have made AI-generated text difficult to distinguish from human-authored writing. This raises concerns about misinformation, the erosion of trust in online content, and model collapse, in which the performance of models trained on partially machine-generated data degrades over successive generations [1, 24, 22]. The misinformation concern in particular is not hypothetical. NewsGuard has identified over 3,000 AI-generated news and information sites publishing in 16 languages, often under legitimate-sounding names and with little to no human oversight [20]. Text watermarking offers one mitigation by embedding a recoverable statistical signature into model output. A watermarking scheme modifies the generation process in a key-dependent way, most commonly by biasing the next-token distribution toward a pseudorandomly selected vocabulary subset [10, 15, 2]. A paired detector then tests a candidate text against this signature and returns a score, which is thresholded to yield a detection decision [6]. Schemes are typically evaluated on detectability, generation quality (fluency, coherence, and distributional similarity to unwatermarked output), and robustness to downstream perturbations [18, 25, 12]. These evaluations, however, are conducted almost exclusively on English prompts and English generated text. The implicit assumption is that a scheme which detects reliably and preserves quality 
+
+> ∗Corresponding author. Preprint. arXiv:2608.20047v1 [cs.CL] 20 Aug 2026
+
+on English will do the same on other languages, but this assumption has not been empirically tested at scale. This gap matters in practice, because watermarking is already deployed in settings where users prompt and generate in dozens of languages [2, 14], and the multilingual misinformation ecosystem flagged above is precisely the threat surface that motivates the technology in the first place. 
+
+Our work. We present the first systematic audit of cross-lingual fairness in LLM text watermarking. Our contribution is methodological and empirical: an evaluation framework that treats multilingual fairness as a first-class object of measurement rather than an after-the-fact slice of an English-centric benchmark, and a characterization of how current schemes behave under it. 
+
+- Framework. We propose four evaluation components designed for cross-lingual settings: em-pirically calibrated detection thresholds, a threshold-independent companion measurement that distinguishes calibration failures from detection failures, three disjoint quality paradigms (distri-butional, paired-semantic, and reference-perplexity), and a generalized-entropy decomposition of disparity over a pre-registered typological partition. 
+
+- Audit. We apply the framework to six watermarking schemes, three open-weight genera-tors, eleven languages spanning four scripts and eight typological families, and two generation regimes (parallel continuation and native-speaker instruction), yielding ≈ 200 ,000 matched water-marked/unwatermarked generations on shared prompts. 
+
+- Findings. Cross-language disparity is large, scheme-specific, and predominantly between-family on the typological partition rather than idiosyncratic to particular languages, on both detection and quality. Per-scheme rankings depend on which evaluation choice (threshold, paradigm, prompt regime) is taken as canonical, and we identify failure modes invisible to single-language, single-paradigm evaluation. 
+
+2 Related Work 
+
+Watermarking schemes. Two design families organize recent work on LLM text watermarking. The green-list logit-bias family biases the next-token distribution toward a pseudorandomly selected vocabulary subset, with variants differing in how the partition is constructed: per-position from a sliding window of preceding tokens [10], statically across the entire vocabulary [29], or via a cross-lingual semantic-cluster lookup intended to preserve detectability under translation [7]. The distortion-free family aims to leave the marginal next-token distribution unchanged in expectation, in-tervening at sampling time through permutation reparameterization [26], key-conditioned tournament sampling [2], or inverse transform sampling against a pseudo-random uniform stream [11]. 
+
+Watermark evaluation. Existing watermark evaluation frameworks share a methodological template: detection is reported at each scheme’s default threshold targeting a theoretical false-positive rate, qual-ity is reported under a single paradigm, and prompts and generations are English. MarkMyWords [18] and WaterBench [25] instantiate this template at benchmark scale, and dedicated robustness studies extend it to adversarial perturbations while retaining the same threshold and quality conventions [12]. Recent work has identified this gap, calling for cross-lingual and demographic disaggregation [16]. These choices are inconsequential on English under single-paradigm reporting, and become conse-quential cross-lingually. Prior cross-lingual evaluation of watermarking has addressed translation robustness, asking whether a signal embedded in one language survives a translation pass, rather than whether detection and quality are preserved across languages of original generation [7]. 
+
+Fairness methodology. A watermark detector is a binary classifier and a quality measurement is a real-valued performance score, so per-language detection and quality vectors are the watermarking analog of per-group performance vectors in classical fair-ML evaluation. We import three tools from that literature. Operating-point calibration, which sets detection thresholds per group rather than globally to expose calibration-driven disparity [5]. The four-fifths rule, which thresholds per-group performance ratios against the maximum to flag disparate impact [3]. Generalized-entropy decomposition, which splits a per-group dispersion statistic into within-partition and between-partition components against a registered partition of the groups [21]. Each tool transfers directly with language as the group attribute and typological family as the partition. 23 Experimental Grid 
+
+We evaluate every cell of a 11 languages × 6 schemes × 3 generators × 2 regimes grid at n = 500 
+
+matched pairs per cell (one watermarked, one unwatermarked, on a shared prompt). The grid’s axes are chosen so that the typological decomposition of §4.4 is well-posed (multiple languages per script and morphological class), so that base-versus-instruct sensitivity is identifiable (every generator appears in both regimes), and so that scheme-family effects are not confounded with any single tokenizer (every scheme is run on three independent vocabularies). 
+
+Languages: The eleven evaluation languages span four scripts, eight typological families, and two Joshi et al. resource tiers [8]; Table 1 enumerates the assignments. The set is the minimal configuration in which the between-family component of the generalized-entropy decomposition (§4.4) is identifiable on more than one non-singleton family: Germanic and Romance both carry within-family signal, and the remaining six families enter as singletons.                                                 
+
+> ISO 639-3 Language Script Typological family Joshi et al. tier eng English Latin Germanic 5nld Dutch Latin Germanic 4fra French Latin Romance 5spa Spanish Latin Romance 5por Portuguese Latin Romance 4tur Turkish Latin Turkic 4vie Vietnamese Latin Austroasiatic 4hin Hindi Devanagari Indic 4arb Arabic Arabic Semitic 5zho Chinese Han Sinitic 5jpn Japanese Han + Kana Japonic 5
+
+Table 1: The eleven evaluation languages with script, typological family, and Joshi resource tier. 
+
+Watermarking schemes: We evaluate six schemes covering the two design families introduced in §2. From the green-list logit-bias family: KGW [10] (per-position sliding window), Unigram [29] (static green list), and XSIR [7] (cross-lingual semantic-cluster lookup, designed to preserve detectability under translation). From the distortion-free family: DIP [26] (permutation reparameterization), SynthID-Text [2] (key-conditioned tournament sampling), and EXPEdit [11] (inverse transform sampling). For EXPEdit we use the published fast-path detector, which replaces the original permuta-tion test with a closed-form score; we validate the fast path against the slow path. Together the six schemes vary along the axes whose interaction with cross-lingual generation is the object of study: per-position versus static green-list construction, logit-bias versus sampling-time intervention, and English-trained versus cross-lingual partitioning. 
+
+Generators and regimes: We use three open-weight generator families with distinct tokenizers and meaningful coverage of our eleven languages: Mistral-NeMo-12B [13], Gemma-3-4B [4], and Qwen2.5-7B [27]. Each is run in both its base and instruction-tuned variant. The two generation regimes are designed to control different sources of cross-lingual confound. The base regime feeds each base generator a sentence from FLORES + devtest [17] as continuation prompt; FLORES +
+
+provides parallel translations of the same source sentences across all eleven languages, so prompt content is held constant across languages and any cross-lingual variation in detection or quality cannot be attributed to prompt-content variation. The instruct regime feeds each instruction-tuned generator native-speaker prompts from the AYA dataset [23] ( original-annotations subset only, no machine translations); AYA provides linguistically natural prompt distributions written by speakers of the target language, so cross-lingual variation reflects realistic deployment input. Reporting both regimes lets us check whether cross-lingual disparities are robust across content-controlled continuation by base models, and in-language instruction-following by their tuned counterparts or are localized to one. 
+
+Generation protocol and LID gating: For every cell we generate n = 500 watermarked outputs and an additional n = 500 unwatermarked outputs sharing the same prompts and seeds, fixing 
+
+temperature = 0 .7, max_new_tokens = 200 , and min_new_tokens = 100 . The unwatermarked baseline is shared across the six schemes within each (l, m, r ) triple, so detection comparisons within a cell are matched-prompt. Every generation is passed through GlotLID-v3 [9] to assign a language identifier; the headline rollups in §5 are computed on subset = all (no LID filtering) to avoid post-hoc selection effects on the disparity statistics, with on-target and off-target slices reported in 3Appendix B. Cells with fewer than 200 LID-passing unwatermarked generations are excluded from quantile calibration at α = 0 .01 (100 at α = 0 .05 ); paired-set quality measurements require at least 100 samples per side. 
+
+4 Evaluation Framework 
+
+We propose a four-component framework: empirically calibrated detection thresholds (§4.1), a threshold-independent companion that distinguishes calibration failures from detection failures (§4.2), three disjoint quality paradigms (§4.3), and a generalized-entropy decomposition of cross-language disparity over a typological partition (§4.4). §4.5 specifies four disparity measurements (M1-M4) applied symmetrically to both detection and quality sides. 
+
+4.1 Empirical FPR Threshold Calibration 
+
+We index each evaluation cell as c = ( l, s, m, r ): language, scheme, generator, regime. Each scheme s defines a score Ss : T → R with watermarked text receiving systematically larger scores than unwatermarked, and within c we observe a watermarked set X + 
+
+> c
+
+and a matched-prompt unwatermarked set X − 
+
+> c
+
+. Each of the six schemes ships a hardcoded threshold targeting a theoretical FPR under an IID-token null that cross-lingual generation does not satisfy, and in §5 we exhibit a scheme-language pair where the null tail saturates at the score cap so no watermarked text can clear the default. We calibrate empirically instead: at level α ∈ (0 , 1) ,
+
+τc(α) := Quantile 1−α
+
+ {Ss(x) : x ∈ X − 
+
+> c
+
+}, lower  ,
+
+the largest cutoff with realised FPR on X − 
+
+> c
+
+at most α. A per-language threshold τ lang  
+
+> c
+
+(α) models deployment with a separate detector per language; a global threshold τ global (s,m,r )(α) calibrated from the pooled null S 
+
+> l
+
+X − 
+
+> (l,s,m,r )
+
+models cross-lingual deployment with a single detector and is our headline for the deployment-realistic analog of operating-point calibration in fair classification [5]. Cells with insufficient null samples are excluded from disparity rollups; sample-size floors are stated in §3. 
+
+4.2 Threshold-Independent Companion Measurement 
+
+The TPR at τc(α) can collapse to zero from null-tail saturation even when the watermarked and unwatermarked score distributions are well separated in the body. To diagnose this we report a threshold-independent companion, 
+
+AUC c = Pr  Ss(x+) > S s(x−) , x+ ∈ X + 
+
+> c
+
+, x − ∈ X − 
+
+> c
+
+,
+
+estimated by the Mann-Whitney U statistic with average-rank tie handling. The TPR -AUC gap separates a calibration failure ( TPR ≈ 0, AUC ≫ 0.5) from a detection failure ( TPR ≈ 0, AUC ≈
+
+0.5); §5 exhibits a concrete instance where this distinction reverses the diagnosis. 
+
+4.3 Three Quality Paradigms 
+
+Quality preservation is conceptually multi-faceted, and a single metric cannot adjudicate it. We measure preservation under three paradigms chosen so that none subsumes another. 
+
+Distributional (MAUVE). We compute MAUVE [19] between X + 
+
+> c
+
+and X − 
+
+> c
+
+on mean-pooled XLM-R-large embeddings. MAUVE captures aggregate distributional shift but is insensitive to per-prompt semantic deviation. 
+
+Paired-semantic (BERTScore). For each watermarked generation we compute BERTScore F1 [28] against the matched-prompt unwatermarked completion, with per-language baselines estimated from FLORES non-pairs for rescaling. BERTScore captures per-prompt semantic preservation but is insensitive to systematic distributional shift. 
+
+Reference perplexity. For a held-out reference LM R (XGLM-7.5B as primary, mGPT-1.3B as cross-reference), let log PPL R(X ) denote the macro-averaged log-perplexity of generations in X
+
+under R. We report the cell preservation score 
+
+PPL -preservation c = exp  − log PPL R(X + 
+
+> c
+
+) − log PPL R(X − 
+
+> c
+
+)  ∈ (0 , 1] .
+
+4PPL captures per-token likelihood preservation under an external reference but inherits that reference’s biases. The three paradigms can disagree on which schemes are least distorting (§5); we therefore report all three rather than pick one. 
+
+4.4 Generalized-Entropy Decomposition 
+
+Given a per-language vector y = ( y1, . . . , y L) of detection or quality scores, we measure cross-language disparity by the generalized entropy index at α = 2 , GE 2(y) = (2 L)−1 P
+
+> i
+
+(yi/¯y)2 − 1,which equals half the squared coefficient of variation. Under a partition of languages into typological families F, GE 2 admits the standard within/between decomposition GE 2(y) = GE within 2 (y) + GE between 2 (y) [21]. The between-family share quantifies whether disparity is structural to typology (script, morphology, tokenizer interactions) or idiosyncratic; we register the typological partition (Germanic, Romance, Indic, Semitic, Sinitic, Japonic, Turkic, Austroasiatic) before analysis and report a script-based partition as a robustness check. 
+
+4.5 Disparity Measurements (M1-M4) 
+
+Each per-cell measurement applies to both detection (per-language TPR c(α)) and to each quality paradigm (per-language preservation, §4.3): M1 , the per-language vector; M2 , its mean and minimum across languages; M3 , the four-fifths disparate-impact count, equal to the number of languages with value below 0.8×max [3]; and M4 , GE 2 with within/between-family decomposition (§4.4). 
+
+5 Findings 
+
+5.1 Detection 
+
+Table 2 summarizes detection across both regimes. The base-FLORES panel shows that four of six schemes (KGW, SynthID, EXPEdit, DIP) attain mean TPR above 0.93 in every generator cell at 
+
+τg , with no per-language minimum below 0.798. Within this regime, Unigram and XSIR carry the analytically interesting failure modes; the instruct-AYA panel inverts the picture, so the two regimes warrant separate discussion. 
+
+Calibration versus detection failure. Two cells in the base regime would, under single-threshold reporting, read as outright detection failures: Unigram-Gemma (mean TPR 0.000, all eleven languages at zero) and XSIR-Qwen (mean TPR 0.215, ten of eleven languages flagged for disparate impact). The AUC companion contradicts that classification. Unigram-Gemma’s mean AUC is 0.986 with minimum 0.910, and XSIR-Qwen’s mean AUC is 0.978; the watermark signal is present in both cells, and the global threshold simply sits above the unwatermarked-pool support. Per-language recalibration recovers mean TPR to 0.799 and 0.794 respectively, producing the two largest |∆|
+
+values of 0.799 and 0.579 in the grid and the diagnostic signature for cells where single-detector deployment is the wrong operating-point choice. Without the threshold-independent companion of §4.2, both cells would have been mis-attributed to the watermark rather than to the calibration regime. 
+
+Instruction-tuning collapses detection. The instruct-AYA panel shows mean TPR below 0.7 in 16 of 18 cells and DI <. 8 ≥ 8 in 12 of 18, with non-SynthID cells dropping by roughly 0.17 to 0.78 in mean TPR relative to their base counterparts. SynthID is the only partial exception: SynthID-Mistral and SynthID-Qwen retain mean TPR above 0.9, and SynthID-Gemma at 0.602 is the strongest Gemma instruct cell across all six schemes, though still well below its base value of 1.000. AUC nonetheless remains above the chance baseline of 0.5 in 197 of 198 cell-language entries in the instruct panel (the sole exception is EXPEdit-Gemma on Japanese at 0.462). The instruct collapse is therefore predominantly calibrational: the elevated entropy of instruction-tuned generation under native-speaker prompts compresses the watermarked and unwatermarked score distributions together but does not erase their separation. The base-versus-instruct axis is itself a substantial fairness disparity, comparable in magnitude to the cross-language gaps motivating the framework, and it generalizes across five of six scheme families. 
+
+Structural rather than idiosyncratic disparity. For cells with GE 2 above the 10 −3 floor, the between-family share sits between 61.3% and 99.9% with median above 90% across both regimes. 5AUC TPR at τg (global) TPR at τl (per-lang) Scheme Gen. Mean Min Mean TPR Min TPR DI <. 8 GE 2 Btw. % Mean TPR ∆
+
+Base regime (FLORES+ continuation prompts) 
+
+KGW Mistral 0.999 0.997 0.992 [0.987, 0.996] 0.978 0 < 0.001 83.6 0.991 +0 .001 
+
+Gemma 0.997 0.991 0.969 [0.959, 0.979] 0.934 0 < 0.001 72.4 0.974 −0.005 
+
+Qwen 0.996 0.987 0.965 [0.939, 0.986] 0.880 0 < 0.001 85.1 0.966 −0.001 
+
+Unigram Mistral 0.996 0.981 0.868 [0.802, 0.927] 0.638 3 0.008 61.3 0.971 −0.103 
+
+Gemma 0.986 0.910 0.000 [0.000, 0.000] 0.000 11 — — 0.799 −0.799 
+
+Qwen 0.994 0.972 0.898 [0.845, 0.942] 0.722 2 0.004 93.8 0.949 −0.051 
+
+SynthID Mistral 1.000 1.000 1.000 [0.999, 1.000] 0.998 0 < 0.001 100.0 1.000 −0.000 
+
+Gemma 1.000 1.000 1.000 [0.999, 1.000] 0.998 0 < 0.001 100.0 1.000 +0 .000 
+
+Qwen 1.000 0.999 0.997 [0.995, 0.999] 0.990 0 < 0.001 97.5 0.998 −0.000 
+
+EXPEdit Mistral 1.000 0.998 0.999 [0.999, 1.000] 0.996 0 < 0.001 88.0 1.000 −0.000 
+
+Gemma 1.000 0.998 1.000 [0.999, 1.000] 0.998 0 < 0.001 100.0 1.000 +0 .000 
+
+Qwen 0.998 0.993 0.991 [0.982, 0.997] 0.946 0 < 0.001 99.2 0.992 −0.001 
+
+DIP Mistral 0.997 0.989 0.975 [0.966, 0.984] 0.938 0 < 0.001 92.6 0.975 +0 .000 
+
+Gemma 0.992 0.965 0.963 [0.947, 0.977] 0.914 0 < 0.001 99.5 0.965 −0.002 
+
+Qwen 0.992 0.977 0.931 [0.891, 0.968] 0.798 0 0.003 94.7 0.929 +0 .002 
+
+XSIR Mistral 0.981 0.962 0.784 [0.743, 0.821] 0.672 2 0.004 91.5 0.833 −0.049 
+
+Gemma 0.984 0.977 0.766 [0.712, 0.817] 0.588 4 0.006 96.0 0.829 −0.063 
+
+Qwen 0.978 0.930 0.215 [0.118, 0.362] 0.050 10 0.493 98.9 0.794 −0.579 
+
+Instruct regime (AYA native-speaker prompts) 
+
+KGW Mistral 0.953 0.909 0.626 [0.540, 0.707] 0.386 7 0.026 95.3 0.632 −0.005 
+
+Gemma 0.900 0.848 0.389 [0.325, 0.463] 0.222 10 0.053 82.4 0.411 −0.022 
+
+Qwen 0.966 0.937 0.689 [0.628, 0.753] 0.510 8 0.011 78.6 0.723 −0.034 
+
+Unigram Mistral 0.909 0.865 0.311 [0.171, 0.453] 0.022 6 0.297 99.8 0.450 −0.139 
+
+Gemma 0.851 0.790 0.037 [0.023, 0.052] 0.010 10 0.226 81.2 0.151 −0.113 
+
+Qwen 0.943 0.880 0.546 [0.455, 0.621] 0.210 4 0.032 91.7 0.636 −0.090 
+
+SynthID Mistral 0.991 0.982 0.905 [0.865, 0.940] 0.782 1 0.003 77.7 0.903 +0 .002 
+
+Gemma 0.946 0.902 0.602 [0.530, 0.675] 0.422 10 0.020 79.7 0.597 +0 .005 
+
+Qwen 0.993 0.977 0.941 [0.906, 0.971] 0.792 1 0.002 91.9 0.942 −0.002 
+
+EXPEdit Mistral 0.918 0.782 0.577 [0.454, 0.698] 0.238 6 0.067 80.0 0.591 −0.014 
+
+Gemma 0.621 0.462 0.225 [0.179, 0.275] 0.084 10 0.071 84.2 0.237 −0.012 
+
+Qwen 0.839 0.683 0.496 [0.379, 0.620] 0.174 9 0.080 84.4 0.508 −0.012 
+
+DIP Mistral 0.913 0.865 0.455 [0.364, 0.546] 0.264 9 0.058 99.5 0.477 −0.022 
+
+Gemma 0.823 0.770 0.196 [0.154, 0.247] 0.110 10 0.084 91.6 0.205 −0.010 
+
+Qwen 0.924 0.866 0.513 [0.434, 0.593] 0.296 8 0.035 99.6 0.521 −0.007 
+
+XSIR Mistral 0.864 0.770 0.266 [0.183, 0.369] 0.088 10 0.185 91.8 0.300 −0.035 
+
+Gemma 0.775 0.699 0.081 [0.055, 0.113] 0.016 10 0.175 76.5 0.125 −0.043 
+
+Qwen 0.854 0.748 0.043 [0.003, 0.119] 0.000 10 3.787 99.9 0.286 −0.243 
+
+Table 2: Detection fairness by scheme, generator, and regime, subset all , α = 0 .01 . Mean TPR shown with 95% bootstrap CIs ( B = 1000 resamples of the 11-language vector). Min TPR is the realized minimum. DI <. 8 counts languages with TPR l < 0.8 · max l TPR l. GE 2 uses the typological partition (Germanic, Romance, Indic, Semitic, Sinitic, Japonic, Turkic, Austroasiatic); Btw. % is its between-family share. ∆ = mean TPR( τg ) − mean TPR( τl). Values below 10 −3 reported as 
+
+< 0.001 ; entries marked are undefined when the per-language mean is zero. Cross-language disparity is therefore concentrated at the typological-family level rather than scattering across individual languages. The family-versus-script partition robustness check (Table 12) sharpens this: the family partition captures more between-group variance than the script partition for every cell with non-trivial total disparity, with the sole near-tie being XSIR-Qwen instruct, where Hindi is a singleton in both partitions and the structural component is therefore invariant to the choice. The XSIR-Qwen instruct cell, with GE 2 = 3 .787 , is an order of magnitude beyond any other entry in the grid; its 99.9% between-family share localizes the extreme dispersion to a small number of typological families rather than to any singular linguistic outlier. 
+
+5.2 Quality 
+
+Figures 1 and 2 show the per-language preservation landscape and its typological decomposition under three paradigms; per-cell aggregates appear in Appendix D.1. Four findings organize the discussion. 
+
+Distortion-free schemes are the most distorting empirically. EXPEdit and SynthID (the two distortion-free schemes) sit at the bottom of the quality ranking under every paradigm in the base regime. EXPEdit-Gemma collapses to MAUVE 0.01-0.06 and PPL preservation 0.08-0.21 across the row; SynthID-Gemma sits at MAUVE 0.03-0.42 and PPL 0.19-0.37; on BERTScore both schemes show distortion an order of magnitude beyond any logit-bias scheme. The marginal-distribution 6Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen 
+
+0.99 0.94 0.96 0.97 0.96 0.94 0.92 0.98 0.88 0.91 0.96 0.97 0.94 0.88 0.86 0.92 0.81 0.44 0.93 0.93 0.91 0.82 0.98 0.95 0.85 0.96 0.97 0.47 0.94 0.92 0.89 0.88 0.97 0.95 0.71 0.46 0.83 0.96 0.66 0.42 0.90 0.80 0.73 0.80 0.62 0.72 0.72 0.44 0.47 0.54 0.85 0.70 0.73 0.67 0.55 0.92 0.80 0.87 0.75 0.82 0.12 0.82 0.61 0.76 0.66 0.93 0.55 0.07 0.39 0.38 0.22 0.04 0.02 0.23 0.08 0.03 0.05 0.42 0.04 0.13 0.10 0.08 0.04 0.03 0.07 0.04 0.03 0.06 0.66 0.10 0.15 0.17 0.14 0.19 0.05 0.36 0.06 0.09 0.03 0.27 0.03 0.17 0.16 0.09 0.01 0.01 0.08 0.02 0.01 0.02 0.06 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.33 0.03 0.04 0.04 0.02 0.10 0.01 0.09 0.01 0.04 0.02 0.99 0.98 0.97 0.99 0.98 0.93 0.96 0.98 0.98 0.94 0.98 0.98 0.97 0.96 0.97 0.93 0.93 0.90 0.95 0.88 0.90 0.88 0.98 0.92 0.94 0.98 0.97 0.86 0.93 0.97 0.97 0.91 0.97 0.93 0.94 0.78 0.93 0.90 0.64 0.86 0.96 0.87 0.88 0.76 0.86 0.75 0.46 0.56 0.70 0.75 0.59 0.75 0.89 0.66 0.54 0.97 0.85 0.83 0.89 0.93 0.60 0.85 0.94 0.88 0.69 0.92 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+MAUVE preservation 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
+-0.02 -0.03 -0.02 -0.01 -0.02 -0.07 -0.05 -0.03 -0.05 -0.07 -0.08 -0.04 -0.03 -0.05 -0.04 -0.05 -0.10 -0.13 -0.09 -0.12 -0.04 -0.19 -0.02 -0.05 -0.01 -0.00 -0.00 -0.05 -0.01 -0.04 -0.04 -0.09 -0.04 -0.04 -0.07 -0.04 -0.03 -0.02 -0.11 -0.13 -0.05 -0.08 -0.10 -0.10 -0.10 -0.06 -0.08 -0.09 -0.10 -0.13 -0.03 -0.13 -0.19 -0.09 -0.08 -0.04 -0.07 -0.01 -0.01 -0.03 -0.07 -0.06 -0.13 -0.07 -0.07 -0.04 -0.08 -0.15 -0.07 -0.06 -0.09 -0.15 -0.16 -0.08 -0.13 -0.14 -0.16 -0.10 -0.13 -0.10 -0.12 -0.14 -0.17 -0.14 -0.15 -0.18 -0.13 -0.25 -0.09 -0.16 -0.10 -0.09 -0.09 -0.07 -0.12 -0.08 -0.11 -0.19 -0.15 -0.10 -0.17 -0.09 -0.09 -0.10 -0.22 -0.19 -0.12 -0.16 -0.17 -0.23 -0.17 -0.19 -0.17 -0.18 -0.19 -0.27 -0.22 -0.25 -0.25 -0.20 -0.33 -0.11 -0.20 -0.12 -0.12 -0.12 -0.08 -0.12 -0.14 -0.18 -0.24 -0.16 +0.00 -0.03 +0.00 +0.00 -0.00 -0.03 -0.03 -0.01 -0.01 -0.03 -0.04 -0.02 -0.02 -0.02 -0.02 -0.03 -0.09 -0.04 -0.05 -0.09 -0.02 -0.18 -0.01 -0.03 +0.01 +0.01 +0.01 +0.01 +0.00 -0.01 +0.00 -0.07 -0.01 -0.03 -0.05 -0.04 -0.02 -0.02 -0.11 -0.08 -0.05 -0.08 -0.10 -0.10 -0.10 -0.08 -0.10 -0.10 -0.09 -0.14 -0.11 -0.14 -0.14 -0.11 -0.23 -0.05 -0.07 -0.01 -0.01 -0.01 +0.01 -0.03 -0.05 -0.05 -0.13 -0.06 
+
+0.4 0.3 0.2 0.1 0.0 0.1 0.2 0.3 0.4 0.5 
+
+BERTScore F1 (rescaled) 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
+0.81 0.97 0.84 0.79 0.81 0.86 0.85 0.83 0.89 0.99 0.87 0.86 0.88 0.81 0.82 0.89 0.93 0.97 0.99 0.99 0.85 0.92 0.84 0.88 0.82 0.83 0.76 0.69 0.76 0.93 0.88 0.98 0.81 0.84 0.82 0.83 0.81 0.85 0.96 0.86 0.87 0.88 0.98 0.88 0.92 0.81 0.89 1.00 0.92 0.82 0.89 0.89 0.98 0.90 1.00 0.90 0.96 0.91 0.91 0.91 0.65 0.93 0.97 0.95 0.84 0.91 0.40 0.28 0.44 0.40 0.35 0.22 0.14 0.34 0.27 0.18 0.26 0.37 0.24 0.35 0.32 0.30 0.27 0.20 0.21 0.24 0.19 0.27 0.47 0.32 0.34 0.32 0.28 0.31 0.20 0.39 0.27 0.21 0.27 0.29 0.28 0.33 0.33 0.30 0.13 0.08 0.22 0.17 0.11 0.14 0.21 0.14 0.17 0.16 0.14 0.12 0.10 0.08 0.13 0.10 0.13 0.37 0.23 0.25 0.21 0.19 0.23 0.17 0.32 0.16 0.13 0.21 0.85 0.77 0.86 0.85 0.84 0.75 0.78 0.83 0.79 0.77 0.83 0.81 0.70 0.82 0.81 0.81 0.79 0.81 0.74 0.74 0.73 0.76 0.87 0.85 0.86 0.83 0.80 0.72 0.77 0.88 0.80 0.71 0.83 0.91 0.82 0.94 0.82 0.87 0.99 0.93 0.91 0.98 1.00 0.98 0.92 0.79 0.95 0.94 0.90 1.00 0.96 0.88 0.99 1.00 0.85 0.87 0.94 0.86 0.89 0.80 0.75 0.87 0.95 0.97 0.94 0.87 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+PPL preservation Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen 
+
+1.00 0.99 0.98 1.00 1.00 0.98 0.97 0.99 0.99 0.99 0.99 1.00 1.00 0.96 1.00 1.00 1.00 0.96 1.00 0.99 1.00 1.00 1.00 0.99 0.98 0.99 1.00 0.95 0.97 1.00 0.99 0.98 1.00 1.00 0.94 0.98 1.00 1.00 0.98 0.97 0.99 0.98 0.96 0.99 1.00 0.99 0.99 1.00 1.00 1.00 0.99 1.00 0.99 1.00 1.00 1.00 0.98 0.99 0.99 0.99 0.93 0.94 1.00 0.99 0.97 0.99 1.00 0.90 0.99 0.99 1.00 0.46 0.07 0.97 0.89 0.27 0.40 1.00 1.00 0.98 0.99 1.00 1.00 0.98 1.00 0.99 1.00 1.00 1.00 0.83 0.95 0.98 0.98 0.82 0.63 0.99 0.85 0.24 0.90 0.99 0.48 0.76 0.77 0.67 0.23 0.02 0.69 0.33 0.15 0.18 0.89 0.75 0.94 0.89 0.81 0.87 0.60 0.98 0.60 0.96 0.95 0.96 0.45 0.85 0.78 0.83 0.81 0.34 0.96 0.75 0.17 0.79 1.00 1.00 0.99 1.00 1.00 1.00 0.96 1.00 1.00 0.99 0.99 1.00 1.00 0.99 1.00 1.00 1.00 1.00 1.00 0.99 1.00 1.00 1.00 0.99 0.98 1.00 1.00 0.99 0.99 1.00 0.99 1.00 1.00 1.00 0.99 0.99 1.00 0.99 0.99 0.98 1.00 0.98 0.99 1.00 1.00 1.00 0.97 1.00 1.00 1.00 0.99 1.00 0.99 1.00 1.00 1.00 0.99 0.99 1.00 1.00 0.98 0.98 1.00 0.98 0.98 1.00 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+MAUVE preservation 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
++0.35 +0.27 +0.31 +0.37 +0.35 +0.23 +0.09 +0.28 +0.24 +0.16 +0.17 +0.47 +0.38 +0.38 +0.39 +0.45 +0.41 +0.39 +0.38 +0.36 +0.34 +0.45 +0.38 +0.26 +0.33 +0.33 +0.34 +0.28 +0.22 +0.37 +0.29 +0.19 +0.32 +0.35 +0.22 +0.30 +0.35 +0.34 +0.21 +0.09 +0.28 +0.21 +0.13 +0.16 +0.46 +0.39 +0.41 +0.40 +0.46 +0.41 +0.40 +0.37 +0.34 +0.33 +0.43 +0.38 +0.26 +0.34 +0.34 +0.34 +0.27 +0.20 +0.35 +0.29 +0.18 +0.31 +0.32 +0.15 +0.29 +0.30 +0.29 +0.08 -0.12 +0.21 +0.10 +0.01 +0.01 +0.43 +0.34 +0.37 +0.37 +0.41 +0.38 +0.35 +0.34 +0.33 +0.30 +0.40 +0.34 +0.17 +0.27 +0.27 +0.28 +0.23 +0.09 +0.31 +0.20 +0.05 +0.20 +0.28 +0.07 +0.22 +0.23 +0.16 +0.03 -0.17 +0.13 -0.01 -0.01 -0.04 +0.38 +0.29 +0.33 +0.32 +0.35 +0.34 +0.29 +0.31 +0.26 +0.28 +0.36 +0.29 +0.11 +0.22 +0.21 +0.19 +0.22 +0.06 +0.26 +0.18 +0.02 +0.18 +0.36 +0.25 +0.34 +0.37 +0.35 +0.21 +0.11 +0.30 +0.23 +0.16 +0.16 +0.45 +0.39 +0.41 +0.40 +0.45 +0.42 +0.40 +0.38 +0.35 +0.33 +0.44 +0.39 +0.27 +0.35 +0.36 +0.36 +0.31 +0.24 +0.38 +0.31 +0.21 +0.33 +0.37 +0.27 +0.34 +0.38 +0.35 +0.21 +0.11 +0.28 +0.24 +0.15 +0.15 +0.46 +0.40 +0.41 +0.39 +0.45 +0.40 +0.39 +0.36 +0.34 +0.33 +0.43 +0.39 +0.27 +0.34 +0.34 +0.35 +0.30 +0.23 +0.37 +0.30 +0.20 +0.32 
+
+0.4 0.3 0.2 0.1 0.0 0.1 0.2 0.3 0.4 0.5 
+
+BERTScore F1 (rescaled) 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
+0.93 0.89 0.92 0.92 0.92 0.87 0.86 0.92 0.85 0.86 0.87 0.98 0.97 0.99 0.96 1.00 0.94 0.97 0.95 0.96 0.95 0.97 0.96 0.89 0.93 0.91 0.94 0.75 0.87 0.92 0.87 0.81 0.89 0.97 0.99 0.91 0.93 0.90 0.84 0.87 0.90 0.86 0.85 0.84 0.97 0.94 0.97 0.98 0.99 0.98 0.96 0.95 0.97 0.94 0.95 0.94 0.88 0.93 0.95 0.93 0.70 0.83 0.94 0.90 0.83 0.91 0.91 0.70 0.84 0.79 0.77 0.40 0.18 0.65 0.55 0.36 0.39 0.96 0.93 0.95 0.95 0.96 0.93 0.91 0.89 0.90 0.91 0.95 0.82 0.67 0.69 0.72 0.73 0.53 0.52 0.76 0.58 0.44 0.63 0.87 0.70 0.75 0.74 0.65 0.37 0.20 0.62 0.48 0.33 0.35 0.81 0.75 0.75 0.73 0.71 0.77 0.67 0.76 0.74 0.71 0.75 0.83 0.78 0.68 0.68 0.67 0.58 0.54 0.74 0.59 0.44 0.64 1.00 0.98 0.94 0.96 0.98 0.91 0.84 0.95 0.94 0.90 0.92 0.98 0.95 1.00 0.98 1.00 0.99 1.00 0.97 0.97 0.98 0.98 0.96 0.93 0.95 0.94 0.96 0.87 0.92 0.95 0.93 0.85 0.92 0.97 0.95 0.95 0.94 0.94 0.88 0.92 0.94 0.91 0.91 0.89 0.99 0.97 0.99 0.97 0.98 0.97 0.98 0.97 0.99 0.97 0.99 0.97 0.91 0.89 0.93 0.90 0.84 0.90 0.94 0.92 0.83 0.90 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+PPL preservation Figure 1: Per-language quality preservation under three paradigms, base-FLORES (top) and instruct-AYA (bottom); n = 500 matched pairs per cell. Left: MAUVE on mean-pooled XLM-R-large embeddings ( 1.0 identical, 0.0 fully separable). Center: BERTScore F1, rescaled against per-language FLORES non-pair baselines (negative: paired generations less similar than random non-pairs). Right: PPL preservation under XGLM-7.5B, exp( −| log PPL R(X +) − log PPL R(X −)|) ∈ (0 , 1] . Rows: (scheme, generator) cells; columns: eleven languages grouped by typological family. distortion-freeness these schemes provide in expectation does not translate to preservation under finite-sample distributional, paired-semantic, or reference-perplexity measurement. The four logit-bias schemes (KGW, Unigram, DIP, XSIR) all preserve quality substantially better. 
+
+Instruct regime compression. All three measurements compress upward in the instruct regime: MAUVE saturates above 0.95 on KGW, Unigram, DIP, and XSIR; BERTScore-rescaled values flip to large positive (the non-pair baseline drops because AYA prompts force tighter content overlap among non-pairs); PPL preservation rises above 0.90 on DIP and XSIR cells and above 0.88 on KGW and Unigram. The compression parallels the detection-side compression of §5.1 but does not erase cross-scheme separation: SynthID and EXPEdit remain the most distorting, with SynthID-Mistral on Arabic at MAUVE 0.07 and EXPEdit-Mistral on Arabic at MAUVE 0.02. Within schemes the compression tracks the detection-collapse pattern where the watermark detects weakly (e.g., SynthID-Gemma instruct, TPR 0.602) show near-perfect quality preservation, consistent with the watermark having less effect on the generation distribution. 
+
+Disparity is structural across paradigms. Figure 2 reports GE 2 over the per-language preservation vector, averaged across the three generators per scheme, with the typological-partition decomposition shown by stacking. Two findings track. First, SynthID and EXPEdit dominate cross-language disparity on MAUVE (GE 2 peaks at 0.66 for EXPEdit base) and PPL ( ≈0.053), an order of magnitude beyond any logit-bias scheme on the same paradigm; they are the most distorting schemes both on 7average and disparately across languages. Second, the typological partition captures the dominant share of cross-language disparity across the grid: between-family ≥ 70% in 32 of 36 (scheme, paradigm, regime) cells, with median ≈ 85% , supporting the structural-disparity claim from §5.1 on the quality side; the four sub-70% cells are all on MAUVE and split between high-GE 2 rows (SynthID/EXPEdit base, where within-family dispersion registers more in absolute terms) and very-low-GE 2 rows (DIP/Unigram instruct, where the ratio is noisy). 0.0 0.2 0.4 0.6              
+
+> Base GE 2
+> 93% 71% 52% 49% 91% 86%
+> MAUVE
+> 012345
+> GE 2 × 10  5
+> 97% 96% 87% 90% 95% 96%
+> BERTScore F1 (raw)
+> 0.00 0.02 0.04 0.06
+> GE 2
+> 84% 88% 80% 85% 79% 78%
+> PPL preservation (XGLM-7.5B)
+> KGW Unigram SynthID EXPEdit DIP XSIR 0.00 0.02 0.04 0.06 0.08 0.10
+> Instruct GE 2
+> 72% 64% 82% 86% 59% 71%
+> KGW Unigram SynthID EXPEdit DIP XSIR 0510 15
+> GE 2 × 10  5
+> 83% 84% 84% 82% 86% 88%
+> KGW Unigram SynthID EXPEdit DIP XSIR 0.00 0.01 0.02 0.03
+> GE 2
+> 88% 90% 92% 91% 84% 76%
+> between-family within-family
+
+Figure 2: Per-scheme disparity decomposition under three quality paradigms, base-FLORES (top) and instruct-AYA (bottom). Bar height is GE 2 over the per-language preservation vector, averaged across the three generators per scheme. Stacking shows the typological-partition decomposition into between-family (dark) and within-family (light) components; the percentage above is the between-family share. Absolute disparity is orders of magnitude smaller than under MAUVE or PPL but the between-family pattern persists. Y-axes differ across panels. 
+
+Cross-paradigm rank agreement. Table 3 quantifies cross-paradigm rank inversion. Pooled across the grid, no paradigm pair clears ρ = 0 .6: MAUVE-vs-BERTScore averages +0 .58 , MAUVE-vs-PPL +0 .38 , and BERTScore-vs-PPL +0 .37 . The disagreement splits cleanly by intervention site. The two sampling-time distortion-free schemes (SynthID, EXPEdit) sit at ρ ∈ [0 .68 , 0.81] across all three pairs with strictly positive cell-level minima: their per-language preservation vectors are monotone-equivalent under all three paradigms. The three green-list schemes (KGW, Unigram, XSIR) sit at PPL-vs-embedding mean correlations of ≤ +0 .20 with cell-level minima between −0.39 
+
+and −0.80 , locating cells where reference perplexity and the embedding-based paradigms produce opposite per-language orderings. DIP, distortion-free in design but logit-side in implementation, falls in between at ρ ∈ [0 .43 , 0.50] . The split is a local-fluency-vs-distributional-shift effect: where the watermark intervenes at the logit level, PPL captures fluency under a held-out reference while MAUVE and BERTScore capture divergence from the unwatermarked set, so the per-language orderings can come apart. Hindi is the cleanest cell-level instance: KGW, Unigram, and XSIR all preserve Hindi PPL at ≥ 0.65 under both XGLM and mGPT references (Appendix D.2) while MAUVE flags outliers on the same cells (Unigram-Qwen 0.12, KGW-Qwen 0.47).                               
+
+> Scheme MAUVE ↔BS MAUVE ↔PPL BS ↔PPL KGW +0.61 (+0.45) +0.03 ( −0.80) +0.03 ( −0.76) Unigram +0.56 (+0.23) +0.14 ( −0.39) +0.20 ( −0.67) SynthID +0.76 (+0.47) +0.81 (+0.27) +0.77 (+0.45) EXPEdit +0.68 (+0.26) +0.75 (+0.39) +0.70 (+0.46) DIP +0.46 ( −0.03) +0.43 (+0.05) +0.50 ( −0.05) XSIR +0.42 ( −0.09) +0.10 ( −0.71) +0.00 ( −0.76)
+> All schemes +0.58 ( −0.09) +0.38 ( −0.80) +0.37 ( −0.76)
+
+Table 3: Cross-paradigm rank agreement: per-cell Spearman ρ between per-language preservation vectors, mean across (model, regime) cells with per-cell minimum in parentheses (subset= all ; n = 6 
+
+cells per scheme, n = 36 pooled). Pairs use BERTScore F1 (rescaled) and PPL preservation under XGLM-7.5B; BS-raw gives nearly identical rankings ( ρBS-raw ↔BS-rescaled = +0 .87 ). Negative minima identify cells where two paradigms produce opposite per-language orderings. 85.3 Joint detection-quality 
+
+The detection and quality axes of §5.1-§5.2 do not determine the joint shape: a scheme balanced on each axis separately can still be unfair if its detection wins and quality wins fall on different language subsets. Figure 3 reports per-language (TPR @ τg , MAUVE) pairs per scheme with the per-regime spread s, the mean pairwise Euclidean distance over the 33 points (11 languages × 3 generators), annotated. 
+
+Low spread is consistent with opposite topologies. DIP base ( sB =0 .066 ) and EXPEdit base (sB =0 .070 ) carry near-identical scalar spread but cluster in opposite corners: DIP top-right (detect-and-preserve), EXPEdit bottom-right (detect-everywhere, preserve-nowhere). XSIR instruct (sI =0 .159 ) is a third low-spread topology: top-left under uniform detection collapse. The scalar must be read with the panel. 0.0 0.5 1.0                          
+
+> TPR @ FPR=0.01
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> MAUVE preservation
+> sB=0.114 sI=0.214
+> KGW
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> sB=0.551 sI=0.301
+> Unigram
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> sB=0.165 sI=0.365
+> SynthID
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> sB=0.070 sI=0.442
+> EXPEdit
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> sB=0.066 sI=0.221
+> DIP
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> sB=0.399 sI=0.159
+> XSIR
+> Base Instruct Germanic Romance Indic Semitic Sinitic Japonic Turkic Austroasiatic
+
+Figure 3: Joint per-language detection-quality landscape, MAUVE paradigm. Markers: per-language 
+
+(TPR @ τg , MAUVE) pairs at α=0 .01 . Circles: base-FLORES. Triangles: instruct-AYA. Color: typological family. Annotations sB , sI : mean pairwise Euclidean distance within each regime. BERTScore and PPL-preservation companion panels in Appendix E. 
+
+Spread is regime-dependent. Base-regime spread is dominated by detection-side calibration failure: Unigram ( sB =0 .551 ) and XSIR ( sB =0 .399 ) scatter horizontally with quality intact, reproducing the §5.1 calibration-gap diagnosis in joint form, while the four other base panels are tight clusters (sB ≤ 0.165 ). Instruction tuning swaps the ranking: EXPEdit ( sI =0 .442 ), SynthID ( sI =0 .365 ), and Unigram ( sI =0 .301 ) lead under instruct as detection collapse induces vertical scatter on a typology-structured language subset. Base-vs-instruct shifts the topology of joint unfairness, not its magnitude. 
+
+6 Discussions 
+
+Limitations: Two limitations bound our claims. Our eleven languages span four scripts and eight typological families, but many of the world’s languages remain outside this set. Our six schemes cover the dominant green-list and distortion-free design families but are not exhaustive of an actively growing literature. 
+
+Societal impacts: Watermarking is a scalable mitigation for AI-generated text currently being deployed, much of which is multilingual. A detection gap structural to typological family rather than idiosyncratic to a single language means the same scheme offers materially weaker protection to speakers of some language families than others, and quality disparities mean the cost of being watermarked is unequally borne. Because these gaps are between-family rather than per-language, they are unlikely to close by scaling data for individual languages and instead implicate architectural choices, such as tokenizer construction or partition design, that operate at the family level. 
+
+7 Conclusion 
+
+In this work, we introduce the first systematic cross-lingual fairness audit of LLM text watermarking: a four-component evaluation framework comprising empirical FPR calibration, a threshold-independent AUC companion, three disjoint quality paradigms, and a generalized-entropy decomposition over a typological partition. We apply this framework to six schemes, three open-weight generators, and 9eleven languages across four scripts and eight typological families, under two generation regimes. The audit surfaces failure modes that single-language, single-paradigm evaluation cannot, including calibration failures misread as detection failures, distortion-free schemes that are empirically the most distorting, cross-paradigm rank inversion, and disparity dominated by between-family variation. Our work promotes further research toward fairness in LLM watermarking. 
+
+References 
+
+[1] C. Chen and K. Shu. Combating misinformation in the age of llms: Opportunities and challenges. 
+
+AI Magazine , 45(3):354–368, 2024. [2] S. Dathathri, A. See, S. Ghaisas, P.-S. Huang, R. McAdam, J. Welbl, V. Bachani, A. Kaskasoli, R. Stanforth, T. Matejovicova, et al. Scalable watermarking for identifying large language model outputs. Nature , 634(8035):818–823, 2024. [3] M. Feldman, S. A. Friedler, J. Moeller, C. Scheidegger, and S. Venkatasubramanian. Certifying and removing disparate impact. In proceedings of the 21th ACM SIGKDD international conference on knowledge discovery and data mining , pages 259–268, 2015. [4] Gemma Team, Google DeepMind. Gemma 3 technical report. Technical report, Google DeepMind, 2025. [5] M. Hardt, E. Price, and N. Srebro. Equality of opportunity in supervised learning. Advances in neural information processing systems , 29, 2016. [6] H. He, S. Xu, A. Nemecek, J. Li, E. Ayday, and G. Cheng. Optimal watermark generation under type i and type ii errors. Biometrika , page asag049, 2026. [7] Z. He, B. Zhou, H. Hao, A. Liu, X. Wang, Z. Tu, Z. Zhang, and R. Wang. Can watermarks survive translation? on the cross-lingual consistency of text watermark for large language models. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 4115–4129, 2024. [8] P. Joshi, S. Santy, A. Budhiraja, K. Bali, and M. Choudhury. The state and fate of linguistic diversity and inclusion in the nlp world. In Proceedings of the 58th annual meeting of the association for computational linguistics , pages 6282–6293, 2020. [9] A. H. Kargaran, A. Imani, F. Yvon, and H. Schuetze. Glotlid: Language identification for low-resource languages. In Findings of the Association for Computational Linguistics: EMNLP 2023 , pages 6155–6218, 2023. [10] J. Kirchenbauer, J. Geiping, Y. Wen, J. Katz, I. Miers, and T. Goldstein. A watermark for large language models. In International conference on machine learning , pages 17061–17084. PMLR, 2023. [11] R. Kuditipudi, J. Thickstun, T. Hashimoto, and P. Liang. Robust distortion-free watermarks for language models. arXiv preprint arXiv:2307.15593 , 2023. [12] J. Liang, Z. Wang, S. Hong, S. Ji, and T. Wang. Watermark under fire: A robustness evaluation of llm watermarking. arXiv preprint arXiv:2411.13425 , 2024. [13] Mistral AI team. Mistral NeMo, jul 2024. Accessed: 2026-05-05. [14] A. Nemecek, Y. Jiang, and E. Ayday. Watermarking without standards is not ai governance. 
+
+arXiv preprint arXiv:2505.23814 , 2025. [15] A. Nemecek, Y. Jiang, and E. Ayday. Topic-based watermarks for large language models. In M. Liakata, V. P. Moreira, J. Zhang, and D. Jurgens, editors, Findings of the Association for Computational Linguistics: ACL 2026 , pages 24372–24402, San Diego, California, United States, July 2026. Association for Computational Linguistics. [16] A. Nemecek, O. Zafar, Y. Xu, W. Li, and E. Ayday. Who gets flagged? the pluralistic evaluation gap in ai content watermarking. arXiv preprint arXiv:2604.13776 , 2026. 10 [17] NLLB Team, M. R. Costa-jussà, J. Cross, O. Çelebi, M. Elbayad, K. Heafield, K. Heffernan, E. Kalbassi, J. Lam, D. Licht, J. Maillard, A. Sun, S. Wang, G. Wenzek, A. Youngblood, B. Akula, L. Barrault, G. M. Gonzalez, P. Hansanti, J. Hoffman, S. Jarrett, K. R. Sadagopan, D. Rowe, S. Spruit, C. Tran, P. Andrews, N. F. Ayan, S. Bhosale, S. Edunov, A. Fan, C. Gao, V. Goswami, F. Guzmán, P. Koehn, A. Mourachko, C. Ropers, S. Saleem, H. Schwenk, and J. Wang. Scaling neural machine translation to 200 languages. Nature , 630(8018):841–846, 2024. [18] J. Piet, C. Sitawarin, V. Fang, N. Mu, and D. Wagner. Markmywords: Analyzing and evaluating language model watermarks. In 2025 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML) , pages 68–91. IEEE, 2025. [19] K. Pillutla, S. Swayamdipta, R. Zellers, J. Thickstun, S. Welleck, Y. Choi, and Z. Harchaoui. Mauve: Measuring the gap between neural text and human text using divergence frontiers. 
+
+Advances in Neural Information Processing Systems , 34:4816–4828, 2021. [20] M. Sadeghi, D. Dimitriadis, V. Padovese, G. Pozzi, S. Badilini, C. Vercellone, N. Huet, Z. Fishman, L. Pfaller, and N. Adams. Tracking AI-enabled misinformation: 3,006 AI con-tent farm sites (and counting), plus the top false claims generated by artificial intelligence tools. https://www.newsguardtech.com/special-reports/ai-tracking-center/ ,Mar. 2026. NewsGuard Technologies, Inc. Last updated March 17, 2026. Accessed: May 4, 2026. [21] A. F. Shorrocks. The class of additively decomposable inequality measures. Econometrica: Journal of the Econometric Society , pages 613–625, 1980. [22] I. Shumailov, Z. Shumaylov, Y. Zhao, N. Papernot, R. Anderson, and Y. Gal. Ai models collapse when trained on recursively generated data. Nature , 631(8022):755–759, 2024. [23] S. Singh, F. Vargus, D. Dsouza, B. F. Karlsson, A. Mahendiran, W.-Y. Ko, H. Shandilya, J. Patel, D. Mataciunas, L. OMahony, M. Zhang, R. Hettiarachchi, J. Wilson, M. Machado, L. S. Moura, D. Krzemi´ nski, H. Fadaei, I. Ergün, I. Okoh, A. Alaagib, O. Mudannayake, Z. Alyafeai, V. M. Chien, S. Ruder, S. Guthikonda, E. A. Alghamdi, S. Gehrmann, N. Muennighoff, M. Bartolo, J. Kreutzer, A. Üstün, M. Fadaee, and S. Hooker. Aya dataset: An open-access collection for multilingual instruction tuning, 2024. [24] G. Spitale, N. Biller-Andorno, and F. Germani. Ai model gpt-3 (dis) informs us better than humans. Science Advances , 9(26):eadh1850, 2023. [25] S. Tu, Y. Sun, Y. Bai, J. Yu, L. Hou, and J. Li. Waterbench: Towards holistic evaluation of watermarks for large language models. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 1517–1542, 2024. [26] Y. Wu, Z. Hu, J. Guo, H. Zhang, and H. Huang. A resilient and accessible distribution-preserving watermark for large language models. arXiv preprint arXiv:2310.07710 , 2023. [27] A. Yang, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Li, D. Liu, F. Huang, H. Wei, et al. Qwen2.5 technical report. arXiv preprint arXiv:2412.15115 , 2024. [28] T. Zhang, V. Kishore, F. Wu, K. Q. Weinberger, and Y. Artzi. Bertscore: Evaluating text generation with bert. arXiv preprint arXiv:1904.09675 , 2019. [29] X. Zhao, P. Ananth, L. Li, and Y.-X. Wang. Provable robust watermarking for ai-generated text. 
+
+arXiv preprint arXiv:2306.17439 , 2023. 
+
+A Compute 
+
+Compute. All generation and evaluation runs were conducted on a mix of NVIDIA H100 and A100 GPUs. 11 B Generation Preprocessing 
+
+B.1 Language adherence 
+
+Table 4 reports per-cell on-target rates from GlotLID-v3 for nowatermark generations (NWM%) and the mean shift across the six watermarked schemes ( ¯∆, percentage points). Baseline adherence varies systematically: generator-mean rates run from 80.9% (Mistral instruct) to 96.5% (Mistral base), with cell-level minima at Qwen-Turkish base (57.2%) and Mistral-Hindi instruct (52.2%). Instruction-tuning does not uniformly raise adherence; Mistral and Qwen lose ground on several non-Latin-script cells while Gemma remains roughly stable. Watermark-induced shifts are modest in base (2 of 33 cells exceed | ¯∆| = 5 pp) and larger in instruct (12 of 33), concentrated on Mistral and Qwen non-Latin cells while Gemma instruct stays close to its baseline ( ¯∆ = −0.4 pp on average). Three instruct cells lose more than 13 points: Mistral-Arabic (−15 .6), Qwen-Arabic ( −15 .0), and Qwen-Turkish ( −13 .5). These are the cells where the on-target subset thins toward the n = 200 sample-size floor for α = 0 .01 calibration and produce the largest subset-all -vs-on-target gaps in the detection robustness analysis.                                                                                                                                                                   
+
+> Base regime (FLORES+ continuation prompts) Instruct regime (AYA native-speaker prompts)
+> Mistral Gemma Qwen Mistral Gemma Qwen Lang NWM% ¯∆NWM% ¯∆NWM% ¯∆NWM% ¯∆NWM% ¯∆NWM% ¯∆
+> eng 99.6 −0.398.8 −2.098.4 −0.692.6 −0.980.6 −1.793.2 −2.0
+> fra 99.2 −1.197.6 −4.089.2 −0.291.4 +0 .586.2 −1.794.8 −4.9
+> spa 100.0 −1.496.8 −2.691.2 +1 .195.2 −1.362.6 +2 .792.0 −5.0
+> por 99.2 −0.596.8 −1.098.2 −0.896.2 −2.070.6 +3 .096.4 −4.3
+> nld 96.2 −7.095.8 +1 .680.8 −4.673.2 −3.189.2 −0.490.4 −5.8
+> zho 97.6 −1.892.8 −1.296.4 −4.289.0 −7.995.6 −0.498.4 −0.6
+> jpn 96.8 −3.395.6 −1.699.8 −3.371.0 −10 .794.0 −1.998.4 −7.4
+> arb 89.2 −3.087.6 −3.887.8 +2 .967.6 −15 .684.2 −1.281.0 −15 .0
+> hin 96.2 −9.188.2 −2.398.8 −3.952.2 −6.583.8 −1.483.2 +0 .1
+> tur 89.0 +1 .396.8 −4.357.2 −1.181.8 −8.192.8 −0.695.6 −13 .5
+> vie 98.6 −4.777.0 +4 .799.0 −1.079.2 −7.398.8 −0.695.2 −6.4
+> mean 96.5 −2.893.1 −1.590.6 −1.480.9 −5.785.3 −0.492.6 −5.9
+
+Table 4: Per-cell language adherence on the eleven evaluation languages, base-FLORES (left) and instruct-AYA (right). NWM% is the GlotLID-v3 on-target rate for nowatermark generations; ¯∆ is the mean shift in percentage points across the six watermarked schemes. mean rows are unweighted means across the eleven languages. 
+
+B.2 Generation length statistics 
+
+Generations sit close to the maximum-token cap in the base regime where language-mean lengths are 
+
+196 .7 ± 16 .2 (Mistral), 196 .6 ± 16 .8 (Gemma), and 187 .3 ± 26 .6 (Qwen) tokens and shift to shorter, more dispersed distributions under instruction tuning ( 167 .7 ± 37 .8, 174 .6 ± 39 .4, 180 .2 ± 32 .0
+
+respectively). Per-cell variation is largest on Mistral instruct, where mean lengths range from 152.2 tokens (Portuguese) to 183.2 (English). 
+
+Regime Subset n kept n skipped Mean Median Min Max Base on_target_only 231 0 1.003 1.000 0.996 1.081 Base off_target_only 8 223 0.929 0.908 0.859 1.023 Instruct on_target_only 231 0 1.000 1.000 0.964 1.057 Instruct off_target_only 26 205 1.025 1.017 0.947 1.119 
+
+Table 5: Length-distribution similarity between LID subsets and the all-subset baseline. Each row is a (regime, subset) pair; ratio =subset-mean length/all-subset mean length, computed per (regime, model, language, watermark) cell and summarized across cells. Cells require n ≥ 100 in both subsets to enter the summary; n skipped counts cells that fail this floor (typically off_target on high-adherence cells). Table 5 reports the ratio of subset-conditioned mean length to all-subset mean length, computed per (regime, model, language, watermark) cell with n ≥ 100 in both subsets. On-target subset lengths are within 0.5% of all-subset means in aggregate (median ratio 1.000 in both regimes; per-cell range 12 0.964 -1.081 ), so the on-target stratification used downstream is not confounded by systematic length differences. The off-target subset clears the n ≥ 100 floor on only 8 of 231 base cells and 26 of 231 instruct cells. This is a consequence of high baseline adherence outside the cells flagged in §B.1 but where measurable its mean lengths track all-subset means within ∼ 7%. 
+
+B.3 Categorization robustness 
+
+The on-target categorization depends on two thresholds: a GlotLID per-sentence confidence floor (conf_floor ) and a per-text on-target sentence fraction ( on_target_ratio ). Table 6 sweeps these on a 3 × 3 grid and reports Spearman rank-correlation against the default-config per-cell adherence vector. Rank-correlation stays ≥ 0.86 across all eight alternatives, and the mean on-target rate across cells moves by at most 7.3 pp ( 82 .5% at the strictest config to 92 .0% at the most permissive). The cell-level adherence patterns that drive §B.1 are not knife-edge sensitive to the threshold choice.                                                        
+
+> conf_floor on_target_ratio ρvs default Mean on-target % Mean |∆|(pp) Max |∆|(pp) 0.3 0.7 0.9347 92.0 2.19 13.60 0.3 0.8 0.9468 90.7 0.91 13.00 0.3 0.9 0.8627 86.3 4.87 31.00 0.5 0.7 0.9910 91.1 1.26 11.80
+> 0.5 †0.8 1.0000 89.8 0.00 0.00
+> 0.5 0.9 0.9317 85.4 4.43 31.20 0.7 0.7 0.9486 87.9 3.76 24.60 0.7 0.8 0.9627 86.8 3.04 24.80 0.7 0.9 0.9385 82.5 7.36 31.80
+
+Table 6: LID categorization robustness: per-cell adherence under a 3 × 3 sweep of the GlotLID per-sentence confidence floor ( conf_floor ) and the per-text on-target sentence fraction (on_target_ratio ). ρ is the Spearman rank-correlation between the per-cell on-target-rate vector under each configuration and the default ( †). Mean on-target % is the unweighted mean across the 462 cells of the evaluation grid. Mean/Max |∆| are the mean and maximum absolute per-cell shift in on-target rate (pp) relative to default. 
+
+C Detection: Per-Language Detail and Robustness 
+
+This appendix supplies the detection-side material that the main text’s headline summary (Table 2) and §5.1 collapse or defer. It is organized around four questions, each answered by one or two tables. First, what does the per-language vector behind each headline cell actually look like (Figures 4a and 4b, Table 7)? Second, do the calibration-failure cells flagged in §5.1 survive alternative operating choices on the FPR target and the language-adherence subset (Tables 8, 9)? Third, do the per-cell disparity statistics depend on the choice of anchor language for DI and on whether Min TPR is read as a single-language outlier or a small low-performing cluster (Table 10)? Fourth, does the structural-disparity claim of §5.1 survive swapping the inequality measure (GE 2 → GE 0) or the typological partition (family → script) used in the decomposition (Tables 11, 12)? Each table’s caption carries the cell-specific findings; the prose below signposts which group a given table belongs to and what it adjudicates. 
+
+C.1 Per-language detail 
+
+Figures 4a and 4b render the per-language TPR and AUC vectors for both regimes. The heatmap is the visual entry point to every cell-language pattern that the headline table’s mean, min, and GE 2
+
+statistics collapse: the Unigram-Gemma all-zero row under base, the XSIR-Qwen Hindi outlier, the EXPEdit-Gemma broad AUC degradation under instruct. Table 7 then shows the per-language 
+
+∆l = TPR l(τl) − TPR l(τg ) matrix, decomposing the headline ∆ column into its per-language sources. Together the two items establish that calibration locality is doing structurally different work in different cells: a near-noise correction of order ±0.03 on strong-detection cells, a near-total recovery on the base Unigram-Gemma row, and a smaller-scale broad recovery across most instruct cells. 13 Germanic Romance Indic Semitic Sinitic Japonic Turkic Aus. Scheme Gen. eng nld fra spa por hin arb zho jpn tur vie 
+
+Base regime (FLORES+ continuation prompts) 
+
+KGW Mistral 0.000 +0 .004 +0 .004 +0 .002 0.000 −0.008 0.000 −0.006 0.000 −0.004 +0 .002 
+
+Gemma +0 .006 +0 .030 +0 .008 +0 .016 +0 .038 −0.020 +0 .044 −0.010 −0.064 0.000 +0 .010 
+
+Qwen +0 .028 +0 .018 −0.002 −0.002 +0 .002 −0.008 0.000 +0 .008 0.000 −0.030 0.000 
+
+Unigram Mistral +0 .074 +0 .354 +0 .218 +0 .292 +0 .142 −0.062 +0 .004 +0 .064 −0.018 +0 .074 −0.012 
+
+Gemma +0 .996 +0 .992 +0 .968 +0 .990 +0 .960 0.000 +0 .958 +0 .976 +0 .984 +0 .960 0.000 
+
+Qwen +0 .024 +0 .034 −0.040 +0 .002 +0 .022 +0 .106 +0 .230 +0 .134 −0.008 +0 .092 −0.034 
+
+SynthID Mistral 0.000 0.000 0.000 0.000 0.000 0.000 0.000 +0 .002 0.000 0.000 0.000 
+
+Gemma 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+
+Qwen 0.000 0.000 0.000 0.000 0.000 +0 .002 0.000 +0 .006 0.000 −0.004 0.000 
+
+EXPEdit Mistral 0.000 +0 .002 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+
+Gemma 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+
+Qwen +0 .002 −0.006 0.000 0.000 0.000 +0 .012 0.000 0.000 0.000 +0 .002 0.000 
+
+DIP Mistral 0.000 0.000 +0 .002 +0 .002 +0 .002 +0 .002 0.000 −0.014 0.000 +0 .004 0.000 
+
+Gemma 0.000 −0.004 +0 .002 0.000 +0 .002 +0 .010 +0 .004 +0 .004 +0 .018 −0.010 0.000 
+
+Qwen 0.000 −0.008 +0 .004 +0 .008 −0.004 −0.004 +0 .002 +0 .010 0.000 −0.028 +0 .002 
+
+XSIR Mistral +0 .024 −0.054 +0 .166 +0 .106 +0 .086 −0.022 −0.066 +0 .092 +0 .014 +0 .014 +0 .178 
+
+Gemma +0 .028 +0 .054 +0 .054 +0 .114 +0 .026 +0 .146 +0 .056 −0.042 +0 .168 +0 .122 −0.030 
+
+Qwen +0 .516 +0 .774 +0 .770 +0 .802 +0 .912 −0.286 +0 .684 +0 .638 +0 .464 +0 .360 +0 .732 
+
+Instruct regime (AYA native-speaker prompts) 
+
+KGW Mistral +0 .112 +0 .032 −0.250 +0 .028 +0 .118 −0.016 +0 .014 +0 .030 −0.018 +0 .012 −0.004 
+
+Gemma +0 .030 −0.070 +0 .108 +0 .046 +0 .112 −0.038 0.000 −0.036 −0.082 +0 .134 +0 .034 
+
+Qwen +0 .012 +0 .014 −0.036 −0.058 +0 .110 −0.106 +0 .138 +0 .016 +0 .084 +0 .058 +0 .140 
+
+Unigram Mistral +0 .340 +0 .380 +0 .090 +0 .282 +0 .316 −0.106 0.000 +0 .070 −0.178 +0 .282 +0 .052 
+
+Gemma +0 .024 −0.054 +0 .174 +0 .178 +0 .056 −0.070 −0.036 +0 .376 +0 .276 +0 .272 +0 .050 
+
+Qwen +0 .084 −0.018 −0.108 −0.012 +0 .078 +0 .128 +0 .438 +0 .352 +0 .094 +0 .088 −0.132 
+
+SynthID Mistral +0 .056 +0 .020 −0.026 −0.034 −0.048 +0 .016 0.000 0.000 −0.022 0.000 +0 .016 
+
+Gemma +0 .050 −0.030 +0 .046 −0.022 −0.020 −0.022 −0.124 +0 .038 −0.102 +0 .094 +0 .036 
+
+Qwen +0 .018 −0.002 +0 .010 −0.022 −0.002 +0 .016 0.000 0.000 0.000 0.000 0.000 
+
+EXPEdit Mistral −0.030 +0 .062 −0.080 +0 .028 +0 .130 −0.012 +0 .006 +0 .004 +0 .028 +0 .016 −0.002 
+
+Gemma +0 .002 +0 .042 −0.040 0.000 −0.018 −0.022 +0 .046 +0 .066 +0 .066 +0 .002 −0.014 
+
+Qwen +0 .046 −0.002 −0.072 −0.006 +0 .050 +0 .048 +0 .032 0.000 +0 .004 −0.020 +0 .056 
+
+DIP Mistral −0.042 +0 .026 −0.016 +0 .002 +0 .008 +0 .058 +0 .048 +0 .046 +0 .122 +0 .032 −0.038 
+
+Gemma −0.016 −0.014 +0 .010 0.000 +0 .052 +0 .076 −0.004 +0 .030 +0 .004 −0.030 0.000 
+
+Qwen −0.046 0.000 −0.038 0.000 +0 .016 +0 .030 −0.008 +0 .042 +0 .088 +0 .006 −0.008 
+
+XSIR Mistral +0 .064 −0.180 +0 .044 −0.032 −0.008 +0 .088 −0.152 +0 .084 +0 .186 +0 .208 +0 .078 
+
+Gemma +0 .110 +0 .062 −0.008 +0 .046 −0.022 +0 .026 −0.024 +0 .174 −0.006 +0 .116 +0 .002 
+
+Qwen +0 .208 +0 .308 +0 .212 +0 .224 +0 .286 −0.248 +0 .274 +0 .406 +0 .292 +0 .444 +0 .264 
+
+Table 7: Per-language calibration gap ∆l = TPR l(τl) − TPR l(τg ), base-FLORES (top) and instruct-AYA (bottom), subset all , α = 0 .01 . Positive: per-language calibration recovers detection. Negative: per-language calibration worsens detection. Zero: detection insensitive to calibration locality. Row means equal −1× the ∆ column of Table 2. 
+
+C.2 Detection-threshold robustness 
+
+The calibration-failure diagnoses in §5.1 depend on two operating choices: the FPR target α and the LID-adherence subset on which the null is calibrated. Table 8 repeats the headline summary at 
+
+α = 0 .05 , and Table 9 restricts the unwatermarked null to LID-passing on-target generations. The first table addresses whether the score-cap saturation underlying Unigram-Gemma at α = 0 .01 persists at a looser FPR target; the second addresses whether that saturation is driven by off-target generations contaminating the calibration pool. Read together, the two robustness checks distinguish two distinct base-regime failure modes: Unigram-Gemma is an off-target-mixture artifact that dissolves under either operating change, while XSIR-Qwen is a deeper threshold misalignment that persists across both. 
+
+C.3 Floor-statistic robustness 
+
+The headline table reports Min TPR as a worst-language floor, which is sensitive to isolated single-language outliers. Table 10 replaces Min TPR with the mean of the bottom two languages (the bottom quintile at L = 11 ), testing whether the headline minima are driven by isolated outliers or by low-performing clusters. The bottom-quintile mean and Min TPR identify the same worst-performing cells in both regimes, with the bottom-quintile values typically within 0.05 of Min TPR on cells where 14 Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen 
+
+1.00 0.99 0.99 1.00 1.00 0.98 0.99 0.98 1.00 0.99 0.99 0.99 0.96 0.99 0.98 0.95 0.96 0.93 0.99 0.99 0.96 0.96 0.96 0.91 0.96 0.96 1.00 0.97 1.00 0.98 1.00 0.88 0.99 0.92 0.64 0.78 0.71 0.86 0.95 0.98 0.87 0.98 0.90 0.97 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.94 0.90 0.90 0.97 0.97 0.87 0.77 0.86 0.98 0.72 0.99 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.99 1.00 0.99 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.99 0.99 1.00 1.00 1.00 0.95 1.00 0.99 1.00 0.99 1.00 0.99 0.97 0.98 1.00 0.99 0.96 0.99 0.94 0.96 0.97 0.98 0.98 0.99 0.99 0.98 0.99 0.91 0.95 0.97 0.95 0.97 0.92 0.91 0.85 0.96 0.95 0.99 0.84 0.99 0.96 0.99 0.80 0.99 0.86 0.81 0.75 0.81 0.82 0.82 0.88 0.67 0.72 0.82 0.67 0.78 0.77 0.75 0.82 0.82 0.68 0.82 0.94 0.59 0.72 0.73 0.17 0.09 0.08 0.12 0.05 0.82 0.14 0.21 0.42 0.15 0.12 
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
+1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.99 1.00 0.99 0.99 1.00 1.00 0.99 1.00 1.00 1.00 0.99 1.00 1.00 1.00 0.99 1.00 1.00 1.00 1.00 1.00 1.00 0.98 1.00 0.99 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.99 0.98 0.99 1.00 1.00 0.99 0.91 1.00 0.99 0.97 1.00 1.00 1.00 1.00 1.00 1.00 0.99 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.99 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.99 1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00 0.98 0.99 0.99 0.99 1.00 0.97 0.99 0.98 1.00 0.99 1.00 0.99 1.00 1.00 1.00 0.98 1.00 0.99 0.96 0.99 0.99 0.99 0.97 0.98 0.97 0.98 0.98 0.98 0.98 0.99 0.98 0.99 0.99 0.98 0.99 0.98 0.98 0.98 0.98 0.97 0.98 0.99 0.99 1.00 0.93 0.99 0.99 0.98 0.96 0.99 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+TPR 
+
+0.5 0.6 0.7 0.8 0.9 1.0 
+
+AUC (a) Base-FLORES regime. Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen 
+
+0.54 0.53 0.39 0.51 0.51 0.72 0.85 0.61 0.65 0.83 0.76 0.39 0.48 0.38 0.44 0.22 0.40 0.28 0.72 0.33 0.35 0.28 0.69 0.62 0.69 0.70 0.51 0.62 0.65 0.85 0.75 0.89 0.62 0.09 0.06 0.04 0.02 0.06 0.51 0.63 0.39 0.56 0.51 0.55 0.03 0.07 0.05 0.03 0.01 0.09 0.06 0.02 0.02 0.01 0.02 0.58 0.58 0.64 0.65 0.48 0.40 0.21 0.47 0.70 0.68 0.63 0.83 0.92 0.78 0.79 0.89 0.93 0.99 0.96 0.94 0.97 0.94 0.53 0.64 0.65 0.65 0.45 0.60 0.59 0.90 0.65 0.54 0.42 0.92 0.97 0.95 0.92 0.89 0.79 0.98 0.99 0.99 1.00 0.94 0.24 0.65 0.37 0.25 0.40 0.71 0.84 0.64 0.70 0.80 0.77 0.20 0.24 0.26 0.23 0.12 0.28 0.20 0.43 0.08 0.23 0.21 0.28 0.62 0.45 0.39 0.31 0.17 0.63 0.72 0.61 0.86 0.42 0.37 0.41 0.26 0.27 0.29 0.52 0.74 0.48 0.40 0.68 0.57 0.21 0.21 0.22 0.18 0.11 0.23 0.13 0.42 0.12 0.18 0.15 0.52 0.48 0.39 0.40 0.40 0.30 0.54 0.74 0.62 0.73 0.51 0.15 0.35 0.09 0.14 0.17 0.31 0.66 0.17 0.19 0.45 0.23 0.07 0.07 0.12 0.04 0.14 0.11 0.07 0.18 0.02 0.02 0.07 0.00 0.00 0.02 0.00 0.00 0.42 0.01 0.00 0.01 0.01 0.00 
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
+0.95 0.96 0.91 0.94 0.94 0.96 0.98 0.96 0.96 0.98 0.95 0.90 0.89 0.92 0.92 0.87 0.91 0.87 0.96 0.89 0.92 0.85 0.95 0.97 0.96 0.96 0.94 0.94 0.98 0.99 0.99 1.00 0.96 0.91 0.93 0.90 0.89 0.90 0.88 0.95 0.92 0.87 0.97 0.90 0.86 0.84 0.86 0.87 0.80 0.84 0.83 0.94 0.86 0.86 0.79 0.94 0.94 0.94 0.94 0.92 0.92 0.96 0.98 0.97 0.99 0.88 0.99 0.99 0.98 0.98 0.99 0.99 1.00 1.00 0.99 1.00 0.99 0.94 0.95 0.97 0.96 0.90 0.94 0.94 0.99 0.95 0.96 0.91 0.99 0.99 0.99 0.99 0.99 0.98 1.00 1.00 1.00 1.00 0.99 0.78 0.96 0.84 0.87 0.94 0.93 0.97 0.93 0.97 0.96 0.94 0.66 0.56 0.68 0.63 0.55 0.63 0.56 0.78 0.46 0.71 0.62 0.78 0.88 0.80 0.79 0.80 0.68 0.91 0.91 0.89 0.95 0.83 0.89 0.91 0.87 0.86 0.87 0.92 0.97 0.93 0.93 0.96 0.93 0.82 0.82 0.84 0.83 0.79 0.83 0.80 0.91 0.80 0.84 0.77 0.92 0.92 0.90 0.91 0.89 0.87 0.94 0.98 0.96 0.97 0.91 0.82 0.84 0.81 0.77 0.83 0.90 0.95 0.86 0.91 0.94 0.88 0.74 0.80 0.74 0.81 0.70 0.76 0.78 0.89 0.79 0.81 0.73 0.79 0.88 0.83 0.86 0.84 0.75 0.86 0.89 0.91 0.93 0.86 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+TPR 
+
+0.5 0.6 0.7 0.8 0.9 1.0 
+
+AUC (b) Instruct-AYA regime. 
+
+Figure 4: Per-language detection diagnostics, subset all , α = 0 .01 . Within each panel, left: TPR at the global empirical-FPR threshold τg ; right: threshold-free AUC. Rows are (scheme, generator) cells; columns are the eleven evaluation languages, grouped by typological family. the floor is genuine and substantially higher only on the handful of cells where a single language sits well below the rest. The check supports the headline floor statistic rather than displacing it. 
+
+C.4 Decomposition robustness 
+
+The structural-disparity claim of §5.1 rests on a single decomposition: GE 2 over the typological-family partition. Table 11 repeats it under GE 0 (mean log deviation, more sensitive to inequality at the low end of the per-language vector), and Table 12 repeats it under a script-based partition. Between-family share remains the dominant component ( >65% in every well-defined cell) under both inequality measures across both regimes. The family partition consistently captures more between-group variance than the script partition for cells with non-trivial total disparity, locating the structural component at the typology level rather than the writing-system level. 15 TPR at τg (global) TPR at τl (per-lang) Scheme Gen. Mean TPR Min TPR DI <. 8 GE 2 Btw. % Mean TPR ∆
+
+Base regime (FLORES+ continuation prompts) 
+
+KGW Mistral 0.997 0.992 0 < 0.001 61.1 0.997 +0 .000 
+
+Gemma 0.991 0.980 0 < 0.001 93.2 0.993 −0.002 
+
+Qwen 0.987 0.952 0 < 0.001 57.8 0.986 +0 .000 
+
+Unigram Mistral 0.977 0.920 0 < 0.001 54.9 0.988 −0.011 
+
+Gemma 0.988 0.976 0 < 0.001 55.9 0.898 +0 .089 
+
+Qwen 0.961 0.860 0 0.001 86.3 0.979 −0.018 
+
+SynthID Mistral 1.000 0.998 0 < 0.001 100.0 1.000 +0 .000 
+
+Gemma 1.000 0.998 0 < 0.001 100.0 1.000 +0 .000 
+
+Qwen 0.999 0.996 0 < 0.001 74.3 0.999 +0 .000 
+
+EXPEdit Mistral 1.000 0.996 0 < 0.001 100.0 1.000 +0 .000 
+
+Gemma 1.000 0.998 0 < 0.001 100.0 1.000 +0 .000 
+
+Qwen 0.995 0.966 0 < 0.001 99.2 0.995 −0.000 
+
+DIP Mistral 0.990 0.972 0 < 0.001 94.7 0.989 +0 .001 
+
+Gemma 0.981 0.942 0 < 0.001 97.9 0.981 −0.001 
+
+Qwen 0.966 0.896 0 0.001 91.6 0.966 +0 .000 
+
+XSIR Mistral 0.924 0.868 0 0.001 83.3 0.935 −0.011 
+
+Gemma 0.929 0.840 0 0.001 92.8 0.944 −0.015 
+
+Qwen 0.503 0.276 9 0.076 94.6 0.919 −0.416 
+
+Instruct regime (AYA native-speaker prompts) 
+
+KGW Mistral 0.801 0.622 2 0.006 85.0 0.813 −0.012 
+
+Gemma 0.616 0.474 10 0.015 79.7 0.617 −0.001 
+
+Qwen 0.860 0.740 1 0.003 78.1 0.869 −0.009 
+
+Unigram Mistral 0.517 0.090 5 0.149 95.8 0.659 −0.143 
+
+Gemma 0.380 0.154 5 0.050 80.3 0.408 −0.028 
+
+Qwen 0.727 0.366 4 0.018 93.8 0.790 −0.063 
+
+SynthID Mistral 0.967 0.926 0 < 0.001 77.8 0.969 −0.002 
+
+Gemma 0.791 0.662 4 0.005 75.9 0.785 +0 .005 
+
+Qwen 0.971 0.898 0 < 0.001 95.7 0.973 −0.002 
+
+EXPEdit Mistral 0.665 0.354 4 0.036 76.7 0.682 −0.017 
+
+Gemma 0.341 0.126 10 0.049 83.3 0.339 +0 .002 
+
+Qwen 0.583 0.230 9 0.050 82.5 0.596 −0.013 
+
+DIP Mistral 0.666 0.478 6 0.017 98.8 0.672 −0.006 
+
+Gemma 0.410 0.302 10 0.031 93.0 0.416 −0.007 
+
+Qwen 0.698 0.510 7 0.012 99.7 0.700 −0.002 
+
+XSIR Mistral 0.510 0.256 9 0.051 86.4 0.523 −0.013 
+
+Gemma 0.267 0.072 10 0.092 94.3 0.300 −0.033 
+
+Qwen 0.169 0.024 10 0.811 97.5 0.513 −0.344 
+
+Table 8: Detection fairness summary at α = 0 .05 , base-FLORES (top) and instruct-AYA (bottom), subset all . Format mirrors Table 2; AUC columns are omitted (threshold-independent, identical to Table 2) and bootstrap CIs on Mean TPR are omitted for compactness. L = 11 throughout. Values below 10 −3 reported as < 0.001 .16 Base regime (FLORES+ continuation) Instruct regime (AYA native-speaker) Scheme Gen. Mean TPR Min TPR DI <. 8 ∆ vs. all Mean TPR Min TPR DI <. 8 ∆ vs. all 
+
+KGW Mistral 0.995 0.983 0 +0 .003 0.681 0.425 6 +0 .055 
+
+Gemma 0.973 0.939 0 +0 .004 0.426 0.264 10 +0 .037 
+
+Qwen 0.987 0.963 0 +0 .022 0.697 0.520 8 +0 .008 
+
+Unigram Mistral 0.885 0.654 2 +0 .017 0.388 0.011 7 +0 .077 
+
+Gemma 0.987 0.974 0 +0 .987 0.020 0.000 9 −0.017 
+
+Qwen 0.925 0.762 1 +0 .027 0.547 0.176 4 +0 .001 
+
+SynthID Mistral 1.000 0.998 0 0.000 0.924 0.774 1 +0 .019 
+
+Gemma 1.000 0.998 0 0.000 0.610 0.426 10 +0 .008 
+
+Qwen 0.999 0.996 0 +0 .002 0.941 0.764 1 0.000 
+
+EXPEdit Mistral 1.000 1.000 0 +0 .001 0.675 0.234 5 +0 .098 
+
+Gemma 1.000 0.997 0 0.000 0.232 0.091 10 +0 .007 
+
+Qwen 0.994 0.941 0 +0 .003 0.508 0.059 10 +0 .012 
+
+DIP Mistral 0.980 0.952 0 +0 .005 0.488 0.266 9 +0 .033 
+
+Gemma 0.977 0.954 0 +0 .014 0.198 0.105 10 +0 .002 
+
+Qwen 0.957 0.848 0 +0 .026 0.507 0.200 8 −0.006 
+
+XSIR Mistral 0.799 0.688 2 +0 .015 0.296 0.081 10 +0 .030 
+
+Gemma 0.793 0.600 3 +0 .027 0.092 0.019 10 +0 .011 
+
+Qwen 0.207 0.047 10 −0.008 0.047 0.000 10 +0 .004 
+
+Table 9: Detection summary on the on-target subset, α = 0 .01 , global threshold τg , base-FLORES (left) and instruct-AYA (right). Thresholds re-calibrated on each cell’s on-target unwatermarked pool; L = 11 throughout. The off-target subset is omitted: in the base regime no cell meets the 
+
+nneg ≥ 200 inclusion floor, and in the instruct regime only six (Mistral-generator) cells pass the relaxed α = 0 .05 floor with L ≤ 3, insufficient for the fairness aggregates this appendix reports. The 
+
+∆ vs. all columns report change in Mean TPR relative to subset all (Table 2). 
+
+Base regime (FLORES+) Instruct regime (AYA) Scheme Gen. Min TPR Bot.-q mean Bot.-q langs Min TPR Bot.-q mean Bot.-q langs KGW Mistral 0.978 0.979 zho, hin 0.386 0.447 fra, por 
+
+Gemma 0.934 0.943 arb, por 0.222 0.251 por, vie 
+
+Qwen 0.880 0.894 tur, nld 0.510 0.564 por, nld 
+
+Unigram Mistral 0.638 0.672 nld, spa 0.022 0.029 spa, fra 
+
+Gemma 0.000 0.000 eng, fra 0.010 0.010 por, tur 
+
+Qwen 0.722 0.744 tur, arb 0.210 0.306 arb, hin 
+
+SynthID Mistral 0.998 0.998 zho, tur 0.782 0.788 fra, spa 
+
+Gemma 0.998 0.999 vie, eng 0.422 0.437 vie, por 
+
+Qwen 0.990 0.992 tur, zho 0.792 0.842 hin, por 
+
+EXPEdit Mistral 0.996 0.997 zho, nld 0.238 0.244 eng, spa 
+
+Gemma 0.998 0.998 jpn, vie 0.084 0.101 jpn, por 
+
+Qwen 0.946 0.968 hin, nld 0.174 0.226 hin, eng 
+
+DIP Mistral 0.938 0.950 zho, jpn 0.264 0.265 fra, spa 
+
+Gemma 0.914 0.917 hin, vie 0.110 0.115 por, jpn 
+
+Qwen 0.798 0.819 tur, hin 0.296 0.345 hin, fra 
+
+XSIR Mistral 0.672 0.673 zho, vie 0.088 0.116 fra, spa 
+
+Gemma 0.588 0.635 jpn, hin 0.016 0.019 tur, jpn 
+
+Qwen 0.050 0.064 por, fra 0.000 0.000 nld, vie 
+
+Table 10: Bottom-quintile-mean Rawlsian floor as a stability companion to Min TPR (Table 2), base-FLORES (left) and instruct-AYA (right), subset all , α = 0 .01 , global threshold τg . With 
+
+L = 11 evaluation languages the bottom quintile is ⌊0.2 · 11 ⌋ = 2 languages; the columns report the mean TPR of the two worst-performing languages per cell, with the languages listed minimum first (arbitrary tie-breaking). The Unigram-Gemma base cell is degenerate (all eleven per-language TPRs are zero); its bottom-quintile language identities are reported but uninformative. 17 Base regime (FLORES+) Instruct regime (AYA) 
+
+GE 2 GE 0 GE 2 GE 0
+
+Scheme Gen. Total Btw. % Total Btw. % Total Btw. % Total Btw. % KGW Mistral < 0.001 83.6 < 0.001 83.7 0.026 95.3 0.027 91.4 Gemma < 0.001 72.4 < 0.001 72.7 0.053 82.4 0.046 73.3 Qwen 0.001 85.1 0.001 85.1 0.011 78.6 0.011 72.5 Unigram Mistral 0.008 61.3 0.009 55.7 0.297 99.8 0.556 94.8 Gemma — — < 0.001 † 100 .0† 0.226 81.2 0.243 73.9 Qwen 0.004 93.8 0.005 94.6 0.032 91.7 0.046 94.6 SynthID Mistral < 0.001 100.0 < 0.001 100.0 0.003 77.7 0.003 75.6 Gemma < 0.001 100.0 < 0.001 100.0 0.020 79.7 0.019 75.6 Qwen < 0.001 97.5 < 0.001 97.5 0.002 91.9 0.002 92.2 EXPEdit Mistral < 0.001 88.0 < 0.001 88.1 0.067 80.0 0.087 68.2 Gemma < 0.001 100.0 < 0.001 100.0 0.071 84.2 0.077 79.0 Qwen < 0.001 99.2 < 0.001 99.2 0.080 84.4 0.093 81.4 DIP Mistral < 0.001 92.6 < 0.001 92.8 0.058 99.5 0.059 99.2 Gemma < 0.001 99.5 < 0.001 99.5 0.084 91.6 0.068 84.4 Qwen 0.003 94.7 0.003 94.6 0.035 99.6 0.035 99.6 XSIR Mistral 0.004 91.5 0.004 92.1 0.185 91.8 0.160 83.4 Gemma 0.006 96.0 0.007 96.3 0.175 76.5 0.220 81.1 Qwen 0.493 98.9 0.326 92.5 3.787 99.9 3.244 79.0 
+
+Table 11: Robustness of the generalized-entropy decomposition to choice of inequality measure: GE 2
+
+(half the squared coefficient of variation, more sensitive to inequality at the top of the per-language TPR distribution) versus GE 0 (mean log deviation, more sensitive to inequality at the bottom). Base-FLORES (left) and instruct-AYA (right), subset all , α = 0 .01 , global threshold τg ; typological partition as in Table 2. Total values below 10 −3 reported as < 0.001 . The Unigram-Gemma base 
+
+GE 0 entry is obtained by replacing zero TPRs with a small ϵ (per the strict-positivity requirement of 
+
+GE 0); the resulting Total = 0 and Btw . % = 100 .0 are regularization artifacts, marked †.
+
+Base regime (FLORES+) Instruct regime (AYA) Btw. % Btw. % Scheme Gen. GE 2 Family Script GE 2 Family Script KGW Mistral < 0.001 83.6 46.2 0.026 95.3 32.8 Gemma < 0.001 72.4 62.2 0.053 82.4 29.8 Qwen 0.001 85.1 26.2 0.011 78.6 26.7 Unigram Mistral 0.008 61.3 28.8 0.297 99.8 46.3 Gemma — — — 0.226 81.2 61.7 Qwen 0.004 93.8 26.1 0.032 91.7 75.0 SynthID Mistral < 0.001 100.0 17.1 0.003 77.7 33.0 Gemma < 0.001 100.0 5.7 0.020 79.7 47.1 Qwen < 0.001 97.5 7.5 0.002 91.9 79.3 EXPEdit Mistral < 0.001 88.0 31.7 0.067 80.0 30.2 Gemma < 0.001 100.0 17.1 0.071 84.2 8.5 Qwen < 0.001 99.2 95.8 0.080 84.4 41.6 DIP Mistral < 0.001 92.6 69.3 0.058 99.5 38.9 Gemma < 0.001 99.5 48.2 0.084 91.6 25.2 Qwen 0.003 94.7 32.5 0.035 99.6 53.4 XSIR Mistral 0.004 91.5 54.8 0.185 91.8 64.7 Gemma 0.006 96.0 12.7 0.175 76.5 7.6 Qwen 0.493 98.9 93.5 3.787 99.9 99.8 
+
+Table 12: Robustness of the GE 2 between-share to choice of partition: typological family (8 groups: Germanic, Romance, Indic, Semitic, Sinitic, Japonic, Turkic, Austroasiatic, with 5 of 11 languages in non-singleton groups) vs. script (4 groups: Latin pooling eng, nld, fra, spa, por, tur, vie; Devanagari =hin; Arabic =arb; Han pooling zho, jpn; with 9 of 11 languages in non-singleton groups). Base-FLORES (left) and instruct-AYA (right), subset all , α = 0 .01 , global threshold τg .
+
+GE 2 Total depends only on the per-language vector and is partition-independent (shown once per regime). Totals below 10 −3 reported as < 0.001 ; for these cells the between-share values involve ratios of near-zero variance components and should not be over-interpreted. 18 D Quality: Per-Paradigm Detail and Robustness 
+
+D.1 Per-cell quality fairness summary 
+
+MAUVE BERTScore F1 (rescaled) PPL preservation (XGLM-7.5B) Scheme Gen mean (min) DI <.8 GE 2 Btw. % mean (min) mean (min) DI <.8 GE 2 Btw. % 
+
+Base regime (FLORES+ continuation) 
+
+KGW Mistral 0.947 (0.879) jpn 0 0.001 86.0 -0.041 (-0.079) vie 0.866 (0.793) spa 0 0.002 66.4 KGW Gemma 0.855 (0.435) arb 1 0.013 98.9 -0.081 (-0.194) vie 0.899 (0.812) fra 0 0.002 91.0 KGW Qwen 0.889 (0.471) hin 1 0.012 95.6 -0.034 (-0.091) tur 0.834 (0.686) hin 3 0.005 94.0 Unigram Mistral 0.747 (0.420) arb 5 0.026 49.5 -0.070 (-0.134) arb 0.872 (0.811) spa 0 0.002 96.4 Unigram Gemma 0.638 (0.444) spa 6 0.017 67.8 -0.098 (-0.191) jpn 0.911 (0.815) nld 0 0.002 68.3 Unigram Qwen 0.734 (0.123) hin 3 0.043 97.2 -0.055 (-0.128) zho 0.896 (0.647) hin 1 0.005 98.0 SynthID Mistral 0.187 (0.020) arb 10 0.435 59.0 -0.115 (-0.163) vie 0.299 (0.145) arb 7 0.048 88.4 SynthID Gemma 0.095 (0.029) tur 10 0.641 43.0 -0.146 (-0.254) vie 0.269 (0.195) tur 7 0.021 73.2 SynthID Qwen 0.183 (0.035) vie 10 0.455 53.0 -0.112 (-0.188) tur 0.308 (0.203) arb 9 0.028 78.2 EXPEdit Mistral 0.079 (0.006) arb 10 0.536 57.1 -0.149 (-0.228) vie 0.218 (0.079) arb 6 0.085 99.1 EXPEdit Gemma 0.013 (0.006) jpn 10 0.574 43.4 -0.220 (-0.333) vie 0.135 (0.076) zho 9 0.033 82.7 EXPEdit Qwen 0.067 (0.013) arb 10 0.874 47.9 -0.145 (-0.245) tur 0.224 (0.135) tur 9 0.042 74.6 DIP Mistral 0.973 (0.933) hin 0 0.000 95.6 -0.015 (-0.040) vie 0.809 (0.750) hin 0 0.001 77.6 DIP Gemma 0.932 (0.878) jpn 0 0.001 94.7 -0.053 (-0.183) vie 0.774 (0.702) nld 0 0.001 68.0 DIP Qwen 0.947 (0.864) hin 0 0.001 81.6 -0.008 (-0.071) tur 0.811 (0.714) tur 0 0.002 92.7 XSIR Mistral 0.859 (0.642) hin 2 0.006 86.6 -0.062 (-0.110) hin 0.922 (0.816) nld 0 0.002 73.2 XSIR Gemma 0.683 (0.461) fra 6 0.018 80.9 -0.123 (-0.226) vie 0.925 (0.785) nld 1 0.002 75.8 XSIR Qwen 0.850 (0.603) hin 2 0.008 89.9 -0.042 (-0.129) tur 0.883 (0.745) hin 1 0.003 86.4 
+
+Instruct regime (AYA native-speaker) 
+
+KGW Mistral 0.989 (0.970) arb 0 0.000 58.9 0.255 (0.088) arb 0.892 (0.853) jpn 0 0.001 91.0 KGW Gemma 0.990 (0.959) arb 0 0.000 65.3 0.397 (0.338) tur 0.967 (0.941) hin 0 0.000 80.0 KGW Qwen 0.987 (0.954) hin 0 0.000 90.8 0.300 (0.192) tur 0.885 (0.749) hin 1 0.002 92.5 Unigram Mistral 0.981 (0.938) nld 0 0.000 40.3 0.240 (0.087) arb 0.897 (0.835) hin 0 0.001 97.4 Unigram Gemma 0.996 (0.991) jpn 0 0.000 54.1 0.400 (0.329) tur 0.965 (0.941) nld 0 0.000 78.0 Unigram Qwen 0.980 (0.927) hin 0 0.000 97.7 0.297 (0.184) tur 0.885 (0.700) hin 1 0.003 95.9 SynthID Mistral 0.721 (0.066) arb 4 0.107 99.6 0.149 (-0.117) arb 0.595 (0.185) arb 7 0.070 95.4 SynthID Gemma 0.994 (0.979) fra 0 0.000 50.0 0.365 (0.296) tur 0.931 (0.885) zho 0 0.000 90.0 SynthID Qwen 0.833 (0.237) tur 2 0.033 97.1 0.219 (0.047) tur 0.645 (0.442) tur 5 0.014 90.7 EXPEdit Mistral 0.480 (0.023) arb 10 0.198 86.6 0.082 (-0.169) arb 0.549 (0.198) arb 7 0.070 95.7 EXPEdit Gemma 0.840 (0.598) arb 3 0.012 90.0 0.319 (0.265) jpn 0.742 (0.669) arb 0 0.001 78.7 EXPEdit Qwen 0.699 (0.170) tur 4 0.063 80.6 0.174 (0.016) tur 0.651 (0.437) tur 5 0.014 99.1 DIP Mistral 0.992 (0.956) arb 0 0.000 96.6 0.259 (0.108) arb 0.937 (0.836) arb 0 0.001 94.6 DIP Gemma 0.997 (0.991) fra 0 0.000 52.2 0.403 (0.328) tur 0.982 (0.946) nld 0 0.000 61.7 DIP Qwen 0.994 (0.985) fra 0 0.000 28.0 0.318 (0.210) tur 0.925 (0.853) tur 0 0.001 94.6 XSIR Mistral 0.991 (0.975) arb 0 0.000 91.9 0.258 (0.112) arb 0.928 (0.876) hin 0 0.000 97.7 XSIR Gemma 0.995 (0.975) fra 0 0.000 31.1 0.396 (0.333) tur 0.979 (0.969) tur 0 0.000 44.6 XSIR Qwen 0.991 (0.980) tur 0 0.000 90.6 0.311 (0.197) tur 0.902 (0.826) tur 0 0.001 84.3 
+
+Table 13: Quality fairness summary by scheme, generator, regime, and measurement, subset all .Each row reports mean per-language preservation with the per-cell minimum and floor language (ISO 639-3 superscript) in parentheses. DI <.8 counts languages with per-language preservation below 
+
+0.8 × max l. GE 2 uses the typological partition (Germanic, Romance, Indic, Semitic, Sinitic, Japonic, Turkic, Austroasiatic); Btw. % is its between-family share. BERTScore mean (min) is reported on rescaled F1 [28]; DI <.8 and GE 2 are omitted for BERTScore because neither registers signal on the bounded raw scale and both behave pathologically on the rescaled scale (§5.2). Table 13 reports the per-(scheme, generator, regime) quality-fairness summary that the heatmaps in Figure 1 and the per-scheme decomposition in Figure 2 aggregate over. Three quantities are recoverable here that are not directly readable from those figures: the per-cell minimum-language identity (ISO 639-3 superscript on each mean–min pair), the four-fifths disparate-impact count DI <.8 against the per-cell maximum, and the GE 2 total with its between-family share at the (scheme, generator) granularity rather than the per-scheme generator-averaged values plotted in Figure 2. The BERTScore DI <.8 and GE 2 columns are omitted: raw F1 has insufficient dynamic range to register either statistic, and the rescaled F1 used elsewhere is unbounded below and produces pathological ratios under both the four-fifths anchor and the squared-coefficient-of-variation normalization (§5.2). 19 The cell-level numbers support three observations that the main-text aggregates state at the scheme level. First, the floor-language column shows that the worst-preserved language within a cell is not constant across (scheme, generator): Arabic, Hindi, Turkish, Vietnamese, and Japanese each appear as floor language in at least four cells across the grid, while English never does. Second, the DI <.8 column localizes the distortion-free collapse of §5.2 to its cell-level extent: all six SynthID and EXPEdit base cells flag ≥ 6 languages on MAUVE, while all six DIP base cells flag zero. Third, the per-cell GE 2 values expose within-scheme generator variation that the per-scheme bars in Figure 2 smooth over, the largest case being EXPEdit on MAUVE in the base regime, where Qwen (0.874) sits substantially above Mistral (0.536) and Gemma (0.574) despite all three being labelled “EXPEdit base” in the headline plot. 
+
+D.2 PPL preservation under mGPT cross-reference 
+
+The cross-scheme ranking is invariant to reference choice. Per-scheme means across the 33 base cells: XSIR (0.93 mGPT, 0.91 XGLM), Unigram (0.92, 0.89), KGW (0.86, 0.87), DIP (0.81, 0.80), SynthID (0.32, 0.29), EXPEdit (0.22, 0.19). Per-cell agreement is close throughout the grid. The Hindi-on-PPL pattern flagged in §5.2 reproduces under mGPT: KGW, Unigram, and XSIR all preserve Hindi at 
+
+≥ 0.75 under both references despite weaker BERTScore and MAUVE preservation in the same cells. The largest single-cell shift between references is SynthID-Mistral on Hindi (0.22 XGLM → 0.42 mGPT); the second-largest is EXPEdit-Qwen on Hindi (0.23 → 0.44). Both shifts are toward higher preservation under mGPT and are concentrated on the schemes already flagged as most distorting, so the cross-reference comparison reinforces rather than weakens the per-scheme conclusions of §5.2. Two-reference agreement supports the §4 design choice of treating PPL as a single paradigm with one primary and one cross-reference reading. Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen                                                                                                                                                                                          
+
+> 0.83 0.88 0.85 0.82 0.83 0.97 0.89 0.86 0.92 1.00 0.90 0.87 0.86 0.82 0.82 0.92 0.93 0.86 0.95 0.95 0.88 0.92 0.87 0.84 0.83 0.86 0.79 0.75 0.81 0.97 0.97 0.93 0.82 0.89 0.78 0.86 0.83 0.90 0.95 0.79 0.93 0.96 0.97 0.96 0.94 0.99 0.91 0.97 0.91 0.86 0.93 0.87 0.87 0.92 0.93 1.00 0.99 0.94 0.99 0.96 0.77 0.99 0.92 0.95 0.86 0.95 0.40 0.26 0.45 0.43 0.39 0.42 0.18 0.39 0.27 0.27 0.28 0.34 0.30 0.34 0.32 0.31 0.51 0.23 0.24 0.24 0.28 0.27 0.47 0.29 0.36 0.35 0.32 0.50 0.26 0.44 0.28 0.28 0.29 0.31 0.23 0.35 0.37 0.34 0.22 0.10 0.27 0.17 0.17 0.16 0.21 0.15 0.18 0.17 0.16 0.29 0.12 0.10 0.13 0.16 0.15 0.38 0.19 0.27 0.24 0.23 0.44 0.21 0.37 0.18 0.20 0.23 0.84 0.81 0.84 0.84 0.84 0.87 0.79 0.84 0.76 0.82 0.84 0.78 0.80 0.80 0.79 0.78 0.86 0.81 0.74 0.71 0.76 0.73 0.89 0.83 0.86 0.83 0.81 0.84 0.79 0.89 0.78 0.78 0.82 0.99 0.99 0.99 0.88 0.93 0.93 0.88 0.92 0.91 0.95 0.92 0.98 0.98 0.99 0.96 0.92 0.95 0.96 0.86 0.92 0.98 0.85 0.94 0.92 0.90 0.97 0.85 0.98 0.93 0.98 0.95 0.78 0.92
+> 0.0 0.2 0.4 0.6 0.8 1.0
+
+PPL preservation 
+
+(a) Base-FLORES regime. Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen                                                                                                                                                                                          
+
+> 0.95 0.88 0.92 0.92 0.93 0.90 0.86 0.93 0.85 0.89 0.92 0.98 0.95 1.00 0.98 1.00 0.98 0.97 0.95 0.96 0.97 0.97 0.96 0.85 0.97 0.94 0.94 0.87 0.90 0.93 0.88 0.86 0.91 0.97 0.82 0.92 0.92 0.91 0.92 0.91 0.92 0.89 0.89 0.88 0.97 0.99 0.97 1.00 0.98 0.99 0.99 0.96 0.96 0.96 0.95 0.94 0.84 0.95 0.96 0.93 0.87 0.86 0.94 0.93 0.87 0.93 0.91 0.63 0.84 0.79 0.78 0.56 0.24 0.67 0.59 0.42 0.42 0.97 0.91 0.95 0.95 0.98 0.96 0.90 0.89 0.90 0.93 0.96 0.83 0.56 0.71 0.75 0.75 0.76 0.58 0.78 0.62 0.49 0.66 0.88 0.56 0.78 0.77 0.73 0.47 0.24 0.64 0.54 0.38 0.38 0.85 0.74 0.79 0.78 0.77 0.89 0.74 0.79 0.68 0.79 0.77 0.89 0.58 0.73 0.73 0.72 0.78 0.62 0.80 0.66 0.47 0.67 0.99 0.95 0.95 0.96 0.98 0.93 0.86 0.95 0.93 0.91 0.93 1.00 0.99 1.00 0.98 1.00 1.00 0.99 0.97 0.98 0.99 0.98 0.98 0.89 0.97 0.95 0.94 0.94 0.93 0.96 0.93 0.91 0.93 0.98 0.95 0.96 0.96 0.96 0.97 0.96 0.94 0.92 0.93 0.92 0.99 0.99 1.00 0.97 0.98 1.00 0.99 0.97 0.98 0.98 0.98 0.97 0.87 0.91 0.94 0.90 0.96 0.93 0.95 0.93 0.87 0.91
+> 0.0 0.2 0.4 0.6 0.8 1.0
+
+PPL preservation (b) Instruct-AYA regime. 
+
+Figure 5: PPL preservation under mGPT-1.3B cross-reference. Format and color scale match Figure 1. 
+
+D.3 On-target vs. all-subset stratification 
+
+The headline quality reporting in §5.2 is computed on subset =all per the pre-registration. Figure 6 reports the per-cell shift ∆ = preservation on-target − preservation all across the three paradigms in both regimes. In base, shifts fall within ±0.05 for the vast majority of cells, with isolated MAUVE exceptions on Unigram-Gemma, XSIR-Gemma, and XSIR-Qwen that do not displace the cross-scheme rankings of §5.2. In instruct, shifts concentrate on the most-distorting schemes (SynthID, EXPEdit) and the lowest-adherence cells flagged in Table 4 (Mistral and Qwen on Arabic, Hindi, Turkish, Vietnamese). 20 Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen 
+
+-0.01 +0.01 -0.01 +0.01 +0.00 -0.04 +0.03 -0.00 +0.04 -0.01 -0.01 +0.01 -0.01 +0.04 +0.05 -0.03 -0.02 +0.11 +0.00 -0.03 +0.02 +0.04 -0.02 +0.01 +0.09 -0.00 -0.02 +0.08 +0.02 +0.00 +0.08 +0.06 +0.01 -0.02 +0.07 +0.04 +0.00 -0.07 -0.01 -0.02 -0.03 +0.06 +0.07 -0.03 +0.08 +0.04 +0.04 +0.06 +0.04 +0.15 -0.03 -0.02 +0.11 -0.06 +0.07 +0.00 +0.01 +0.02 +0.00 +0.01 -0.06 +0.01 +0.05 +0.05 +0.01 -0.06 +0.08 -0.02 +0.00 +0.02 +0.00 -0.01 -0.00 +0.08 -0.01 -0.01 +0.01 +0.10 -0.01 +0.10 +0.06 -0.01 +0.01 -0.01 -0.01 -0.00 +0.00 +0.02 +0.02 -0.02 -0.01 +0.01 -0.03 +0.03 -0.01 +0.01 -0.00 -0.06 +0.00 -0.06 -0.00 -0.00 +0.03 +0.00 +0.00 +0.00 -0.02 -0.01 -0.00 -0.00 -0.01 -0.00 +0.00 +0.00 -0.00 -0.00 -0.00 -0.00 +0.00 -0.00 -0.00 -0.01 -0.02 -0.01 -0.02 +0.01 +0.01 +0.00 +0.01 -0.00 -0.02 -0.00 +0.00 -0.01 -0.01 +0.00 -0.00 +0.03 -0.00 +0.01 -0.02 +0.00 -0.03 -0.00 -0.01 -0.01 -0.00 +0.01 +0.03 +0.02 +0.01 +0.01 +0.02 +0.06 +0.01 +0.03 +0.01 -0.01 -0.00 +0.04 +0.03 +0.01 +0.01 -0.03 +0.01 +0.03 +0.03 -0.11 -0.02 +0.03 +0.08 -0.01 -0.03 -0.03 -0.04 +0.04 -0.06 -0.03 -0.00 -0.05 +0.06 +0.09 +0.12 -0.06 -0.04 +0.05 +0.15 -0.01 +0.05 -0.03 -0.03 -0.03 +0.03 +0.08 +0.01 +0.02 +0.21 -0.02 
+
+0.3 0.2 0.1 0.0 0.1 0.2 0.3 
+
+MAUVE preservation 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
++0.00 +0.01 +0.00 +0.00 +0.00 +0.02 +0.01 +0.01 +0.02 +0.02 +0.01 +0.01 +0.01 +0.02 +0.01 +0.01 +0.05 +0.12 +0.03 +0.04 +0.02 +0.14 +0.01 +0.03 +0.02 +0.00 +0.01 +0.01 +0.00 +0.01 +0.00 +0.03 +0.01 +0.00 +0.02 +0.00 +0.00 +0.00 +0.02 +0.01 +0.01 +0.01 +0.03 +0.01 +0.02 +0.01 +0.02 +0.01 +0.02 +0.05 +0.01 +0.03 +0.09 +0.02 -0.01 +0.01 +0.03 +0.00 +0.01 +0.01 +0.00 +0.01 +0.04 +0.01 -0.04 +0.01 +0.00 +0.02 +0.00 +0.00 +0.00 +0.03 +0.02 +0.01 +0.02 +0.02 +0.02 +0.00 +0.01 +0.01 +0.01 +0.01 +0.05 +0.02 +0.02 +0.02 +0.01 +0.12 +0.01 +0.03 +0.02 +0.01 +0.01 +0.01 +0.02 +0.02 +0.00 +0.05 +0.01 +0.00 +0.03 +0.00 +0.00 +0.00 +0.06 +0.02 +0.01 +0.02 +0.02 +0.03 +0.01 +0.01 +0.02 +0.01 +0.01 +0.06 +0.03 +0.02 +0.02 +0.03 +0.13 +0.01 +0.03 +0.02 +0.01 +0.01 +0.01 +0.01 +0.02 +0.01 +0.06 +0.01 +0.00 +0.01 +0.00 +0.00 +0.00 +0.01 +0.01 +0.01 +0.01 +0.02 +0.01 +0.01 +0.01 +0.01 +0.01 +0.01 +0.08 +0.04 +0.03 +0.05 +0.01 +0.14 +0.01 +0.03 +0.02 +0.01 +0.01 +0.01 +0.00 +0.01 +0.00 +0.04 +0.01 +0.00 +0.02 +0.01 +0.00 +0.00 +0.02 +0.01 +0.02 +0.02 +0.02 +0.01 +0.01 +0.01 +0.02 +0.02 +0.01 +0.06 +0.02 +0.03 +0.03 +0.02 +0.12 +0.01 +0.04 +0.01 +0.00 +0.00 +0.00 +0.01 +0.02 +0.01 +0.06 +0.00 
+
+0.3 0.2 0.1 0.0 0.1 0.2 0.3 
+
+BERTScore F1 (rescaled) 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
+-0.00 -0.00 -0.00 +0.00 -0.00 -0.00 +0.01 -0.01 +0.00 -0.08 +0.00 -0.00 -0.00 -0.01 -0.01 -0.01 +0.01 -0.08 +0.01 -0.00 -0.03 +0.00 -0.01 +0.00 -0.00 +0.01 -0.01 -0.02 -0.01 +0.00 -0.00 -0.04 +0.01 +0.00 -0.06 +0.00 -0.01 +0.00 +0.00 -0.01 +0.00 +0.00 -0.07 -0.01 -0.04 -0.01 -0.02 -0.04 +0.07 +0.03 -0.03 +0.03 +0.01 +0.04 -0.09 -0.00 -0.06 -0.01 +0.01 -0.02 -0.00 -0.03 -0.01 -0.01 -0.06 +0.00 +0.00 -0.02 +0.00 +0.00 -0.00 -0.00 +0.00 -0.00 +0.00 -0.02 -0.00 +0.00 +0.01 -0.00 +0.00 -0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.04 -0.00 -0.08 -0.02 -0.00 -0.00 -0.00 -0.00 -0.01 +0.00 -0.08 +0.00 +0.00 -0.05 +0.00 +0.00 +0.00 -0.01 -0.00 +0.01 +0.00 -0.01 -0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 -0.00 +0.00 +0.00 -0.00 +0.03 -0.00 -0.07 -0.02 -0.00 -0.00 -0.01 -0.01 -0.01 +0.01 -0.06 +0.00 +0.00 -0.02 +0.00 +0.00 +0.00 +0.00 +0.01 -0.01 +0.01 -0.04 +0.00 -0.00 +0.01 -0.00 -0.00 -0.01 -0.00 -0.02 +0.01 +0.01 -0.01 +0.06 -0.00 -0.07 -0.02 +0.02 -0.00 -0.03 -0.01 -0.00 -0.00 -0.04 +0.00 -0.00 +0.03 -0.01 -0.00 -0.00 +0.01 -0.02 -0.02 +0.01 -0.06 -0.00 -0.03 +0.00 -0.02 -0.02 -0.01 -0.00 -0.02 +0.02 +0.01 -0.04 +0.11 -0.01 -0.03 -0.03 +0.02 -0.00 +0.00 -0.03 -0.01 -0.02 +0.06 +0.00 
+
+0.3 0.2 0.1 0.0 0.1 0.2 0.3 
+
+PPL preservation Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie KGW Mistral 
+
+KGW Gemma 
+
+KGW Qwen 
+
+Unigram Mistral 
+
+Unigram Gemma 
+
+Unigram Qwen 
+
+SynthID Mistral 
+
+SynthID Gemma 
+
+SynthID Qwen 
+
+EXPEdit Mistral 
+
+EXPEdit Gemma 
+
+EXPEdit Qwen 
+
+DIP Mistral 
+
+DIP Gemma 
+
+DIP Qwen 
+
+XSIR Mistral 
+
+XSIR Gemma 
+
+XSIR Qwen 
+
+-0.00 +0.00 +0.02 -0.00 -0.00 +0.01 -0.02 +0.00 +0.01 +0.00 +0.00 -0.00 -0.01 +0.03 +0.00 +0.00 -0.00 +0.02 +0.00 -0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 +0.00 -0.00 +0.03 -0.00 +0.00 +0.01 -0.00 +0.00 +0.05 -0.01 +0.00 -0.00 -0.01 -0.02 +0.00 -0.01 -0.03 -0.00 -0.00 +0.00 +0.00 -0.02 -0.00 -0.00 -0.00 -0.00 +0.00 -0.00 +0.00 -0.00 +0.00 +0.00 +0.00 +0.01 +0.03 +0.04 +0.00 -0.01 +0.02 +0.01 +0.00 +0.06 -0.00 +0.00 +0.00 -0.29 -0.04 +0.01 +0.06 -0.11 -0.14 -0.00 -0.01 +0.01 -0.00 -0.00 -0.00 +0.00 +0.00 -0.00 -0.01 +0.00 +0.00 +0.10 +0.04 +0.01 +0.01 -0.04 +0.25 +0.00 +0.14 +0.09 +0.08 -0.02 -0.02 -0.04 +0.12 -0.06 -0.16 -0.02 +0.14 -0.05 -0.07 -0.06 +0.06 +0.04 +0.01 -0.03 -0.03 +0.05 +0.13 +0.01 +0.08 -0.02 +0.00 +0.02 +0.25 +0.06 +0.11 +0.08 -0.01 +0.36 +0.02 +0.17 +0.11 +0.16 -0.00 -0.00 +0.01 -0.00 -0.00 +0.00 +0.02 +0.00 -0.01 +0.01 +0.00 -0.00 -0.00 +0.00 -0.00 -0.00 -0.00 +0.00 -0.00 -0.01 +0.00 -0.00 -0.00 +0.01 +0.00 -0.00 +0.00 +0.00 +0.00 -0.00 +0.00 -0.00 -0.00 +0.00 +0.00 +0.01 +0.00 +0.00 +0.00 +0.01 +0.00 +0.01 +0.01 -0.00 -0.00 -0.00 +0.02 -0.00 -0.00 -0.00 +0.00 -0.00 -0.01 +0.00 +0.00 +0.00 +0.00 +0.00 -0.00 +0.00 -0.01 +0.00 -0.00 +0.01 +0.00 +0.00 
+
+0.3 0.2 0.1 0.0 0.1 0.2 0.3 
+
+MAUVE preservation 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
++0.01 +0.02 +0.04 +0.01 +0.01 +0.02 +0.04 +0.02 +0.03 +0.02 +0.03 +0.00 +0.01 +0.03 +0.01 -0.00 +0.03 +0.02 +0.00 +0.01 +0.00 -0.00 +0.01 +0.01 +0.02 +0.02 +0.02 +0.02 +0.08 +0.00 +0.01 +0.02 +0.03 +0.02 +0.04 +0.02 +0.01 +0.01 +0.02 +0.04 +0.03 +0.04 +0.03 +0.02 +0.01 +0.01 +0.01 +0.00 +0.00 +0.03 +0.01 -0.00 +0.02 +0.01 +0.00 +0.01 +0.01 +0.02 +0.02 +0.02 +0.02 +0.09 +0.00 +0.01 +0.02 +0.03 +0.01 +0.06 +0.03 +0.02 +0.01 +0.04 +0.10 +0.04 +0.10 +0.04 +0.06 +0.00 +0.01 +0.01 -0.00 +0.00 +0.03 +0.02 +0.00 +0.01 +0.00 -0.00 +0.02 +0.03 +0.03 +0.02 +0.03 +0.03 +0.13 +0.00 +0.03 +0.07 +0.06 +0.02 +0.03 +0.03 +0.02 +0.02 +0.00 +0.09 +0.11 +0.04 +0.05 -0.01 +0.01 +0.00 +0.01 +0.01 +0.03 +0.01 +0.00 +0.03 +0.00 +0.01 +0.02 +0.06 +0.05 +0.05 +0.06 +0.03 +0.14 +0.01 +0.04 +0.08 +0.06 +0.01 +0.04 +0.03 +0.00 +0.01 +0.03 +0.06 +0.02 +0.05 +0.03 +0.04 +0.00 +0.00 +0.01 +0.01 +0.00 +0.03 +0.02 +0.00 +0.00 +0.00 -0.00 +0.01 +0.02 +0.02 +0.02 +0.02 +0.02 +0.07 +0.01 +0.01 +0.02 +0.02 +0.00 +0.01 +0.02 +0.01 +0.01 +0.01 +0.05 +0.03 +0.05 +0.02 +0.04 +0.01 -0.00 +0.02 +0.00 +0.00 +0.03 +0.01 -0.00 +0.01 +0.00 +0.00 +0.01 +0.02 +0.02 +0.02 +0.02 +0.02 +0.08 +0.00 +0.01 +0.02 +0.03 
+
+0.3 0.2 0.1 0.0 0.1 0.2 0.3 
+
+BERTScore F1 (rescaled) 
+
+Germ. Rom. 
+
+> Ind. Sem. Sin. Jpn. Tur. Aus.
+
+eng nld fra spa por hin arb zho jpn tur vie 
+
++0.00 +0.02 -0.00 +0.01 +0.00 -0.01 -0.03 -0.01 +0.00 -0.03 -0.02 +0.00 +0.00 +0.00 +0.02 -0.00 +0.01 -0.03 +0.00 +0.00 -0.01 +0.00 +0.01 -0.01 +0.02 -0.01 -0.00 -0.03 +0.02 +0.00 +0.01 -0.01 +0.00 -0.01 -0.19 -0.00 -0.00 -0.00 -0.04 -0.06 +0.00 +0.00 -0.05 -0.00 +0.01 +0.00 -0.01 +0.01 -0.00 -0.01 -0.01 +0.01 +0.00 -0.00 -0.00 +0.02 -0.00 +0.01 -0.00 +0.00 -0.04 +0.00 +0.00 +0.01 +0.00 +0.01 +0.01 -0.08 -0.00 +0.01 +0.01 -0.17 -0.08 +0.01 -0.02 -0.10 -0.08 +0.01 -0.02 +0.02 +0.01 +0.02 -0.00 -0.01 -0.00 +0.00 -0.01 -0.00 +0.02 -0.07 +0.05 +0.02 +0.02 -0.03 +0.02 +0.00 +0.03 -0.06 +0.04 -0.00 -0.15 -0.01 +0.01 -0.00 -0.22 -0.15 -0.05 -0.05 -0.12 -0.10 +0.00 -0.00 +0.00 +0.05 +0.06 +0.01 +0.05 +0.00 +0.05 -0.00 +0.01 +0.04 -0.16 +0.05 +0.05 +0.04 -0.04 +0.01 +0.00 +0.04 -0.07 +0.05 -0.00 -0.01 +0.00 +0.00 -0.01 -0.02 -0.02 +0.00 -0.02 -0.02 -0.01 -0.01 -0.01 -0.01 +0.01 -0.01 -0.01 +0.00 -0.00 +0.00 -0.01 +0.00 +0.01 -0.01 +0.01 -0.02 +0.00 -0.03 +0.01 +0.01 +0.00 +0.01 -0.00 -0.01 +0.03 -0.00 +0.01 -0.00 -0.02 -0.02 -0.01 -0.01 -0.04 -0.02 -0.01 -0.02 -0.01 +0.02 +0.01 -0.01 +0.00 +0.00 -0.00 -0.01 +0.00 -0.00 -0.04 +0.03 -0.00 +0.00 -0.03 +0.01 +0.00 +0.01 +0.00 +0.01 
+
+0.3 0.2 0.1 0.0 0.1 0.2 0.3 
+
+PPL preservation Figure 6: On-target minus all-subset preservation, base-FLORES regime (top) and instruct-AYA regime (bottom). Each cell is ∆ = preservation on-target − preservation all for the indicated paradigm; rows are (scheme, generator), columns are languages. Positive (red): on-target restriction raises preservation; negative (blue): on-target restriction lowers it. Color scale fixed at [−0.3, +0 .3] ; values outside this range saturate. The EXPEdit-Mistral, Arabic, BERTScore F1 entry in the instruct panel is omitted (—) because the on-target sample size falls below the n ≥ 100 paired-set floor. Two opposing patterns recur on these cells: MAUVE shifts are large and positive (on-target restriction raises apparent preservation, indicating that off-target generations are distributionally far from baseline), while PPL preservation shifts are predominantly negative (on-target generations are distributionally closer to baseline but exhibit lower fluency under the held-out reference). The bidirectionality reflects that off-target removal trades distributional similarity against reference-perplexity fluency in opposite directions on these cells, consistent with the green-list/sampling-time mechanism split. The four logit-bias schemes show shifts within ±0.05 on the great majority of entries in both regimes. With the single exception of the EXPEdit-Mistral, Arabic, BERTScore entry (omitted for falling below the n ≥ 100 paired-set floor), the conclusions of §5.2 survive on-target restriction: SynthID and EXPEdit remain the most distorting, the cross-paradigm disagreement pattern persists, and the typological structure of cross-language disparity is unchanged. 
+
+E Joint Detection-Quality: Full Paradigm Grid 
+
+Figure 7 reports the BERTScore-rescaled and PPL-XGLM companion panels to Figure 3. The topology of §5.3 carries through on both paradigms. Unigram and XSIR retain the highest base-21 −0.2 −0.1 0.0 0.1 0.2 0.3 0.4 0.5                                  
+
+> BERTScore-rescaled preservation
+> sB=0.130 sI=0.280
+> KGW
+> −0.2 −0.1 0.0 0.1 0.2 0.3 0.4 0.5 sB=0.506 sI=0.371
+> Unigram
+> −0.2 −0.1 0.0 0.1 0.2 0.3 0.4 0.5 sB=0.133 sI=0.334
+> SynthID
+> −0.2 −0.1 0.0 0.1 0.2 0.3 0.4 0.5 sB=0.195 sI=0.375
+> EXPEdit
+> −0.2 −0.1 0.0 0.1 0.2 0.3 0.4 0.5 sB=0.127 sI=0.287
+> DIP
+> −0.2 −0.1 0.0 0.1 0.2 0.3 0.4 0.5 sB=0.399 sI=0.241
+> XSIR
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> 0.2 0.4 0.6 0.8 1.0
+> PPL-XGLM preservation
+> sB=0.100 sI=0.234
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> 0.2 0.4 0.6 0.8 1.0 sB=0.484 sI=0.322
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> 0.2 0.4 0.6 0.8 1.0 sB=0.098 sI=0.375
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> 0.2 0.4 0.6 0.8 1.0 sB=0.100 sI=0.362
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> 0.2 0.4 0.6 0.8 1.0 sB=0.083 sI=0.233
+> 0.0 0.5 1.0
+> TPR @ FPR=0.01
+> 0.2 0.4 0.6 0.8 1.0 sB=0.354 sI=0.181
+> Base Instruct Germanic Romance Indic Semitic Sinitic Japonic Turkic Austroasiatic
+
+Figure 7: Joint per-language detection–quality landscape, BERTScore-rescaled (top) and PPL-XGLM (bottom) paradigms. Format matches Figure 3: markers are per-language (TPR @ τg , quality) pairs at α=0 .01 , n=33 per regime (11 languages × 3 generators); circles are base-FLORES, triangles are instruct-AYA; color encodes typological family; sB , sI are mean pairwise Euclidean distance within each regime. regime spread on every paradigm (Unigram sB ∈ [0 .484 , 0.551] ; XSIR sB ∈ [0 .354 , 0.399] ), with the four remaining schemes at sB ≤ 0.195 . EXPEdit, SynthID, and Unigram lead the instruct-regime spread on every paradigm, and XSIR carries the lowest instruct spread on every paradigm (sI ∈ [0 .181 , 0.241] ). The opposite-corner low-spread topologies of §5.3 (DIP top-right, EXPEdit bottom-right) reproduce on the BERTScore and PPL panels: DIP base sB ≤ 0.127 across paradigms, EXPEdit base sB ≤ 0.195 . The headline finding is that joint disparity is regime-shaped rather than scheme-uniform is therefore not specific to MAUVE. 
+
+F Mechanism Regression 
+
+The decompositions of §5.1-§5.3 establish that disparity is typology-structured but do not identify which structural variable does the work. This appendix reports per-language OLS fits of detection TPR and quality preservation on four candidate covariates: tokenizer fertility (tokens per FLORES-devtest sentence), unwatermarked-generation surprisal under XGLM-7.5B, a Latin-script indicator, and language-adherence rate (NWM% from Table 4). Tables 14 and 15 report per-regime single-covariate 
+
+R2 over 33 (language, generator) points; §F.1 repeats the quality-side analysis on BERTScore-rescaled and PPL-XGLM as paradigm-stability checks on the MAUVE headline. 
+
+Detection and quality have different mechanisms. In base, adherence is the dominant detection predictor for KGW, SynthID, and DIP ( R2 between 0.41 ∗∗ and 0.60 ∗∗ ); fertility is dominant for the distortion-free schemes (EXPEdit 0.83 ∗∗ , DIP 0.24 ∗∗ ). On quality, fertility predicts the green-list schemes (KGW 0.39 ∗∗ , Unigram 0.25 ∗∗ , DIP 0.23 ∗∗ ), and adherence registers only for the distortion-free schemes under instruct. The covariate that drives detectability is not the one that drives preservation. 
+
+Instruction tuning collapses detection-side structure. Detection R2 falls below significance for five of six schemes under instruct (XSIR adherence 0.29 ∗∗ excepted), consistent with the calibrational instruct collapse of §5.1. Quality-side fertility persists for the green-list family. Latin script and NWM surprisal clear p < 0.05 in 6 of 48 cells combined; both correlate with the typological partition but neither carries enough non-collinear signal at n=33 to compete. Pooling across regimes (results omitted) dilutes the regime-specific detection mechanisms while preserving the regime-stable quality-side fertility effect, corroborating the asymmetry. 22 Covariate KGW Unigram SynthID EXPEdit DIP XSIR                                                     
+
+> Base regime (FLORES+ continuation, n= 33 )
+> Fertility (tokens/sent.) 0.016 0.052 0.008 0.834 ∗∗ 0.238 ∗∗ 0.001 NWM surprisal (XGLM) 0.066 0.074 0.058 0.261 ∗∗ 0.156 ∗0.003 Latin script 0.029 0.001 0.005 0.051 0.009 0.019 NWM adherence 0.600 ∗∗ 0.006 0.415 ∗∗ 0.001 0.461 ∗∗ 0.091
+> Instruct regime (AYA native-speaker, n= 33 )
+> Fertility (tokens/sent.) 0.017 0.046 0.009 0.001 0.000 0.107 NWM surprisal (XGLM) 0.024 0.003 0.009 0.040 0.017 0.011 Latin script 0.046 0.014 0.035 0.049 0.040 0.058 NWM adherence 0.000 0.000 0.003 0.047 0.000 0.291 ∗∗
+
+Table 14: Single-covariate R2 for per-language detection TPR at τg , α=0 .01 , subset all. Each fit regresses the per-language outcome vector on a single covariate over 33 (language, generator) points. Stars from the slope p-value: ∗p < 0.05 , ∗∗ p < 0.01 .                                                          
+
+> Covariate KGW Unigram SynthID EXPEdit DIP XSIR
+> Base regime (FLORES+ continuation, n= 33 )
+> Fertility (tokens/sent.) 0.392 ∗∗ 0.249 ∗∗ 0.027 0.005 0.234 ∗∗ 0.093 NWM surprisal (XGLM) 0.026 0.023 0.018 0.001 0.007 0.009 Latin script 0.136 ∗0.036 0.062 0.052 0.083 0.000 NWM adherence 0.031 0.007 0.101 0.074 0.219 ∗∗ 0.072
+> Instruct regime (AYA native-speaker, n= 33 )
+> Fertility (tokens/sent.) 0.346 ∗∗ 0.464 ∗∗ 0.027 0.016 0.019 0.168 ∗
+> NWM surprisal (XGLM) 0.008 0.152 ∗0.022 0.052 0.005 0.002 Latin script 0.122 ∗0.051 0.018 0.041 0.052 0.082 NWM adherence 0.076 0.099 0.153 ∗0.230 ∗∗ 0.053 0.047
+
+Table 15: Single-covariate R2 for per-language MAUVE preservation. Each fit regresses the per-language outcome vector on a single covariate over 33 (language, generator) points. Stars from the slope p-value: ∗p < 0.05 , ∗∗ p < 0.01 . BERTScore-rescaled and PPL-XGLM paradigm-stability tables in §F.1. 
+
+F.1 Paradigm-stability check 
+
+Tables 16 and 17 repeat the single-covariate quality-side regression with BERTScore-rescaled and PPL-XGLM as the outcome. PPL-XGLM corroborates and strengthens the MAUVE story: fertility is the dominant predictor for the green-list family on both regimes, with the largest R2 values in the entire mechanism analysis appearing under instruct (KGW 0.446 ∗∗ , Unigram 0.559 ∗∗ , XSIR 
+
+0.340 ∗∗ ). BERTScore-rescaled diverges: adherence, not fertility, is the dominant predictor in base for five of six schemes ( R2 between 0.188 ∗ and 0.378 ∗∗ ). The divergence is consistent with the narrow-dynamic-range observation of §5.2: BERTScore-rescaled F1 is sensitive to the per-language LID-baseline that goes into rescaling, so its single-covariate R2 captures adherence rather than the fertility-driven distributional shift that MAUVE and PPL-XGLM register. The fertility-on-green-list mechanism is therefore paradigm-stable across the two paradigms that measure distributional or reference-likelihood divergence directly. 23 Covariate KGW Unigram SynthID EXPEdit DIP XSIR 
+
+Base regime ( n = 33 )
+
+Fertility (tokens/sent.) 0.000 0.013 0.024 0.054 0.039 0.095 NWM surprisal (XGLM) 0.036 0.016 0.000 0.032 0.039 0.094 Latin script 0.068 0.207 ∗∗ 0.004 0.022 0.003 0.008 NWM adherence 0.239 ∗∗ 0.004 0.378 ∗∗ 0.259 ∗∗ 0.298 ∗∗ 0.188 ∗
+
+Instruct regime ( n = 33 )
+
+Fertility (tokens/sent.) 0.072 0.069 0.043 0.026 0.047 0.051 NWM surprisal (XGLM) 0.034 0.034 0.030 0.021 0.037 0.026 Latin script 0.046 0.045 0.042 0.037 0.044 0.056 NWM adherence 0.096 0.095 0.119 ∗ 0.125 ∗ 0.123 ∗ 0.110 
+
+Table 16: Single-covariate R2 for BERTScore-rescaled preservation. Stars from the slope p-value: 
+
+∗p < 0.05 , ∗∗ p < 0.01 .
+
+Covariate KGW Unigram SynthID EXPEdit DIP XSIR 
+
+Base regime ( n = 33 )
+
+Fertility (tokens/sent.) 0.191 ∗ 0.327 ∗∗ 0.013 0.000 0.121 ∗ 0.148 ∗
+
+NWM surprisal (XGLM) 0.003 0.179 ∗ 0.017 0.018 0.094 0.183 ∗
+
+Latin script 0.022 0.001 0.126 ∗ 0.105 0.052 0.056 NWM adherence 0.186 ∗ 0.014 0.164 ∗ 0.123 ∗ 0.109 0.015 
+
+Instruct regime ( n = 33 )
+
+Fertility (tokens/sent.) 0.446 ∗∗ 0.559 ∗∗ 0.119 ∗ 0.070 0.225 ∗∗ 0.340 ∗∗ 
+
+NWM surprisal (XGLM) 0.044 0.029 0.010 0.000 0.047 0.016 Latin script 0.086 0.077 0.070 0.084 0.046 0.012 NWM adherence 0.020 0.024 0.096 0.217 ∗∗ 0.023 0.006 
+
+Table 17: Single-covariate R2 for PPL-XGLM preservation. Stars from the slope p-value: ∗p < 0.05 ,
+
+∗∗ p < 0.01 .24
