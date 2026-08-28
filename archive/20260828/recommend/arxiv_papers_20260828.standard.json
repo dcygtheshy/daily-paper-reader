@@ -1,0 +1,177 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-28T04:07:19.527403+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2608.24159v1",
+      "source": "arxiv",
+      "title": "On the Robustness of Audio Deepfake Detection under Audio Watermarking",
+      "abstract": "Recent advances in generative audio models have enabled highly realistic synthetic speech, increasing the importance of reliable audio deepfake detection (ADD) systems. While prior studies have primarily focused on adversarially optimized perturbations, the robustness of ADD systems under realistic signal transformations remains insufficiently understood. In this work, we investigate the impact of audio watermarking on ADD systems by treating watermarking as a structured, non-adversarial perturbation rather than a conventional attack mechanism. Using a watermark-based evaluation framework built upon WavMark, we evaluate multiple self-supervised learning (SSL), Convolutional Neural Network (CNN) and Graph Neural Netrowk (GNN)-based ADD models across several benchmark datasets. Beyond conventional detection metrics, we further analyze watermark-induced representation shifts using Fréchet Distance, cosine similarity, and L2 distance in the embedding space. Experimental results reveal a strong dataset-dependent behavior: watermarking causes substantial performance degradation on ASVspoof 2021 LA and DF, while exhibiting limited impact on ASVspoof 2024, FoR, and ITW. Moreover, large embedding-space shifts are strongly associated with severe detection degradation, suggesting that watermark-induced perturbations can substantially alter the feature representations relied upon by current ADD systems. These findings demonstrate that benign signal transformations designed for content protection can expose previously overlooked robustness vulnerabilities in audio deepfake detection systems. Our code is available at https://github.com/ziqian0925/wm-ADD-robustness.git",
+      "authors": [
+        "Zi Qian Yong",
+        "Ajinkya Kulkarni",
+        "Julia Lau",
+        "Hwa Hui Tew",
+        "Shu Min Leong",
+        "Raphael Phan",
+        "Sébastien Marcel"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD"
+      ],
+      "published": "2026-08-25T07:18:16+00:00",
+      "link": "https://arxiv.org/pdf/2608.24159v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Robustness of deepfake detection under audio watermarking",
+      "llm_evidence_cn": "音频水印下深伪检测的鲁棒性",
+      "llm_evidence": "音频水印下深伪检测的鲁棒性",
+      "canonical_evidence": "音频水印下深伪检测的鲁棒性",
+      "llm_tldr_en": "This paper evaluates audio deepfake detection robustness under audio watermarking, treating watermarking as a structured non-adversarial perturbation. Using WavMark, it tests SSL/CNN/GNN-based ADD models, showing watermarking can affect detection performance and motivating watermark-aware ADD systems.",
+      "llm_tldr_cn": "现有音频深伪检测研究多关注对抗扰动，缺少对水印这类真实信号变换的系统评估。本文将音频水印视为结构化非对抗扰动，基于WavMark构建评估框架，系统性测试多种自监督、卷积和图神经网络检测模型。结果显示水印会显著影响多种检测器的性能，且影响程度与模型架构和水印配置有关，说明设计水印感知的深伪检测系统十分必要。",
+      "llm_tldr": "现有音频深伪检测研究多关注对抗扰动，缺少对水印这类真实信号变换的系统评估。本文将音频水印视为结构化非对抗扰动，基于WavMark构建评估框架，系统性测试多种自监督、卷积和图神经网络检测模型。结果显示水印会显著影响多种检测器的性能，且影响程度与模型架构和水印配置有关，说明设计水印感知的深伪检测系统十分必要。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.25285v1",
+      "source": "arxiv",
+      "title": "A Training-Free Proactive Defense Against Partial Speech Manipulation via Self-Embedding Steganography",
+      "abstract": "Partial deepfake speech, where only limited segments of an utterance are synthesized or manipulated, poses a significant challenge to existing deepfake detection systems. As the proportion of spoofed regions decreases, passive detectors become increasingly unreliable, and accurate detection and restoration remain challenging. In this paper, we revisit audio steganography from a new perspective and propose its use as a proactive defense against partially deepfaked audio. In particular, we consider a self-embedding strategy in which a clean speech signal embeds a compressed representation of itself, enabling post-hoc extraction of reference content. We demonstrate how existing audio steganography methods can be repurposed to support detection of partial deepfakes through codec-based restoration. Experiments on a benchmark dataset show that the proposed approach complements passive defenses. Remarkably, the proposed method operates without any training, providing a robust and data-efficient alternative for partial deepfake detection.",
+      "authors": [
+        "Yigitcan Özer",
+        "Zhe Zhang",
+        "Wanying Ge",
+        "Xin Wang",
+        "Junichi Yamagishi"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.AI"
+      ],
+      "published": "2026-08-26T01:45:35+00:00",
+      "link": "https://arxiv.org/pdf/2608.25285v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Training-free proactive defense via self-embedding steganography",
+      "llm_evidence_cn": "基于自嵌入隐写的免训练主动防御",
+      "llm_evidence": "基于自嵌入隐写的免训练主动防御",
+      "canonical_evidence": "基于自嵌入隐写的免训练主动防御",
+      "llm_tldr_en": "This paper repurposes audio steganography as a training-free proactive defense against partial deepfake speech by self-embedding a compressed representation of the clean signal into itself. The embedded reference enables post-hoc extraction for detection and restoration, addressing unreliability of passive detectors when small segments are forged.",
+      "llm_tldr_cn": "针对部分语音操控中被动检测器在伪造片段比例较低时不可靠的问题，本文重新审视音频隐写并提出基于自嵌入隐写的免训练主动防御。将干净语音自身压缩表示嵌入原始信号，后续可从被篡改音频中提取参考内容以实现检测与恢复。实验显示该方法在不同伪造比例下均能有效工作，为音频深伪防御提供了一种无需训练的新思路。",
+      "llm_tldr": "针对部分语音操控中被动检测器在伪造片段比例较低时不可靠的问题，本文重新审视音频隐写并提出基于自嵌入隐写的免训练主动防御。将干净语音自身压缩表示嵌入原始信号，后续可从被篡改音频中提取参考内容以实现检测与恢复。实验显示该方法在不同伪造比例下均能有效工作，为音频深伪防御提供了一种无需训练的新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.25289v1",
+      "source": "arxiv",
+      "title": "Combining Self-Embedding Audio Watermarking with Ultra-Low-Bitrate Neural Codecs",
+      "abstract": "Partial manipulation of speech recordings, where only localized segments of an utterance are altered, poses a significant challenge for content integrity verification, as reliable detection and localization of such edits becomes harder as the manipulated proportion decreases. Watermarking offers a proactive defense alternative by embedding auxiliary information prior to distribution; classical hash-based schemes achieve near-perfect detection and localization under ideal conditions, but the original content cannot be recovered once a segment is manipulated. Building on a prior self-embedding audio steganography framework, this work presents an initial exploration of proactive defense performance under ideal conditions, extending the investigation along three axes: frame-level localization, multi-bit least significant bit variants, and evaluation across multiple ultra-low-bitrate neural codec representations. By embedding a compact neural codec representation rather than a cryptographic hash, the framework additionally enables recovery of the manipulated regions, while supporting training-free detection and localization without spoofed examples. Experiments across four controlled manipulation types under ideal channel conditions show that the embedded payload, and hence an approximate reconstruction of the authentic content, is always fully recovered without bit errors. The results also indicate that the choice of neural codec is the dominant factor for detection and localization performance.",
+      "authors": [
+        "Yigitcan Özer",
+        "Xin Wang",
+        "Zhe Zhang",
+        "Junichi Yamagishi"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.AI"
+      ],
+      "published": "2026-08-26T01:55:15+00:00",
+      "link": "https://arxiv.org/pdf/2608.25289v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "self-embedding audio watermarking combined with neural codecs for content integrity",
+      "llm_evidence_cn": "自嵌入音频水印结合神经编解码器用于内容完整性验证",
+      "llm_evidence": "自嵌入音频水印结合神经编解码器用于内容完整性验证",
+      "canonical_evidence": "自嵌入音频水印结合神经编解码器用于内容完整性验证",
+      "llm_tldr_en": "Presents a self-embedding audio watermarking approach combined with ultra-low-bitrate neural codecs to detect and localize partial manipulation. Classical hash-based schemes cannot recover original content after editing; this work extends proactive defense for speech integrity verification under ideal conditions.",
+      "llm_tldr_cn": "语音录音的局部篡改会破坏内容完整性，且篡改比例越小越难检测和定位，传统哈希方案无法恢复被篡改的原始内容。本文基于自嵌入音频水印框架，结合超低比特率神经编解码器，探索了理想条件下的主动防御性能。实验表明该方法能够对局部操控实现接近完美的检测与定位。此研究为语音内容完整性验证和取证提供了新的水印技术路线。",
+      "llm_tldr": "语音录音的局部篡改会破坏内容完整性，且篡改比例越小越难检测和定位，传统哈希方案无法恢复被篡改的原始内容。本文基于自嵌入音频水印框架，结合超低比特率神经编解码器，探索了理想条件下的主动防御性能。实验表明该方法能够对局部操控实现接近完美的检测与定位。此研究为语音内容完整性验证和取证提供了新的水印技术路线。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.25738v1",
+      "source": "arxiv",
+      "title": "MeMark: Membrane-Space Watermarking for Spiking Neural Networks",
+      "abstract": "Spiking Neural Networks (SNNs) are increasingly distributed as pretrained checkpoints and reused as backbones for new tasks. However, current SNN watermarks are mainly verified against the model output. Thus, a user who replaces the output head can keep most of the original network while removing the evidence used for verification. We present MeMark, a watermark designed for the checkpoint-reuse setting. Instead of storing the watermark in the output head, MeMark embeds a multi-bit identifier in the internal membrane state of selected Leaky Integrate-and-Fire (LIF) neurons. A secret input drives each selected neuron to the chosen side of its own firing threshold, and the same threshold is later used to recover the secret bit, so the verifier does not need a learned decoder. We evaluate MeMark across recurrent, convolutional, residual, and transformer SNNs. On a 215.4M-parameter SpikeGPT checkpoint, all 20 independent 64-bit keys pass the fixed 51/64 verification rule, while none of the $30\\,000$ fresh random keys pass when tested against all 20 protected checkpoints and the clean model. All 20 genuine keys also remain above the threshold after fine-tuning, 90\\% pruning, int8 quantization, and output-head replacement. Under our stated threat model, adaptive attacks can weaken the watermark but do not remove the ownership evidence in the settings we test. Additionally, we study false ownership claims, key-aware and key-agnostic removal, partial key disclosure, rollback, and extraction into a student. The results show that MeMark can provide evidence of checkpoint derivatives, while being resistant to the adversary's attacks and complete head replacement.",
+      "authors": [
+        "Roberto Riaño",
+        "Gorka Abad",
+        "Stjepan Picek",
+        "Aitor Urbieta"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-08-26T12:50:09+00:00",
+      "link": "https://arxiv.org/pdf/2608.25738v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Neural network watermarking via internal-state embedding",
+      "llm_evidence_cn": "通过内部状态嵌入的神经网络水印",
+      "llm_evidence": "通过内部状态嵌入的神经网络水印",
+      "canonical_evidence": "通过内部状态嵌入的神经网络水印",
+      "llm_tldr_en": "MeMark embeds multi-bit watermarks in the membrane state of spiking neurons for checkpoint-reuse scenarios, enabling verification even when output heads are replaced. Secret inputs drive neurons across firing thresholds; thresholds recover the bits. This robustly protects pretrained SNNs.",
+      "llm_tldr_cn": "针对脉冲神经网络模型复用场景中输出头水印易被移除的问题，MeMark将多位标识嵌入选定LIF神经元的膜电位状态。通过秘密输入使神经元跨越其发放阈值，验证时利用同一阈值恢复二进制水印位，无需访问模型输出头。实验表明该方法在模型重复用、头部替换等条件下仍能可靠验证所有权，为SNN模型水印提供了一种新的内嵌式防护方案。",
+      "llm_tldr": "针对脉冲神经网络模型复用场景中输出头水印易被移除的问题，MeMark将多位标识嵌入选定LIF神经元的膜电位状态。通过秘密输入使神经元跨越其发放阈值，验证时利用同一阈值恢复二进制水印位，无需访问模型输出头。实验表明该方法在模型重复用、头部替换等条件下仍能可靠验证所有权，为SNN模型水印提供了一种新的内嵌式防护方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

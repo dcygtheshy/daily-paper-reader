@@ -1,0 +1,69 @@
+{
+  "label": "2026-08-28",
+  "date": "2026-08-28",
+  "generated_at": "2026-08-28T04:09:14",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202608/28/2608.24159v1-on-the-robustness-of-audio-deepfake-detection-under-audio-watermarking",
+      "section": "quick",
+      "title_en": "On the Robustness of Audio Deepfake Detection under Audio Watermarking",
+      "authors": "Zi Qian Yong, Ajinkya Kulkarni, Julia Lau, Hwa Hui Tew, Shu Min Leong, Raphael Phan, Sébastien Marcel",
+      "date": "2026-08-25",
+      "pdf": "https://arxiv.org/pdf/2608.24159v1",
+      "score": "7.0",
+      "evidence": "音频水印下深伪检测的鲁棒性",
+      "tldr": "音频深度伪造检测（ADD）对现实世界信号变换的鲁棒性尚未充分探索，现有研究多聚焦于对抗性扰动。本文将音频水印视为一种结构化的非对抗扰动，基于WavMark搭建评估框架，系统考察多个自监督学习、卷积神经网络和图神经网络模型在多个基准数据集上的检测性能，并从嵌入空间偏移角度分析水印影响。实验发现，水印在ASVspoof 2021 LA和DF上造成显著的检测性能下降，而在ASVspoof 2024、FoR和ITW上影响有限；大的嵌入空间偏移与严重性能退化密切相关。工作表明，内容保护等良性信号变换可能暴露ADD系统的鲁棒性缺陷，为鲁棒性评估提供了新视角。",
+      "tags": "query:watermarking",
+      "abstract_en": "Recent advances in generative audio models have enabled highly realistic synthetic speech, increasing the importance of reliable audio deepfake detection (ADD) systems. While prior studies have primarily focused on adversarially optimized perturbations, the robustness of ADD systems under realistic signal transformations remains insufficiently understood. In this work, we investigate the impact of audio watermarking on ADD systems by treating watermarking as a structured, non-adversarial perturbation rather than a conventional attack mechanism. Using a watermark-based evaluation framework built upon WavMark, we evaluate multiple self-supervised learning (SSL), Convolutional Neural Network (CNN) and Graph Neural Netrowk (GNN)-based ADD models across several benchmark datasets. Beyond conventional detection metrics, we further analyze watermark-induced representation shifts using Fréchet Distance, cosine similarity, and L2 distance in the embedding space. Experimental results reveal a strong dataset-dependent behavior: watermarking causes substantial performance degradation on ASVspoof 2021 LA and DF, while exhibiting limited impact on ASVspoof 2024, FoR, and ITW. Moreover, large embedding-space shifts are strongly associated with severe detection degradation, suggesting that watermark-induced perturbations can substantially alter the feature representations relied upon by current ADD systems. These findings demonstrate that benign signal transformations designed for content protection can expose previously overlooked robustness vulnerabilities in audio deepfake detection systems. Our code is available at https://github.com/ziqian0925/wm-ADD-robustness.git",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/28/2608.25289v1-combining-self-embedding-audio-watermarking-with-ultra-low-bitrate-neural-codecs",
+      "section": "quick",
+      "title_en": "Combining Self-Embedding Audio Watermarking with Ultra-Low-Bitrate Neural Codecs",
+      "authors": "Yigitcan Özer, Xin Wang, Zhe Zhang, Junichi Yamagishi",
+      "date": "2026-08-26",
+      "pdf": "https://arxiv.org/pdf/2608.25289v1",
+      "score": "7.0",
+      "evidence": "自嵌入音频水印结合神经编解码器用于内容完整性验证",
+      "tldr": "局部语音的部分操纵使内容完整性验证困难，且操纵比例越小越难以检测定位；经典哈希水印虽可检测但无法恢复原始内容。为此，将自嵌入音频水印与超低比特率神经编解码器结合，以紧凑编解码表示取代哈希嵌入，并探索帧级定位与多比特LSB变体。理想信道下四种受控操纵中负载均无位错完整恢复，可实现篡改区域重建；且神经编解码器选择是检测定位性能的主导因素，展现出无需训练即可检测定位与内容恢复的能力。",
+      "tags": "query:watermarking",
+      "abstract_en": "Partial manipulation of speech recordings, where only localized segments of an utterance are altered, poses a significant challenge for content integrity verification, as reliable detection and localization of such edits becomes harder as the manipulated proportion decreases. Watermarking offers a proactive defense alternative by embedding auxiliary information prior to distribution; classical hash-based schemes achieve near-perfect detection and localization under ideal conditions, but the original content cannot be recovered once a segment is manipulated. Building on a prior self-embedding audio steganography framework, this work presents an initial exploration of proactive defense performance under ideal conditions, extending the investigation along three axes: frame-level localization, multi-bit least significant bit variants, and evaluation across multiple ultra-low-bitrate neural codec representations. By embedding a compact neural codec representation rather than a cryptographic hash, the framework additionally enables recovery of the manipulated regions, while supporting training-free detection and localization without spoofed examples. Experiments across four controlled manipulation types under ideal channel conditions show that the embedded payload, and hence an approximate reconstruction of the authentic content, is always fully recovered without bit errors. The results also indicate that the choice of neural codec is the dominant factor for detection and localization performance.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/28/2608.25285v1-a-training-free-proactive-defense-against-partial-speech-manipulation-via-self-embedding-steganography",
+      "section": "quick",
+      "title_en": "A Training-Free Proactive Defense Against Partial Speech Manipulation via Self-Embedding Steganography",
+      "authors": "Yigitcan Özer, Zhe Zhang, Wanying Ge, Xin Wang, Junichi Yamagishi",
+      "date": "2026-08-26",
+      "pdf": "https://arxiv.org/pdf/2608.25285v1",
+      "score": "6.0",
+      "evidence": "基于自嵌入隐写的免训练主动防御",
+      "tldr": "部分深度伪造语音仅篡改话语的有限片段，导致被动检测器在伪造比例较低时不可靠。本文重新审视音频隐写术，提出自嵌入主动防御：将干净语音的压缩表征嵌入自身，事后提取参考内容进行比对。在基准数据集上的实验表明，该方法无需训练即可有效检测部分伪造，并能与被动检测互补。这为深度伪造音频检测提供了数据高效且无需训练的新途径。",
+      "tags": "query:watermarking",
+      "abstract_en": "Partial deepfake speech, where only limited segments of an utterance are synthesized or manipulated, poses a significant challenge to existing deepfake detection systems. As the proportion of spoofed regions decreases, passive detectors become increasingly unreliable, and accurate detection and restoration remain challenging. In this paper, we revisit audio steganography from a new perspective and propose its use as a proactive defense against partially deepfaked audio. In particular, we consider a self-embedding strategy in which a clean speech signal embeds a compressed representation of itself, enabling post-hoc extraction of reference content. We demonstrate how existing audio steganography methods can be repurposed to support detection of partial deepfakes through codec-based restoration. Experiments on a benchmark dataset show that the proposed approach complements passive defenses. Remarkably, the proposed method operates without any training, providing a robust and data-efficient alternative for partial deepfake detection.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/28/2608.25738v1-memark-membrane-space-watermarking-for-spiking-neural-networks",
+      "section": "quick",
+      "title_en": "MeMark: Membrane-Space Watermarking for Spiking Neural Networks",
+      "authors": "Roberto Riaño, Gorka Abad, Stjepan Picek, Aitor Urbieta",
+      "date": "2026-08-26",
+      "pdf": "https://arxiv.org/pdf/2608.25738v1",
+      "score": "6.0",
+      "evidence": "通过内部状态嵌入的神经网络水印",
+      "tldr": "针对现有SNN水印依赖输出头、易被用户替换而移除证据的问题，提出MeMark检查点水印。方法将多比特标识嵌入选定LIF神经元的膜状态，通过秘密输入驱动每个神经元到阈值一侧，验证时复用同一阈值恢复比特，无需学习解码器。在SpikeGPT等模型上，20个64位真实密钥全部通过51/64验证，3万随机密钥无一误报，且对微调、90%剪枝、int8量化及输出头替换保持鲁棒。能为检查点衍生提供可靠证据，并抵抗自适应攻击与误报指控。",
+      "tags": "query:watermarking",
+      "abstract_en": "Spiking Neural Networks (SNNs) are increasingly distributed as pretrained checkpoints and reused as backbones for new tasks. However, current SNN watermarks are mainly verified against the model output. Thus, a user who replaces the output head can keep most of the original network while removing the evidence used for verification. We present MeMark, a watermark designed for the checkpoint-reuse setting. Instead of storing the watermark in the output head, MeMark embeds a multi-bit identifier in the internal membrane state of selected Leaky Integrate-and-Fire (LIF) neurons. A secret input drives each selected neuron to the chosen side of its own firing threshold, and the same threshold is later used to recover the secret bit, so the verifier does not need a learned decoder. We evaluate MeMark across recurrent, convolutional, residual, and transformer SNNs. On a 215.4M-parameter SpikeGPT checkpoint, all 20 independent 64-bit keys pass the fixed 51/64 verification rule, while none of the $30\\,000$ fresh random keys pass when tested against all 20 protected checkpoints and the clean model. All 20 genuine keys also remain above the threshold after fine-tuning, 90\\% pruning, int8 quantization, and output-head replacement. Under our stated threat model, adaptive attacks can weaken the watermark but do not remove the ownership evidence in the settings we test. Additionally, we study false ownership claims, key-aware and key-agnostic removal, partial key disclosure, rollback, and extraction into a student. The results show that MeMark can provide evidence of checkpoint derivatives, while being resistant to the adversary's attacks and complete head replacement.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
