@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-08-30 <!--dpr-date:20260830-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/30/2608.22213v1-adaptprint-response-adaptive-fingerprinting-of-black-box-llm-services" data-sidebar-item="{&quot;title&quot;: &quot;AdaptPrint: Response-Adaptive Fingerprinting of Black-Box LLM Services&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2608.22213v1-adaptprint-response-adaptive-fingerprinting-of-black-box-llm-services&quot;, &quot;score&quot;: &quot;9.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;黑盒大语言模型服务指纹识别，直接属于生成模型指纹识别技术&quot;}">AdaptPrint: Response-Adaptive Fingerprinting of Black-Box LLM Services</a>
   * 2026-08-28 <!--dpr-date:20260828-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202608/28/2608.24159v1-on-the-robustness-of-audio-deepfake-detection-under-audio-watermarking" data-sidebar-item="{&quot;title&quot;: &quot;On the Robustness of Audio Deepfake Detection under Audio Watermarking&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2608.24159v1-on-the-robustness-of-audio-deepfake-detection-under-audio-watermarking&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;音频水印下深伪检测的鲁棒性&quot;}">On the Robustness of Audio Deepfake Detection under Audio Watermarking</a>

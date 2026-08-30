@@ -1,0 +1,725 @@
+Title: AdaptPrint: Response-Adaptive Fingerprinting of Black-Box LLM Services
+
+URL Source: https://arxiv.org/pdf/2608.22213v1
+
+Published Time: Tue, 25 Aug 2026 00:56:55 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# AdaptPrint: Response-Adaptive Fingerprinting of Black-Box LLM Services 
+
+Yilin Li 1,2 , Yifei Zhang 1,2 , Guozhu Meng 1,2, *
+
+> 1
+
+State Key Laboratory of Cyberspace Security Defense, Institute of Information Engineering, Chinese Academy of Sciences, China 
+
+> 2
+
+School of Cybersecurity, University of Chinese Academy of Sciences, China 
+
+{liyilin2023, mengguozhu }@iie.ac.cn, zhangyifei26@mails.ucas.ac.cn 
+
+Abstract —Black-box LLM services have emerged as a practical deployment paradigm. Nevertheless, their opacity also hinders the systematic assessment of security risks and complicates copy-right auditing for model owners. Black-box LLM fingerprinting, which identifies the underlying LLM identity through query-response interactions, offers a promising way to bridge this gap. Existing approaches typically collect responses from target LLM services using a fixed set of queries and perform poorly in the presence of realistic and complex configurations (e.g., system prompt and sampling settings). To overcome these limitations, we propose AdaptPrint, a response-adaptive fingerprinting method for revealing hidden LLM identities in black-box LLM services. AdaptPrint integrates three progressive response consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing. AdaptPrint determines the final LLM identity by performing similarity matching among candidate LLMs. Experimental results show that AdaptPrint significantly out-performs state-of-the-art methods among 27 candidate models, achieving Top-1, Top-3, and Top-5 accuracies of 80.6%, 90.3%, and 92.1%. AdaptPrint also demonstrates strong robustness across different defense strategies and decoding parameters. 
+
+I. I NTRODUCTION 
+
+With the rapid advancement of large language models (LLMs), different LLMs have been widely adopted as the backend of various LLM services. Due to differences in model capability, cost, and task preference, LLMs are typically selected to match the requirements of specific service cate-gories, such as knowledge-based question answering, software development, and real-time translation [1], [2]. Such services are commonly realized either through self-hosting models on cloud platforms or through wrapping responses obtained from upstream LLM providers into downstream applications [3], [4], [5], [6]. In these service scenarios, users interact with the model by requesting queries and receiving responses, without direct access to the model parameters or gradients. Among these LLM services, some providers disclose the underlying model identity, thereby allowing users to better assess model capabilities and ensuring greater transparency in service pricing [7], [8], [9]. We refer to them as white-box LLM services , where the underlying LLM identity is explicitly visible to users. In contrast, other providers do not reveal the specific model identity due to flexible upgrades, reduced exposure to model-specific attacks, and the need for 
+
+> *Corresponding author.
+
+customization and service flexibility [10], [11]. We refer to them as black-box LLM services , where users can only access the service interface without knowing the exact underlying model. In this paper, we primarily focus on the potential security issues associated with black-box LLM services. On the one hand, many existing attacks towards white-box LLM services adopt an adaptive attack paradigm, in which attackers make use of the disclosed LLM identity and tailor their attack strategies to exploit model-specific vulnerabilities [12], [13]. These attacks have been demonstrated to pose substantial security risks to LLM services [14], [15]. However, concealing the underlying model identity does not necessarily prevent model-specific adaptive attacks. Attackers who infer the hid-den LLM identity can similarly apply adaptive attacks to exploit model-specific vulnerabilities [16]. On the other hand, when the identity of the underlying LLM is not disclosed, a malicious service provider may violate the copyright or licensing agreements associated with the model [17], such as by directly deploying a model whose license prohibits commercial use. Therefore, identifying the underlying LLM identity is essential for assessing the real-world risks of black-box LLM services and auditing potential copyright or licensing violations. This task can be formulated as the problem of identifying LLM fingerprints in LLM services. Several prior studies have attempted to extract LLM fingerprints from black-box LLM services [16], [18], [19]. However, these methods suffer from inherent limitations. First, existing approaches typically rely on a fixed set of queries to probe target LLM services. This static querying strategy lacks the ability to adapt to service-specific guardrails, such as safety filters or intent recognition mechanisms, which may alter responses and consequently degrade fingerprinting effectiveness [20], [21]. Second, these methods perform poorly in realistic and complex configurations (e.g., system prompt, sampling settings, and prompting strategies). When the fixed queries are applied under diverse and sophisticated service configurations, the resulting outputs often become unstable, causing the same underlying model to be erroneously identi-fied as having different fingerprints. To overcome the above limitations, we propose AdaptPrint, a response-adaptive fingerprinting method for identifying hid-arXiv:2608.22213v1 [cs.CR] 23 Aug 2026 den LLM identities in black-box LLM services. To address the first limitation, AdaptPrint adaptively generates benign and domain-relevant queries for the target LLM service. To ad-dress the second limitation, AdaptPrint introduces a response-consistency-based paradigm, in which fixed queries are no longer used as the starting point for LLM fingerprint analysis. Instead, fingerprint analysis is initiated from the responses pro-duced by the target model itself and is subsequently conducted based on those responses. Specifically, AdaptPrint first adaptively generates queries towards the domain of the target LLM service and collects the resulting responses. It then builds a candidate model pool and performs similarity-based comparison. For fingerprint identification, AdaptPrint integrates three response consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing, and aggregates the information collected from these strategies to perform fingerprint matching. Exper-imental results demonstrate that, across 18 distinct system prompts, and 27 candidate models, AdaptPrint achieves Top-1, Top-3, and Top-5 accuracies of 80.6%, 90.3%, and 92.1%, respectively, improving over the baseline by 32.5, 21.3, and 15.2 percentage points. In addition, AdaptPrint remains ef-fective under common defense mechanisms, such as safety check and intent detection, and its reliability is further demon-strated across different levels of randomness in the decoding parameters. AdaptPrint performs well in open-set verification, which allows the target to be rejected as belonging to none of the candidate models, demonstrating its applicability beyond closed-set classification. 
+
+Contributions. We make the following contributions.  
+
+> •
+
+We present a new perspective on LLM fingerprinting through response consistency probing. Instead of relying on a fixed set of predefined queries, AdaptPrint adaptively generates probes and uses the target model’s responses as anchors for fingerprinting.  
+
+> •
+
+We propose AdaptPrint, a response-adaptive fingerprinting method for revealing LLM identities in black-box services. AdaptPrint integrates three progressive response-consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing. The three probing strategies enable progressive, multi-dimensional response matching for robust LLM fingerprints.  
+
+> •
+
+We perform extensive experimental evaluations under di-verse system prompts, sampling parameters, prompting strategies and different LLMs. The results show that AdaptPrint consistently outperforms state-of-the-art (SOTA) black-box fingerprinting methods and remains effective across a variety of scenarios, demonstrating its reliability and general applicability. II. B ACKGROUND AND MOTIVATION 
+
+A. LLM Fingerprinting 
+
+LLM fingerprint is inspired by the general notion of a fingerprint, which can be defined as a compact representation of an object’s salient characteristics. In the context of LLMs, an LLM fingerprint refers to an identifiable signature that characterizes a specific model and can be used to distinguish it from others. Accordingly, LLM fingerprinting denotes the process of extracting or verifying such signatures for model identification, with the goal of determining the specific identity of an unknown LLM. LLM fingerprinting can be categorized into white-box and black-box settings. White-box LLM finger-printing leverages internal information such as model weights, gradients, or activation states, whereas black-box LLM finger-printing can only rely on query–response interactions with the target LLM. A closely related technique is LLM watermarking[22], [23], [24]. Although both fingerprinting and watermarking can be broadly viewed as approaches for model identification, they differ in their original mechanisms. LLM fingerprints are typi-cally derived from the intrinsic characteristics of a model, such as its parameters, representations, or behavioral patterns. In contrast, LLM watermarks are usually intentionally embedded into model outputs or generation processes, often through modifications to the model weights [25]. 
+
+B. Threat Model 
+
+In this work, as shown in Figure 1, we concentrate on black-box LLM fingerprinting, as it aligns with the requirements of black-box LLM services. In practical black-box LLM services, providers commonly deploy either self-hosted LLMs or HTTP API-based LLMs as the underlying engine. From the perspec-tive of users, interaction with such services is typically limited to a query–response interface (e.g., API or webpage), through which users submit queries and receive generated outputs. Access to internal model information, such as parameters, weights, or hidden representations, is generally unavailable. Black-box LLM services may also employ safety guardrails that filter malicious queries and responses. We assume that the LLM identity remains stable within the short query–response interaction window, as model updates or upgrades typically require longer deployment cycles [26]. Formally, given an input and an LLM with specific configu-ration (system prompt, sampling parameters, prompting tech-niques, etc), the fingerprint extractor computes the fingerprint as: 
+
+f ingerprint = ϕ(llm( ·, conf ig ), input ), (1) where ϕ is the fingerprint extractor, llm( ·, conf ig ) denotes the target LLM under configuration config, and input is the query used for fingerprinting. 
+
+C. Motivation 
+
+Table I summarizes prior work on black-box LLM finger-printing. These studies offered valuable insights but still have limitations, which can be categorized into two aspects. 
+
+Limitation 1. Prior work commonly adopts predefined queries for interacting with LLM services, which may fail to accom-modate diverse interaction contexts. For instance, the queries used in LLMmap [16] include injection prompts, which may be detected by the safety guardrails of the target service and fail to collect the desired responses. Similarly, ZeroPrint [18] 2TABLE I COMPARISON WITH EXISTING BLACK -BOX LLM FINGERPRINTING METHODS .                               
+
+> Works Question Source Question Topic Methodology Underlying Assumption
+> MET [19] Predefined Wikipedia Maximum Mean Discrepancy ϕ(llm black , q )≈ϕ(llm white , q )
+> LLMmap [16] Predefined Safety Alignment Deep Learning ϕ(llm black , q )≈ϕ(llm white , q )
+> ZeroPrint [18] Predefined Code Jacobian Matrix ϕ(llm black , q )≈ϕ(llm white , q )
+> AdaptPrint (ours) Adaptive Target’s Topic Response Consistency Probing ϕ(llm black , r ∗)≈ϕ(llm white , r ∗)Fingerprint Extraction Black-box LLM Service
+> Sampling Parameters
+> Serving LLM
+> Interface
+> Matching
+> (Query-Response Pairs) LLM Identity
+> Response
+> Query
+> System Prompt
+> Augmented Generation
+> Safety Guardrails
+> What is your name?
+> What is model calibration in ML?
+> I am a healthcare AI …
+> Model calibration
+> refers to …
+> Fig. 1. Threat model of black-box LLM fingerprinting.
+
+focuses on code completion queries, when these queries are posed to LLM services designed for unrelated domains (e.g., medical assistant), they may activate the model’s avoidance behavior or even trigger the service’s intent-detection mecha-nism, resulting in a refusal to answer. This limitation highlights the need for designing benign and domain-relevant queries tailored to the application domain of the target LLM service. 
+
+Inspired by the Computerized Adaptive Testing (CAT) concept in psychology [27], [28], which dynamically selects test items based on a respondent’s answers during the assessment pro-cess, we aim to design an adaptive initial question generation method according to the domain of LLM service. 
+
+Limitation 2. Prior studies seek to develop LLM fingerprint-ing approaches that is insensitive to configuration variations. The underlying assumption of previous methods can be for-malized as: 
+
+ϕ(llm black , q ) ≈ ϕ(llm white , q ), (2) where llm white denotes the known LLM that has the same underlying identity as the black-box LLM llm black and q
+
+denotes the input query. Therefore, they employ only a uni-versal base configuration for fingerprint comparison. However, the assumption that configuration-dependent factors can be ignored becomes especially questionable when the system prompt and decoding parameters are complex and highly variable. For instance, when the system prompt is substantially longer than the user query, the generated response may be strongly influenced by information beyond the query itself. An analogy can be drawn from face recognition. A user’s current appearance may deviate from their pre-enrolled profile due to makeup, hairstyle changes, or other uncontrolled factors. In such cases, an effective recognition method should adapt to the user’s current appearance rather than relying exclusively on a fixed profile. Likewise, in LLM fingerprinting, the observable behavior of a target service can be affected by complex 0 20 40 0.5 1.0 1.5 NLL per Token  Llama-3-8B-Instruct 
+
+0 20 40 NLL per Token  Llama-3.1-8B-Instruct 
+
+0 20 40 0.5 1.0 1.5 NLL per Token  Qwen2.5-7B-Instruct 
+
+0 20 40 NLL per Token  Qwen3-8B 
+
+Llama-3-8B-Instruct Llama-3.1-8B-Instruct Qwen2.5-7B-Instruct Qwen3-8B  
+
+> Fig. 2. Self vs. other LLMs in NLL per token.
+
+and variable configurations, including system prompts and decoding parameters. This leads to a key intuition: finger-printing should be performed based on the LLM’s actual responses under the current service setting, rather than relying on responses pre-collected under a presumed universal base configuration. 
+
+To demonstrate the validity of the above intuition, we conduct experiments on four representative models: Llama-3-8B-Instruct [29], Llama-3.1-8B-Instruct [30], Qwen2.5-7B-Instruct [31], and Qwen3-8B [32]. We randomly selected a system prompt for docker-related tasks. For each model, we asked five different questions under temperature and top-p configurations sampled from [0.1, 0.3, 0.5, 0.7, 0.9] × [0.9, 1.0], resulting in 50 collected responses per model. We then sequentially compared the four models by computing the average negative log-likelihood (NLL) per token for each response, which provides a normalized measure of how well each response matches the generation distribution of a given model. The results are presented in Figure 2. A lower NLL value suggests that the model assigns a higher likelihood to the corresponding response, indicating greater familiarity with it. The results show that each model generally yields the lowest NLL values for responses previously generated by itself. The result demonstrates the feasibility of developing LLM fingerprinting methods based on model responses. Based on the above analysis, the underlying assumption of AdaptPrint can be formalized as: 
+
+r∗ = llm black (q∗), ϕ (llm black , r ∗) ≈ ϕ(llm white , r ∗), (3) where r denotes the generated response. AdaptPrint aims 3to construct a response-adaptive fingerprinting method while reducing the impact of complex and variable configuration settings in black-box LLM services. III. A PPROACH 
+
+As shown in Figure 3, AdaptPrint comprises four stages: initial question generation, candidate model pool construction, multi-strategy fingerprint collection, and fingerprint matching. First, AdaptPrint generates domain-specific and low-entropy yet non-trivial questions tailored to the task domain of the tar-get LLM service. Next, it constructs a pool of candidate mod-els under a unified system prompt. AdaptPrint then collects model fingerprints using three response consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing, which progressively probe the model behavior from different perspectives. Finally, AdaptPrint performs simi-larity matching between the target model and candidate models across the three strategies, thereby determining the exact LLM identity. 
+
+A. Theoretical Formulation 
+
+The core objective addressed by AdaptPrint is to identify the hidden LLM identity behind a black-box LLM service through query-response pairs. Following the formulation in Section II, we use llm black to denote the target black-box LLM service and llm m 
+
+> cand
+
+to denote a candidate LLM with identity m. Among all candidates, m∗ denotes the ground-truth identity of llm black .Given an initial question q, the target black-box LLM gener-ates a response under its unknown deployment configuration: 
+
+rB = llm black (q, conf ig B ), (4) where conf ig B includes factors such as the hidden system prompt, decoding parameters, and prompting techniques. A straightforward comparison is to query each candidate LLM with the same question q. The underlying assumption is that the black-box LLM should behave most similarly to the candidate LLM with the same underlying identity: 
+
+ϕ(llm black , q ) ≈ ϕ(llm m∗
+
+> cand
+
+, q ). (5) However, this comparison can be fragile because the response of llm black may be strongly affected by its unknown service configuration. The design of AdaptPrint leverages response consistency: the target LLM’s response is less sensitive to configuration changes than its query. Formally, let T denote the set of probing strategies used by AdaptPrint. For each strategy τ ∈ T , AdaptPrint constructs a response-conditioned probe: 
+
+qτ = Pτ (q, r B ), (6) where Pτ (·) denotes the probe construction function for strat-egy τ . The corresponding response of candidate model m is: 
+
+rCm,τ = llm m
+
+> cand
+
+(qτ , conf ig ). (7) The fingerprinting objective is to identify the candidate LLM whose responses are most consistent with the black-box responses across multiple probing strategies: 
+
+ˆm = arg max  
+
+> m∈M
+
+Agg τ ∈T 
+
+Sim  rBτ , r Cm,τ 
+
+ , (8) where M is the candidate model pool, rBτ is the black-box response used as the reference for strategy τ , rCm,τ is the response generated by candidate model m under the same strategy, and Sim( ·, ·) measures response similarity. Agg( ·)
+
+denotes the strategy-level aggregation function that combines consistency evidence from different probing strategies into a final matching score. A successful fingerprint matching is achieved when the candidate with the highest aggregated score corresponds to the hidden identity of llm black .
+
+B. Initial Question Generation 
+
+During the initial question generation stage, AdaptPrint constructs low-entropy yet non-trivial questions that are both natural and domain-relevant. This design is necessary for reli-able fingerprint extraction. Open-ended queries, such as “write a romantic poem.” may produce substantially different outputs even from the same model, while trivial factual queries, such as “Who won the Nobel Prize in Physics in 1921?” often lead to highly similar responses across different models. Neither provides stable and discriminative behavioral evidence. To address this issue, AdaptPrint uses an auxiliary LLM to generate initial questions according to the task domain of the black-box LLM service. The generated question is required to guide the answer toward a single stable explanatory backbone, such as a process, a constraint-resolution path, or a decision dependency path. For instance, a product-comparison question may require the model to jointly consider user prefer-ences, operational constraints, and long-term usability. These requirements induce a coherent decision path in which the model must resolve a fixed set of tradeoffs, thereby reducing response variability and encouraging structurally consistent outputs. These constraints reduce response randomness while preserving sufficient model-specific semantic and lexical vari-ation for fingerprinting. The complete prompt used for initial question generation is provided in Appendix A1. 
+
+C. Candidate Model Pool Construction 
+
+LLM fingerprinting is essentially concerned with deter-mining whether a black-box LLM service is powered by a model of interest. In practical auditing or security analysis, this problem can be generalized to identifying whether the black-box LLM corresponds to one of several candidate models. Therefore, AdaptPrint constructs a candidate model pool from LLMs with known identities and uses it as the comparison space for fingerprint matching. After obtaining the initial query questions, AdaptPrint queries the target black-box LLM service to collect its re-sponses. AdaptPrint places all candidate LLMs under a unified reference configuration. Specifically, all candidate LLMs are queried with the same neutral system prompt, “You are a helpful assistant.” and the same low-randomness decoding 4Direct Probing 
+
+Continuation Probing 
+
+Follow-up Probing 
+
+3. Multi-strategy 
+
+Fingerprint Collection 
+
+Auxiliary LLM 
+
+4. Fingerprint 
+
+Matching 
+
+Scoring Mechanism 
+
+Semantic Similarity 
+
+Textual Similarity 
+
+2. Candidate Model 
+
+Pool Construction 
+
+…
+
+## LLM Identity Black-box LLM 
+
+1. Initial Question 
+
+Generation 
+
+Service Domain 
+
+Auxiliary 
+
+LLM 
+
+Initial Questions  Response Fig. 3. Workflow of AdaptPrint. 
+
+setting. This design provides a common starting point for candidate comparison. The purpose of candidate model pool construction is therefore not to approximate the hidden system prompt of the black-box service, but to establish a controlled candidate-side configuration. Under this unified configuration, response differences among candidate LLMs are more directly attributable to model-specific behavior. The low-randomness decoding setting further standardizes output stability and reduces interference from sampling noise. Once the candi-date model pool has been constructed, AdaptPrint performs multi-strategy fingerprint collection based on the black-box responses and the candidate model pool. 
+
+D. Multi-strategy Fingerprint Collection 
+
+At the core of AdaptPrint is multi-strategy fingerprint collection, through which AdaptPrint progressively gathers fingerprints using three response-adaptive consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing. The three probing strategies compare the black-box LLM with candidate models through direct response matching, response continuation, and context-aware follow-up questioning, respectively. 
+
+Direct Probing Strategy. The direct probing strategy queries each model in the candidate pool using the same set of ques-tions generated during the initial question generation stage. For each probing question, the candidate models independently produce their responses, which are then compared with the corresponding response by the black-box LLM. By keeping the probing questions identical across models, this strategy provides a direct basis for evaluating response similarities under a controlled input condition. The rationale behind this strategy is to generate discriminative questions that elicit model-specific responses. By comparing the responses of the black-box service with those of candidate models, AdaptPrint can assess their behavioral similarity and identify the most likely underlying model. 
+
+Continuation Probing Strategy. The continuation probing strategy guides the candidate model pool to continue gener-ation from the midpoint of the black-box LLM’s response, and compares the continuation with the second half of the 
+
+Algorithm 1: Continuation Starting Point Selection Input: Target response r, local open-source LLM Mloc ,exclusion ratio ρ, window size w
+
+Output: Continuation starting points P = {p1, p 2, p 3} 
+
+> 1:
+
+t = ( t1, t 2, . . . , t N ) ← Tokenize( r) 
+
+> 2:
+
+zi ← Mloc (· | t<i ), i = 1 , . . . , N  
+
+> 3:
+
+for i = 1 to N do  
+
+> 4:
+
+Let ℓ(1)  
+
+> i
+
+and ℓ(2)  
+
+> i
+
+denote the Top-1 and Top-2 logits in zi 
+
+> 5:
+
+ci ← ℓ(1)  
+
+> i
+
+·
+
+
+
+ℓ(1)  
+
+> i
+
+− ℓ(2) 
+
+> i
+
+ 
+
+> 6:
+
+end for  
+
+> 7:
+
+I ← { i | ⌊ ρN ⌋ < i ≤ N − ⌊ ρN ⌋}  
+
+> 8:
+
+for each j such that {j, . . . , j + w − 1} ⊆ I do  
+
+> 9:
+
+aj ← 1
+
+> w
+
+Pj+w−1 
+
+> i=j
+
+ci 
+
+> 10:
+
+end for  
+
+> 11:
+
+R ← RankDesc( {j}, a j ) 
+
+> 12:
+
+C1, C2, C3 ← KMeans( R, K = 3)  
+
+> 13:
+
+for q = 1 to 3 do  
+
+> 14:
+
+iq ← arg min j∈C q rank R(j) 
+
+> 15:
+
+pq ← TextOffset( iq , r ) 
+
+> 16:
+
+end for  
+
+> 17:
+
+return P = {p1, p 2, p 3}
+
+original response. The rationale is that the second half of the target response can be regarded as the model’s continuation of the first half, where the first half serves as the user prompt. Because model responses are typically much longer than the original questions, a sufficiently long and highly similar prompt can better constrain the generation context and reduce the influence of other factors, such as the system prompt. In addition, continuing from a prefix that resembles the model’s own response approximately places the model back on the next-token-prediction trajectory of the original response, making the subsequent generation more likely to match the original continuation than those of other candidate models. The continuation starting point should be selected at a position with low next-token entropy. Such positions provide a more aligned generation starting state across different models, 5thereby improving the comparability of their continuations. The detailed selection procedure is presented in Algorithm 1. AdaptPrint first evaluates each token position using aheuristic selection score computed from a locally deployed LLM. The score jointly considers the top-1 logit and its margin over the top-2 logit. After excluding boundary to-kens, AdaptPrint aggregates confidence scores with a sliding window and ranks candidate positions accordingly. To obtain diverse starting points, the ranked positions are clustered into three groups, and the highest-ranked position in each group is selected as a continuation point. This design promotes stable continuations through high-confidence starting points, while selecting from three distinct groups introduces diversity and captures complementary information across continuations. We do not claim that these three points are globally optimal. Instead, this design serves as a practical and general solution, as the optimal continuation points are difficult to determine in a black-box setting and may differ across candidate models due to their distinct generation characteristics. Once the con-tinuation starting point is determined, AdaptPrint employs a standardized prompt to regulate the continuation behavior and collect responses from the candidate model pool. The complete continuing prompt is provided in Appendix A2. 
+
+Follow-up Probing Strategy. The follow-up probing strategy formulates an additional question conditioned on the black-box LLM’s response, and provides the initial question-response context to both the black-box LLM and the candidate model pool when comparing their responses. Compared with the con-tinuation strategy, this strategy introduces a longer contextual prefix into the user prompt. When this prefix is generated by the model itself, the attention-based probability distribution over the preceding context is expected to be closer to that of the black-box LLM’s generation process, thereby increasing the likelihood of producing subsequent responses similar to those of the target black-box model. For the follow-up question generation, AdaptPrint feeds the previous response into an auxiliary LLM and prompts it to generate a contextually coherent follow-up question based on the preceding response. The follow-up question maintains contextual continuity while extending the conversation. The full prompt is provided in Appendix A3. 
+
+E. Fingerprint Matching 
+
+In the fingerprint matching stage, AdaptPrint performs the final fingerprint identification. Specifically, AdaptPrint inte-grates the analysis results obtained from the three strategies above and compares the similarity between each LLM in the candidate model pool and the black-box LLM. AdaptPrint measures response similarity from two complementary per-spectives: semantic similarity and textual similarity. For semantic similarity, AdaptPrint uses a semantic em-bedding model to encode model responses into vector rep-resentations, and then compute their cosine similarity. This embedding-based comparison has been widely adopted in prior work as an effective way to measure semantic closeness between generated texts [33], [34], [35]. For textual similar-ity, AdaptPrint adopts n-gram-based Jaccard similarity, which captures local contiguous patterns in text. Such patterns often reflect the model’s lexical choices, phrase-level preferences, and local textual pattern [36]. Given two responses x and y,we denote their n-gram sets as Gn(x) and Gn(y), respectively. The n-gram-based Jaccard similarity is defined as: 
+
+Jaccard n(x, y ) = |Gn(x) ∩ Gn(y)||Gn(x) ∪ Gn(y)| . (9) AdaptPrint uses a score-based mechanism to infer the most likely identity of the black-box LLM service. The detailed procedure is shown in Algorithm 2. AdaptPrint aggregates evidence from multiple fingerprinting strategies. For each strategy, it computes a similarity score between the black-box response and each candidate model’s response using both semantic and textual similarities. Specifically, semantic simi-larity captures high-level meaning consistency, while textual similarity captures local lexical and phrase-level overlap. For Continuation Probing, three generation branches are evaluated, and the two highest scores are retained and summed. For Direct Probing and Follow-up Probing, the strategy-level score is directly added to the candidate’s total score. AdaptPrint adopts this aggregation rule to reflect the dif-ferent sources of probing strategies. Continuation Probing is inherently sensitive to the choice of continuation starting point, as different positions may expose different generation behaviors. We therefore evaluate three diverse starting points to obtain complementary evidence, while retaining the top two scores to reduce the influence of an uninformative or unstable branch. In contrast, Direct Probing and Follow-up Probing operate on complete probing questions and each produces a single response comparison, so no additional branch aggrega-tion is required. The final score of each candidate is aggregated across the three probing strategies, and the model with the highest total score is the inferred identity. IV. E VALUATION 
+
+To systematically evaluate AdaptPrint, we conduct the ex-periments to answer the following research questions: 
+
+RQ1. (Effectiveness and Robustness) How does AdaptPrint perform in identifying black-box LLMs across different models, LLM service settings, and security defense strategies? 
+
+RQ2. (Ablation Study) How does each component of Adapt-Print contribute to its overall effectiveness? 
+
+RQ3. (Applications) Does AdaptPrint remain effective in downstream tasks and real-world scenarios? 
+
+A. Evaluation Setup 
+
+LLM Selection. We conduct experiments on a diverse set of model instances, spanning mainstream open-source and closed-source model families and multiple variants within the same family. The full list of evaluated models is reported in Table II. To control the experimental cost, we select 12 representative models (marked with gray cells) as black-box targets and use all models as the candidate model pool. The 6Algorithm 2: Score-based Fingerprint Matching Input: Black-box responses YB ; candidate responses 
+
+YC ; candidate model set M; similarity weights 
+
+w1, w 2; strategy weights λ1, λ 2, λ 3
+
+Output: Inferred model identity ˆm 
+
+> 1:
+
+V (m) ← 0, ∀m ∈ M  
+
+> 2:
+
+S ← { DIRECT , CONTINUATION , FOLLOW -U P} 
+
+> 3:
+
+for each s ∈ S do  
+
+> 4:
+
+if s = CONTINUATION then  
+
+> 5:
+
+for each g ∈ { 1, 2, 3} do  
+
+> 6:
+
+for each m ∈ M do  
+
+> 7:
+
+Ag (m) ← w1 Sim sem (yBs,g , y Cm,s,g ) + 
+
+w2 Sim text (yBs,g , y Cm,s,g ) 
+
+> 8:
+
+end for  
+
+> 9:
+
+end for  
+
+> 10:
+
+for each m ∈ M do  
+
+> 11:
+
+Select the two highest scores from 
+
+{A1(m), A 2(m), A 3(m)} as G(m) 
+
+> 12:
+
+V (m) ← V (m) + λ2
+
+P 
+
+> a∈G (m)
+
+a 
+
+> 13:
+
+end for  
+
+> 14:
+
+else  
+
+> 15:
+
+for each m ∈ M do  
+
+> 16:
+
+A(m) ← w1 Sim sem (yBs , y Cm,s ) +
+
+w2 Sim text (yBs , y Cm,s ) 
+
+> 17:
+
+end for  
+
+> 18:
+
+for each m ∈ M do  
+
+> 19:
+
+if s = DIRECT then  
+
+> 20:
+
+V (m) ← V (m) + λ1A(m) 
+
+> 21:
+
+else  
+
+> 22:
+
+V (m) ← V (m) + λ3A(m) 
+
+> 23:
+
+end if  
+
+> 24:
+
+end for  
+
+> 25:
+
+end if  
+
+> 26:
+
+end for  
+
+> 27:
+
+return ˆm = arg max m∈M V (m)
+
+target models are chosen to cover different model families and publishers, including Amazon, ByteDance, DeepSeek, Google, Inception, InclusionAI, Meta-Llama, MistralAI, Ope-nAI, Qwen, Stepfun, and Xiaomi. For each covered family, we select one representative model as the black-box target, while retaining all 27 models as candidates for fingerprint matching. 
+
+LLM Configuration. For decoding settings, we use six temperature/top-p pairs: (0 .0, 1.0) , (0 .1, 0.9) , (0 .3, 0.9) ,
+
+(0 .5, 0.9) , (0 .7, 0.95) , and (0 .9, 1.0) . We choose (0 .7, 0.95) 
+
+as the default temperature/top-p setting, and use the other combinations to evaluate the randomness of decoding pa-rameters on the effectiveness of AdaptPrint. These settings define a sampling spectrum from conservative to open-ended generation. For prompt configurations, we collect system prompts following an LLM-service style from public GitHub repositories [37], [38], [39], and further include a random subset of prompt configurations (including Chain-of-Thought and Retrieval-Augmented Generation template) from prior work [16] for comparison. The information of the evaluated prompts is reported in Table III. 
+
+Implement and Hyperparameters Settings. We use Open-Router [40] as the unified model routing platform to query different LLMs. We conduct analysis that uses local LLMs on a server equipped with an Intel Xeon Gold 5218R CPU and four NVIDIA A800 GPUs. By default, we use Qwen-3-8B [32] for continuation starting point selection and Qwen3-4B-Embedding [34] as the semantic embedding model. We use Gemini-3-Flash-Preview [41] as the auxiliary LLM to perform tasks such as initial question generation. For the candidate model pool, we use a temperature/top-p setting of (0 .0, 1.0) .For Algorithm 1, we set the exclusion ratio to 0.25, the window size to 10. For Algorithm 2, w1 and w2 are 0.5, λ1, λ2, and 
+
+λ3 are all set to 0.25. 
+
+B. RQ1: Effectiveness and Robustness 
+
+To answer RQ1, we compare AdaptPrint with the SOTA black-box LLM fingerprinting methods across diverse LLM service settings and under deployed defense strategies. We also evaluate the robustness of AdaptPrint across decoding settings with varying levels of randomness and analyze its performance in open-set settings. 
+
+Comparison with Baseline Methods. We compare Adapt-Print against three state-of-the-art black-box LLM fingerprint-ing baselines: MET [19], LLMmap [16], and ZeroPrint [18]. The details of their methods are shown in Table I. The experiments are conducted on the 18 different system prompts listed in Table III, with the target black-box LLM using a temperature/top-p setting of (0 .7, 0.95) .We report Top-1, Top-3, and Top-5 accuracy to evalu-ate whether the correct model can be identified among the candidate models. The baseline methods rely on template-library-based fingerprint matching. Specifically, they first ex-tract fingerprints from candidate LLMs and then compare the black-box model against these precomputed fingerprints. To construct the reference fingerprint library, we consider two variants: Method-Gen and Method-All . Method-Gen uses fingerprints extracted with a general system prompt as the reference library. Method-All uses all instances from the other system prompts to construct the reference library. To align with the setting of Method-All, the candidate models of AdaptPrint are also restricted to the same 12 different target models. We evaluate the performance of AdaptPrint using three different initial questions. AdaptPrint-Dual denotes the average result obtained from two different initial questions, while AdaptPrint-Triple denotes the result obtained from all three initial questions. Table IV reports the experimental results. Met yields the lowest performance among all evaluated methods. This is mainly due to its limited ability to distinguish between dif-ferent LLMs: many models are often assigned the same score, which reduces its effectiveness for fine-grained identification. LLMmap is effective to some extent, but its performance on complex system prompts can still be improved. Zeroprint achieves strong performance, with Top-1, Top-3, and Top-5 7TABLE II CANDIDATE LLM S USED IN OUR EVALUATION .                                                                                                                              
+
+> No. Model Name No. Model Name No. Model Name
+> 1deepseek/deepseek-v4-flash 10 openai/gpt-4.1-nano 19 meta-llama/llama-3.3-70b-instruct 2amazon/nova-micro-v1 11 openai/gpt-4o-mini 20 meta-llama/llama-4-scout 3bytedance-seed/seed-1.6-flash 12 openai/gpt-oss-120b 21 meta-llama/llama-4-maverick 4inclusionai/ling-2.6-flash 13 google/gemma-4-31b-it 22 mistralai/mistral-small-3.2-24b-instruct 5xiaomi/mimo-v2.5 14 google/gemma-4-26b-a4b-it 23 mistralai/mistral-small-2603 6stepfun/step-3.7-flash 15 google/gemma-3-27b-it 24 mistralai/mistral-large-2512 7inception/mercury-2 16 google/gemini-2.5-flash-lite 25 qwen/qwen3-30b-a3b-instruct-2507 8openai/gpt-3.5-turbo 17 google/gemini-3.1-flash-lite 26 qwen/qwen-2.5-7b-instruct 9openai/gpt-4.1-mini 18 meta-llama/llama-3.1-8b-instruct 27 qwen/qwen3-235b-a22b-2507 TABLE III OVERVIEW OF PROMPT CONFIGURATIONS .
+> No. Assistant Domain Length Type Source
+> 1Coding Assistance I 2218 Service Style GitHub 2Coding Assistance II 1474 Service Style GitHub 3Cold Email 2571 Service Style GitHub 4Database and SQL 452 Service Style GitHub 5Docker Assistance 2731 Service Style GitHub 6Event Planning 1528 Service Style GitHub 7General Assistance 1322 Service Style GitHub 8Medical Diagnosis I 2325 Service Style GitHub 9OpenAI API 1285 Service Style GitHub 10 Shopping Assistance 967 Service Style GitHub 11 Founder Mentorship 129 Basic LLMmap 12 Museum Guide 196 Basic LLMmap 13 Pet Care 261 Basic LLMmap 14 Fitness Tracker 193 COT LLMmap 15 Travel Planning 213 COT LLMmap 16 Tutoring Assistance 190 COT LLMmap 17 Coding Troubleshooting 266 RAG Self-Built 18 Medical Diagnosis II 262 RAG Self-Built
+
+accuracies of 48.1%, 69.0%, and 76.9% on Method-Gen and 78.2%, 84.7%, and 88.9% on Method-All, respectively. Nev-ertheless, AdaptPrint consistently outperforms the baselines, improving Top-1 accuracy by 32.5 and 8.8 percentage points on Method-Gen and Method-All, respectively. 
+
+Fine-grained Analysis. Figure 4 presents the Top-1 accuracy of AdaptPrint across different LLM service configurations and LLM identities. From the LLM perspective, all LLMs except mimo-v2.5 correctly solve at least 10 out of 18 instances, and four LLMs achieve perfect identification accu-racy, indicating that AdaptPrint exhibits good generalizability across different LLMs. From the configuration perspective, all configurations correctly solve at least 8 out of 12 instances, indicating that AdaptPrint exhibits good generalizability across different service configurations. We observe that mimo-v2.5 
+
+failures are mainly caused by verbosity-induced mismatch. It often produces much longer responses, and the Jaccard similarity penalizes these extra n-grams through a larger union, making mimo-v2.5 appears less similar even when it covers the target content. To diagnose this issue, we replace Jaccard similarity with a target-side containment score: 
+
+Containment n(x, y ) = |Gn(x) ∩ Gn(y)||Gn(y)| . (10) Here, x denotes the candidate response and y denotes the target response, so the denominator uses Gn(y) to measure how much of the target-side content is covered by the candidate. With this length-calibrated metric, AdaptPrint successfully identifies 13 out of 18 cases in Figure 4, suggesting that the original failures are largely due to length-sensitive similarity measurement rather than the core mechanism of AdaptPrint. However, this metric is not equally suitable for all models. When applied uniformly across all models, the Top-1, Top-3, and Top-5 accuracies drop to only 32.4%, 64.8%, and 81.5%, respectively. The containment metric is suitable for evaluating longer responses, but it is less broadly applicable than the Jaccard metric. We also present the heatmaps of the average similarity rankings among all LLMs in Appendix E. For almost all target models, the top-1 ranked candidate corresponds to the same underlying entity as the target model. 
+
+Resistance to Defense Mechanisms. To assess the effec-tiveness of different methods in defense scenarios, we con-sider both input-side and output-side validation. Input-side validation checks whether the LLM fingerprinting queries are safe and topic-relevant, while output-side validation examines whether the responses generated by the target LLM are safe and policy-compliant. Such guardrails have been widely de-ployed in real-world LLM services [42], [43], [44]. For input-side validation, we employ Llama-Prompt-Guard-2-86M [42] and OpenAI Guardrails [43], two representa-tive guardrail mechanisms used in LLM services. Prompt-Guard-2-86M (PromptGuard) evaluates prompt-injection risks. Guardrails Jailbreak (Jailbreak) detects jailbreak attempts, while Guardrails Off Topic (Off-Topic) identifies off-topic queries. LLMmap, Met, and ZeroPrint include 8, 25, and 10 different default queries. For AdaptPrint, we construct three groups of initial questions for each of the 16 different assistant domains listed in Table III, yielding 48 initial questions in total. For off-topic query detection, the initial questions must be dynamically adapted to the specific system prompt of each LLM service. The four methods contain 144, 450, 180, and 54 distinct initial questions, respectively. The detailed results are reported in Table V. LLMmap relies on safety-alignment questions that often trigger jailbreak or prompt-injection rejections. Moreover, LLMmap, Met, and ZeroPrint use fixed domain-specific questions, resulting in off-topic rejection rates exceeding 92%, 88%, and 62%, respectively. 8TABLE IV COMPARISON OF DIFFERENT METHODS .                                                       
+
+> Metric LLMmap Met ZeroPrint AdaptPrint-Q1 AdaptPrint-Q2 AdaptPrint-Q3 AdaptPrint-Dual-Avg AdaptPrint-Triple Top-1-gen 36.6% 7.5% 48.1% 56.0% 63.0% 65.7% 75.5% 80.6%(+32.5pp) Top-3-gen 63.9% 21.0% 69.0% 82.4% 83.3% 81.9% 89.0% 90.3%(+21.3pp) Top-5-gen 74.1% 31.6% 76.9% 88.4% 89.4% 86.6% 91.5% 92.1%(+15.2pp) Top-1-all 57.4% 4.2% 78.2% 72.2% 78.7% 75.0% 85.6% 87.0%(+8.8pp) Top-3-all 73.1% 7.1% 84.7% 88.4% 90.3% 87.0% 91.4% 91.7%(+7.0pp) Top-5-all 81.5% 9.9% 88.9% 94.4% 93.5% 92.6% 94.3% 94.4%(+5.5pp) 1234567913 21 22 25
+
+Index in Table II 
+
+036912 15 18 21 
+
+> Correct Count
+
+Different LLMs 
+
+Total: 18 1 2 3 4 5 6 7 8 910 11 12 13 14 15 16 17 18 
+
+Index in Table III 
+
+0246810 12 14 
+
+> Correct Count
+
+Different Configurations 
+
+Total: 12                  
+
+> Fig. 4. Top-1 accuracy across different LLMs and service configurations. TABLE V INPUT VALIDATION ACROSS DIFFERENT METHODS .
+> Method LLMmap Met ZeroPrint AdaptPrint PromptGuard 3/8 0/25 0/10 0/48
+> Jailbreak 4/8 0/25 0/10 0/48
+> Off-Topic 133/144 399/450 112/180 3/54
+
+In contrast, only 3 of the 54 initial questions generated by AdaptPrint are off-topic. Since AdaptPrint does not depend on fixed query questions and incurs only a low cost for generating new questions, these results highlight its superiority in real-world LLM service scenarios. For output-side validation, we integrate a harmful-content risk assessment module into the OpenAI Guardrails frame-work. About 1% of AdaptPrint’s responses are flagged as posing potential safety risks. Manual analysis suggests that most flags arise from the medical and fitness domains of the target LLM services rather than explicitly harmful content. 
+
+Robustness to Decoding Randomness. To evaluate the ro-bustness of AdaptPrint to variations in decoding parameters, we randomly select two assistants, No. 5 and No. 10 in Table III, assigning Models No. 1-6 in Table II to the former and Models No. 7, 9, 13, 21, 22, and 25 to the latter. In addition to the original decoding setting of temperature and top-p, (0 .7, 0.95) , we evaluate AdaptPrint under five additional settings: (0 .0, 1.0) , (0 .1, 0.9) , (0 .3, 0.9) , (0 .5, 0.9) ,and (0 .9, 1.0) . As shown in Figure 5, AdaptPrint maintains (0.0, 1.0) (0.1, 0.9) (0.3, 0.9) (0.5, 0.9) (0.7, 0.95) (0.9, 1.0) 
+
+(Temperature, Top-p) 
+
+0246810 12 
+
+> # Correct Top-1 Count
+
+911 11 10 10 10 
+
+default setting  
+
+> Fig. 5. Impact of decoding settings on top-1 correct count.
+
+consistently effective performance across decoding settings with different levels of randomness. 
+
+Open-Set Performance. We primarily evaluate AdaptPrint in the closed-set setting, solely to provide a more intuitive demonstration and comparison of its effectiveness. The effec-tiveness of AdaptPrint does not rely on the closed-set assump-tion that the candidate model pool necessarily contains the target model. In the open-set scenario, AdaptPrint is required to either make a definitive prediction of the model identity or determine that the target model is none of the candidates. A high absolute similarity threshold alone is not sufficient to support a reliable identification decision, because different 9target instances may have different score scales. Instead of applying a single global threshold to the raw similarity score, AdaptPrint uses the score gap between the top-1 and top-2 candidates. Let sim top1 and sim top2 denote the highest and second-highest similarity scores between LLM black and the candidate models. AdaptPrint accepts the top-1 prediction only when 
+
+∆top = sim top1 − sim top2 ≥ τ. (11) Otherwise, the prediction is rejected as “none-of-all”. Here, 
+
+τ > 0 requires the top-1 candidate to be sufficiently separated from the runner-up, instead of being accepted merely because it ranks first. We evaluate open-set rejection under two candidate-pool settings: a 12-model candidate pool containing the target models and the full 27-model candidate pool. We consider both target-present and target-absent cases. In the target-present case, the ground-truth model is included in the candidate pool, and AdaptPrint either accepts or rejects its top-1 prediction according to the rejection threshold τ . In the target-absent case, the ground-truth model is removed from the candidate pool; therefore, any accepted top-1 prediction is necessarily a false acceptance of an unknown target. For each threshold τ , we report three counts. Correct Known Accepts (CKA) denotes the number of target-present cases for which the top-1 prediction is accepted and matches the ground-truth model. Incorrect Known Accepts (IKA) 
+
+denotes the number of target-present cases for which the top-1 prediction is accepted but does not match the ground-truth model. Unknown Accepts (UA) denotes the number of target-absent cases for which AdaptPrint incorrectly accepts a candidate model instead of rejecting as unknown. We fur-ther summarize these outcomes using three metrics. Known Acceptance Precision (KAP) measures the accuracy of ac-cepted predictions among target-present cases and is defined as 
+
+KAP = CKA /(CKA + IKA) . Known Correct Acceptance Rate (KCAR) measures the fraction of all target-present cases that are both accepted and correctly identified, and is defined as KCAR = CKA /N known , where Nknown is the total number of target-present cases. Unknown Rejection Rate (URR) 
+
+measures the fraction of target-absent cases that are correctly rejected, and is defined as URR = 1 − UA /N unknown , where 
+
+Nunknown is the total number of target-absent cases. The results are shown in Figure 6. Increasing the rejec-tion threshold τ leads to a clear trade-off between known-target acceptance and unknown-target rejection. Specifically, KAP and URR generally increase with τ , indicating that accepted predictions become more reliable and target-absent cases are more effectively rejected, whereas KCAR decreases as increasingly strict rejection removes more correct known-target predictions. Overall, τ = 0.01 and τ = 0.0125 
+
+achieves a good balance in both settings, maintaining high KAP while achieving a reasonable balance between KCAR and URR. It is worth noting that the baseline methods are primarily designed for similarity-based matching, and they do 020 40 60 80 100 
+
+> Rate (%)
+
+(a) 12-model Candidate Pool 
+
+0 0.005 0.010 0.015 0.020 0.025 0.030 0.035 0.040 
+
+Rejection Threshold τ
+
+020 40 60 80 100 
+
+> Rate (%)
+
+(b) 27-model Candidate Pool 
+
+KAP KCAR URR                          
+
+> Fig. 6. Open-set results under different margin thresholds. TABLE VI ABLATION STUDY OF PROBING STRATEGIES .
+> Strategy Top-1 Top-3 Top-5 Direct 61.6% 79.6% 87.0%
+> Continuation 66.2% 81.9% 87.5%
+> Follow-up 67.6% 85.7% 89.4%
+> Direct & Continuation 73.6% 87.0% 89.8%
+> Direct & Follow-up 74.5% 88.4% 91.2%
+> Follow-up & Continuation 75.9% 89.8% 92.6%
+> Direct & Continuation & Follow-up 80.6% 90.3% 92.1%
+
+not explicitly discuss threshold calibration for “none of all” rejection. Therefore, their support for this scenario is limited. 
+
+C. RQ2: Ablation Study 
+
+To answer RQ2, we analyze the impact of each component of AdaptPrint on its effectiveness. 
+
+Ablation of Strategies. As shown in Table VI, we decompose AdaptPrint-Triple in Table IV by examin-ing the performance of individual probing strategies and their pairwise combinations. The results show that these strategies provide complementary support and jointly en-hance the effectiveness of AdaptPrint. For the computa-tion of semantic similarity and textual similarity, we con-duct evaluations using different embedding models and tex-tual similarity metrics, respectively. Specifically, we base on the results of AdaptPrint-Q1 in Table IV. For se-mantic similarity, we additionally select two embedding models: multilingual-e5-large-instruct [45] and 10 TABLE VII ABLATION OF EMBEDDING MODELS AND METRICS .                  
+
+> Ablation Settings Top-1 Top-3 Top-5 base 56.0% 82.4% 88.4%
+> multilingual-e5-large-instruct 59.7% 81.5% 90.7%
+> bge-large-en-v1.5 59.3% 81.0% 87.5%
+> edit distance 56.9% 74.5% 80.6%
+> longest common substring 54.2% 70.8% 76.9%
+
+BigCode 1Q 2Q 3Q 4Q 5Q 40.0 60.0 80.0 100.0 Accuracy (%) 
+
+Top-1 Top-3 Top-5  
+
+> Fig. 7. Accuracy across different numbers of questions.
+
+bge-large-en-v1.5 [46]. For textual similarity, we adopt edit distance and longest common substring as the evaluation metrics. The results are shown in Table VII. Different embed-ding models achieve comparable performance, as they mainly serve to extract semantic representations. Jaccard similarity achieves better performance in textual similarity measurement because it focuses on the overlap of local textual units rather than strict sequence-level alignment. In contrast, edit distance and longest common substring metrics are more sensitive to sequential changes and length differences, and may lead to inaccurate similarity judgments for texts that differ in surface. 
+
+Impact of Questions and Continuation Starting Points. 
+
+The performance of AdaptPrint improves as the number of initial questions increases. We further analyze this situation in depth. Specifically, based on the results of AdaptPrint-Q1 in Table IV, we select the subsets corresponding to No. 1, No. 4, No. 5, No. 7, and No. 10 in Table III, which cover a range of Top-1 accuracy from low to high. To further evaluate the quality of the initial question, we randomly choose a question from BigCodebench [47]. The experimental results are shown in Figure 7. The accuracy of AdaptPrint improves steadily as the number of questions increases. Using multiple questions helps reduce the randomness and noise in LLM responses and enables the extraction of more stable model fingerprints. In comparison, the initial question sampled from BigCodebench results in substantially lower performance, demonstrating the effectiveness of adaptive initial question generation. To further validate the effectiveness of the continuation starting point selection in Algorithm 1, we replace it with three randomly selected starting points under each of the five configurations. Compared with AdaptPrint-Q1 when considering the con-tinuation strategy in isolation, the Top-1, Top-3, and Top-5 accuracies decrease from 53.3%, 73.3%, and 83.3% to 48.3%, 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 Semantic Weight α (Textual Weight = 1 − α)70.0 80.0 90.0 Accuracy (%) 
+
+Top-1 Top-3 Top-5  
+
+> Fig. 8. Weight ablation of AdaptPrint.
+
+66.7%, and 71.7%, respectively, demonstrating the benefit of the proposed selection strategy. 
+
+Impact of weighting ratios. We also evaluate different weighting ratios between semantic and textual similarities, as shown in Figure 8. Relying solely on either similarity measure results in relatively lower performance, whereas their combi-nation consistently achieves competitive results. Accordingly, we adopt equal weights of 0.5 as the default setting. This choice is not intended to be optimal, but provides a general and effective setting without additional parameter tuning. 
+
+D. RQ3: Applications 
+
+To answer RQ3, we conduct a case study on real-world LLM service and further evaluate the performance of Adapt-Print on fine-tuned LLMs. 
+
+Case Study. We demonstrate the workflow of AdaptPrint on a Python Expert Chatbot hosted on POE [48]. This chatbot publicly discloses its underlying model as gpt-4o-mini ,while other configuration details remain black-box. We se-lect this target for two reasons. First, the disclosed model identity allows us to obtain a reliable ground truth while still emulating the LLM configuration uncertainty of a black-box LLM service. Second, the ultimate goal of AdaptPrint is to infer the backend LLM identity of a service through benign user interactions. In this setting, where the LLM identity is already publicly available, our analysis does not compromise any rights or interests of the service provider. Figure 9 illustrates the interaction process. AdaptPrint issues two queries to the LLM service: the first is used for direct probing and continuation probing, whereas the second is used for follow-up probing. Based on these interactions, AdaptPrint successfully identifies the target model as gpt-4o-mini .
+
+Fine-tuned Models. We select two LoRA-based fine-tuned models derived from Llama-3.1-8B-Instruct 
+
+as the target LLMs: llama3.1-8b-reasoning-code math [49] and flowertune-medical-lora-llama-3.1-8b-instruct [50], paired with system prompts No. 2 and No. 8 in Table III, respectively. The LLMs listed in Table II are used as the candidate LLMs. For each fine-tuned model, we evaluate AdaptPrint under six temperature/top-p settings: (0 .0, 1.0) , (0 .1, 0.9) , (0 .3, 0.9) ,
+
+(0 .5, 0.9) , (0 .7, 0.95) , and (0 .9, 1.0) . For these 12 fine-tuned 11 I'm working on a Python-based data 
+
+processing service… 
+
+In your scenario, refactoring 
+
+to a fully asynchronous… 
+
+The following conversation history is 
+
+provided as context… 
+
+Follow-up question: How should I … 
+
+To determine the optimal 
+
+value for the semaphore … Fig. 9. Case study of AdaptPrint. 
+
+settings, AdaptPrint correctly identifies 8, 9, and 11 models at Top-1, Top-3, and Top-5, respectively. The results demonstrate that AdaptPrint can effectively trace fine-tuned models back to their source models. V. D ISCUSSION 
+
+Limitations and Future Directions. The effectiveness of AdaptPrint can be affected by probe question quality and dynamic multi-model routing. In our experiments, different probe questions may lead to different identification results even for the same LLM service under the same setting, highlighting the importance of generating informative and discriminative probes. Future work could explore more sys-tematic probe optimization, such as reinforcement learning for targeted probe generation. In addition, AdaptPrint assumes a stable underlying model within each probing session, which may not hold for services that dynamically route queries to different sub-LLMs. Such routing can reduce fingerprinting reliability. Since each response probing in AdaptPrint uses only two consecutive, topic-consistent queries, the two queries are more likely to be routed to the same sub-LLM when routing is primarily determined by query semantics or task type. A systematic study of probe optimization and dynamic routing is left for future work. 
+
+Cost Overhead. Each initial probe question of AdaptPrint requires querying the target model twice and querying each candidate model five times. Based on the three groups of initial probe questions used in Table IV, we further estimate the query cost, which averages only about $0.044 per target black-box model. The cost is relatively low and can be reduced if open-source candidate models are deployed locally. 
+
+Downsteam Tasks. (1) Security risk assessment of black-box LLM services. Recent studies reveal that LLMs exhibit heterogeneous security properties across different domains and attack types [51], [52], identifying the specific LLM behind a black-box service may enable attackers to exploit known model-specific vulnerabilities and launch more targeted attacks. For instance, knowledge of the underlying model can facilitate adaptive optimization of jailbreak prompts, achieving substantially higher attack success rates [14], [15]. The design of AdaptPrint therefore helps assess the real-world security risks associated with model identity exposure and can support more effective security evaluation and hardening of black-box LLM services. (2) Model copyright auditing and IP protection. For model owners, AdaptPrint can audit black-box LLM services for model provenance, helping detect unautho-rized use or license violations and thereby supporting model copyright protection. It can also be extended to white-box settings to verify whether service providers faithfully deliver the claimed models through model similarity comparison, safeguarding subscribers’ interests. By revealing the identity of the underlying LLM, AdaptPrint further enables model owners to enforce usage policies and protect their intellectual property rights. VI. R ELATED WORK 
+
+A. LLM Application Security 
+
+As LLMs have been widely employed in various applica-tions [53], [54], [55], they also raise security concerns due to their inherent susceptibility to jailbreaking, hallucinations, and prompt injection [56], [57], [58], [59]. A malicious query perturbed by several exclamation marks, or embedded within a code snippet, can effectively bypass the guardrails of an aligned LLM [58], [14]. More sophisticated attacks that leverage the internal states of the LLMs during response, or adaptively modify the malicious prompts based on the model’s response, can further increase the attack success rates to up to 100% [60], [59], [61], [15]. The vulnerabilities of LLMs to attacks such as jailbreak and prompt injection not only reduce the reliability and validity of their responses but also introduce broader attack vectors for LLM-integrated applica-tions. Configurations of LLMs, such as RAG datastores or system prompts, can be poisoned or embedded with backdoor triggers, enabling attacks targeting safety-critical applications [62], [63], [64]. Successful prompt injection attacks also fuel traditional attacks, including SQL injections and Remote Code Execution (RCE), towards LLM applications [65], [66]. 
+
+B. LLM fingerprinting 
+
+To protect LLM’s intellectual property, white-box finger-printing extracts distinctive features from model parameters and architecture. Xu et al. [67] utilized instruction tuning to embed backdoor triggers in LLMs, which produce specific fingerprint texts upon activation. Zeng et al. [68] proposed HuRef, which identifies training-stable invariant terms in Transformers and is robust to weight rearrangement. Zhang et al. [69] introduced REEF, a training-free method that compares the representations of LLMs using Centered Kernel Align-ment (CKA) similarity. Wu et al. introduced TensorGuard, which fingerprints LLMs using statistical features of their gradients [70]. In contrast, black-box fingerprinting methods 12 construct fingerprints by sending carefully designed queries to the target model and analyzing its output responses, since model parameters or internal representations are not available. Pasquini et al. [16] proposed LLMmap, which uses greedy search to select queries that maximize inter-LLM differences while preserving intra-LLM consistency. Gao et al. [19] in-troduced MET, a statistical framework for Model Equality Testing (MET) that calculates Maximum Mean Discrepancy (MMD). Shao et al.[18] designed ZeroPrint, which estimates LLM Jacobian-based fingerprints from query-response pairs and measures their similarity using Pearson correlation. VII. C ONCLUSION 
+
+In this paper, we focus on the problem of black-box LLM fingerprinting. We proposed AdaptPrint, a response-adaptive fingerprinting method for revealing hidden LLM identities in black-box LLM services. AdaptPrint integrates three response consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing. Extensive experimental re-sults demonstrate that AdaptPrint significantly outperforms SOTA methods, achieves strong robustness under different de-fense strategies and decoding parameters, and shows promis-ing feasibility for practical applications. REFERENCES [1] I. Ong, A. Almahairi, V. Wu, W.-L. Chiang, T. Wu, J. E. Gonzalez, M. W. Kadous, and I. Stoica, “Routellm: Learning to route llms from preference data,” in The Thirteenth International Conference on Learning Representations , 2025. [2] S. Jo and I. Trummer, “Sparellm: Automatically selecting task-specific minimum-cost large language models under equivalence constraint,” 
+
+Proceedings of the ACM on Management of Data , vol. 3, no. 3, pp. 1–26, 2025. [3] N. Maslej, L. Fattorini, R. Perrault, Y. Gil, V. Parli, N. Kariuki, E. Capstick, A. Reuel, E. Brynjolfsson, J. Etchemendy et al. , “Artificial intelligence index report 2025,” arXiv preprint arXiv:2504.07139 , 2025. [4] Forefront, “Forefront: Build with Open-Source AI,” https://forefront.ai/. [5] AI21, “AI Systems Built for the Enterprise,” https://www.ai21.com/. [6] N. Seifi and M. Chugh, “Multi-LLM Routing Strate-gies for Generative AI Applications on AWS,” https://aws.amazon.com/cn/blogs/machine-learning/ multi-llm-routing-strategies-for-generative-ai-applications-on-aws/. [7] W. Cai, T. Shi, X. Zhao, and D. Song, “Are you getting what you pay for? auditing model substitution in llm apis,” arXiv preprint arXiv:2504.04715 , 2025. [8] TNO, “GPT-NL: The first compliant, transparent, secure, and sovereign Dutch large language model,” https://ventures.tno.nl/portfolio/gpt-nl/. [9] DeepInfra, “Llama 3.1 70b instruct api from deepinfra: Snappy starts, fair pricing, production fit,” DeepInfra blog. [10] G. Lin, Y. Wan, S. Pei, T. Xu, K. Xu, and G. Xue, “Behavioral consistency and transparency analysis on large language model api gateways,” arXiv preprint arXiv:2604.21083 , 2026. [11] Y. Li, J. Wang, H. Zhu, J. Lin, S. Chang, and M. Guo, “Thinktrap: Denial-of-service attacks against black-box llm services via infinite thinking,” arXiv preprint arXiv:2512.07086 , 2025. [12] W. Zheng, P. Zeng, Y. Li, H. Wu, N. Lin, J. Chen, A. Yang, and Y. Zhou, “Jailbreaking? one step is enough!” in Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , 2025, pp. 11 623–11 642. [13] J. Yang, Z. Zhang, S. Cui, H. Wang, and M. Huang, “Guiding not forcing: Enhancing the transferability of jailbreaking attacks on llms via removing superfluous constraints,” in Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , 2025, pp. 19 643–19 655. [14] M. Andriushchenko, F. Croce, and N. Flammarion, “Jailbreaking lead-ing safety-aligned llms with simple adaptive attacks,” in International Conference on Learning Representations . Curran Associates Inc., 2025, pp. 43 486–43 513. [15] S. Geisler, T. Wollschl¨ ager, M. Abdalla, V. Cohen-Addad, J. Gasteiger, and S. G¨ unnemann, “Reinforce adversarial attacks on large language models: An adaptive, distributional, and semantic objective,” in Inter-national Conference on Machine Learning . PMLR, 2025, pp. 19 082– 19 111. [16] D. Pasquini, E. M. Kornaropoulos, and G. Ateniese, “LLMmap: Finger-printing for large language models,” in 34th USENIX Security Sympo-sium (USENIX Security 25) , 2025, pp. 299–318. [17] Z. Yang, Y. Wu, Y. Shen, W. Dai, M. Backes, and Y. Zhang, “The challenge of identifying the origin of black-box large language models,” 
+
+arXiv preprint arXiv:2503.04332 , 2025. [18] S. Shao, Y. Li, H. Yao, Y. Chen, Y. Yang, and Z. Qin, “Reading between the lines: Towards reliable black-box llm fingerprinting via zeroth-order gradient estimation,” in Proceedings of the ACM Web Conference 2026 ,2026, pp. 2637–2648. [19] I. Gao, P. Liang, and C. Guestrin, “Model equality testing: Which model is this api serving?” arXiv preprint arXiv:2410.20247 , 2024. [20] T. Rebedea, R. Dinu, M. N. Sreedhar, C. Parisien, and J. Cohen, “Nemo guardrails: A toolkit for controllable and safe llm applications with programmable rails,” in Proceedings of the 2023 conference on empirical methods in natural language processing: system demonstrations , 2023, pp. 431–445. [21] Z. Yang, Y. Wu, R. Wen, M. Backes, and Y. Zhang, “Peering behind the shield: Guardrail identification in large language models,” in Findings of the Association for Computational Linguistics: ACL 2026 , 2026, pp. 11 663–11 676. [22] R. Zhang, S. S. Hussain, P. Neekhara, and F. Koushanfar, “REMARK-LLM: A robust and efficient watermarking framework for generative 
+
+13 large language models,” in 33rd USENIX Security Symposium (USENIX Security 24) , 2024, pp. 1813–1830. [23] E. Giboulot and T. Furon, “Watermax: breaking the llm watermark detectability-robustness-quality trade-off,” Advances in Neural Informa-tion Processing Systems , vol. 37, pp. 18 848–18 881, 2024. [24] L. Pan, A. Liu, Z. He, Z. Gao, X. Zhao, Y. Lu, B. Zhou, S. Liu, X. Hu, L. Wen et al. , “Markllm: An open-source toolkit for llm watermarking,” in Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , 2024, pp. 61–71. [25] Q. Pang, S. Hu, W. Zheng, and V. Smith, “No free lunch in LLM watermarking: Trade-offs in watermarking design choices,” Advances in Neural Information Processing Systems , vol. 37, pp. 138 756–138 788, 2024. [26] T. Chauvin, E. Le Merrer, F. Ta¨ ıani, and G. Tredan, “Log probability tracking of llm apis,” in International Conference on Learning Repre-sentations , vol. 2026, 2026, pp. 149 447–149 465. [27] H. Wainer, N. J. Dorans, R. Flaugher, B. F. Green, and R. J. Mislevy, 
+
+Computerized adaptive testing: A primer . Routledge, 2000. [28] R. R. Meijer and M. L. Nering, “Computerized adaptive test-ing: Overview and introduction,” Applied psychological measurement ,vol. 23, no. 3, pp. 187–194, 1999. [29] Meta AI, “Introducing Meta Llama 3: The Most Capable Openly Available LLM to Date,” https://ai.meta.com/blog/meta-llama-3/. [30] A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan et al. , “The llama 3 herd of models,” arXiv preprint arXiv:2407.21783 , 2024. [31] A. Yang, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Li, D. Liu, F. Huang, H. Wei et al. , “Qwen2. 5 technical report,” arXiv e-prints , pp. arXiv–2412, 2024. [32] A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv et al. , “Qwen3 technical report,” arXiv preprint arXiv:2505.09388 , 2025. [33] P. BehnamGhader, V. Adlakha, M. Mosbach, D. Bahdanau, N. Chapados, and S. Reddy, “Llm2vec: Large language models are secretly powerful text encoders,” arXiv preprint arXiv:2404.05961 , 2024. [34] Y. Zhang, M. Li, D. Long, X. Zhang, H. Lin, B. Yang, P. Xie, A. Yang, D. Liu, J. Lin et al. , “Qwen3 embedding: Advancing text embedding and reranking through foundation models,” arXiv preprint arXiv:2506.05176 ,2025. [35] J. Chen, S. Xiao, P. Zhang, K. Luo, D. Lian, and Z. Liu, “M3-embedding: Multi-linguality, multi-functionality, multi-granularity text embeddings through self-knowledge distillation,” in Findings of the association for computational linguistics: ACL 2024 , 2024, pp. 2318– 2335. [36] Y. Sari, M. Stevenson, and A. Vlachos, “Topic or style? exploring the most useful features for authorship attribution,” in Proceedings of the 27th international conference on computational linguistics , 2018, pp. 343–353. [37] linexjlin, “Gpts,” https://github.com/linexjlin/GPTs. [38] 0xeb, “The big prompt library,” https://github.com/0xeb/ TheBigPromptLibrary. [39] LouisShark, “Promptcraft: The ultimate gpt system prompt collection,” https://github.com/LouisShark/chatgpt system prompt. [40] OpenRouter, “Openrouter,” https://openrouter.ai/. [41] Google, “Gemini 3 flash preview,” https://ai.google.dev/gemini-api/docs/ models/gemini-3-flash-preview. [42] Meta Llama, “Llama prompt guard 2 86m,” https://huggingface.co/ meta-llama/Llama-Prompt-Guard-2-86M. [43] OpenAI, “Openai guardrails,” https://guardrails.openai.com/. [44] Meta Llama, “Llama guard 3 8b,” https://huggingface.co/meta-llama/ Llama-Guard-3-8B. [45] L. Wang, N. Yang, X. Huang, L. Yang, R. Majumder, and F. Wei, “Multilingual e5 text embeddings: A technical report,” arXiv preprint arXiv:2402.05672 , 2024. [46] BAAI, “bge-large-en-v1.5,” https://huggingface.co/BAAI/ bge-large-en-v1.5, 2023. [47] T. Y. Zhuo, M. C. Vu, J. Chim, H. Hu, W. Yu, R. Widyasari, I. N. B. Yusuf, H. Zhan, J. He, I. Paul et al. , “Bigcodebench: Benchmarking code generation with diverse function calls and complex instructions,” 
+
+arXiv preprint arXiv:2406.15877 , 2024. [48] nihiniverse, “Python expert 4o,” https://poe.com/Python Expert 4o. [49] Yaxin1992, “llama3.1-8b-reasoning-code-math,” https://huggingface.co/ Yaxin1992/llama3.1-8b-reasoning-code-math. [50] zjudai, “flowertune-medical-lora-llama-3.1-8b-instruct,” https: //huggingface.co/zjudai/flowertune-medical-lora-llama-3.1-8b-instruct. [51] L. Li, B. Dong, R. Wang, X. Hu, W. Zuo, D. Lin, Y. Qiao, and J. Shao, “Salad-bench: A hierarchical and comprehensive safety benchmark for large language models,” in Findings of the Association for Computa-tional Linguistics, ACL 2024 , pp. 3923–3954. [52] K. Vongthongsri, “Comparing jailbreaking techniques,” https://www. trydeepteam.com/blog/multi-turn-jailbreaking-analysis-deepteam. [53] O. Topsakal and T. C. Akinci, “Creating large language model appli-cations utilizing langchain: A primer on developing llm apps fast,” in 
+
+International conference on applied engineering and natural sciences ,vol. 1, no. 1, 2023, pp. 1050–1056. [54] Y. Zhao, X. Hou, S. Wang, and H. Wang, “Llm app store analysis: A vision and roadmap,” ACM Transactions on Software Engineering and Methodology , vol. 34, no. 5, pp. 1–25, 2025. [55] Q. Wu, G. Bansal, J. Zhang, Y. Wu, B. Li, E. Zhu, L. Jiang, X. Zhang, S. Zhang, J. Liu et al. , “Autogen: Enabling next-gen llm applications via multi-agent conversations,” in First conference on language modeling ,2024. [56] A. Zou, Z. Wang, N. Carlini, M. Nasr, J. Z. Kolter, and M. Fredrikson, “Universal and transferable adversarial attacks on aligned language models,” arXiv preprint arXiv:2307.15043 , 2023. [57] Q. Ren, C. Gao, J. Shao, J. Yan, X. Tan, W. Lam, and L. Ma, “Codeattack: Revealing safety generalization challenges of large lan-guage models via code completion,” in Findings of the Association for Computational Linguistics: ACL 2024 , 2024, pp. 11 437–11 452. [58] F. Perez and I. Ribeiro, “Ignore previous prompt: Attack techniques for language models,” in NeurIPS ML Safety Workshop .[59] J. Yu, H. Luo, J. Y.-C. Hu, Y. Chen, W. Guo, H. Liu, and X. Xing, “Mind the inconspicuous: Revealing the hidden weakness in aligned LLMs’refusal boundaries,” in 34th USENIX Security Symposium (USENIX Security 25) , 2025, pp. 259–278. [60] T. Liu, Y. Zhang, Z. Zhao, Y. Dong, G. Meng, and K. Chen, “Making them ask and answer: Jailbreaking large language models in few queries via disguise and reconstruction,” in 33rd USENIX Security Symposium (USENIX Security 24) , 2024, pp. 4711–4728. [61] Y. Zhang, T. Liu, Z. Zhao, G. Meng, and K. Chen, “Bleeding pathways: Vanishing discriminability in llm hidden states fuels jailbreak attacks,” 
+
+arXiv preprint arXiv:2503.11185 , 2025. [62] M. Ben-Tov and M. Sharif, “Gasliteing the retrieval: Exploring vulner-abilities in dense embedding-based search,” in Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security ,2025, pp. 4364–4378. [63] Z. Chen, Z. Xiang, C. Xiao, D. Song, and B. Li, “Agentpoison: Red-teaming llm agents via poisoning memory or knowledge bases,” Ad-vances in Neural Information Processing Systems , vol. 37, pp. 130 185– 130 213, 2024. [64] W. Zou, R. Geng, B. Wang, and J. Jia, “PoisonedRAG: Knowledge corruption attacks to Retrieval-Augmented generation of large language models,” in 34th USENIX Security Symposium (USENIX Security 25) ,2025, pp. 3827–3844. [65] R. Pedro, D. Castro, P. Carreira, and N. Santos, “From prompt injections to sql injection attacks: How protected is your llm-integrated web application?” arXiv preprint arXiv:2308.01990 , 2023. [66] T. Liu, Z. Deng, G. Meng, Y. Li, and K. Chen, “Demystifying rce vulnerabilities in llm-integrated apps,” in Proceedings of the 2024 on ACM SIGSAC Conference on Computer and Communications Security ,2024, pp. 1716–1730. [67] J. Xu, F. Wang, M. Ma, P. W. Koh, C. Xiao, and M. Chen, “Instructional fingerprinting of large language models,” in Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , 2024, pp. 3277–3306. [68] B. Zeng, L. Wang, Y. Hu, Y. Xu, C. Zhou, X. Wang, Y. Yu, and Z. Lin, “Huref: Human-readable fingerprint for large language models,” Ad-vances in Neural Information Processing Systems , vol. 37, pp. 126 332– 126 362, 2024. [69] J. Zhang, D. Liu, C. Qian, L. Zhang, Y. Liu, Y. Qiao, and J. Shao, “Reef: Representation encoding fingerprints for large language models,” arXiv preprint arXiv:2410.14273 , 2024. [70] Z. Wu, Y. Zhao, and H. Wang, “Tensorguard: Gradient-based model fingerprinting for llm similarity detection and family classification,” in 
+
+2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE) . IEEE, 2025, pp. 445–456. 
+
+14 APPENDIX 
+
+A. Instrumental Prompts 1) Initial Question Generation Prompt: Here is the com-plete prompt for initial question generation. You are a realistic user-query generator for model fingerprinting. Generate one natural user request for the given task domain. The request should sound like something a real user would ask an AI assistant in that domain. It should be concrete enough to elicit a substantive answer, but it should not be over-specified, artificially technical, or framed like an evaluation benchmark. Requirements: 1) Use a realistic scenario with 3-5 concrete contextual details. At least one detail should introduce a constraint, failed prior attempt, conflicting preference, edge case, or risk boundary that makes the best answer non-obvious. 2) Make the request self-contained enough that the assistant can answer without asking follow-up questions. 3) The request should ask for practical judgment: prioritizing between options, explaining a tradeoff, setting a risk boundary, choosing a next step, or ruling out a tempting but unsuitable approach. 4) Avoid canonical FAQ-style questions or requests where most competent assistants would likely give the same common 2-3 suggestions. 5) Avoid asking for model identity, probabilities, token behavior, internal policies, or anything that looks like fingerprint testing. 6) Avoid rigid formats such as mandatory numbered lists, exhaustive checklists, or step-by-step derivations unless they are natural for the task. 7) Do not make the question intentionally obscure, adversarial, trick-like, or overly academic. 8) The answer should be comparable across models, but not forced into a single deterministic wording or structure. Given task: task Return only the final user question. 
+
+2) Continuing Prompt: Here is the complete continuing prompt. Here is the answer you generated last time, but it was cut off due to network issues. Please recall it and continue the answer in the same context as before. Hard rules: 1) Output ONLY the continuation (no preface, no quotes, no JSON, no markdown). 2) NEVER ask for clarification. 3) NEVER mention that the input is incomplete/corrupt-ed/truncated. 4) NEVER apologize or explain what you are doing. 5) NEVER repeat any part of the provided answer. 6) Preserve the same language, tone, and formatting style as the provided answer. 7) If the answer ends mid-word, first complete that word with the most likely characters, then continue. 8) Even if the provided answer is extremely short or looks fragmentary, you MUST still continue coherently. Question: {question }
+
+Previous answer: {previous text }
+
+Continue the answer from here: 
+
+3) Following-up Question Generation Prompt: Here is the complete following-up question generation prompt. You are a conversation continuity assistant. Generate one natural follow-up question based on the given answer text. The question should sound like something a real user would ask after reading the answer. It should continue the same task or scenario, refer to a concrete point from the answer, and be specific enough to elicit a substantive response. Requirements: 1) Continue the same conversation without introducing an unrelated topic. 2) Refer to a specific decision, step, constraint, risk, example, or recommendation mentioned in the answer when possible. 3) Ask for a practical clarification, next action, tradeoff, edge case, or application detail. 4) Keep the question natural and concise; do not make it artificially technical, adversarial, or benchmark-like. 5) Do not ask about model identity, probabilities, tokens, internal policies, or hidden reasoning. 6) Avoid generic follow-ups such as ”Can you elaborate?” or ”Tell me more?” 7) Do not force a rigid format such as a numbered list or step-by-step derivation unless that is natural for the conversation. Output rules: - Output exactly one question. 15 - Do not include explanations, prefixes, or quotation marks. Text: {text }
+
+B. CoT and RAG Prompt Templates 
+
+Here are the prompt templates of Chain-of-Thought and Retrieval-Augmented Generation. 
+
+Fitness Tracker: {user query } + “Let’s think step by step.” 
+
+Travel Planning: “Please provide a step-by-step explanation and a final answer: ” + {user query }
+
+Tutoring Assistance: “Let’s think step by step and then give the final answer: ” + {user query }
+
+Coding Troubleshooting & Medical Diagnosis II: 
+
+Context Details: 
+
+{context }
+
+Question: 
+
+{question }
+
+Answer based on the provided context: 
+
+C. Generic System Prompt 
+
+Here is the generic system prompt we used. You are a helpful, honest, and efficient AI assistant. Answer clearly, accurately, and concisely. Understand the user’s intent, give practical and actionable help, and explain complex topics step by step when needed. 
+
+D. Examples 1) Initial Question Examples: Here are some initial ques-tion examples. 
+
+Example I (shopping): I’m looking to buy a high-end espresso machine for my kitchen, and I’ve narrowed it down to the Decent DE1Pro and the La Marzocco Linea Micra. I drink mostly medium-dark roast traditional lattes, but my partner is really into experimenting with light roast “turbo shots” and terroir exploration. We have limited counter space under some low-hanging cabinets, and while I’m willing to spend the $3,000+, I’m concerned because I’ve heard the Decent can feel a bit like operating a computer rather than a tactile appliance, whereas the Micra might be too “locked-in” for the experimental shots my partner wants. Given that we need something that heats up in under 10 minutes for our morning commute but won’t become an obsolete piece of hardware in five years, which of these two should I prioritize, or is there a specific tradeoff in the workflow of one that makes it a dealbreaker for this specific mix of users? 
+
+Example II (pet care): My 8-year-old indoor cat, Jasper, has suddenly started urinating on the bathmat and my laundry pile over the last three days, even though his litter box is kept clean and hasn’t changed location. He seems to be acting normally otherwise—eating well and still playful—but I did recently start a new job where I’m gone for 10 hours a day instead of working from home. I’m torn between taking him to the emergency vet tonight because I’m worried about a blockage, or waiting a few days to see if he’s just stressed and acting out because of my new schedule. Given that he is still successfully passing urine (just in the wrong places) and isn’t straining or crying, what is the most responsible way to prioritize his care right now without causing him unnecessary stress or deanonymizing my bank account on an emergency visit? 
+
+E. Candidate Model Rank 
+
+The average candidate rank by target model is shown in Figure 10. 16 amazon/nova-micro-v1 bytedance-seed/seed-1.6-flash deepseek/deepseek-v4-flash google/gemma-4-31b-it inception/mercury-2 inclusionai/ling-2.6-flash meta-llama/llama-4-maverick mistralai/mistral-small-3.2-24b-instruct openai/gpt-4.1-mini qwen/qwen3-30b-a3b-instruct-2507 stepfun/step-3.7-flash xiaomi/mimo-v2.5 openai/gpt-3.5-turbo qwen/qwen-2.5-7b-instruct openai/gpt-4o-mini google/gemini-2.5-flash-lite meta-llama/llama-4-scout mistralai/mistral-large-2512 google/gemma-3-27b-it meta-llama/llama-3.3-70b-instruct mistralai/mistral-small-2603 qwen/qwen3-235b-a22b-2507 openai/gpt-4.1-nano google/gemma-4-26b-a4b-it openai/gpt-oss-120b google/gemini-3.1-flash-lite meta-llama/llama-3.1-8b-instruct amazon/nova-micro-v1 bytedance-seed/seed-1.6-flash deepseek/deepseek-v4-flash google/gemma-4-31b-it inception/mercury-2 inclusionai/ling-2.6-flash meta-llama/llama-4-maverick mistralai/mistral-small-3.2-24b-instruct openai/gpt-4.1-mini qwen/qwen3-30b-a3b-instruct-2507 stepfun/step-3.7-flash xiaomi/mimo-v2.5 
+
+10 20 Average rank Fig. 10. Average Candidate Rank by Target Model. 
+
+17

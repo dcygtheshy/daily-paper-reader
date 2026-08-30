@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-30",
+  "date": "2026-08-30",
+  "generated_at": "2026-08-30T22:39:30",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/30/2608.22213v1-adaptprint-response-adaptive-fingerprinting-of-black-box-llm-services",
+      "section": "deep",
+      "title_en": "AdaptPrint: Response-Adaptive Fingerprinting of Black-Box LLM Services",
+      "authors": "Yilin Li, Yifei Zhang, Guozhu Meng",
+      "date": "2026-08-23",
+      "pdf": "https://arxiv.org/pdf/2608.22213v1",
+      "score": "9.0",
+      "evidence": "黑盒大语言模型服务指纹识别，直接属于生成模型指纹识别技术",
+      "tldr": "黑盒LLM服务因不透明而难以审计与评估风险。现有指纹识别方法用固定查询集，在系统提示和采样设置变化时性能差。AdaptPrint提出响应自适应的三种渐进探测策略，结合相似度匹配识别模型。在27个候选模型中Top-1达80.6%，并具强鲁棒性。",
+      "tags": "query:watermarking",
+      "abstract_en": "Black-box LLM services have emerged as a practical deployment paradigm. Nevertheless, their opacity also hinders the systematic assessment of security risks and complicates copyright auditing for model owners. Black-box LLM fingerprinting, which identifies the underlying LLM identity through query-response interactions, offers a promising way to bridge this gap. Existing approaches typically collect responses from target LLM services using a fixed set of queries and perform poorly in the presence of realistic and complex configurations (e.g., system prompt and sampling settings). To overcome these limitations, we propose AdaptPrint, a response-adaptive fingerprinting method for revealing hidden LLM identities in black-box LLM services. AdaptPrint integrates three progressive response consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing. AdaptPrint determines the final LLM identity by performing similarity matching among candidate LLMs. Experimental results show that AdaptPrint significantly outperforms state-of-the-art methods among 27 candidate models, achieving Top-1, Top-3, and Top-5 accuracies of 80.6%, 90.3%, and 92.1%. AdaptPrint also demonstrates strong robustness across different defense strategies and decoding parameters.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

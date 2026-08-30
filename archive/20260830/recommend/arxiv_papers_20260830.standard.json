@@ -1,0 +1,53 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-30T22:38:07.529833+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2608.22213v1",
+      "source": "arxiv",
+      "title": "AdaptPrint: Response-Adaptive Fingerprinting of Black-Box LLM Services",
+      "abstract": "Black-box LLM services have emerged as a practical deployment paradigm. Nevertheless, their opacity also hinders the systematic assessment of security risks and complicates copyright auditing for model owners. Black-box LLM fingerprinting, which identifies the underlying LLM identity through query-response interactions, offers a promising way to bridge this gap. Existing approaches typically collect responses from target LLM services using a fixed set of queries and perform poorly in the presence of realistic and complex configurations (e.g., system prompt and sampling settings). To overcome these limitations, we propose AdaptPrint, a response-adaptive fingerprinting method for revealing hidden LLM identities in black-box LLM services. AdaptPrint integrates three progressive response consistency probing strategies: Direct Probing, Continuation Probing, and Follow-up Probing. AdaptPrint determines the final LLM identity by performing similarity matching among candidate LLMs. Experimental results show that AdaptPrint significantly outperforms state-of-the-art methods among 27 candidate models, achieving Top-1, Top-3, and Top-5 accuracies of 80.6%, 90.3%, and 92.1%. AdaptPrint also demonstrates strong robustness across different defense strategies and decoding parameters.",
+      "authors": [
+        "Yilin Li",
+        "Yifei Zhang",
+        "Guozhu Meng"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-08-23T04:34:55+00:00",
+      "link": "https://arxiv.org/pdf/2608.22213v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Fingerprinting of black-box generative LLM services; directly fits generative-model fingerprinting",
+      "llm_evidence_cn": "黑盒大语言模型服务指纹识别，直接属于生成模型指纹识别技术",
+      "llm_evidence": "黑盒大语言模型服务指纹识别，直接属于生成模型指纹识别技术",
+      "canonical_evidence": "黑盒大语言模型服务指纹识别，直接属于生成模型指纹识别技术",
+      "llm_tldr_en": "Black-box LLM services are hard to audit; existing fingerprinting fails under varying system prompts/sampling. AdaptPrint adaptively selects queries based on responses, revealing hidden LLM identity with higher accuracy and robustness.",
+      "llm_tldr_cn": "黑盒大语言模型服务因透明度低而难以进行安全评估和版权审计，现有固定查询指纹方法在系统提示和采样设置变化时性能下降。为此提出AdaptPrint，一种响应自适应的指纹识别方法，根据目标服务的实际响应动态调整查询，以揭示隐藏的LLM身份。实验表明在复杂真实配置下，AdaptPrint显著提升了识别准确率和鲁棒性。这项工作为生成式模型服务的安全审计提供了一种更可靠的技术手段。",
+      "llm_tldr": "黑盒大语言模型服务因透明度低而难以进行安全评估和版权审计，现有固定查询指纹方法在系统提示和采样设置变化时性能下降。为此提出AdaptPrint，一种响应自适应的指纹识别方法，根据目标服务的实际响应动态调整查询，以揭示隐藏的LLM身份。实验表明在复杂真实配置下，AdaptPrint显著提升了识别准确率和鲁棒性。这项工作为生成式模型服务的安全审计提供了一种更可靠的技术手段。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
