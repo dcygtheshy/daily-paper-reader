@@ -1,0 +1,54 @@
+{
+  "label": "2026-08-31",
+  "date": "2026-08-31",
+  "generated_at": "2026-08-31T23:23:44",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202608/31/2608.27899v1-openstamp-a-watermark-for-open-source-language-models",
+      "section": "deep",
+      "title_en": "OpenStamp: A Watermark for Open-Source Language Models",
+      "authors": "Miroojin Bakshi, Saksham Rastogi, Danish Pruthi",
+      "date": "2026-08-28",
+      "pdf": "https://arxiv.org/pdf/2608.27899v1",
+      "score": "8.0",
+      "evidence": "通过嵌入模型权重为开源生成式语言模型提供水印",
+      "tldr": "现有水印通过对token采样概率微调来标记大模型文本，但对开源模型失效，因为用户可白盒访问并轻松禁用。我们提出OpenStamp，将水印逻辑直接编码进模型权重，仅修改最后的投影/解嵌入层。实验表明，OpenStamp检测性能优越，对模型能力影响小，且对改写攻击和微调去除更具鲁棒性。已开源代码及4个流行开源模型的水印版本。",
+      "tags": "query:watermarking",
+      "abstract_en": "With the growing prevalence of large language model (LLM) generated content, watermarking is considered a promising approach for attributing text to LLMs and distinguishing it from human-written content. A prominent class of techniques embeds subtle but detectable signals in generated text by modifying token sampling probabilities. However, such methods are unsuitable for open-source models, where users have white-box access and can easily disable watermarking during inference. In this work, we introduce OpenStamp, a watermarking technique that encodes the watermarking logic directly into the model weights by modifying only the final projection, or unembedding, layer. Through experiments across two models, we show that OpenStamp achieves superior detection performance, with minimal degradation in model capabilities compared to prior methods. The implanted watermark is explicitly designed, and empirically confirmed, to be more robust to paraphrasing attacks and harder to scrub off through post-hoc fine-tuning than prior open-source watermarks. To enable developers to watermark their models, we release our code alongside watermarked versions of 4 popular open-source models.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/31/2608.27666v1-semantic-watermarking-with-order-robust-detection-over-sub-sentence-units",
+      "section": "quick",
+      "title_en": "Semantic Watermarking with Order-Robust Detection over Sub-sentence Units",
+      "authors": "Abdulrahman Diaa, Jonathan Petit, Florian Kerschbaum",
+      "date": "2026-08-27",
+      "pdf": "https://arxiv.org/pdf/2608.27666v1",
+      "score": "7.0",
+      "evidence": "针对语义水印检测的自适应嵌入位移攻击",
+      "tldr": "现有语义水印通过绑定句子语义实现鲁棒性，但检测器面对攻击者改写、重排、重分段时会发生嵌入位移，导致标记丢失。本文提出自适应嵌入位移攻击（EDA），将三种编辑统一于最大化位移目标，无需生成器或密钥，在5%假阳性率下对四种方案的水印移除率高达32.6%-47.9%。为弥补脆弱性，进一步设计k-SwordStamp，基于子句单元进行顺序鲁棒检测，将无盒攻击成功率降至10.8%，具有检测器访问权限的强攻击也仅39.7%。该工作提供了更全面的鲁棒性评估方法，并显著提高语义水印的抗编辑能力。",
+      "tags": "query:watermarking",
+      "abstract_en": "Semantic watermarks tie the mark to sentence meaning rather than token choices, promising robustness to content-preserving edits. However, the detector only observes attacker-supplied text, which can be reworded, reordered, or resegmented to evade detection without content loss. Rewording, reordering, and resegmentation all cause embedding displacement: detection tests embeddings different from those selected during watermarking and can therefore lose the mark. Our adaptive embedding displacement attack (EDA) admits all three edits under a single objective that maximizes this displacement. It uses a public paraphraser and surrogate encoder without access to the provider's generator or secret key. At a 5% false-positive rate (FPR) and content-preservation threshold $\\bar{q}=90\\%$, EDA successfully removes the mark on between 32.6% and 47.9% of documents across four schemes, the highest among the tested attacks. Therefore, EDA evaluates the schemes' robustness more thoroughly than passive paraphrasing.   To address these vulnerabilities, we design (k)-SwordStamp: semantic watermarks with order-robust detection over sub-sentence units, reducing sensitivity to attacker-chosen structure at a small quality cost. Against k-SwordStamp, the strongest no-box attack we test is an EDA variant adapted to its design, with a 10.8% attack-success rate. A stronger EDA with access to the provider's detector and secret key reaches a 39.7% attack-success rate, compared with 65.5% on k-SemStamp. Our code is available at https://github.com/D-Diaa/SwordStamp.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/31/2608.27492v1-can-tainted-pixels-expose-deepfake-videos",
+      "section": "quick",
+      "title_en": "Can Tainted Pixels Expose Deepfake Videos?",
+      "authors": "Juan Hu, Shaojing Fan, Sanjay Saha, Marc Herrera, Terence Sim",
+      "date": "2026-08-26",
+      "pdf": "https://arxiv.org/pdf/2608.27492v1",
+      "score": "6.0",
+      "evidence": "主动视频水印，用于暴露深度伪造操作",
+      "tldr": "针对现有深度伪造防御多在事后检测且局限于静态图像的问题，本文提出TaintedPixels主动视频保护方法，通过向面部区域蓝色通道注入结构化周期扰动，并优化条纹可见性、色偏与视频级LPIPS预算，使扰动在原始视频中不可见但在被黑盒操纵后显著暴露。在三个现成视频操纵工具和两个检测器上，该方法取得最高伪造检出率且扰动极小（LPIPS=0.0042）。人类研究显示，受保护源视频仅引发3.26%怀疑率，而受保护源的伪造视频被识别为假的比率达90.72%，显著高于未受保护源（56.71%），验证了其有效性。",
+      "tags": "query:watermarking",
+      "abstract_en": "Publicly-acceesible face-manipulation tools have made deepfake creation accessible to non-expert users. Against these, existing defenses are mostly post-hoc, detecting only after forgery has occurred, and operating on still images rather than videos. Research is lacking in i) the proactive protection of published facial videos against black-box manipulation tools, and in (ii) understanding its perceptual effect on human viewers. We introduce TaintedPixels, a proactive video-protection method built around an asymmetric visibility trade-off: the embedded watermark should remain inconspicuous in the published video but become obvious once a downstream tool manipulates the video. TaintedPixels injects structured periodic perturbations into the blue channel of facial regions and refines them under stripe-visibility, color-cast, and video-level LPIPS budgets, with lightweight motion-adaptive deployment. We believe TaintedPixels is the first proactive defense designed specifically against black-box manipulation tools rather than image-level pipelines or specific surrogate generators. Across three publicly available off-the-shelf video manipulation tools and two off-the-shelf detectors, TaintedPixels attains the highest forgery fake rate while keeping perturbations small (LPIPS = 0.0042). Our non-expert human study, conducted on a diverse set of 300 video stimuli spanning different lighting conditions, backgrounds, and skin tones, shows that protected source videos draw a 3.26% suspicion rate, while forgeries from protected sources are identified as fake much more often than forgeries from unprotected sources (90.72% vs. 56.71%). This validates the effectiveness of TaintedPixels.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,135 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-31T23:20:20.050489+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2608.27899v1",
+      "source": "arxiv",
+      "title": "OpenStamp: A Watermark for Open-Source Language Models",
+      "abstract": "With the growing prevalence of large language model (LLM) generated content, watermarking is considered a promising approach for attributing text to LLMs and distinguishing it from human-written content. A prominent class of techniques embeds subtle but detectable signals in generated text by modifying token sampling probabilities. However, such methods are unsuitable for open-source models, where users have white-box access and can easily disable watermarking during inference. In this work, we introduce OpenStamp, a watermarking technique that encodes the watermarking logic directly into the model weights by modifying only the final projection, or unembedding, layer. Through experiments across two models, we show that OpenStamp achieves superior detection performance, with minimal degradation in model capabilities compared to prior methods. The implanted watermark is explicitly designed, and empirically confirmed, to be more robust to paraphrasing attacks and harder to scrub off through post-hoc fine-tuning than prior open-source watermarks. To enable developers to watermark their models, we release our code alongside watermarked versions of 4 popular open-source models.",
+      "authors": [
+        "Miroojin Bakshi",
+        "Saksham Rastogi",
+        "Danish Pruthi"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-08-28T04:08:01+00:00",
+      "link": "https://arxiv.org/pdf/2608.27899v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "watermarking for open-source generative language models by embedding into model weights",
+      "llm_evidence_cn": "通过嵌入模型权重为开源生成式语言模型提供水印",
+      "llm_evidence": "通过嵌入模型权重为开源生成式语言模型提供水印",
+      "canonical_evidence": "通过嵌入模型权重为开源生成式语言模型提供水印",
+      "llm_tldr_en": "OpenStamp embeds watermark logic directly into the final projection or unembedding layer of open-source LLMs, making watermarking robust to white-box users; experiments on two models show superior detection performance.",
+      "llm_tldr_cn": "开源语言模型的权重对用户可见，基于采样概率扰动的传统水印容易被白盒用户关闭。为此，OpenStamp提出只在最终投影（unembedding）层中编码水印逻辑，使水印直接融入模型权重，从而在开源场景下依然可靠。实验在两种模型上表明该方法取得了优越的检测性能。该工作为生成式模型水印与指纹识别提供了面向开源部署的新途径。",
+      "llm_tldr": "开源语言模型的权重对用户可见，基于采样概率扰动的传统水印容易被白盒用户关闭。为此，OpenStamp提出只在最终投影（unembedding）层中编码水印逻辑，使水印直接融入模型权重，从而在开源场景下依然可靠。实验在两种模型上表明该方法取得了优越的检测性能。该工作为生成式模型水印与指纹识别提供了面向开源部署的新途径。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2608.27666v1",
+      "source": "arxiv",
+      "title": "Semantic Watermarking with Order-Robust Detection over Sub-sentence Units",
+      "abstract": "Semantic watermarks tie the mark to sentence meaning rather than token choices, promising robustness to content-preserving edits. However, the detector only observes attacker-supplied text, which can be reworded, reordered, or resegmented to evade detection without content loss. Rewording, reordering, and resegmentation all cause embedding displacement: detection tests embeddings different from those selected during watermarking and can therefore lose the mark. Our adaptive embedding displacement attack (EDA) admits all three edits under a single objective that maximizes this displacement. It uses a public paraphraser and surrogate encoder without access to the provider's generator or secret key. At a 5% false-positive rate (FPR) and content-preservation threshold $\\bar{q}=90\\%$, EDA successfully removes the mark on between 32.6% and 47.9% of documents across four schemes, the highest among the tested attacks. Therefore, EDA evaluates the schemes' robustness more thoroughly than passive paraphrasing.   To address these vulnerabilities, we design (k)-SwordStamp: semantic watermarks with order-robust detection over sub-sentence units, reducing sensitivity to attacker-chosen structure at a small quality cost. Against k-SwordStamp, the strongest no-box attack we test is an EDA variant adapted to its design, with a 10.8% attack-success rate. A stronger EDA with access to the provider's detector and secret key reaches a 39.7% attack-success rate, compared with 65.5% on k-SemStamp. Our code is available at https://github.com/D-Diaa/SwordStamp.",
+      "authors": [
+        "Abdulrahman Diaa",
+        "Jonathan Petit",
+        "Florian Kerschbaum"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-08-27T19:54:17+00:00",
+      "link": "https://arxiv.org/pdf/2608.27666v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "adaptive embedding displacement attack on semantic watermarking detection",
+      "llm_evidence_cn": "针对语义水印检测的自适应嵌入位移攻击",
+      "llm_evidence": "针对语义水印检测的自适应嵌入位移攻击",
+      "canonical_evidence": "针对语义水印检测的自适应嵌入位移攻击",
+      "llm_tldr_en": "This paper reveals semantic watermark vulnerability to rewording, reordering, and resegmentation, and proposes an adaptive embedding displacement attack that evades detection at 5% FPR while preserving content.",
+      "llm_tldr_cn": "语义水印在文本被改写、重排或重切分时可能因嵌入位置偏移而失效。本文提出自适应嵌入位移攻击（EDA），在单一目标下统一三类内容保持型编辑，仅使用公开改写器和替代编码器即可攻击水印检测。在5%假阳性率下，EDA能在保持内容的同时逃逸检测。该工作揭示了语义水印顺序鲁棒性隐患，为设计更稳健的文本水印提供参照。",
+      "llm_tldr": "语义水印在文本被改写、重排或重切分时可能因嵌入位置偏移而失效。本文提出自适应嵌入位移攻击（EDA），在单一目标下统一三类内容保持型编辑，仅使用公开改写器和替代编码器即可攻击水印检测。在5%假阳性率下，EDA能在保持内容的同时逃逸检测。该工作揭示了语义水印顺序鲁棒性隐患，为设计更稳健的文本水印提供参照。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.27492v1",
+      "source": "arxiv",
+      "title": "Can Tainted Pixels Expose Deepfake Videos?",
+      "abstract": "Publicly-acceesible face-manipulation tools have made deepfake creation accessible to non-expert users. Against these, existing defenses are mostly post-hoc, detecting only after forgery has occurred, and operating on still images rather than videos. Research is lacking in i) the proactive protection of published facial videos against black-box manipulation tools, and in (ii) understanding its perceptual effect on human viewers. We introduce TaintedPixels, a proactive video-protection method built around an asymmetric visibility trade-off: the embedded watermark should remain inconspicuous in the published video but become obvious once a downstream tool manipulates the video. TaintedPixels injects structured periodic perturbations into the blue channel of facial regions and refines them under stripe-visibility, color-cast, and video-level LPIPS budgets, with lightweight motion-adaptive deployment. We believe TaintedPixels is the first proactive defense designed specifically against black-box manipulation tools rather than image-level pipelines or specific surrogate generators. Across three publicly available off-the-shelf video manipulation tools and two off-the-shelf detectors, TaintedPixels attains the highest forgery fake rate while keeping perturbations small (LPIPS = 0.0042). Our non-expert human study, conducted on a diverse set of 300 video stimuli spanning different lighting conditions, backgrounds, and skin tones, shows that protected source videos draw a 3.26% suspicion rate, while forgeries from protected sources are identified as fake much more often than forgeries from unprotected sources (90.72% vs. 56.71%). This validates the effectiveness of TaintedPixels.",
+      "authors": [
+        "Juan Hu",
+        "Shaojing Fan",
+        "Sanjay Saha",
+        "Marc Herrera",
+        "Terence Sim"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CV"
+      ],
+      "published": "2026-08-26T15:39:43+00:00",
+      "link": "https://arxiv.org/pdf/2608.27492v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "proactive video watermarking to expose deepfake manipulation",
+      "llm_evidence_cn": "主动视频水印，用于暴露深度伪造操作",
+      "llm_evidence": "主动视频水印，用于暴露深度伪造操作",
+      "canonical_evidence": "主动视频水印，用于暴露深度伪造操作",
+      "llm_tldr_en": "TaintedPixels proactively protects published facial videos by embedding structured periodic perturbations in the blue channel; watermarks stay invisible but become conspicuous after any manipulation. This asymmetric visibility trade-off provides a new defense against black-box face manipulation tools.",
+      "llm_tldr_cn": "现有深度伪造防御多为事后检测，且缺少对已发布视频的主动保护。TaintedPixels在视频人脸区域的蓝色通道注入结构化周期扰动，使水印在原始视频中不可见，而一旦视频被下游工具篡改便明显暴露。该方法利用非对称可见性权衡实现主动防护，并通过人工评估验证了感知影响，为深度伪造视频提供前瞻性防御方案。",
+      "llm_tldr": "现有深度伪造防御多为事后检测，且缺少对已发布视频的主动保护。TaintedPixels在视频人脸区域的蓝色通道注入结构化周期扰动，使水印在原始视频中不可见，而一旦视频被下游工具篡改便明显暴露。该方法利用非对称可见性权衡实现主动防护，并通过人工评估验证了感知影响，为深度伪造视频提供前瞻性防御方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
