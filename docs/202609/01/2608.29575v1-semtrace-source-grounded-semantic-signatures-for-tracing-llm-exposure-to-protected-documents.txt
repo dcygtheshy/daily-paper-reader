@@ -1,0 +1,204 @@
+Title: SemTrace: Source-Grounded Semantic Signatures for Tracing LLM Exposure to Protected Documents
+
+URL Source: https://arxiv.org/pdf/2608.29575v1
+
+Published Time: Tue, 01 Sep 2026 01:08:18 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# SEM TRACE : S OURCE -G ROUNDED SEMANTIC SIGNA -
+
+# TURES FOR TRACING LLM E XPOSURE TO PROTECTED 
+
+# DOCUMENTS 
+
+Junyan Zhang 1, Yudong Zeng 2, Yongwei Huang 2, Zuhao Ouyang 2, Hong Chen 1, Xuming Hu 1,∗
+
+> 1
+
+The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China 
+
+> 2
+
+Bosum Institute of Management Science, Shenzhen, China 
+
+> ∗
+
+Corresponding author 
+
+# ABSTRACT 
+
+Large language models are increasingly used to read documents and produce downstream text, creating a provenance problem when the document owner can-not control or inspect the model that performs the generation. We introduce S EM -TRACE , a source-grounded semantic watermark for detecting whether a generated review was influenced by a known protected manuscript copy. Rather than biasing token probabilities or imposing surface-form patterns, S EM TRACE constructs a document-specific binary signature from factual propositions that are directly sup-ported by the manuscript itself. A protected PDF invisibly carries a content con-tract that selects one fact from each binary pair and asks an instruction-following reviewer to express those facts in fixed review slots without changing its inde-pendent evaluation. A frozen natural language inference model then decodes the resulting semantic evidence with explicit erasures and scores the recovered bits against the codeword assigned to that copy. This design targets model-agnostic, assigned-copy exposure detection while keeping the watermark semantically tied to the source document. 
+
+# 1 INTRODUCTION 
+
+Large language models (LLMs) are rapidly becoming general-purpose readers and writers. A user can provide a long document—a paper, report, assignment, contract, or internal memo—and ask a model to summarize, critique, transform, or reason about it. This workflow is useful, but it creates a difficult provenance question for the document owner: if a downstream text was produced after an LLM read a particular protected copy of a document, can that exposure be detected from the generated text alone? In many realistic settings, the document owner neither controls the LLM nor has access to its logits, decoding process, API provider, or model weights. Academic peer review is a representative example: a venue may distribute a manuscript to a reviewer, yet cannot assume access to whatever external model the reviewer may use to process it (Rao et al., 2025; Liu et al., 2026a). Most LLM watermarking methods address a different deployment setting. They embed statistical structure during model decoding, for example by biasing token selection toward a keyed subset of the vocabulary. Such methods have established that generated text can carry detectable signals with small quality loss, and later work has studied robustness, unbiased sampling, and adaptive watermark strength. However, these approaches generally require the party embedding the watermark to control generation (Kirchenbauer et al., 2023; Kuditipudi et al., 2023; Liu & Bu, 2024). This assumption breaks when a trusted party controls only the input document , while generation is performed by an unknown third-party LLM. In-context watermarking (ICW) provides a compelling alternative: instead of modifying the model, a trusted party places a watermarking instruction in the model’s context and relies on instruction following to induce a detectable pattern in the output(Liu et al., 2026b). Recent work demonstrates this idea with Unicode, word-initial, lexical, and acrostic signals, including an indirect-prompt-1arXiv:2608.29575v1 [cs.CL] 30 Aug 2026 injection setting in which the instruction is embedded in a document (Greshake et al., 2023; Liu et al., 2026a). This removes the need for decoding access, but the watermark signal itself is largely expressed through surface form. Such patterns are intentionally orthogonal to the document’s sub-stantive content: particular characters, initials, vocabulary items, or sentence initials are encouraged because they carry a key, not because they are facts supported by the source. This creates a natu-ral tension between detectability, unobtrusiveness, instruction-following burden, and robustness to rewriting. We explore a different design point: source-grounded semantic signatures . Our method, S EM -TRACE , constructs the watermark alphabet from the document itself. For each paper, we extract atomic propositions that are directly supported by auditable source passages, filter them for factu-ality, neutrality, and redundancy, and use unwatermarked reviews to estimate how often each fact would be mentioned naturally. We then select a set of reliable and relatively rare facts, arrange them into binary alternatives, and assign the document a balanced codeword that chooses one side of each pair. The protected copy contains an invisible instruction asking the review model to naturally express the selected facts in predetermined content slots. The facts are not fabricated claims: both alternatives in every pair are true statements supported by the paper. The signature therefore changes 
+
+which true details are selected for expression , rather than forcing arbitrary lexical artifacts into the review. Detection is semantic rather than string based. Given a review, a frozen natural language inference (NLI) model evaluates whether either side of each fact pair is entailed by local review spans. Each position is decoded as 0, 1, or an explicit erasure when evidence is absent, conflicting, or ambiguous. The observed positions are compared only with the codeword assigned to the known protected copy. Accordingly, our primary task is assigned-copy exposure detection : determining whether a review carries the semantic signature of a specified protected manuscript copy. The signature is a structured detection code rather than a claim of arbitrary-payload communication, and the single-copy main protocol does not require scanning a multi-recipient codebook. The key technical challenge is that semantic carriers are not automatically reliable. A fact that ap-pears frequently in ordinary reviews produces false evidence; two near-duplicate facts waste capac-ity; and if the selected fact semantically entails its unselected counterpart, the detector may observe both sides and erase the position. S EM TRACE therefore couples source verification, natural-mention estimation, diversity-aware selection, and code-aware pairing. Seed-disjoint unwatermarked reviews estimate each candidate’s natural mention prior. A maximal-marginal-relevance objective favors source-supported, important, verifiable, naturally expressible, but control-rare facts. A subsequent joint assignment procedure chooses fact pairs, bit orientation, and review slots while explicitly pe-nalizing selected-to-unselected semantic implication. Our contributions are: • We introduce a source-grounded semantic signature that encodes a balanced binary code-word through alternative, manuscript-supported factual propositions rather than token-level or formatting patterns. • We develop a fully auditable construction pipeline combining exact source quotations, source-NLI validation, neutrality constraints, semantic deduplication, control-aware MMR selection, and code-aware joint pairing and slot assignment. • We introduce an erasure-aware NLI detector that recovers semantic bits from generated reviews and scores them against the known assigned codeword. Our evaluation protocol uses paired protected/unprotected generations, paper-level clustered uncertainty, matched ICW baselines, and black-box paraphrase stress tests. 
+
+# 2 RELATED WORK 
+
+2.1 WATERMARKING LLM-G ENERATED TEXT 
+
+A large body of work embeds machine-detectable signals directly into LLM generations. A canoni-cal approach modifies next-token sampling so that a secret key defines preferred “green” tokens and detection tests whether these tokens occur more often than expected by chance (Kirchenbauer et al., 2023). Follow-up work studies reliability under editing and mixing, distortion-free constructions, 2adaptive watermarking, security, and stronger statistical (Kirchenbauer et al., 2024; Kuditipudi et al., 2023; Liu & Bu, 2024; Liu et al., 2025; Huo et al., 2026; Dathathri et al., 2024; Liu et al., 2024; Zhang et al., 2025). These methods are well suited to model providers that can intervene in decod-ing, but this access requirement is restrictive when watermarking must be initiated by a document owner rather than by the generator. Post-hoc watermarking relaxes decoder access by transforming already generated text. For example, PostMark derives an input-dependent vocabulary through semantic representations and rewrites text to incorporate selected words (Chang et al., 2024). This setting is complementary to ours: a post-hoc watermarker controls the output after generation, whereas S EM TRACE assumes control only over the input document before an unknown model produces the downstream text. 2.2 SEMANTIC WATERMARKS AND ROBUSTNESS TO PARAPHRASING 
+
+Token-level watermarks can be weakened by sufficiently aggressive rewriting, motivating water-marks defined at coarser semantic granularity. SemStamp partitions sentence embedding space with locality-sensitive hashing and uses rejection sampling to place generated sentences in keyed seman-tic regions; k-SemStamp replaces random hyperplanes with clustering to improve the robustness– efficiency trade-off (Hou et al., 2024). These methods define watermark states over representations of generated sentences. S EM TRACE uses “semantic” in a different sense: its symbols are explicit source-grounded propositions, and detection asks whether a downstream text entails one of two fac-tual alternatives associated with each bit. This makes every decoded position interpretable in terms of a concrete claim from the protected document. Robustness is also central to the broader literature on AI-text detection. Recursive paraphrasing and other rewriting attacks can substantially reduce the effectiveness of both learned detectors and watermark-based detectors, while reliability studies show that some watermark evidence can sur-vive moderate human or machine rewriting when enough text is observed (Sadasivan et al., 2023; Kirchenbauer et al., 2024; Rastogi & Pruthi, 2024). Motivated by this tension, our evaluation treats paraphrasing as an explicit stress test and distinguishes semantic survival from surface overlap. 2.3 IN-C ONTEXT WATERMARKING AND DOCUMENT -T RIGGERED INSTRUCTIONS 
+
+In-context watermarking removes the need for privileged model access by expressing the water-mark as an instruction in the model context. In the peer-review setting, Rao et al. (2025) embed hidden instructions in manuscript PDFs to induce distinctive phrases, technical terms, or citations in LLM-generated reviews and detect their presence statistically. Liu et al. (2026a) study Unicode, initials, lexical, and acrostic ICWs, and further instantiate indirect prompt injection by placing wa-termarking instructions into documents such as academic manuscripts. We share the same core deployment advantage—the protected-document owner can trigger a watermark without modify-ing the downstream LLM—but differ in the representation of the signal. Existing ICW variants primarily manipulate orthographic, lexical, or structural statistics. S EM TRACE instead binds each watermark position to a pair of true, source-supported facts and detects the resulting content choices with NLI. The carrier mechanism is also related to indirect prompt injection, where instructions embedded in retrieved or externally supplied content are interpreted by an LLM as commands rather than passive data. Prior security work demonstrates that this data–instruction boundary can be exploited to influ-ence downstream model behavior (Greshake et al., 2023). We use the same underlying capability for a narrowly scoped provenance mechanism: the protected copy contains a document-owner con-straint whose intended effect is limited to selecting among source-supported content details, while explicitly instructing the reviewer not to alter its score, recommendation, criticism strength, or fac-tual judgment. 33 METHOD 
+
+3.1 PROBLEM SETTING 
+
+Let d denote a source document and y a downstream text generated after an LLM reads that doc-ument. The trusted party distributes a protected copy d+ and retains the original unwatermarked copy d−. The generation model is treated as a black box: the trusted party does not require access to model weights, logits, decoding, or provider-side watermarking infrastructure. Our goal is to test whether y carries the semantic signature assigned to d+.For a configurable signature length K, S EM TRACE constructs K binary fact pairs 
+
+Pd =   f 0 
+
+> d,j
+
+, f 1
+
+> d,j
+
+ Kj=1 , (1) where both f 0 
+
+> d,j
+
+and f 1 
+
+> d,j
+
+are independently true propositions supported by the document. The pro-tected copy receives a document-specific binary codeword 
+
+cd = ( cd, 1, . . . , c d,K ) ∈ { 0, 1}K . (2) We use balanced codewords to avoid a systematic preference for either side of the fact pairs. The codeword selects one fact from each pair, 
+
+gd,j = f cd,j  
+
+> d,j
+
+, (3) and the carrier asks an instruction-following model to express the selected facts in predetermined content slots. At detection time, we recover 
+
+ˆc(y) ∈ { 0, 1, ?}K , (4) where “?” denotes an erasure when the generated text does not provide sufficiently clear evidence for either side. The main hypothesis test is deliberately narrow. Under H0, the downstream text does not carry the signature of the known protected copy; under H1, its recoverable semantic choices agree with the assigned codeword. We compare against the single assigned codeword rather than scanning a multi-recipient codebook. Thus, the binary vector serves as a structured exposure-detection signature rather than an arbitrary payload channel. 3.2 SOURCE -G ROUNDED ATOMIC FACT POOL 
+
+A semantic watermark is only meaningful if its carriers are faithful to the source. We therefore con-struct the fact pool from the document body while retaining explicit provenance for every candidate. The source is parsed into stable evidence units, and candidate propositions are generated only from evidence within the retained document scope. Each candidate is linked to a designated source unit and an exact supporting quotation. Candidate facts pass a sequence of frozen gates. We require structural validity and exact quotation support, then verify that the proposition is entailed by a local source window using a frozen NLI model. We additionally exclude facts whose estimated sentiment or rating impact is too strong, because the watermark should select content details without deliberately steering the downstream evaluation. Finally, we remove redundant propositions using both representation-level similarity and bidirectional semantic entailment. If the approved pool is too small to construct all binary positions, the system searches uncovered evidence for additional candidates under the same gates rather than relaxing the acceptance criteria. If a valid pool still cannot be formed, construction fails explicitly for that document. Formally, let ef denote source entailment, and let af collect auxiliary attributes such as importance, verifiability, natural expressibility, sentiment, and rating impact. Candidate acceptance is written abstractly as 
+
+f ∈ F d ⇐⇒ ef ≥ τsrc ∧ Neutral( af ) ∧ Distinct( f ; Fd), (5) where the thresholds and concrete duplicate tests are fixed before evaluation and reported with the experimental configuration. 43.3 ESTIMATING NATURAL MENTION PRIORS 
+
+Not every true fact is a useful watermark carrier. Central contributions may be mentioned by ordi-nary downstream texts even without the protected carrier, making their presence weak evidence of exposure. To estimate this background rate, we generate a separate set of selection-only controls 
+
+from the original unwatermarked document. These controls use a seed space disjoint from the final evaluation and are used only during signature construction. Let Nsel be the number of selection controls and qf,k the NLI coverage of candidate fact f in control 
+
+k. With mention threshold τmention and add-one smoothing, we estimate 
+
+rf =
+
+PNsel  
+
+> k=1
+
+⊮[qf,k ≥ τmention ] + 1 
+
+Nsel + 2 . (6) A smaller rf indicates that the fact is less likely to appear spontaneously and is therefore potentially more discriminative. Selection-only controls are never reused as final negative examples. 3.4 SELECTING RELIABLE AND NONREDUNDANT FACTS 
+
+To instantiate K binary positions, we select 2K facts from the approved pool. Each fact receives a utility score that combines source support, importance, verifiability, natural expressibility, and rarity under unwatermarked controls: 
+
+B(f ) = αeef + αiif + αv vf + αnnf + αr (1 − rf ), (7) where the α coefficients are fixed hyperparameters. We also penalize redundancy between candidates. Let qf denote the vector of control-coverage scores for f , and let Jlex (f, g ) denote lexical overlap. We use a generic redundancy function 
+
+R(f, g ) = βc max(0 , corr( qf , qg )) + βlJlex (f, g ). (8) Starting from an empty set S, greedy maximal marginal relevance selects the next fact maximizing 
+
+B(f ) − λMMR max  
+
+> g∈S
+
+R(f, g ), (9) until 2K facts are chosen (Carbonell & Goldstein, 1998). This favors individually strong carriers while discouraging semantically or behaviorally redundant positions. 3.5 CODE -A WARE PAIRING , O RIENTATION , AND SLOT ASSIGNMENT 
+
+The selected 2K facts must be converted into K binary positions. A naive construction can be fragile: if the code-selected side of a pair semantically entails its unselected counterpart, the detector may find evidence for both facts and erase the position. We therefore jointly optimize fact pairing, 0/1 orientation, and content-slot assignment with knowledge of the document-specific codeword. For candidate facts f and g, the pairing cost combines mismatch in their natural mention priors and content attributes, their tendency to co-occur in selection controls, semantic redundancy, and optional category mismatch: 
+
+Cpair (f, g ) = λr |rf − rg | + λi|if − ig | + λn|nf − ng | (10) 
+
++ λco Cco (f, g ) + λRR(f, g ) + λcat ⊮[cat( f )̸ = cat( g)] . (11) Here Cco (f, g ) measures how often the two candidates are simultaneously covered in selection con-trols. Let E(f → g) denote directed semantic entailment between two candidate facts. We transform entailment above a reference threshold into an implication-risk function ρ(f → g). The complete assignment objective takes the form 
+
+L = λAA + λP P + λH H, (12) where A aggregates implication risk from code-selected facts to their unselected counterparts, P
+
+is the total pair cost, and H captures preferences induced by the downstream content slots. We initialize with a control-aware matching and refine the joint assignment using a deterministic search procedure. The optimization therefore determines which facts form a bit, which side is 0 or 1, and where the selected fact should appear in the generated text. 53.6 DOCUMENT CARRIER 
+
+After assignment, the codeword selects one fact Fj for every semantic position. The carrier maps these selected facts to predetermined content slots rather than leaving the model free to distribute them arbitrarily. The instruction permits faithful paraphrasing but requires each selected fact to remain independently recognizable and to preserve meaning-critical details such as named entities, datasets, comparisons, numbers, and causal qualifiers. Crucially, selected facts serve only as evidence or context. The carrier instructs the downstream model not to change its independent score, recommendation, criticism strength, or factual judgment; not to invent unsupported results; and not to reveal the watermark, fact identifiers, or slot mapping. The exact slot layout is part of the experimental instantiation rather than the general definition of SEM TRACE .The carrier is placed in an invisible text layer of the protected document so that visible content re-mains unchanged. After construction, the embedded instruction is re-extracted and checked against the intended text under a narrowly defined normalization. We also verify carrier boundaries and integrity metadata. A failed round trip causes construction to abort rather than silently using a cor-rupted carrier. 3.7 SEMANTIC BIT DECODING WITH NLI The detector receives only the generated text y and the precomputed fact pairs for the known doc-ument; it does not read the carrier instruction itself. We split y into local windows W(y) and, for each position j and side b ∈ { 0, 1}, compute 
+
+sj,b (y) = max  
+
+> w∈W (y)
+
+PNLI 
+
+ f bd,j | w . (13) We decode conservatively with explicit erasures. Let τboth , τmin , and τmargin be frozen thresholds. Then 
+
+ˆcj =
+
+
+
+?, sj, 0 ≥ τboth ∧ sj, 1 ≥ τboth ,
+
+?, max( sj, 0, s j, 1) < τ min ,
+
+?, |sj, 1 − sj, 0| ≤ τmargin ,
+
+⊮[sj, 1 > s j, 0], otherwise. (14) The three erasure cases respectively handle evidence for both alternatives, absent evidence, and insufficient semantic separation. Let O be the number of non-erased positions, M the number matching the assigned codeword, and 
+
+U = O − M the number of mismatches. For an eligibility threshold Omin , the assigned-code score is 
+
+S(y) = 
+
+M − U = 2 M − O, O ≥ Omin ,sinel , O < O min , (15) where sinel is fixed below the minimum score attainable by an eligible codeword. Erased positions contribute zero to the signed match count. This prevents low-coverage texts from appearing positive merely because a small number of observed positions happen to agree. 
+
+# 4 EXPERIMENTS 
+
+We evaluate S EM TRACE in the academic peer-review setting using papers from ICML 2023 and ICLR 2024. We instantiate the general framework with a frozen Exact-12 configuration and keep the watermark construction, review generation, semantic decoding, and evaluation protocol fixed across the two corpora. We first describe the paper corpora, the Exact-12 instantiation, and the paired detection protocol, and then report results on clean detection and robustness to black-box paraphrasing. 4.1 PAPER CORPORA 
+
+We construct our evaluation corpus from accepted papers at ICML 2023 and ICLR 2024. These two conferences provide diverse and technically detailed research papers spanning a broad range of ma-6chine learning topics, making them suitable for evaluating document-level semantic watermarking under realistic academic-review settings. We use the original paper PDFs as the source documents for all subsequent fact extraction, watermark construction, review generation, and detection experi-ments. 4.2 EXACT -12 C ONFIGURATION 
+
+We use K = 12 binary positions, selecting 2K = 24 approved facts per paper and assigning a balanced codeword with six zeros and six ones. Eight seed-disjoint selection-only controls are used to estimate the natural mention tendency of candidate facts. Candidate facts are generated with Qwen2.5-VL-32B-Instruct and filtered for source support, eval-uative neutrality, and semantic redundancy. We then select 24 complementary facts and pair them into 12 binary positions using the utility, redundancy, and control-aware objectives defined in Sec-tions 3.4 and 3.5. All thresholds, candidate-generation settings, selection weights, and pairing opti-mization details are fixed across experiments and are provided in the Appendix. 4.3 CARRIER AND REVIEW GENERATION 
+
+The 12 selected facts are mapped to a fixed conference-review layout: four facts occupy the four Summary sentences; two facts are assigned to the first Strength, one to each of the second and third Strengths; two to the first Weakness, and one to each of the second and third Weaknesses. We delib-erately adopt this structured review format so that each semantic position has a predictable content location. The slot contract reduces fact omission and clustering, limits cross-position interference during NLI decoding, and makes the resulting semantic evidence easier to audit and compare across paired generations. It is therefore an experimental control for reliable semantic transmission and measurement rather than a general requirement of S EM TRACE .The complete watermark instruction is embedded invisibly in the protected PDF, and reviews are generated using Qwen2.5-VL-32B-Instruct. Protected and unprotected generations use identical model and review-format constraints, so that the paired comparison differs in the presence of the document-triggered carrier rather than in the outer review format. Full carrier-construction and generation parameters are provided in Appendix A.2. 4.4 DETECTION AND EVALUATION PROTOCOL 
+
+For detection, we use a frozen DeBERTa-v3-small NLI model to determine which member of each fact pair is supported by the generated review. Reviews with at least 8 of the 12 positions observed are eligible for assigned-code scoring. The detector and all decision rules are fixed across datasets and experimental conditions; detailed NLI thresholds and decoding parameters are provided in the appendix. For each paper, we generate five paired positive/null review draws. The positive member receives the protected PDF containing the carrier, whereas the null member receives the original unwatermarked PDF. Positive and null reviews within each pair share the same sampling seed. Selection-only con-trols use a separate seed space and are used only during watermark construction, not as negative examples in the final evaluation. Our primary detection metric is ROC-AUC over the assigned-code score. We additionally report em-pirical zero-FPR and 5% FPR operating points as descriptive summaries. Because multiple review draws from the same paper are not independent, confidence intervals are estimated using cluster bootstrap over papers while retaining all within-paper draws. The same paired evaluation protocol is used for the lexical, initials, and acrostic ICW baselines (Liu et al., 2026a). We further evaluate robustness under two black-box paraphrase attacks: a neutral paraphrase that rewrites wording and structure while preserving the original meaning and evaluation, and an adaptive scheme-agnostic paraphrase in which the attacker is informed that an unknown watermark may be present but receives no information about the paper-specific fact pairs, codeword, detector scores, or key. The detector remains frozen under both attacks. 7ICML 2023 ICLR 2024 ROC-AUC 1.000 0.990 95% cluster CI [1.000, 1.000] [0.970, 1.000] Zero-FPR TPR 1.00 0.98 Positive observed bits 10.76 10.84 Control observed bits 1.46 1.26 Positive bit accuracy 1.0000 0.9945 Paired score difference +23.76 +23.34 
+
+Table 1: Clean detection results for S EM TRACE . The zero-FPR operating point is measured descrip-tively on the evaluation data rather than using an independently calibrated threshold.                     
+
+> Dataset Attack ROC-AUC TPR@clean thr. Obs. bits ICML 2023 Neutral 0.880 0.68 9.06 ICML 2023 Adaptive 0.990 0.98 10.18 ICLR 2024 Neutral 0.960 0.92 9.50 ICLR 2024 Adaptive 0.980 0.94 10.64
+
+Table 2: Robustness results under neutral and adaptive unknown-scheme paraphrasing. TPR is evaluated using the frozen clean operating threshold. 4.5 EXPERIMENT RESULTS 
+
+We evaluate S EM TRACE on the frozen ICML 2023 and ICLR 2024 corpora under the paired protocol described above. These preliminary results use the same construction, generation, detection, and evaluation pipeline as the main experiment. 
+
+Clean detection. SEM TRACE yields near-perfect separation between protected and unprotected reviews on both corpora. On ICML 2023, the assigned-code score achieves a ROC-AUC of 1.000 
+
+with a paper-cluster bootstrap 95% CI of [1 .000 , 1.000] . On ICLR 2024, the corresponding ROC-AUC is 0.990 with a 95% CI of [0 .970 , 1.000] . At the descriptive empirical zero-FPR operating point, TPR is 1.00 on ICML and 0.98 on ICLR. Protected reviews expose substantially more decodable semantic positions than matched controls. The mean numbers of observed bits are 10 .76 versus 1.46 on ICML and 10 .84 versus 1.26 on ICLR. Among non-erased positive bits, agreement with the assigned codeword is 1.0000 and 0.9945 , re-spectively. The mean paired positive-minus-null score differences are +23 .76 for ICML and +23 .34 
+
+for ICLR. 
+
+Paraphrase robustness. The semantic signal remains detectable after both black-box paraphrase attacks, although robustness depends on the rewriting strategy. Under neutral paraphrasing, ROC-AUC decreases to 0.880 on ICML and 0.960 on ICLR. At the frozen clean operating threshold, the corresponding TPRs are 0.68 and 0.92 , with no observed false positives. The adaptive unknown-scheme attack is less damaging in the current evaluation, yielding ROC-AUCs of 0.990 on ICML and 0.980 on ICLR and clean-threshold TPRs of 0.98 and 0.94 , respec-tively. Protected reviews retain on average 9.06 and 9.50 observed bits after neutral paraphrasing, compared with 10 .18 and 10 .64 under the adaptive attack. Non-erased bit accuracy remains high in all four conditions, ranging from 0.9845 to 1.0000 .The apparently weaker adaptive attack should not be interpreted as robustness to a knowledgeable white-box adversary. The attacker is not given the source paper, fact pairs, assigned codeword, de-tector scores, or key. These results therefore characterize strong robustness to the evaluated scheme-agnostic black-box rewriting conditions. 
+
+# REFERENCES 
+
+Jaime G Carbonell and Jade Goldstein. The use of mmr, diversity-based reranking for reordering documents and producing summaries. In SIGIR , volume 98, pp. 290941–291025, 1998. 8Yapei Chang, Kalpesh Krishna, Amir Houmansadr, John Frederick Wieting, and Mohit Iyyer. Post-mark: A robust blackbox watermark for large language models. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , pp. 8969–8987, 2024. Sumanth Dathathri, Abigail See, Sumedh Ghaisas, Po-Sen Huang, Rob McAdam, Johannes Welbl, Vandana Bachani, Alex Kaskasoli, Robert Stanforth, Tatiana Matejovicova, et al. Scalable water-marking for identifying large language model outputs. Nature , 634(8035):818–823, 2024. Kai Greshake, Sahar Abdelnabi, Shailesh Mishra, Christoph Endres, Thorsten Holz, and Mario Fritz. Not what you’ve signed up for: Compromising real-world llm-integrated applications with indirect prompt injection. In Proceedings of the 16th ACM workshop on artificial intelligence and security , pp. 79–90, 2023. Abe Hou, Jingyu Zhang, Tianxing He, Yichen Wang, Yung-Sung Chuang, Hongwei Wang, Lingfeng Shen, Benjamin Van Durme, Daniel Khashabi, and Yulia Tsvetkov. Semstamp: A semantic water-mark with paraphrastic robustness for text generation. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 4067–4082, 2024. Jiahao Huo, Shuliang Liu, Bin Wang, Junyan Zhang, Yibo Yan, Aiwei Liu, Xuming Hu, and Mingxun Zhou. Pmark: Towards robust and distortion-free semantic-level watermarking with channel constraints. In International Conference on Learning Representations , volume 2026, pp. 27100–27126, 2026. John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In International conference on machine learning , pp. 17061–17084. PMLR, 2023. John Kirchenbauer, Jonas Geiping, Yuxin Wen, Manli Shu, Khalid Saifullah, Kezhi Kong, Kasun Fernando, Aniruddha Saha, Micah Goldblum, and Tom Goldstein. On the reliability of water-marks for large language models. In International Conference on Learning Representations ,volume 2024, pp. 49660–49704, 2024. Rohith Kuditipudi, John Thickstun, Tatsunori Hashimoto, and Percy Liang. Robust distortion-free watermarks for language models. arXiv preprint arXiv:2307.15593 , 2023. Aiwei Liu, Leyi Pan, Xuming Hu, Shiao Meng, and Lijie Wen. A semantic invariant robust wa-termark for large language models. In International Conference on Learning Representations ,volume 2024, pp. 6499–6519, 2024. Shuliang Liu, Zheng Qi, Jesse Jiaxi Xu, Yibo Yan, Junyan Zhang, He Geng, Aiwei Liu, Peijie Jiang, Jia Liu, Yik-Cheung Tam, et al. Vla-mark: A cross modal watermark for large vision-language alignment models. In Proceedings of the 2025 conference on empirical methods in natural language processing , pp. 26420–26438, 2025. Yepeng Liu and Yuheng Bu. Adaptive text watermark for large language models. arXiv preprint arXiv:2401.13927 , 2024. Yepeng Liu, Xuandong Zhao, Christopher Kruegel, Dawn Song, and Yuheng Bu. In-context wa-termarks for large language models. In International Conference on Learning Representations ,volume 2026, pp. 53136–53162, 2026a. Yepeng Liu, Xuandong Zhao, Dawn Song, Gregory W Wornell, and Yuheng Bu. Position: Llm watermarking should align stakeholders’ incentives for practical adoption. In Findings of the Association for Computational Linguistics: ACL 2026 , pp. 25887–25903, 2026b. Vishisht Srihari Rao, Aounon Kumar, Himabindu Lakkaraju, and Nihar B Shah. Detecting llm-generated peer reviews. PLoS One , 20(9):e0331871, 2025. Saksham Rastogi and Danish Pruthi. Revisiting the robustness of watermarking to paraphrasing attacks. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , pp. 18100–18110, 2024. 9Vinu Sankar Sadasivan, Aounon Kumar, Sriram Balasubramanian, Wenxiao Wang, and Soheil Feizi. Can ai-generated text be reliably detected? arXiv preprint arXiv:2303.11156 , 2023. Junyan Zhang, Shuliang Liu, Aiwei Liu, Yubo Gao, Jungang Li, Xiaojie Gu, and Xuming Hu. Cohemark: A novel sentence-level watermark for enhanced text quality. arXiv preprint arXiv:2504.17309 , 2025. 
+
+# A IMPLEMENTATION DETAILS 
+
+This appendix provides the frozen implementation details omitted from the main experimental setup for readability. All configurations described below are fixed across datasets and experimental con-ditions. A.1 EXACT -12 C ONSTRUCTION DETAILS 
+
+For the Exact-12 configuration, we use K = 12 binary positions and select 2K = 24 approved facts per paper. The assigned codeword is balanced, containing six zeros and six ones. Eight seed-disjoint selection-only controls are generated to estimate the natural mention tendency of candidate facts. Natural mention rates are computed using add-one smoothing, and the mention threshold is set to 0.52 .Candidate generation uses Qwen2.5-VL-32B-Instruct over approximately 15,000-character evi-dence chunks with a three-unit overlap. Each chunk receives an initial candidate-generation pass followed by a supplemental pass. Candidate facts are constrained to 12–35 words and must include an exact supporting quotation of at least five words from the source document. Source support is verified using NLI, with a minimum entailment probability of 0.68 . To reduce evaluative bias, we retain only candidates whose absolute sentiment and rating-impact scores are at most 0.35 . Near-duplicate candidates are removed at an embedding cosine similarity of 0.99 .Semantic-equivalence deduplication additionally uses bidirectional entailment with threshold 0.75 
+
+together with lexical Jaccard similarity threshold 0.35 . If fewer than 24 candidates survive these filters, targeted refill searches are performed over uncovered evidence without relaxing any filtering threshold. For fact selection, the base utility of candidate f is 
+
+B(f ) = 1 .2ef + 0 .8if + 0 .5vf + 0 .5nf + 1 .0(1 − rf ), (16) and pairwise redundancy is defined as 
+
+R(f, g ) = 0 .6 max(0 , corr( qf , qg )) + 0 .4Jlex (f, g ). (17) Greedy MMR selection uses coefficient 1.2.The frozen pairing cost is 
+
+Cpair (f, g ) = 3 ( |rf − rg | + |if − ig | + |nf − ng |) (18) 
+
++ 2 Cco (f, g ) + 2 R(f, g ) + 0 .2⊮[cat( f )̸ = cat( g)] . (19) Directed implication risk is activated at entailment 0.52 , and the assignment objective is 
+
+8A + P + H. (20) We initialize pairing with control-aware minimum-weight perfect matching, refine the assignment using deterministic simulated annealing, and finish with greedy improving swaps. A.2 CARRIER AND REVIEW GENERATION DETAILS 
+
+The complete document-triggered instruction is placed on the final page of the protected PDF us-ing a Unicode-capable font in invisible render mode. After construction, we verify the embedded instruction through a text round-trip check. Review generation uses Qwen2.5-VL-32B-Instruct in bfloat16 with temperature 0.35 , top-p = 0 .9,and a maximum of 1,800 output tokens. Generated reviews are constrained to 400–1,200 words and contain the sections Summary, Strengths, Weaknesses, Questions for the authors, and Overall score. Protected and unprotected generations use the same review structure, formatting constraints, model, and generation parameters. 10 A.3 DETECTION DETAILS 
+
+Detection uses a frozen DeBERTa-v3-small NLI model. Each generated review is divided into adjacent two-sentence windows, with at most 128 windows retained for inference. The minimum entailment threshold is 0.52 , the ambiguity margin is 0.20 , and the threshold for identifying both members of a fact pair as mentioned is 0.90 .A binary position is treated as observed only when the NLI-based decoding rule resolves sufficient evidence for one member of the corresponding fact pair. Reviews with at least 8 of the 12 posi-tions observed are eligible for assigned-code scoring. Reviews that do not satisfy this minimum-observability requirement receive the fixed ineligible score −13 , which places them below the eligi-ble score range. For every paper, we generate five paired positive/null review draws. Within each draw, the positive review is generated from the protected PDF and the null review from the original unwatermarked PDF. The two generations share the same sampling seed. Selection-only controls occupy a disjoint seed space and are used only during watermark construction; they are never included as negative examples in the final detector evaluation. The primary detection metric is ROC-AUC over the assigned-code score. We additionally report empirical zero-false-positive and 5% false-positive operating points as descriptive summaries rather than independently calibrated deployment thresholds. Because multiple review draws from the same source paper are statistically dependent, confidence intervals are estimated by cluster bootstrap over papers while retaining all review draws belonging to each sampled paper. Under paraphrase evaluation, the detector and the clean operating threshold remain frozen. The neutral attack rewrites wording and structure while preserving the review’s meaning and evaluation. In the adaptive scheme-agnostic condition, the attacker is informed only that the review may contain an unknown watermark; it is not given the source paper, selected fact pairs, assigned codeword, detector scores, or secret key. 11

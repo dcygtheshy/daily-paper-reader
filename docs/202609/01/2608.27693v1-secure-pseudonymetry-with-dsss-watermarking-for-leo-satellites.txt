@@ -1,0 +1,208 @@
+Title: Secure Pseudonymetry with DSSS Watermarking for LEO Satellites
+
+URL Source: https://arxiv.org/pdf/2608.27693v1
+
+Published Time: Mon, 31 Aug 2026 00:13:27 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# Secure Pseudonymetry with DSSS Watermarking for LEO Satellites 
+
+Nisanur Camuzcu and Alireza Vahid 
+
+Abstract —Low-Earth-orbit (LEO) constellations offer dense signals of opportunity (SOP) for positioning, navigation, and tim-ing (PNT) without dedicated navigation infrastructure. However, using these signals passively, by only listening to the downlink, is difficult when beacon/pilot components are weak, signals from multiple satellites overlap, or the receiver cannot reliably identify which satellite generated a given observable. This paper proposes a low-power direct-sequence spread-spectrum (DSSS) watermarking framework that embeds a recoverable pseudony-mous satellite identifier and keyed authentication field into a LEO downlink signal. The watermark carries a public satellite pseudonym for identification and a keyed HMAC-SHA256-based authentication field for authorized verification, enabling passive detection and verification without full downlink demodulation. We evaluate the framework in a multi-satellite simulation using Starlink two-line-element (TLE)-derived geometry, Doppler, and link-budget scaling with Sionna RT-based local propagation. The results demonstrate candidate-satellite detection, public-ID recovery, and keyed verification under co-observed satellite interference, with limited perturbation to the simulated bea-con/pilot and primary downlink components. The framework targets future transmitter-enabled LEO systems while remaining transparent to legacy receivers that do not process the low-power watermark. 
+
+Index Terms —LEO satellites, passive PNT, spread spectrum, DSSS watermarking, authentication, signal-of-opportunity. 
+
+I. I NTRODUCTION 
+
+Reliable positioning, navigation, and timing (PNT) is criti-cal in GNSS-denied or GNSS-degraded environments, includ-ing urban canyons, indoor/obstructed areas, disaster-response operations, and contested military scenarios. Low-Earth-orbit (LEO) broadband constellations provide a dense set of fast-moving transmitters with favorable geometry, strong Doppler diversity, and global coverage, making them attractive signals of opportunity for passive PNT [1]. In a passive setting, the receiver only listens to already transmitted satellite signals and does not require a dedicated navigation payload, a two-way link, or new terrestrial infrastructure. Processing the full LEO downlink waveform may pro-vide richer navigation observables by exploiting broader waveform and frame structure. However, this approach can require wideband sampling, detailed waveform knowledge, and frame-structure access that may not be available to a low-complexity passive PNT receiver [2]. In field-deployable or military-oriented settings, a passive receiver may instead rely on limited beacon/pilot guidance and satellite-specific 
+
+This work was supported in part by NSF award 2348589. Nisanur Camuzcu and Alireza Vahid are with the Department of Elec-trical and Microelectronic Engineering, Rochester Institute of Technology, Rochester, NY 14623 USA (e-mails: nc1138@rit.edu; arveme@rit.edu). 
+
+identification or authentication observables while remaining receive-only. Existing opportunistic LEO-PNT studies have therefore explored satellite-specific beacon, pilot, and reference compo-nents that can be observed without full payload decoding [3], [4]. These components are attractive because they can pro-vide Doppler- and timing-related observables while avoiding full demodulation of the primary downlink waveform. For Starlink, narrowband beacon components near the downlink channel center have been reported as persistently observable during satellite passes [5], and prior work has used such beacon-derived Doppler-rate measurements for passive LEO-aided PNT [6]. However, reliable identification and attribution of these observables remains a key challenge, especially in future scenarios: the receiver must know which satellite generated the observable used in the navigation solution. 
+
+Fig. 1: Dense multi-satellite future setting. The receiver only listens to satellite downlink components and must associate recovered observables with the correct satellite. 
+
+As illustrated in Fig. 1, in emerging dense LEO deploy-ments, multiple satellites are visible from the same receiver, and their reference components may appear in nearby time-frequency regions. Hence, a passive receiver that is not part of the network control protocol may observe a signal feature but may not reliably associate it with a specific satellite, beam, or transmitter. This ambiguity is problematic because the receiver must know which satellite generated the observable used in the navigation solution. Recent Starlink measurements further show that pilot-tone observability has degraded after 2023, making earlier pilot-tone-based approaches less reliable for low-gain passive receivers [4], [7]. These limitations motivate a forward-compatible signal-layer enhancement that preserves passive reception while making satellite-specific observables easier to detect, identify, and verify. 
+
+© 2026 IEEE. Personal use of this material is permitted. Permission from IEEE must be obtained for all other uses, in any current or future media, including reprinting/republishing this material for advertising or promotional purposes, creating new collective works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work in other works. arXiv:2608.27693v1 [eess.SP] 27 Aug 2026 A suitable enhancement must be low-power, recoverable through correlation, and independent of full payload demod-ulation. Direct-sequence spread-spectrum (DSSS) satisfies these requirements through spreading gain, which is central to GNSS acquisition [8], and has also been investigated in DSSS-overlaid OFDM receivers for joint communication and positioning [9]. Recent work has further studied DSSS acquisition under high-dynamics LEO satellite communica-tion [10], [11]. Motivated by these properties, we propose a DSSS pseudonymetry framework for passive LEO-aided PNT, in which a low-power watermark is superimposed on the existing downlink rather than transmitted as a separately allocated DSSS channel. Here, pseudonymetry refers to embedding a recoverable, replaceable satellite identifier into the transmitted signal for passive attribution. The watermark remains below the primary waveform and is recovered through correlation, enabling satellite identification and verification without full downlink demodulation, unlike a conventional header avail-able only after successful frame acquisition and demodula-tion. The watermark is a transmitter-side enhancement for future LEO systems and is not part of current Starlink transmissions, requiring operator participation for passive PNT/authenticated attribution while remaining transparent to legacy receivers. It is structured around three functions: correlation-based synchronization, public pseudonym identification, and keyed authentication using a hash-based message authentication code (HMAC). The public identification field enables satellite attribution, while the keyed authentication field allows autho-rized passive receivers to verify that the detected pseudonym was generated by a transmitter possessing the authorized key. The design builds on prior pseudonymetry work that watermarks transmitted OFDM signals for passive emitter identification [12], but targets LEO-aided PNT under high dynamics and multi-satellite coexistence. We therefore use DSSS pseudonymetry to denote its satellite-oriented physical-layer realization rather than a direct implementation of the original protocol. The receiver is motion-aware: Doppler and Doppler drift are derived from two-line-element (TLE)-based satellite-to-receiver range rate and range acceleration. A beacon-assisted front end provides coarse timing and fre-quency guidance, after which the DSSS watermark is used for synchronization, public-ID detection, and keyed verification. We evaluate the proposed framework in a conservative multi-satellite simulation setting. Real Starlink TLEs are used to obtain slant range, path loss, delay, Doppler, and Doppler drift [13], while a Sionna RT campus scene provides local multipath and blockage through a near-receiver ray-tracing proxy [14]. The received signal includes the candidate satellite, co-observed satellites, a modeled primary downlink component, the low-power DSSS watermark, and noise. The watermark is not placed in a protected quiet subband of the primary downlink; instead, passive primary-waveform suppression is applied before DSSS acquisition. The simu-lation therefore tests whether a weak watermark can still be recovered and authenticated under multi-satellite coexistence. The main contributions of this paper are as follows:  
+
+> •
+
+We propose a DSSS pseudonymetry architecture for passive LEO-aided PNT, where future LEO systems embed a low-power transmitter-side spread-spectrum watermark into the primary downlink component.  
+
+> •
+
+We design a watermark frame that separates public satel-lite identification from authorized authentication. A public DSSS field enables pseudonym detection, while an HMAC-SHA256-based DSSS field enables keyed verification by authorized passive receivers.  
+
+> •
+
+We develop a motion-aware passive receiver that combines beacon-assisted timing/frequency guidance, DSSS acqui-sition/tracking, keyed verification, and primary-waveform suppression.  
+
+> •
+
+We evaluate the framework in a multi-satellite simulation using real Starlink TLE-derived geometry and Sionna RT -based local propagation. The results demonstrate low-power watermark recovery and successful authentication for a dish-assisted passive receiver. II. S YSTEM MODEL 
+
+We consider a passive receiver observing a limited base-band portion of a representative LEO downlink. Each satellite signal is modeled as the superposition of three components: (i) a primary downlink component occupying the observed band, (ii) a beacon/pilot component used for coarse acqui-sition and frequency guidance, and (iii) a low-power DSSS watermark used for pseudonymous transmitter identification and authentication. The transmitted complex baseband signal from satellite m is written as 
+
+sm(t) = sp,m (t) + sb,m (t) + swm ,m (t), (1) where sp,m (t) denotes the modeled primary downlink com-ponent in the observed band, sb,m (t) denotes the beacon/pilot component, and swm ,m (t) denotes the proposed watermark. 
+
+Fig. 2: DSSS watermark frame structure. The frame contains synchronization, public-ID, and authentication fields, each composed of Nsync , NID , and Nauth watermark symbols respectively. Each watermark symbol is spread into a Lc-chip DSSS sequence before transmission. 
+
+The watermark is modeled as a low-power DSSS compo-nent, 
+
+swm ,m (t) = pPwm ,m xkm (t) ej2π∆fwm t, (2) where Pwm ,m is the watermark power, km is the public pseudonym/code-index assigned to satellite m, xkm (t) is formed by spreading each watermark symbol with the Lc-chip DSSS code indexed by km, and ∆fwm denotes the watermark frequency offset relative to the primary downlink reference. The receiver is assumed to have access to the valid pseudonym-to-satellite mapping or schedule for the authorized candidate set. The DSSS watermark is structured around three functions as shown in Fig. 2: correlation-based synchronization, public pseudonym identification, and keyed authentication using HMAC. Thus, the watermark provides a low-rate satellite-specific observable without requiring the receiver to demodulate the primary downlink component. The receiver observes a multi-satellite received signal con-taining the candidate satellite and co-observed satellites: 
+
+r(t) = X
+
+> ℓ
+
+hc,ℓ (t) sc(t − τc,ℓ (t)) ej2πf D,c (t)t
+
+| {z }
+
+> candidate satellite
+
++
+
+> M
+
+X
+
+> m=1
+> m̸=c
+
+X
+
+> ℓ
+
+hm,ℓ (t) sm(t − τm,ℓ (t)) ej2πf D,m (t)t
+
+| {z }
+
+> co-observed satellites
+
++ w(t)
+
+|{z} 
+
+> noise
+
+,
+
+(3) where the first term is the candidate satellite contribution, the second term represents co-observed satellites, and w(t)
+
+is receiver noise. Here, c denotes the candidate satellite, M
+
+is the number of visible satellites, and hm,ℓ (t) and τm,ℓ (t)
+
+denote the complex propagation gain and delay of path ℓ.The Doppler term fD,m (t) is satellite dependent. Since each 
+
+sm(t) includes the primary downlink component, beacon/pilot component, and DSSS watermark, the candidate watermark is observed in the presence of co-satellite signals, primary downlink and beacon/pilot components, multipath, Doppler, and noise. The receiver processing is designed for high-dynamics LEO observations, where Doppler and Doppler-induced sig-nal distortion must be compensated before reliable correlation or tracking [1], [15]. For the candidate satellite c, the receiver first applies motion compensation using TLE-based Doppler and Doppler-rate terms: 
+
+rc(t) = r(t) exp 
+
+
+
+−j2π
+
+
+
+ˆfD,c t + 12ˆ˙fD,c t2
+
+ 
+
+, (4) where ˆfD,c and ˆ˙fD,c are obtained from the candidate satel-lite range rate and range acceleration. This step removes the dominant LEO motion trend and reduces the resid-ual delay/Doppler search space. After this compensation, a beacon/pilot-aided estimator provides a residual CFO estimate 
+
+ˆf0, and the DSSS residual-frequency hypothesis f is searched only over a small neighborhood around ˆf0.After coarse motion compensation and beacon-aided fre-quency centering, the watermark component is translated to baseband and filtered: 
+
+z(t) = LPF rc(t)e−j2π∆fwm t . (5) Chip-rate samples are obtained by integrate-and-dump pro-cessing over chip intervals: 
+
+z[n] = 
+
+Z (n+1) Tc
+
+> nT c
+
+z(t) dt, (6) where Tc = 1 /R c is the chip duration and Rc is the chip rate. DSSS acquisition is performed by correlating the chip-rate sequence with candidate spreading codes over delay and residual-frequency hypotheses. Its search cost scales with the number of code-index, delay, and frequency hypotheses, while the synchronization/public-ID observation interval is 
+
+Tacq = ( Nsync + NID )LcTc and full keyed verification uses 
+
+Tpkt = Nsym LcTc, where Nsym = Nsync + NID + Nauth . For candidate code-index hypothesis k, chip delay d, and residual frequency f , the acquisition metric is 
+
+Λ( k, d, f ) = X
+
+> b
+
+X
+
+> n∈B b
+
+z[n + d] c∗
+
+> k
+
+[n] e−j2πf nT c , (7) where Bb denotes a short group of consecutive chips over which the residual phase is assumed approximately constant. The receiver correlates coherently within each block and sums block magnitudes noncoherently across blocks, improving robustness to residual Doppler drift. This follows standard DSSS acquisition practice, where correlation-based searches and noncoherent accumulation are used for DSSS acquisi-tion [16]. The detected public pseudonymous index is 
+
+ˆk = arg max  
+
+> k,d,f
+
+Λ( k, d, f ). (8) The authentication field is generated by applying HMAC-SHA256 to a frame message containing the public pseudonym and frame counter, using a secret key provisioned to au-thorized receivers. Checking the expected frame counter can reject previously recorded authentication fields; without such validation, replay of a previously valid frame remains possi-ble. Key distribution, counter management, and pseudonym scheduling are treated as operator-provisioned functions out-side the physical-layer receiver design. HMAC-SHA256 pro-vides a standard keyed message-authentication construction, unlike a plain public hash that can be recomputed by any observer [17], [18]. Thus, an attacker knowing only the public codebook can identify or imitate a public pseudonym, but cannot generate a valid authentication tag for that pseudonym-counter combination without the secret key. The tag bits are carried by DSSS-spread authentication symbols and verified by comparing the recovered bits with the expected HMAC output. III. S IMULATION SETUP 
+
+The simulation is implemented in Python 3.14 and uses a post-2023-inspired LEO downlink model observed over a limited baseband bandwidth. Starlink TLEs processed with Skyfield provide satellite geometry, slant range, free-space path loss (FSPL), delay, Doppler, and Doppler drift. Local receiver-side propagation is modeled using a Sionna RT scene of the RIT campus, as shown in Fig. 3 [14]: because the Fig. 3: Sionna RT scene of the RIT campus used to model local propagation around the passive receiver. The light green sphere represents the receiver, while green and gray rays indicate LoS and NLoS propagation paths. 
+
+satellite lies outside the finite scene, a proxy transmitter is placed along its TLE-derived azimuth/elevation direction, and the resulting LoS/NLoS multipath is combined with the satellite-scale TLE quantities. We evaluate a multi-satellite same-band observation sce-nario in which a single receiver snapshot contains the su-perposition of co-visible satellite signals. The components share the observation interval but are not forced to be chip-synchronous; each satellite contribution follows its own mod-eled propagation delay, Doppler shift, and channel response. In the representative run, the closest interferer is separated from the candidate by about 77 μs, or roughly 31 DSSS chips, so the test represents asynchronous same-band overlap rather than a worst-case chip-aligned collision. TLE assistance pro-vides the coarse candidate delay, Doppler, and Doppler-rate prediction, while the beacon/pilot component is used to refine the residual frequency offset before DSSS acquisition. The keyed authentication mechanism itself does not rely on TLEs; however, without TLE or ephemeris assistance, the receiver would require a wider blind search over delay and Doppler hypotheses, increasing acquisition complexity and potentially reducing detection reliability. Received powers are set through a Ku-band link budget with TLE-derived FSPL, receiver gain, noise figure, band-width, and fixed relative signal offsets. In the simulation figures, “host” refers to the modeled primary downlink com-ponent on which the DSSS watermark is superimposed. The beacon/pilot and DSSS watermark are placed 25 dB and 
+
+35 dB below the primary downlink component, respectively. Thus, the watermark is not directly distinguishable in the composite received spectrum before despreading; it is re-covered through DSSS processing gain and correlation-based acquisition. Table I lists the principal receiver, propagation, and watermark design parameters used in the simulation. Geometry-dependent quantities are derived from the selected TLE scene, while chip rate, code length, watermark offset, and authentication-field structure are design parameters of the proposed watermark. A chip is one element of the DSSS spreading sequence; in the simulation, each watermark symbol is spread over Lc =511 chips and ∆fwm ≈ 65 .9 kHz to avoid direct overlap TABLE I: Main simulation and watermark parameters.                                        
+
+> Parameter Value Parameter Value
+> Carrier freq. 11 .325 GHz Observed bandwidth 1MHz Chip rate Rc400 kchips/s Samples/chip 6
+> Code length Lc511 chips No. satellites 8
+> Nsync 48 NID 12
+> Nauth 68 Nsym 128
+> Tpkt 163 .5ms ∆fwm 65 .9kHz Rx gain 35 dBi Noise figure 3dB Beacon offset −25 dB Watermark offset −35 dB
+
+with the beacon/pilot comb. The authentication field contains not only keyed authentication bits but also known preamble and pilot symbols for receiver tracking and equalization. The full watermark frame duration is Tpkt = Nsym Lc/R c for the proof-of-concept parameter set. Shorter frames can be obtained through alternative frame designs, higher chip rates, or more compact ID/auth fields. The reported frame settings balance packet duration and compatibility with existing ob-servables, while TLE-derived motion compensation supports DSSS acquisition over this interval. IV. R ESULTS 
+
+In this section, we evaluate whether the proposed DSSS watermark can be detected, identified, and authenticated in a representative dish-assisted future multi-satellite setting. The results focus on three aspects: (i) detection and keyed verification under different watermark power and coexistence load conditions, (ii) candidate-satellite attribution when co-observed watermark components are present, and (iii) the impact of the watermark on existing beacon/pilot and pri-mary downlink observables. Each sweep point is estimated from 100 independent Monte Carlo trials with randomized receiver noise and waveform initialization, and 95% bino-mial confidence intervals are shown to indicate finite-sample uncertainty. 
+
+A. Watermark Detection and Keyed Verification 
+
+The first objective is to determine the operating region in which the watermark is strong enough to support reliable acquisition and authentication, while still remaining low-power relative to the primary downlink component. Therefore, Fig. 4 shows the sensitivity of the proposed receiver to DSSS watermark power and multi-satellite coexistence. In the watermark power sweep, blind acquisition and keyed verification remain unreliable when the watermark is below about −37 .5 dB relative to the primary downlink component. Around the selected −35 dB operating region, both prob-abilities rise sharply toward near-unity success, indicating a clear threshold for reliable recovery. This behavior is expected because the watermark is recovered through correlation-based DSSS processing gain rather than direct spectral visibility. The coexistence sweep in Fig. 4 evaluates candidate-satellite detection as additional co-observed satellites are included in the same TLE scene. The receiver maintains high keyed verification probability under the tested coexistence load, while the wrong-ID probability remains low. This result indicates that the public-ID and keyed verification stages can (a) (b) Fig. 4: Watermark detection and keyed verification under power and coexistence sweeps. Plot (a) shows blind ac-quisition and keyed verification probability as the DSSS watermark power is varied relative to the primary downlink component, denoted as the host. Plot (b) shows candidate-satellite detection as the number of co-observed satellites increases in the multi-satellite setting. The results show a clear operating threshold in watermark power and sustained keyed verification performance under the tested coexistence load, with low wrong-ID probability. 
+
+support candidate-satellite detection even when other satellite watermark components are present in the observed band. Fig. 5 shows that the proposed authentication layer remains stable under increased multi-satellite demand while retaining strong selectivity against invalid authentication material. The near-unity verification rate after lock indicates that requesting additional satellites does not introduce a measurable keyed verification bottleneck in the tested scenario. The spoofing power sweep further separates valid signal acceptance from spoof false acceptance. Solid curves show that acceptance of the valid signal remains high when the spoofing sig-nal is weak, but degrades once old-authentication, random-authentication, or wrong-ID spoofers approach or exceed the valid DSSS power. In contrast, the dotted curves show no invalid spoofing strategy produces spoof acceptance over the tested power range. Thus, invalid authentication material is rejected in the tested attacks, while sufficiently strong interfer-ence or spoofing can still prevent acquisition of the legitimate watermark. The keyed authentication layer therefore supports source verification but does not prevent denial of service through strong interference or spoofing, and replay protection 1 2 3 4 5 6 7 8Requested satellites 0.0 0.2 0.4 0.6 0.8 1.0 Conditional probability (Wilson 95% CI)     
+
+> (a) Key veri fi cation after lock
+> −20 −10 010 20 Spoof-to-ref. DSSS power ratio [dB] 0.0 0.2 0.4 0.6 0.8 1.0 Acceptance probability (Wilson 95% CI)
+> (b) Auth. robustness to spoo fi ng
+> Signal
+> Valid Spoof
+> Spoofer
+> Old auth. Rand. auth Wrong ID
+
+Fig. 5: Authentication stress tests. Plot (a) shows keyed verification after lock as the requested satellite count in-creases. Plot (b) compares valid-signal and spoof accep-tance versus spoof-to-reference DSSS power for replayed/old-authentication, random-authentication, and wrong-ID attacks. depends on validation of the expected frame counter. 
+
+B. Candidate Attribution in a Multi-Satellite Setting 
+
+The next objective is to evaluate whether the receiver can attribute the recovered watermark to the correct candidate satellite when other satellites cause interference. Fig. 6 exam-ines this attribution behavior under different candidate water-mark carrier-to-noise-density ratio ( C/N 0) and candidate-to-other watermark ratios. Here, C/N 0 quantifies the candidate watermark strength relative to receiver noise density before despreading, making it a useful weak-signal acquisition met-ric. As C/N 0 increases, both blind acquisition and keyed ver-ification improve. This confirms that the receiver performance is primarily limited by the post-despreading reliability of the candidate watermark. The mixture-level sweep evaluates the effect of the candidate-to-other watermark ratio. When the candidate wa-termark is weak relative to co-observed watermark com-ponents, the authentication-bit match and keyed verifica-tion probabilities are reduced, and wrong-ID events are more likely. As the candidate-to-other ratio increases, authentication-bit recovery improves and the wrong-ID prob-ability decreases. Therefore, the receiver is not simply detect-ing the presence of a watermark; it is also able to associate the recovered watermark with the correct candidate satellite when sufficient separation exists between the candidate and co-observed components. The ID-margin plot reports the separation between the strongest and second-strongest public-ID hypotheses and provides an additional diagnostic of this attribution process. (a) (c) (b) (d) 
+
+Fig. 6: Candidate-satellite attribution in a multi-satellite set-ting. Plot (a) shows that increasing candidate watermark C/N0 improves blind acquisition and keyed verification. Plot (b) shows that increasing the candidate-to-other watermark ratio improves authentication-bit recovery and keyed verifica-tion. Plot (c) shows the corresponding reduction in wrong-ID probability, while Plot (d) reports the separation between the strongest and second-strongest public-ID hypotheses. C. Impact on Existing Downlink Observables 
+
+We also evaluate whether the low-power DSSS watermark remains compatible with existing downlink observables. For a receiver that does not despread the watermark, the DSSS layer is not recovered as a separate signal and instead appears as an additional low-power interference term. We therefore assess compatibility by measuring the watermark-induced changes in the beacon/pilot amplitude and phase estimates, as well as the projected distortion on the modeled primary downlink wave-form, relative to the no-watermark case. Fig. 7 shows that the watermark introduces a measurable but limited perturbation to the beacon/pilot observables, while its projection onto the modeled primary waveform remains far below the host. At the selected −35 dB operating point, the amplitude and phase biases remain moderate, while stronger watermark settings increase the perturbation. The beacon amplitude bias is ∼ 0.5
+
+dB and the phase-bias magnitude is about 2◦; the projected primary-waveform distortion is −46 .61 dB, implying 0.00009 
+
+dB equivalent SNR loss and 0.0013 dB total power change. (a) (b) (c) 
+
+Fig. 7: Impact of the DSSS watermark on existing downlink observables. Plots (a) and (b) show beacon amplitude and phase bias relative to the no-watermark reference as DSSS-to-primary power is varied. Stronger watermark power increases the bias magnitude, showing the tradeoff between watermark recoverability and compatibility with existing beacon/pilot observables. Plot (c) shows the projected distortion of the modeled primary waveform due to the watermark. 
+
+V. C ONCLUSION 
+
+This paper proposed a low-power DSSS watermarking framework for secure pseudonymetry in passive LEO-aided PNT. The watermark is superimposed below the primary downlink and recovered through DSSS correlation, carrying a public satellite pseudonym and an HMAC-SHA256-based authentication field for identification and keyed verification without full downlink demodulation. A motion-aware system was developed using TLE-assisted Doppler compensation, beacon/pilot-aided residual correction, DSSS acquisition, and authentication checking. Simulation results in a multi-satellite setting showed that the proposed watermark can support satellite detection, public-ID recovery, and keyed verification under co-observed satellite interference. The results also showed a compatibility tradeoff: increasing watermark power improves recoverability, while also increasing perturbation to existing beacon/pilot observables. Future work will optimize the watermark frame length and power allocation, evaluate smaller-aperture and bare-LNB receivers, study ephemeris uncertainty and validate the proposed design with hardware-calibrated LEO signal measurements. REFERENCES [1] M. Neinavaie, J. Khalife, and Z. M. Kassas, “Doppler Stretch Esti-mation with Application to Tracking Globalstar Satellite Signals,” in 
+
+MILCOM 2021 - 2021 IEEE Military Communications Conference (MILCOM) , 2021, pp. 647–651. [2] T. E. Humphreys, P. A. Iannucci, Z. M. Komodromos, and A. M. Graff, “Signal Structure of the Starlink Ku-Band Downlink,” IEEE Transactions on Aerospace and Electronic Systems , vol. 59, no. 5, pp. 6016–6030, 2023. [3] N. Jardak and R. Adam, “Practical Use of Starlink Downlink Tones for Positioning,” Sensors , vol. 23, no. 6, 2023. [Online]. Available: https://www.mdpi.com/1424-8220/23/6/3234 [4] W. Qin, M. L. Psiaki, J. R. Bowman, and T. E. Humphreys, “Pilots and Other Predictable Elements of the Starlink Ku-Band Downlink,” 2026. [Online]. Available: https://arxiv.org/abs/2602.02627 [5] D. Cristallini, R. Blazquez-Garcia, and D. O’Hagan, “K-space Signal Occupancy of Starlink Signals and Their Applications in Passive Radar Imaging,” in 2023 IEEE Radar Conf. (RadarConf23) , 2023, pp. 1–6. [6] N. Camuzcu, T. M. Hoang, and A. Vahid, “Starlink Beacons for Passive LEO-Aided 9D Navigation,” 2026, accepted for presentation at IEEE VTC 2026-Fall. [Online]. Available: https://arxiv.org/abs/2605.20394 [7] S. Kozhaya, J. Saroufim, and Z. Z. M. Kassas, “Unveiling Starlink for PNT,” NAVIGATION: Journal of the Institute of Navigation , vol. 72, no. 1, 2025. [8] C. J. Hegarty, “GNSS signals — An overview,” in 2012 IEEE Inter-national Frequency Control Symposium Proceedings , 2012, pp. 1–7. [9] A. Gonzalez-Garrido, I. Edjekouane, J. Querol, H. Wymeersch, and S. Chatzinotas, “Joint Communication and Positioning Receiver Archi-tecture for DSSS-Overlayed OFDM Waveform,” IEEE Open Journal of the Communications Society , vol. 6, pp. 8510–8522, 2025. [10] W. Yan, J. An, Y. Feng, S. Wang, X. Yang, and G. Pan, “Coherent Acquisition of MC-DSSS Signal for LEO Satellite Communication,” 
+
+IEEE Transactions on Communications , vol. 74, pp. 6395–6408, 2026. [11] P. Zhang, X. Xiang, G. Li, F. Gong, and Z. Li, “Low-Complex Fast-Acquisition Algorithm and Analysis for Broadband LEO DSSS System,” IEEE Transactions on Vehicular Technology , vol. 75, no. 2, pp. 2342–2355, 2026. [12] M. G. Weldegebriel, J. Wang, G. Hellbourg, N. Zhang, and N. Pat-wari, “Watermarking of OFDM for Pseudonymetry: Analysis and Experimental Results,” in 2024 IEEE International Conference on Communications Workshops (ICC Workshops) , 2024, pp. 317–322. [13] CelesTrak, “Starlink TLE Data,” https://celestrak.org/NORAD/elemen ts/gp.php?GROUP=starlink&FORMAT=tle, accessed: 2026-05-01. [14] J. Hoydis, S. Cammerer, F. Ait Aoudia, M. Nimier-David, L. Maggi, G. Marcus, A. Vem, and A. Keller, “Sionna,” 2022, https://nvlabs.github.io/sionna/. [15] O. Nia and B. L. Mark, “Models for Frequency Doppler Shift Prediction for LEO Satellites at L-Band,” in MILCOM 2022 - 2022 IEEE Military Communications Conference (MILCOM) , 2022, pp. 623–628. [16] Y. Su, “Rapid Code Acquisition Algorithm Employing PN Matched Filters,” IEEE Transactions on Communications , vol. 36, no. 6, pp. 724–733, 1988. [17] A. A. Shenoy and P. P. Nair, “Recent Advancements in HMAC Al-gorithm: A Comprehensive Review,” in 2025 International Conference on Power, Instrumentation, Control, and Computing (PICC) , 2025, pp. 1–7. [18] H. Krawczyk, M. Bellare, and R. Canetti, “HMAC: Keyed-Hashing for Message Authentication,” RFC 2104, 1997.

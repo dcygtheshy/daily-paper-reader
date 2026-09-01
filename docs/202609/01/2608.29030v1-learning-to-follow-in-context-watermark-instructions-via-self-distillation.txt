@@ -1,0 +1,770 @@
+Title: Learning to Follow In-Context Watermark Instructions via Self-Distillation
+
+URL Source: https://arxiv.org/pdf/2608.29030v1
+
+Published Time: Tue, 01 Sep 2026 00:26:27 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# Learning to Follow In-Context Watermark Instructions via Self-Distillation 
+
+Yepeng Liu ∗,† Tianyi Chen ∗ Xuandong Zhao UC Santa Barbara UC San Diego UC Berkeley Dawn Song Yuheng Bu UC Berkeley UC Santa Barbara 
+
+Abstract 
+
+In-context watermarking (ICW) prepends an instruction to a query asking the model to embed a statistically detectable signal in its response. It thus equips LLMs with a watermarking interface that third parties can invoke without access to model internals. Its reliability hinges on the LLM following the instruction without degrading answer quality, yet how well current LLMs do so has not been measured. We introduce ICWBench , a benchmark of three verifiable ICW instruction families, each scored on both detectability and answer quality. Evaluating 14 frontier proprietary and open-source LLMs, we find that none of the evaluated LLMs achieves both objectives across all three families. To address this, we propose a self-contained two-stage training method, requiring no distillation from a stronger model, no manual annotation, and no pre-existing ICW IF ability. The first stage, self-distillation with logits perturbation (SDLP), uses the same base LLM as both teacher and student: an instruction-equivalent decoding-time logits perturbation makes the teacher follow the ICW instruction, and the student is trained to match the teacher’s output distribution. The second stage applies reinforcement learning with the automatic verifier as the reward. Applied to Qwen3-14B and GPT-OSS-20B, our method raises average TPR@ 1% FPR across three ICW instructions from 0.100 to 0.974 and from 0.337 to 0.968 , respectively, while maintaining high response quality under both perplexity evaluation and LLM-as-a-Judge. Our code is available at 
+
+https://github.com/yepengliu/ICW-IF .04812 16 20 24 28 0.0 0.2 0.4 0.6 0.8 1.0    
+
+> Gemini-3-pro Gemini-3-flash Claude-opus-4.5 Claude-sonnet-4.5 Claude-haiku-4.5 GPT-5.4 GPT-5.4-mini GPT-5.4-nano DeepSeek-v4-pro DeepSeek-v4-flash Qwen3-235B
+> Qwen3-14B
+> GPT-OSS-120B GPT-OSS-20B Qwen3-14B (Ours) GPT-OSS-20B (Ours)
+
+Proprietary model Open-source model Qwen3-14B (Ours) GPT-OSS-20B (Ours) 
+
+Average PPL Q ↓
+
+> Average TPR@1%FPR  ↑
+
+Figure 1: TPR@ 1% FPR versus perplexity of 14 evaluated frontier proprietary and open-source LLMs on ICWBench . Each point represents a model’s average performance across three ICW instruction families. Our method raises the average TPR@ 1% FPR of Qwen3-14B from 
+
+0.100 to 0.974 and of GPT-OSS-20B from 0.337 to 0.968 while maintaining low perplexity, achieving a more favorable trade-off than all the frontier proprietary LLMs we evaluate. 
+
+> ∗
+
+These authors contributed equally to this work. 
+
+> †
+
+Correspondence to: yepengliu@ucsb.edu 
+
+1arXiv:2608.29030v1 [cs.AI] 29 Aug 2026 1 Introduction 
+
+The instruction-following (IF) capability of large language models (LLMs) has been studied primarily as a lever for controllability [1–3], powering applications such as formatted generation [4, 5] and tool-using agents [6–9]. We study a different use of this capability: watermarking via instruction . Concretely, an in-context watermark (ICW) instruction [10] asks the model to produce an answer that carries a statistically detectable signal. Watermarking is an important and reliable tool for detecting AI misuse. Most existing LLM watermark-ing techniques are designed for model owners and require access to the internal sampling process, which is not available to the general public [11–20]. However, most LLM providers do not publicly disclose the use of watermarks due to different concerns [21]. This makes AI misuse detection difficult for the general public or third-party stakeholders. To address this problem, Liu et al. [10] proposes the concept of ICWs and studies their application to detecting AI-generated reviews for academic conferences by injecting the ICW instruction into the manuscript submissions. Moreover, ICML 2026 adopts a similar ICW-based detection for identifying AI-generated reviews [22, 23], where 795 reviews ( ∼ 1% of all reviews) are detected as AI-generated. The reliability of ICW rests on the LLM’s ability to follow the embedded instruction, yet how well current LLMs do so, and at what cost to answer quality, has not been measured. We address this gap with ICWBench , a benchmark of three verifiable ICW instruction families (Table 1): Token-Set Preference (TSP), Word-Initial Preference (WIP), and Sentence Acrostic (SA). Each family is designed to be general across queries , automatically verifiable , quality-preserving , and robust to editing . Unlike prior IF benchmarks [1] that score obedience alone, ICWBench scores both whether the response follows the instruction (carries the watermark signal) and whether it remains a high-quality answer to the query. We evaluate 14 frontier proprietary and open-source LLMs on ICWBench , including GPT-5.4 [24], Gemini-3-pro [25], Claude-opus-4.5 [26], and DeepSeek-v4-pro [27]. We observe two contrasting failure modes: under-following , where no evaluated model exceeds 0.66 AUC on TSP, and over-following ,where strong watermark detectability comes at a substantial cost to output quality. For example, Gemini-3-pro reaches 1.000 AUC on WIP, while perplexity rises from 4.33 to 67 .61 .Improving ICW IF capability presents a bootstrapping challenge: the models that need training are precisely those that cannot reliably produce instruction-compliant responses in the first place. Although the automatic verifier makes reinforcement learning with verifiable rewards (RLVR) a natural training framework, effective RLVR requires an initial policy that can already generate sufficiently high-reward rollouts, which weak ICW IF models may fail to provide. Obtaining such a cold start is itself non-trivial. Direct sampling from the base model yields few instruction-compliant responses, manual annotation is costly and difficult to scale, and distillation from stronger LLMs is unreliable because even frontier models exhibit limited ICW IF ability. Moreover, ICW compliance is inherently distributional: the watermark signal is encoded through aggregate token statistics rather than a particular target sequence. Consequently, even given compliant responses, standard supervised fine-tuning (SFT) discards the distribution-level structure that carries the ICW signal. This raises a central question: 
+
+How can we bootstrap reliable ICW IF capability in an LLM with weak initial ICW IF ability, without relying on stronger teacher models or human supervision? 
+
+In this paper, we propose a general self-contained method that runs on the base LLM alone: no distillation from a stronger model, no manual annotation, no strong pre-existing ICW IF ability required. Our intuition is to convert ICW IF into an instruction-equivalent decoding-time logit perturbation on the base LLM. It resolves both cold-start training problems: (1) it provides a method to synthesize instruction-compliant data from the base LLM itself, and (2) it provides a distribution-level supervision signal that is not available in SFT. Specifically, we propose a two-stage training method. Stage one, self-distillation with logits perturbation (SDLP), pairs a frozen teacher with a trainable student, both copies of the base LLM. The teacher receives only the query and produces an instruction-aligned distribution via logit perturbation; the student receives both the ICW instruction and the query without any perturbation, and is trained to match the teacher’s distribution. Stage two applies GRPO [28] with the automated verifier as the reward. Applied to two open-source LLMs, Qwen3-14B and GPT-OSS-20B, our method raises their average TPR@1%FPR across the three ICW instruction families from 0.100 to 0.974 and from 0.337 to 0.968 , respectively, and achieves a more 2favorable IF-quality trade-off than the frontier LLMs we evaluate. We summarize our contributions as follows: • We evaluate 14 frontier proprietary and open-source LLMs on ICWBench and identify the trade-off of frontier LLMs between following ICW instructions and preserving generation quality. • We propose a self-contained two-stage training method to improve LLMs’ ability to follow ICW instructions while maintaining generation quality, without external supervision (stronger teacher model, human annotation, pre-existing capability). • We validate our method on two open-source LLMs with weak initial ICW IF ability, Qwen3-14B and GPT-OSS-20B. Our trained models achieve average TPR@ 1% FPR of 0.974 and 0.968 , respectively, across the three instruction families while maintaining high response quality, resulting in a more favorable ICW IF-quality trade-off than the frontier LLMs we evaluate. 
+
+# 2 Related Works 
+
+LLM Watermarks. AI-generated content detection is crucial for mitigating risks of AI misuse [29–43]. Post-hoc detectors [44–46] train classifiers to identify patterns in generated text, but are vulnerable to high false positive rates [47, 48], which limits their reliability. LLM watermarking methods actively embed a verifiable signal into AI-generated text, usually providing high true positive rates and controllable false positive rates [12, 14, 49–59]. Most existing generative AI watermarking techniques are designed for model owners and require access to the internal sampling process, which is not available to the general public [11, 13, 15–17, 60]. However, the application of watermarks depends on the LLM providers, which significantly limits the real-world adoption of LLM watermarking. A natural alternative is to shift control of watermarking from the model owner to the user or third party: the LLM itself becomes a watermarking tool that requires no access to its internals. ICWs [10, 23] realize this idea by only using the ICW instructions. Specifically, Liu et al. [10] proposes a general ICW framework and investigates four ICW strategies that watermark LLM-generated text at different linguistic granularities, which are broadly applicable across generation tasks. Rao et al. [23] targets only the peer-review scenario and instructs the LLMs to insert stochastically chosen trigger phrases into the generated reviews whose presence serves as the detection signal. In this paper, we focus on general ICW methods, where instructions apply across arbitrary queries and can be evaluated as a general LLM capability. We benchmark frontier LLMs on a suite of ICW instructions, characterize where they fail to comply, and propose a training method to close this gap. 
+
+LLM Instruction-Following Capabilities. The IF ability of LLMs has been extensively studied and evaluated [1, 61, 2, 62], and improved through instruction tuning [63–65], RLHF [66], and preference optimization [67]. ICW instructions, however, differ from the constraints studied in this line of work along two axes. First, prior benchmarks score per-response compliance with surface-level constraints, e.g., length, format, keyword inclusion, or style [1, 2]; in contrast, an ICW instruction imposes a constraint on the aggregate statistics of a response (e.g., token frequencies), whose satisfaction is verified by a statistical test rather than by a deterministic surface check. As a result, a model can satisfy the instruction in a distributional sense, by slightly biasing token-level choices throughout the response, even though no individual token is required to take a specific value. Second, prior IF benchmarks score compliance largely in isolation from answer quality, whereas ICW instructions require both detectability and quality on the same query; ICWBench therefore scores both, exposing an IF-quality trade-off that single-axis evaluation does not surface. Consequently, existing IF benchmarks do not evaluate ICW instruction-following ability, and standard IF training pipelines [68] do not directly transfer. 
+
+# 3 ICWBench 
+
+To evaluate whether an LLM can comprehend and execute ICW instructions, inspired by [10], we introduce ICWBench , a compact benchmark built around three families of verifiable ICW instructions. Each family is parameterized so that a template yields watermarked text with different keys, and each 3Table 1: The three families of ICW instructions in ICWBench , with a brief description. Each family is parameterized by κ, yielding distinct instances per family.                       
+
+> Instruction Type Parameters κDescription
+> Token-Set Preference (TSP)
+> T={t1, t 2, . . . , t k}In answering a query naturally, increase the use of tokens from the given token set Tin the generated text without compromising quality. Word-Initial Preference (WIP)
+> L={ℓ1, ℓ 2, . . . , ℓ k}In answering a query naturally, increase the use of words starting with the letters in Lin the generated text without compromising quality. Sentence Acrostic (SA)
+> S=s1s2· · · skIn answering a query naturally, structure sentences so their initial letters sequentially spell the given string Swithout compromising quality.
+
+is paired with a statistical test for verification. In the rest of this section, we describe the instruction design and evaluation metrics in detail. 
+
+3.1 ICW Instruction 
+
+Problem formulation. Let M denote an LLM and q a user query. An ICW instruction is a pair 
+
+(ψ, κ ), where ψ is an instruction family, π ∈ Πψ is an instruction template in that family, and κ ∈ K ψ is a secret key. Prepending the instantiated instruction to the query yields the response y ← M (π(κ), q ).Each family is paired with a verifier Vψ : Y × K ψ → R that maps a response to a test statistic. The benchmark asks whether Vψ (y; κ) exceeds a detection threshold while y remains an answer to q.
+
+Design principles. We select instructions according to four properties. (1) Generalizability : the template should apply to arbitrary queries rather than a narrow task family. (2) Verifiability : the induced signal in y should be detectable by an automatic verifier. (3) Quality preservation : complying with the instruction should leave the response a faithful answer to q. (4) Robustness : the generated text should be robust to editing operations. 
+
+Instruction families. These principles lead us to focus on ICW instructions that are content-agnostic and can be applied across query domains. This differs from the phrase-insertion approach used for LLM-generated review detection by Rao et al. [23], which instructs the model to insert preselected trigger phrases into a review. Such an approach is well suited to its application-specific detection setting, but largely reduces IF to the inclusion of a small number of strings. Our goal is instead to evaluate ICW IF as a general LLM capability, including instructions that constrain statistical or structural properties of the response while leaving its semantic content unconstrained. ICWBench instantiates three families, summarized in Table 1. The three families impose constraints at progressively coarser granularities: Token-Set Preference (TSP) biases which tokens may appear, Word-Initial Preference (WIP) biases the initial letter of each word, and Sentence Acrostic (SA) requires sentence-initial letters to spell a target string in order. All three are independent of the query domain and admit automatic statistical verification. As shown in [10], they cover distinct forms of ICW IF while satisfying our criteria of generalizability, verifiability, quality preservation, and robustness. 
+
+3.2 Evaluation Metrics 
+
+For a family ψ with parameter κ, let n be the number of scored units in the response y (tokens for TSP and word-initials for WIP), and let X count how many of these positions are instruction-aligned. Under the null hypothesis H0 that y is independent of ICW instructions, let p0 denote the probability that a scored unit is instruction-aligned. The verification score is the z-statistic 
+
+z = X − n p 0
+
+pn p 0 (1 − p0) . (1) A larger z provides stronger evidence against H0 and thus that LLMs follow the instruction, and 
+
+y carries the watermark signal. TSP and WIP admit this closed form in (1). SA instead scores a longest-common-subsequence match against a permutation null, which generalizes (1). We instantiate the details of (X, n, p 0) per family in Appendix A.1. 44 Learning to Follow ICW Instructions 
+
+The automatic verifier (1) of ICW instructions enables a natural reward signal for training LLMs to follow ICW instructions through reinforcement learning. However, effective RLVR typically requires an initial policy that can sample rollouts with high reward, a condition that base LLMs may not satisfy on ICW instructions (see Figure 1). Therefore, an effective cold-start training strategy is needed to give RLVR a better starting point. The cold-start training faces two challenges: (i) how to automatically synthesize high-quality training data; (ii) how to design a training method to effectively use the synthesized data. To address these problems, we propose a two-stage approach (Figure 2). In the first stage, we propose 
+
+self-distillation with logits perturbation (SDLP), which bootstraps an initial policy that already produces aligned, high-quality rollouts, supplying RLVR with a better starting point. The second stage applies Group Relative Policy Optimization (GRPO) [28] on top of the SDLP-initialized policy, using (1) as the reward to further improve IF ability. We describe SDLP in Section 4.2 and RLVR in Section 4.3. 
+
+4.1 Training Data Synthesis 
+
+A high-quality ICW IF dataset is crucial for cold-start training, yet automatically synthesizing such data at scale is non-trivial. Direct sampling from the base LLM yields few instruction-aligned responses, since base LLMs do not reliably follow all ICW instructions. Distillation from a stronger LLM is also unreliable: frontier proprietary models also show limited ability to follow ICW instructions. The way forward comes from a property of ICW verification: it depends on the response’s aggregate token statistics, not on a specific surface form. The core idea is to enforce the IF at decoding time via instruction-equivalent logit perturbation, rather than rely on the base LLM to follow the ICW instruction. Concretely, given a query q, the base LLM M generates a response y autoregressively, one token yt at a time. At each decoding step t, let 
+
+ℓt ∈ R|V| denote the logits produced by M over vocabulary V, conditioned on the prefix q and y<t . We add an instruction-dependent perturbation ∆t(ψ; κ) ∈ R|V| to ℓt and sample the next token from the perturbed distribution: 
+
+yt ∼ softmax( ℓt + ∆t(ψ; κ)) . (2) The perturbation ∆t is chosen to up-weight tokens that move y toward a higher verifier score Vψ (y; κ).For example, under the TSP family with parameter T ⊂ V , a natural choice is 
+
+∆t[v] = δ · 1[v ∈ T ], δ > 0,
+
+which uniformly boosts the logits of tokens in T and thereby raises the expected count of T -tokens in 
+
+y, the very quantity scored by the z-statistic in (1). The concrete design of ∆t should be adapted to the specific ICW instruction family. For details of the perturbation design for three ICW instruction families, see Appendix A.1. Repeating this procedure across different queries q and instruction parameters (ψ, κ ) yields a synthetic cold-start dataset 
+
+Dcs = DH1 ∪ D H0 =    ψ, κ, q (i), y (i) Ni=1 ∪    ˆq(i), ˆy(i) Mi=1 . (3) The watermarked part DH1 collects the perturbed samples: by construction, every y(i) follows the ICW instruction for (ψ, κ ) scored by Vψ ( · ; κ), where M does not see the instruction in its context. The unwatermarked part DH0 collects pairs (ˆ q(i), ˆy(i)), where ˆy(i) is text generated under null hypothesis. The evaluation of Dcs can be found in Appendix A.2, showing that it achieves high reward while maintaining good quality. 
+
+4.2 Self-Distillation with Logits Perturbation 
+
+A natural way to use Dcs is SFT on the realized sequences y(i). However, the ICW signal is encoded in the distribution of the response, spread across many token choices rather than any single emitted token. Standard SFT discards this distribution-level information at each decoding step. 5Base LLM     
+
+> Base LLM
+> Query ICW Instruction + Query Distillation:
+> 𝐾𝐿(𝑝||𝑞)
+> Instruction-equivalent logits perturbation:
+> ℓ!+△ !Response: Response:
+> functionally equivalent
+> Stage 1: Self-Distillation with Logits Perturbation
+> ICW Instruction + Query Base LLM Responses
+> Stage 2: Reinforcement Learning
+> ICW Verifier
+> Reward: 𝑧 -statistics
+
+Figure 2: Our two-stage training workflow. Stage 1 (self-distillation with logits perturbation): A frozen base LLM, given only the query and with an ICW instruction-equivalent logits perturbation at decoding time, serves as the teacher; the student model (initially the same as the teacher model), conditioned on the ICW instruction and query, is trained to match the teacher’s output distribution. Stage 2 (RL): The Stage-1 model is then refined by the reward of the automatic ICW verifier Vψ ( · ; κ).We therefore distill the ICW distribution, rather than only the realized token. The remaining question is how to obtain a teacher distribution that already follows the ICW instruction. The logit pertur-bation ∆t(ψ; κ) from Section 4.1 directly defines such a distribution and can therefore serve as the teacher. 
+
+Teacher – student models setup. Both teacher and student models are copies of the base LLM 
+
+M. The teacher model remains frozen; the student model, denoted Mθ, is updated during training. Moreover, the two models receive different inputs at each decoding step t:
+
+ℓT 
+
+> t
+
+← M   · q, y <t 
+
+ , ℓS 
+
+> t
+
+← M θ
+
+  · π(κ), q, y <t 
+
+ .
+
+Our core idea is to distill the teacher distribution into the student, so that given the ICW instruction π(κ),the student learns to reproduce the distribution induced by the following perturbed decoding. 
+
+Self-distillation loss. The teacher distribution at step t is 
+
+pT 
+
+> t
+
+= softmax 
+
+
+
+ℓT 
+
+> t
+
++ ∆t
+
+
+
+, ∆t =
+
+(
+
+∆t(ψ; κ) for samples in DH1 ,
+
+0 for samples in DH0 . (4) On DH0 , the target is the base LLM’s natural output distribution (no instruction signal); on DH1 , it is the perturbed distribution. The student distribution is pS 
+
+> t
+
+= softmax( ℓS 
+
+> t
+
+). The SDLP loss is: 
+
+LSDLP (θ) = E(q,y )∼D cs 
+
+
+
+> |y|
+
+X
+
+> t=1
+
+KL   ˜pT 
+
+> t
+
+˜pS
+
+> t
+
+ , (5) where KL  ˜pT 
+
+> t
+
+˜pS
+
+> t
+
+ = P 
+
+> i
+
+˜pT 
+
+> t
+
+(i) log ˜pT   
+
+> t(i)˜pS
+> t(i)
+
+is the KL divergence, and ˜pT 
+
+> t
+
+, ˜pS 
+
+> t
+
+are top-k truncated distribu-tions defined below. 
+
+Top-k truncation. In practice, low-probability tail of pT 
+
+> t
+
+contributes little meaningful training signal. Therefore, we restrict the KL term in (5) to the top-k tokens of the teacher distribution. Let 
+
+It = TopK  pT 
+
+> t
+
+, k  ⊂ V denote the k token indices with the largest probability under pT 
+
+> t
+
+. We restrict 
+
+both pT 
+
+> t
+
+and pS 
+
+> t
+
+to this same support It and renormalize: 
+
+˜pT 
+
+> t
+
+[v] = pT 
+
+> t
+
+[v] · 1[v ∈ I t]
+
+P 
+
+> v′∈I t
+
+pT 
+
+> t
+
+[v′] , ˜pS 
+
+> t
+
+[v] = pS 
+
+> t
+
+[v] · 1[v ∈ I t]
+
+P 
+
+> v′∈I t
+
+pS 
+
+> t
+
+[v′] . (6) 
+
+4.3 Reinforcement Learning with Verifiable Rewards 
+
+After SDLP, the policy Mθ learns to produce rollouts that follow ICW instructions and earn high rewards. We further improve Mθ with GRPO [28], using the verifier Vψ ( · ; κ) from Section 3.2 as the 6reward and rolling out only on DH1 . For each (ψ, κ, q ) ∼ D H1 , we sample G rollouts {y(i)}Gi=1 from the current policy Mθold , score them by ri = Vψ (y(i); κ), and compute group-relative advantages 
+
+Ai = ri − ¯rσr
+
+, ¯r = 1
+
+G
+
+> G
+
+X
+
+> j=1
+
+rj , σr =
+
+vuut 1
+
+G
+
+> G
+
+X
+
+> j=1
+
+(rj − ¯r)2 + ε. (7) Let ρ(i) 
+
+> t
+
+(θ) = Mθ
+
+ y(i) 
+
+> t
+
+π(κ), q, y (i)
+
+> <t
+
+  Mθold 
+
+ y(i) 
+
+> t
+
+π(κ), q, y (i)
+
+> <t
+
+ denote the per-token importance ratio. We maximize: 
+
+JRLVR (θ) = E(ψ,κ,q )∼D H1
+
+ 1
+
+G
+
+> G
+
+X
+
+> i=1
+
+1
+
+|y(i)|
+
+> |y(i)|
+
+X
+
+> t=1
+
+min 
+
+
+
+ρ(i) 
+
+> t
+
+(θ)Ai, clip  ρ(i) 
+
+> t
+
+(θ), 1 − ϵ, 1 + ϵAi
+
+ , (8) where ϵ is the clipping range. 
+
+# 5 Experiments 
+
+5.1 Experiment Settings 
+
+Models & Datasets & Baselines. Evaluation queries. We sample 500 queries from LFQA 1, a long-form question-answering dataset whose open-ended queries admit substantial response variation and thus expose the IF versus quality trade-off more clearly than short factual questions. The same 
+
+500 queries are reused across all three instruction families and all evaluated models. 
+
+Training data. The training set is built from LFQA queries disjoint from the 500 evaluation queries. For positives ( DH1 ), we use 3379 , 1865 , 2906 queries for TSP, WIP, and SA, respectively, and synthesize one instruction-aligned response per query using the data synthesis method in Section 4.1. For negatives (DH0 ), we sample 1000 , 800 , 800 additional queries per family and generate a single response per query from the base model with the query alone as input. Together, the positive and negative examples form the cold-start dataset Dcs in (3). 
+
+Baselines & Models. We benchmark 14 frontier LLMs spanning two groups. Proprietary : GPT-5.4 [24], GPT-5.4-mini [69], GPT-5.4-nano [70], Gemini-3-pro [25], Gemini-3-flash [71], Claude-opus-4.5 [26], Claude-sonnet-4.5 [72], Claude-haiku-4.5 [73]. Open-source : DeepSeek-v4-pro, DeepSeek-v4-flash [27], Qwen3-235B, Qwen3-14B [74], GPT-OSS-120B, GPT-OSS-20B [75]. The same 14 models serve as the baselines against which we compare our trained models; alternative training methods (SFT, direct RL) are reported in the ablation study (Table 4). All models are queried with default decoding parameters and a generation cap of 600 new tokens. 
+
+Implementation Details. We train Qwen3-14B and GPT-OSS-20B, two open-source models with weak initial ICW IF ability among all LLMs we evaluate. All experiments are conducted on NVIDIA B200 GPUs and RTX PRO 6000 Blackwell GPUs. Full implementation details can be found in Appendix A. 
+
+Evaluation Metrics. We evaluate each model along two axes: ICW IF performance and response quality. All metrics are reported per instruction family. 
+
+ICW IF Performance. For each query q, we collect a positive response y+ generated under π(κ) and q
+
+and a negative response y− generated under q alone, and score both with the z-statistic in (1). We report ROC-AUC and TPR@ 1% FPR; the latter measures the true positive rate at a controlled 1% 
+
+false positive rate. 
+
+Response Quality. We assess response quality using both perplexity (PPL) and LLM-as-a-Judge. PPL is computed on y+ using two external reference models, Nemotron-3-Super-120B [76] and Qwen3-235B, conditioned on the query q as the prefix; lower PPL indicates that the watermarked response remains a likely continuation of the query under these reference models. For LLM-as-a-Judge, we provide 
+
+gpt-4o-mini with the query and generated response and ask it to assign an integer score from 1 to 5
+
+along four dimensions: Relevance, Clarity, Informativeness, and Factual Correctness. 
+
+> 1https://huggingface.co/datasets/vblagoje/lfqa
+
+7Table 2: ICW instruction-following on ICWBench : ROC-AUC and TPR@ 1% FPR on each instruction family, for 14 frontier LLMs that were not trained for ICW IF and our two trained models. Averaged across the three families, our method raises TPR@ 1% FPR from 0.100 to 0.974 on Qwen3-14B and from 0.337 to 0.968 on GPT-OSS-20B. Answer quality for the same responses is reported separately in Table 3. † marks the two backbones we train.                                                                                                            
+
+> Models TSP WIP SA
+> AUC ↑TPR@1%FPR ↑AUC TPR@1%FPR AUC TPR@1%FPR Proprietary Gemini-3-pro 0.658 0.030 1.000 1.000 1.000 1.000
+> Gemini-3-flash 0.646 0.040 0.998 0.958 1.000 1.000
+> Claude-opus-4.5 0.597 0.022 0.998 0.983 1.000 0.998
+> Claude-sonnet-4.5 0.487 0.011 0.996 0.948 1.000 0.983
+> Claude-haiku-4.5 0.600 0.098 0.961 0.642 0.989 0.864
+> GPT-5.4 0.538 0.020 0.933 0.549 0.998 0.983
+> GPT-5.4-mini 0.527 0.020 0.692 0.059 0.913 0.551
+> GPT-5.4-nano 0.462 0.000 0.529 0.004 0.973 0.824
+> DeepSeek-v4-pro 0.579 0.120 0.841 0.260 0.999 0.992
+> DeepSeek-v4-flash 0.576 0.030 0.832 0.277 0.957 0.665
+> Qwen3-235B 0.591 0.020 0.837 0.252 0.995 0.937
+> Qwen3-14B †0.564 0.020 0.583 0.036 0.830 0.245
+> GPT-OSS-120B 0.625 0.020 0.781 0.166 0.983 0.908
+> Open-source GPT-OSS-20B †0.575 0.010 0.568 0.015 0.998 0.985
+> Qwen3-14B 0.993 0.941 0.999 0.996 0.999 0.985
+> Ours GPT-OSS-20B 0.983 0.922 0.992 0.989 0.999 0.992
+
+5.2 Main Results 
+
+5.2.1 Evaluation of frontier models on ICWBench 
+
+We evaluate the 14 frontier LLMs on ICWBench , reporting ICW IF performance in Table 2 and response quality in Table 3. 
+
+ICW IF Performance. IF performance varies sharply across both instruction families and models. SA is the easiest family: every evaluated LLM reaches AUC ≥ 0.83 , and five proprietary models exceed TPR@ 1% FPR = 0 .98 . WIP is harder but tractable for some proprietary models: Gemini-3-pro, Gemini-3-flash, Claude-opus-4.5, and Claude-sonnet-4.5 all exceed TPR@ 1% FPR = 0 .94 , while other models stay below TPR@ 1% FPR = 0 .65 (e.g., GPT-5.4 at 0.549 ) and 8 of them below 0.30 (e.g., DeepSeek-v4-pro at 0.260 , GPT-OSS-120B at 0.166 ). TSP defeats every frontier model: the strongest is DeepSeek-v4-pro at TPR@ 1% FPR = 0 .120 , and the strongest TSP AUC across all evaluated LLMs is 0.658 .
+
+Text Quality. Across the three families, frontier models lack a controllable IF-quality trade-off. WIP shows the over-following failure mode. Gemini-3-pro pushes TPR@ 1% FPR to 1.000 but its PPL Q
+
+inflates to 67 .61 , roughly 10 × that of other models on WIP. The average LLM-as-a-Judge score drops to 3.94 , the lowest among all evaluated models. TSP shows the opposite failure: PPL Q stays in a normal range ( 2.78 – 7.21 ) and LLM-as-a-Judge scores remain high ( 4.58 – 4.98 ), but no model reaches AUC 0.66 , so quality is preserved only because the constraint is not encoded at all. SA is the one ICW instruction where most models look balanced. This is because SA’s constraint applies only at sentence-initial positions, so satisfying it leaves token distributions between sentences intact. 
+
+5.2.2 Evaluation of our method on ICWBench 
+
+We apply our method to two different open-source backbones with weak initial performance, Qwen3-14B and GPT-OSS-20B. The results are presented in Tables 2 and 3. Qwen3-14B has weak ICW IF ability across all three families, with TPR@ 1% FPR of 0.020 , 0.036 , and 0.245 on TSP, WIP, and SA, 8Table 3: Response quality on ICWBench , measured on the same responses as Table 2. PPL Q and PPL N
+
+are perplexities computed by Qwen3-235B and Nemotron-3-Super-120B, two reference models from different families. R, C, I, and FC are LLM-as-a-Judge scores ( gpt-4o-mini ) for Relevance, Clarity, Informativeness, and Factual Correctness, each an integer in 1–5; Avg is their mean. Our trained models remain comparable to their backbones and to the frontier baselines on both metrics. † marks the two backbones we train.                                                                                                                                                                                 
+
+> Models TSP WIP SA
+> Perplexity ↓LLM-as-a-Judge ↑Perplexity ↓LLM-as-a-Judge ↑Perplexity ↓LLM-as-a-Judge ↑
+> PPL QPPL NRCIFC Avg PPL QPPL NRCIFC Avg PPL QPPL NRCIFC Avg Proprietary Gemini-3-pro 5.55 5.13 4.91 4 .59 4 .11 4 .72 4 .58 67 .61 53 .51 4.40 3 .57 3 .60 4 .18 3 .94 6.64 6.38 5.00 4 .98 5 .00 4 .69 4 .92
+> Gemini-3-flash 3.35 3.30 5.00 4 .86 4 .96 4 .56 4 .85 13 .62 11 .86 4.98 4 .57 4 .63 4 .47 4 .66 8.28 7.81 5.00 4 .87 5 .00 4 .57 4 .86
+> Claude-opus-4.5 4.07 3.92 4.92 4 .88 4 .87 4 .72 4 .85 7.04 6.34 5.00 4 .99 4 .98 4 .71 4 .92 6.54 5.80 5.00 4 .97 5 .00 4 .71 4 .92
+> Claude-sonnet-4.5 3.49 3.53 4.89 4 .85 4 .83 4 .64 4 .80 6.53 5.88 5.00 4 .99 4 .99 4 .73 4 .93 5.01 4.48 5.00 4 .98 4 .99 4 .77 4 .93
+> Claude-haiku-4.5 4.47 4.39 4.93 4 .83 4 .78 4 .71 4 .81 5.50 5.14 5.00 4 .99 4 .96 4 .77 4 .93 6.17 5.64 5.00 4 .97 4 .98 4 .79 4 .94
+> GPT-5.4 6.75 6.23 5.00 4 .99 4 .99 4 .93 4 .98 8.21 7.54 5.00 4 .97 4 .98 4 .92 4 .97 8.33 7.47 5.00 4 .94 4 .99 4 .94 4 .97
+> GPT-5.4-mini 5.55 5.16 5.00 4 .99 4 .97 4 .94 4 .98 5.94 5.44 4.99 4 .99 4 .95 4 .91 4 .96 7.23 6.32 5.00 4 .98 4 .95 4 .92 4 .96
+> GPT-5.4-nano 7.21 6.33 4.99 4 .98 4 .99 4 .94 4 .98 7.24 6.46 4.98 4 .98 4 .95 4 .96 4 .97 8.00 7.01 5.00 4 .92 4 .99 4 .92 4 .96
+> DeepSeek-v4-pro 3.81 3.65 4.97 4 .98 4 .94 4 .76 4 .91 4.43 4.36 4.99 4 .98 4 .89 4 .76 4 .91 6.34 5.64 5.00 4 .97 4 .99 4 .76 4 .93
+> DeepSeek-v4-flash 3.08 3.24 5.00 4 .97 4 .96 4 .71 4 .91 4.87 4.74 4.98 4 .95 4 .75 4 .68 4 .84 6.22 5.87 4.99 4 .89 4 .76 4 .56 4 .80
+> Qwen3-235B 2.78 4.27 5.00 4 .96 4 .99 4 .72 4 .92 3.98 5.75 4.97 4 .96 4 .88 4 .82 4 .91 4.20 5.84 4.99 4 .94 4 .98 4 .80 4 .92
+> Qwen3-14B †2.80 3.17 4.94 4 .95 4 .93 4 .72 4 .89 3.48 3.57 4.96 4 .96 4 .78 4 .72 4 .86 4.05 4.21 4.95 4 .90 4 .74 4 .69 4 .82
+> GPT-OSS-120B 4.34 3.15 5.00 4 .79 4 .87 4 .65 4 .83 6.33 4.64 4.85 4 .66 4 .66 4 .65 4 .71 7.06 5.55 4.97 4 .57 4 .84 4 .44 4 .71
+> Open-source GPT-OSS-20B †4.06 3.19 4.95 4 .86 4 .91 4 .65 4 .84 5.43 4.30 4.67 4 .51 4 .51 4 .43 4 .53 5.35 4.44 4.97 4 .79 4 .95 4 .53 4 .81
+> Qwen3-14B 5.74 5.72 4.97 4 .88 4 .94 4 .60 4 .85 4.99 4.96 4.98 4 .95 4 .97 4 .61 4 .88 6.25 6.28 4.89 4 .86 4 .75 4 .70 4 .80
+> Ours GPT-OSS-20B 7.29 7.10 4.88 4 .82 4 .79 4 .65 4 .79 7.15 6.36 4.58 4 .51 4 .59 4 .39 4 .52 7.38 6.48 4.90 4 .80 4 .76 4 .44 4 .73
+
+respectively. GPT-OSS-20B has near-zero TPR@ 1% FPR on TSP and WIP ( 0.010 and 0.015 ) and good performance on SA ( 0.985 ). After training, Qwen3-14B reaches TPR@ 1% FPR of 0.941 /0.996 /0.985 ,increasing its average TPR@ 1% FPR from 0.100 to 0.974 . GPT-OSS-20B reaches 0.922 /0.989 /0.992 ,increasing its average from 0.337 to 0.968 . The consistent ICW IF improvements across both backbones show that our method can effectively improve ICW IF ability across different model families. These gains are achieved while maintaining high response quality. Across both perplexity and LLM-as-a-Judge, our trained models remain comparable to the original backbones, suggesting that the substantial gains in ICW IF are achieved without a degradation in overall response quality. The advantage is particularly clear on WIP: although Gemini-3-pro achieves near-perfect ICW IF, its response quality deteriorates substantially, with PPL Q/PPL N of 67 .61 /53 .51 and an average judge score of 3.94 . In comparison, our trained Qwen3-14B obtains PPL Q/PPL N of 4.99 /4.96 and a judge score of 4.88 , while GPT-OSS-20B obtains 7.15 /6.36 and 4.52 , respectively. Current results use one instruction template per family, a different key for each sample, and queries drawn from LFQA. Appendix B reports ICW IF performance under a different instruction template, on two unseen query domains, and across held-out watermark keys. 
+
+5.2.3 Robustness under different attacks 
+
+We evaluate robustness against three text perturbations applied to watermarked responses (Figure 3). 
+
+Paraphrase rewrites the response text by an LLM. Word replacement substitutes a fraction 30% of words with synonyms. Word deletion drops a fraction 30% of words at random. Across different attacks, our trained models achieve state-of-the-art AUC on TSP. On WIP and SA, our trained models are competitive compared to the strongest baselines. Appendix C extends this evaluation to multi-round paraphrasing, back-translation, summarize-then-expand editing, and an RL-trained adaptive removal attack. 
+
+5.3 Ablation Study 
+
+We ablate different training strategies against the same base model. Beyond our full method, we compare three alternatives: SFT, supervised fine-tuning as cold start; RL, GRPO with the verifier 90.0 0.2 0.4 0.6 0.8 1.0 TPR                    
+
+> TSP under paraphrase attack TSP under word-replacement attack TSP under word-deletion attack
+> 0.0 0.2 0.4 0.6 0.8 1.0 TPR
+> WIP under paraphrase attack WIP under word-replacement attack WIP under word-deletion attack
+> 0.0 0.2 0.4 0.6 0.8 1.0 FPR 0.0 0.2 0.4 0.6 0.8 1.0 TPR
+> SA under paraphrase attack
+> 0.0 0.2 0.4 0.6 0.8 1.0 FPR
+> SA under word-replacement attack
+> 0.0 0.2 0.4 0.6 0.8 1.0 FPR
+> SA under word-deletion attack
+> Qwen3-14B (Ours) GPT-OSS-20B (Ours) Gemini-3-pro Gemini-3-flash Claude-opus-4.5 Claude-sonnet-4.5 Claude-haiku-4.5 GPT-5.4 GPT-5.4-mini GPT-5.4-nano DeepSeek-v4-pro DeepSeek-v4-flash Qwen3-235B Qwen3-14B GPT-OSS-120B GPT-OSS-20B
+
+Figure 3: Robustness of ICWs under different attacks. Rows correspond to the three instruction families (TSP, WIP, SA) and columns correspond to the three attacks (paraphrase, word replacement, word deletion). Each panel overlays ROC curves of our trained Qwen3-14B and GPT-OSS-20B, and the 14 
+
+evaluated frontier proprietary and open-source LLMs on attacked responses. reward applied directly on the base model with no cold start; and SDLP, SDLP only without RL. Results are reported in Table 4. 
+
+SFT is instruction-dependent. SFT’s effectiveness varies across the three families. On WIP, SFT is effective: TPR@ 1% FPR rises from 0.036 to 0.939 . On TSP, the lift is partial. On SA, SFT is ineffective. SFT is therefore not a reliable cold-start strategy across ICW instructions. 
+
+RL alone is insufficient. Initialized directly from the base and trained with the verifier reward, RL shows limited effectiveness on both TSP and WIP. On SA, the run numerically reaches TPR@ 1% FPR 
+
+0.994 , but we observe obvious reward hacking in which the model introduces unnatural formatting and word-splitting artifacts to place target letters at verifier-recognized sentence-initial positions, rather than satisfying the acrostic constraint through natural sentence construction. 
+
+SDLP consistently shows strong performance on all three ICW instructions. It demonstrates the effectiveness of SDLP in converting instruction-following into a decoding-time logit perturbation, which facilitates model training. 10 Table 4: Ablation of training strategies on Qwen3-14B across three ICW instruction families. PPL is the mean of the two reference-model perplexities (Qwen3-235B and Nemotron-3-Super-120B), and Judge is the mean of the four LLM-as-a-Judge dimensions. SDLP produces a strong cold start across all three families, and RL further improves IF capability. ∗ marks the SA run of Base + RL, whose detection scores come with visible reward hacking in text formatting.                                                                               
+
+> Models TSP WIP SA
+> AUC ↑TPR@1%FPR ↑PPL ↓Judge ↑AUC TPR@1%FPR PPL Judge AUC TPR@1%FPR PPL Judge Base Model 0.564 0.020 2.99 4.89 0.583 0.036 3.53 4.86 0.830 0.245 4.13 4.82
+> Base + SFT 0.868 0.382 3.63 4.89 0.997 0.939 3.53 4.70 0.518 0.006 3.17 4.88
+> Base + RL 0.565 0.199 4.25 4.75 0.519 0.008 3.16 4.79 0.999 ∗0.994 ∗3.89 ∗4.76 ∗
+> Base + SDLP 0.968 0.822 4.88 4.83 0.994 0.925 4.10 4.88 0.978 0.849 7.90 4.63
+> Base + SDLP + RL 0.993 0.941 5.73 4.85 0.999 0.996 4.98 4.88 0.999 0.985 6.27 4.80
+
+# 6 Conclusion 
+
+In this paper, we introduce ICWBench , a benchmark of three verifiable ICW instructions, to extensively evaluate 14 frontier proprietary and open-source LLMs. We observe the limitations of frontier LLMs in following ICW instructions: under-following and over-following. We propose an effective, scalable, and self-contained two-stage training method (SDLP and RLVR) that makes the ICW IF of Qwen3-14B and GPT-OSS-20B achieve a better IF-quality trade-off than evaluated frontier models on TSP and WIP, and matches the strongest proprietary baselines on SA. The effectiveness of our method shows that ICWs are a promising approach to equip LLMs with a watermarking interface that third parties can invoke without access to model internals, and we hope our benchmark and training method can facilitate future research in this direction. 11 References 
+
+[1] Jeffrey Zhou, Tianjian Lu, Swaroop Mishra, Siddhartha Brahma, Sujoy Basu, Yi Luan, Denny Zhou, and Le Hou. Instruction-following evaluation for large language models. arXiv preprint arXiv:2311.07911 , 2023. [2] Yuxin Jiang, Yufei Wang, Xingshan Zeng, Wanjun Zhong, Liangyou Li, Fei Mi, Lifeng Shang, Xin Jiang, Qun Liu, and Wei Wang. Followbench: A multi-level fine-grained constraints following benchmark for large language models. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 4667–4688, 2024. [3] Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric Xing, et al. Judging llm-as-a-judge with mt-bench and chatbot arena. Advances in neural information processing systems , 36:46595–46623, 2023. [4] Brandon T Willard and Rémi Louf. Efficient guided generation for large language models. arXiv preprint arXiv:2307.09702 , 2023. [5] Lianmin Zheng, Liangsheng Yin, Zhiqiang Xie, Chuyue Sun, Jeff Huang, Cody H Yu, Shiyi Cao, Christos Kozyrakis, Ion Stoica, Joseph E Gonzalez, et al. Sglang: Efficient execution of structured language model programs. Advances in neural information processing systems , 37:62557–62583, 2024. [6] Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. React: Synergizing reasoning and acting in language models. arXiv preprint arXiv:2210.03629 ,2022. [7] Timo Schick, Jane Dwivedi-Yu, Roberto Dessì, Roberta Raileanu, Maria Lomeli, Eric Hambro, Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. Toolformer: Language models can teach themselves to use tools. Advances in neural information processing systems , 36:68539–68551, 2023. [8] Shishir G Patil, Tianjun Zhang, Xin Wang, and Joseph E Gonzalez. Gorilla: Large language model connected with massive apis. Advances in Neural Information Processing Systems , 37: 126544–126565, 2024. [9] Yepeng Liu, Yu Huang, Yu-Xiang Wang, Yingbin Liang, and Yuheng Bu. Convexbench: Can llms recognize convex functions? arXiv preprint arXiv:2602.01075 , 2026. [10] Yepeng Liu, Xuandong Zhao, Christopher Kruegel, Dawn Song, and Yuheng Bu. In-context watermarks for large language models. arXiv preprint arXiv:2505.16934 , 2025. [11] John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In International Conference on Machine Learning , pages 17061–17084. PMLR, 2023. [12] Xuandong Zhao, Prabhanjan Ananth, Lei Li, and Yu-Xiang Wang. Provable robust watermarking for ai-generated text. arXiv preprint arXiv:2306.17439 , 2023. [13] Yepeng Liu and Yuheng Bu. Adaptive text watermark for large language models. arXiv preprint arXiv:2401.13927 , 2024. [14] Haiyun He, Yepeng Liu, Ziqiao Wang, Yongyi Mao, and Yuheng Bu. Theoretically grounded frame-work for llm watermarking: A distribution-adaptive approach. arXiv preprint arXiv:2410.02890 ,2024. [15] Sumanth Dathathri, Abigail See, Sumedh Ghaisas, Po-Sen Huang, Rob McAdam, Johannes Welbl, Vandana Bachani, Alex Kaskasoli, Robert Stanforth, Tatiana Matejovicova, et al. Scalable watermarking for identifying large language model outputs. Nature , 634(8035):818–823, 2024. [16] Scott Aaronson. Watermarking of large language models. https://simons.berkeley.edu/talks/ scott-aaronson-ut-austin-openai-2023-08-17 , 2023. Accessed: 2023-08. [17] Miranda Christ, Sam Gunn, and Or Zamir. Undetectable watermarks for language models. arXiv preprint arXiv:2306.09194 , 2023. 12 [18] Aiwei Liu, Leyi Pan, Yijian Lu, Jingjing Li, Xuming Hu, Xi Zhang, Lijie Wen, Irwin King, Hui Xiong, and Philip Yu. A survey of text watermarking in the era of large language models. ACM Computing Surveys , 57(2):1–36, 2024. [19] Aiwei Liu, Leyi Pan, Xuming Hu, Shiao Meng, and Lijie Wen. A semantic invariant robust watermark for large language models. arXiv preprint arXiv:2310.06356 , 2023. [20] Aiwei Liu, Leyi Pan, Xuming Hu, Shuang Li, Lijie Wen, Irwin King, and Philip S Yu. An unforgeable publicly verifiable watermark for large language models. In The twelfth international conference on learning representations , 2023. [21] Yepeng Liu, Xuandong Zhao, Dawn Song, Gregory W Wornell, and Yuheng Bu. Position: Llm watermarking should align stakeholders’ incentives for practical adoption. arXiv preprint arXiv:2510.18333 , 2025. [22] ICML 2026. On violations of llm review policies. https://blog.icml.cc/2026/03/18/ on-violations-of-llm-review-policies/ , 2026. Accessed: 2026-03-18. [23] Vishisht Srihari Rao, Aounon Kumar, Himabindu Lakkaraju, and Nihar B Shah. Detecting llm-generated peer reviews. PLoS One , 20(9):e0331871, 2025. [24] OpenAI. GPT-5.4, 2026. URL https://developers.openai.com/api/docs/models/gpt-5.4 .[25] Google DeepMind. Gemini 3 Pro, 2025. URL https://docs.cloud.google.com/vertex-ai/ generative-ai/docs/models/gemini/3-pro .[26] Anthropic. Claude Opus 4.5, 2025. URL https://www.anthropic.com/news/claude-opus-4-5 .[27] DeepSeek-AI. DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence. Technical report, DeepSeek, 2026. URL https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/blob/ main/DeepSeek_V4.pdf .[28] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Yang Wu, et al. Deepseekmath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. [29] Li An, Yujian Liu, Yepeng Liu, Yuheng Bu, Yang Zhang, and Shiyu Chang. A reinforcement learning framework for robust and secure llm watermarking. In Proceedings of the 19th Conference of the European Chapter of the Association for Computational Linguistics (Volume 1: Long Papers) ,pages 7181–7198, 2026. [30] Yepeng Liu, Xuandong Zhao, Dawn Song, and Yuheng Bu. Dataset protection via watermarked canaries in retrieval-augmented llms. arXiv preprint arXiv:2502.10673 , 2025. [31] Li An, Yujian Liu, Yepeng Liu, Yang Zhang, Yuheng Bu, and Shiyu Chang. Defending llm watermarking against spoofing attacks with contrastive representation learning. arXiv preprint arXiv:2504.06575 , 2025. [32] Yepeng Liu, Yiren Song, Hai Ci, Yu Zhang, Haofan Wang, Mike Zheng Shou, and Yuheng Bu. Image watermarks are removable using controllable regeneration from clean noise. arXiv preprint arXiv:2410.05470 , 2024. [33] Pei Yang, Yepeng Liu, Kelly Peng, Yuan Gao, and Yiren Song. Tokenpure: Watermark removal through tokenized appearance and structural guidance. arXiv preprint arXiv:2512.01314 , 2025. [34] Xianjun Yang, Liangming Pan, Xuandong Zhao, Haifeng Chen, Linda Petzold, William Yang Wang, and Wei Cheng. A survey on detection of LLMs-generated content. arXiv preprint arXiv:2310.15654 ,2023. [35] Xuandong Zhao, Sam Gunn, Miranda Christ, Jaiden Fairoze, Andres Fabrega, Nicholas Carlini, Sanjam Garg, Sanghyun Hong, Milad Nasr, Florian Tramer, et al. Sok: Watermarking for ai-generated content. arXiv preprint arXiv:2411.18479 , 2024. [36] Yapei Chang, Kalpesh Krishna, Amir Houmansadr, John Wieting, and Mohit Iyyer. Postmark: A robust blackbox watermark for large language models. arXiv preprint arXiv:2406.14517 , 2024. 13 [37] Chaoyi Zhu, Jeroen Galjaard, Pin-Yu Chen, and Lydia Y Chen. Duwak: Dual watermarks in large language models. arXiv preprint arXiv:2403.13000 , 2024. [38] Ruisi Zhang, Shehzeen Samarah Hussain, Paarth Neekhara, and Farinaz Koushanfar. {REMARK-LLM }: A robust and efficient watermarking framework for generative large language models. In 
+
+33rd USENIX Security Symposium (USENIX Security 24) , pages 1813–1830, 2024. [39] Abe Bohan Hou, Jingyu Zhang, Tianxing He, Yichen Wang, Yung-Sung Chuang, Hongwei Wang, Lingfeng Shen, Benjamin Van Durme, Daniel Khashabi, and Yulia Tsvetkov. Semstamp: A semantic watermark with paraphrastic robustness for text generation. arXiv preprint arXiv:2310.03991 ,2023. [40] Xuandong Zhao, Yu-Xiang Wang, and Lei Li. Protecting language generation models via invisible watermarking. In International Conference on Machine Learning , pages 42187–42199. PMLR, 2023. [41] Hai Ci, Pei Yang, Yiren Song, and Mike Zheng Shou. Ringid: Rethinking tree-ring watermarking for enhanced multi-key identification. In European conference on computer vision , pages 338–354. Springer, 2024. [42] Hanbo Huang, Yiran Zhang, Hao Zheng, Xuan Gong, Yihan Li, Lin Liu, Zhuotao Liu, and Shiyu Liang. Rlcracker: Evaluating the worst-case vulnerability of llm watermarks with adaptive rl attacks. arXiv preprint arXiv:2509.20924 , 2025. [43] Haiyun He, Yepeng Liu, Zhuoer Shen, Ziqiao Wang, Yongyi Mao, and Yuheng Bu. Fundamental trade-offs in multi-bit watermarking of stochastic processes. arXiv preprint arXiv:2605.08826 ,2026. [44] George Alexandru Adam, Alexander Cui, Edwin Thomas, Emily Napier, Nazar Shmatko, Jacob Schnell, Jacob Junqi Tian, Alekhya Dronavalli, Edward Tian, and Dongwon Lee. Gptzero: Robust detection of llm-generated texts, 2026. URL https://arxiv.org/abs/2602.13042 .[45] Eric Mitchell, Yoonho Lee, Alexander Khazatsky, Christopher D Manning, and Chelsea Finn. Detectgpt: Zero-shot machine-generated text detection using probability curvature. In International conference on machine learning , pages 24950–24962. PMLR, 2023. [46] Xiaomeng Hu, Pin-Yu Chen, and Tsung-Yi Ho. Radar: Robust ai-text detection via adversarial learning. Advances in neural information processing systems , 36:15077–15095, 2023. [47] Vinu Sankar Sadasivan, Aounon Kumar, Sriram Balasubramanian, Wenxiao Wang, and Soheil Feizi. Can ai-generated text be reliably detected? arXiv preprint arXiv:2303.11156 , 2023. [48] Weixin Liang, Mert Yuksekgonul, Yining Mao, Eric Wu, and James Zou. Gpt detectors are biased against non-native english writers. Patterns , 4(7), 2023. [49] Xuandong Zhao, Lei Li, and Yu-Xiang Wang. Permute-and-flip: An optimally stable and water-markable decoder for llms. arXiv preprint arXiv:2402.05864 , 2024. [50] Haiyun He, Yepeng Liu, Ziqiao Wang, Yongyi Mao, and Yuheng Bu. Distributional information embedding: A framework for multi-bit watermarking. arXiv preprint arXiv:2501.16558 , 2025. [51] Xiang Li, Feng Ruan, Huiyuan Wang, Qi Long, and Weijie J Su. A statistical framework of watermarks for large language models: Pivot, detection efficiency and optimal rules. The Annals of Statistics , 53(1):322–351, 2025. [52] Xiang Li, Feng Ruan, Huiyuan Wang, Qi Long, and Weijie J Su. Robust detection of watermarks for large language models under human edits. arXiv preprint arXiv:2411.13868 , 2024. [53] Eva Giboulot and Teddy Furon. Watermax: breaking the llm watermark detectability-robustness-quality trade-off. arXiv preprint arXiv:2403.04808 , 2024. [54] Pierre Fernandez, Antoine Chaffin, Karim Tit, Vivien Chappelier, and Teddy Furon. Three bricks to consolidate watermarks for large language models. In 2023 IEEE International Workshop on Information Forensics and Security (WIFS) , pages 1–6. IEEE, 2023. 14 [55] Wenjie Qu, Dong Yin, Zixin He, Wei Zou, Tianyang Tao, Jinyuan Jia, and Jiaheng Zhang. Provably robust multi-bit watermarking for ai-generated text via error correction code. arXiv e-prints , pages arXiv–2401, 2024. [56] Ruibo Chen, Yihan Wu, Junfeng Guo, and Heng Huang. Improved unbiased watermark for large language models. arXiv preprint arXiv:2502.11268 , 2025. [57] Xuehao Cui, Ruibo Chen, Yihan Wu, and Heng Huang. Mc 2 mark: Distortion-free multi-bit watermarking for long messages. arXiv preprint arXiv:2602.14030 , 2026. [58] Ruibo Chen, Yihan Wu, Xuehao Cui, Jingqi Zhang, and Heng Huang. More haste, less speed: Weaker single-layer watermark improves distortion-free watermark ensembles. arXiv preprint arXiv:2602.11793 , 2026. [59] Yihan Wu, Xuehao Cui, Ruibo Chen, and Heng Huang. Analyzing and evaluating unbiased language model watermark. arXiv preprint arXiv:2509.24048 , 2025. [60] Rohith Kuditipudi, John Thickstun, Tatsunori Hashimoto, and Percy Liang. Robust distortion-free watermarks for language models. arXiv preprint arXiv:2307.15593 , 2023. [61] Norman Mu, Sarah Chen, Zifan Wang, Sizhe Chen, David Karamardian, Lulwa Aljeraisy, Basel Alomair, Dan Hendrycks, and David Wagner. Can llms follow simple rules? arXiv preprint arXiv:2311.04235 , 2023. [62] Yiwei Qin, Kaiqiang Song, Yebowen Hu, Wenlin Yao, Sangwoo Cho, Xiaoyang Wang, Xuansheng Wu, Fei Liu, Pengfei Liu, and Dong Yu. Infobench: Evaluating instruction following ability in large language models. In Findings of the Association for Computational Linguistics: ACL 2024 ,pages 13025–13048, 2024. [63] Shayne Longpre, Le Hou, Tu Vu, Albert Webson, Hyung Won Chung, Yi Tay, Denny Zhou, Quoc V Le, Barret Zoph, Jason Wei, et al. The flan collection: Designing data and methods for effective instruction tuning. In International conference on machine learning , pages 22631–22648. PMLR, 2023. [64] Victor Sanh, Albert Webson, Colin Raffel, Stephen H Bach, Lintang Sutawika, Zaid Alyafeai, Antoine Chaffin, Arnaud Stiegler, Teven Le Scao, Arun Raja, et al. Multitask prompted training enables zero-shot task generalization. arXiv preprint arXiv:2110.08207 , 2021. [65] Yizhong Wang, Yeganeh Kordi, Swaroop Mishra, Alisa Liu, Noah A Smith, Daniel Khashabi, and Hannaneh Hajishirzi. Self-instruct: Aligning language models with self-generated instructions. In 
+
+Proceedings of the 61st annual meeting of the association for computational linguistics (volume 1: long papers) , pages 13484–13508, 2023. [66] Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al. Training language models to follow instructions with human feedback. Advances in neural information processing systems , 35: 27730–27744, 2022. [67] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. 
+
+Advances in neural information processing systems , 36:53728–53741, 2023. [68] Guanting Dong, Keming Lu, Chengpeng Li, Tingyu Xia, Bowen Yu, Chang Zhou, and Jingren Zhou. Self-play with execution feedback: Improving instruction-following capabilities of large language models. arXiv preprint arXiv:2406.13542 , 2024. [69] OpenAI. GPT-5.4 mini, 2026. URL https://developers.openai.com/api/docs/models/gpt-5. 4-mini .[70] OpenAI. GPT-5.4 nano, 2026. URL https://developers.openai.com/api/docs/models/gpt-5. 4-nano .[71] Google DeepMind. Gemini 3 Flash, 2025. URL https://docs.cloud.google.com/vertex-ai/ generative-ai/docs/models/gemini/3-flash .15 [72] Anthropic. Claude Sonnet 4.5, 2025. URL https://www.anthropic.com/news/ claude-sonnet-4-5 .[73] Anthropic. Claude Haiku 4.5, 2025. URL https://www.anthropic.com/news/ claude-haiku-4-5 .[74] Qwen Team. Qwen3 technical report, 2025. URL https://arxiv.org/abs/2505.09388 .[75] OpenAI. gpt-oss-120b & gpt-oss-20b model card, 2025. URL https://arxiv.org/abs/2508. 10925 .[76] NVIDIA. Nvidia nemotron 3: Efficient and open intelligence, 2025. URL https://arxiv.org/ abs/2512.20856 . White Paper. [77] George Tsatsaronis, Georgios Balikas, Prodromos Malakasiotis, Ioannis Partalas, Matthias Zschunke, Michael R Alvers, Dirk Weissenborn, Anastasia Krithara, Sergios Petridis, Dimitris Polychronopou-los, Yannis Almirantis, John Pavlopoulos, Nicolas Baskiotis, Patrick Gallinari, Thierry Ar-tières, Axel-Cyrille Ngonga Ngomo, Norman Heino, Eric Gaussier, Liliana Barrio-Alvers, Michael Schroeder, Ion Androutsopoulos, and Georgios Paliouras. An overview of the BIOASQ large-scale biomedical semantic indexing and question answering competition. BMC Bioinformatics , 16(1): 138, 2015. [78] Macedo Maia, Siegfried Handschuh, André Freitas, Brian Davis, Ross McDermott, Manel Zarrouk, and Alexandra Balahur. WWW’18 open challenge: Financial opinion mining and question answering. In Companion Proceedings of the The Web Conference 2018 (WWW ’18 Companion) ,pages 1941–1942, 2018. [79] John Wieting, Kevin Gimpel, Graham Neubig, and Taylor Berg-Kirkpatrick. Paraphrastic representations at scale. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , pages 379–388, 2022. [80] Hanlin Zhang, Benjamin L. Edelman, Danilo Francati, Daniele Venturi, Giuseppe Ateniese, and Boaz Barak. Watermarks in the sand: Impossibility of strong watermarking for generative models. In International Conference on Machine Learning (ICML) , 2024. 16 A Implementation Details 
+
+This appendix gives the per-family instantiation of the verifier Vψ and the logit perturbation ∆t(ψ; κ)
+
+used by both the cold-start data synthesis (Section 4.1) and the SDLP teacher distribution (Section 4.2). It then reports the statistics of the cold-start dataset Dcs , and lists the instruction templates together with the procedure that maps a seed to a key (Appendix A.3). 
+
+A.1 Verifier and Logit Perturbation per Instruction Family 
+
+Rather than using the full vocabulary, we use the English-token subset Ven = v ∈ V : v is ASCII \Vspecial . For Qwen3, |V en | = 88 ,492 , compared to |V| = 151 ,936 . We further denote by V ⊔ 
+
+> en
+
+⊂ V en the subset whose surface form is a leading space followed by an ASCII letter (i.e. word-initial subwords); 
+
+|V ⊔
+
+> en
+
+| = 41 ,547 . For v ∈ V ⊔
+
+> en
+
+, let ϕ(v) ∈ { A, . . . , Z} denote the (uppercased) first letter of v. We restrict to Ven rather than V to keep the context short: TSP serializes T as an explicit token list in the prompt with |T | = γ |V en |, so working over Ven instead of V significantly reduces the context overhead. For each family, Vψ instantiates the z-statistic in (1) by specifying the triple (X, n, p 0), and ∆t
+
+instantiates (2). 
+
+A.1.1 Token-Set Preference (TSP) Parameter. T ⊆ V en , sampled by drawing a uniform random subset of size ⌊γ |V en |⌋ , where the subset ratio γ ∈ (0 , 1) is a fixed hyperparameter. We use γ = 0 .2 for evaluation and γ ∈ { 0.1, 0.2, 0.3}
+
+for data synthesis. 
+
+Verifier VTSP . Following the unique-token construction of [11], let U(y) = {v ∈ V en : v appears in y}
+
+be the set of unique tokens appearing in y. We set 
+
+X = |U (y) ∩ T |, n = |U (y)|, p0 = γ. 
+
+Under the null hypothesis H0 (independence of y from the watermark key T ), each unique token is in 
+
+T with probability γ since T is a uniform random subset of Ven , and z in (1) reduces to the standard binomial z-test. 
+
+Logit perturbation. The perturbation is independent of decoding state: 
+
+∆TSP  
+
+> t
+
+[v] = δTSP · 1[v ∈ T ] ,
+
+with strength δTSP = 3 .0 during synthesis. 
+
+A.1.2 Word-Initial Preference (WIP) Parameter. L ⊂ { A, . . . , Z} with |L| = 13 , sampled randomly from the alphabet with a key. 
+
+Verifier VWIP . Let U ⊔(y) = U(y) ∩ V ⊔
+
+> en
+
+. We set 
+
+X = v ∈ U ⊔(y) : ϕ(v) ∈ L , n = U ⊔(y) , p0 = X
+
+> α∈L
+
+ˆfα,
+
+where ˆfα = |{ v ∈ V ⊔ 
+
+> en
+
+: ϕ(v) = α}| /|V ⊔
+
+> en
+
+| is the empirical fraction of word-initial English tokens whose first letter is α.
+
+Logit perturbation. As with TSP, the perturbation is independent of decoding state: 
+
+∆WIP  
+
+> t
+
+[v] = δWIP · 1[v ∈ V ⊔ 
+
+> en
+
+∧ ϕ(v) ∈ L] ,
+
+with strength δWIP = 3 .0 during synthesis. Equivalently, ∆WIP  
+
+> t
+
+uniformly adds logit perturbation for every word-initial English token whose first letter lies in the in-key letter set. 17 A.1.3 Sentence Acrostic (SA) Parameter. S = s1s2 · · · sk, drawn by sampling each character si uniformly from a 20 -letter pool 
+
+P = ABCDEFGHILMNOPRSTUWY (the alphabet minus {J, K, Q, V, X, Z }, whose word-initial frequency is below 1.5% ). We use |S| = 18 for evaluation; for synthesis, |S| is sampled uniformly in {18 , 19 , 20 } per training example. Unlike TSP and WIP, SA constrains first letters at sentence-initial positions, which require text-level segmentation. We define an extractor Φ( y), which maps a response text y to the concatenation of the first ASCII letter at each detected sentence-initial position. 
+
+Verifier VSA . The observed signal is the longest common subsequence (LCS) length 
+
+X = |LCS( S, Φ( y)) |.
+
+The null distribution is empirical: let ζ range over uniform random permutations of the multiset Φ( y),define the permutation null mean and variance 
+
+μS = Eζ [|LCS( S, ζ )|] , σ2 
+
+> S
+
+= Var ζ [|LCS( S, ζ )|] ,
+
+and report the z-statistic 
+
+z = X − μS
+
+σS
+
+.
+
+This generalizes (1): under the Bernoulli null used by TSP and WIP, (np 0, np 0(1 − p0)) = ( μ, σ 2)
+
+admits a closed form, while SA has no such closed form because LCS depends on the whole sequence rather than the count alone. We estimate (μS , σ S ) with N = 1000 permutations of Φ( y). Using LCS rather than per-position equality makes the verifier robust to extra sentences: if |Φ( y)| > k , the secret string S may still match Φ( y) as a subsequence anywhere, with mismatches and excess letters not penalized. 
+
+Logit perturbation. Intuitively, we treat the secret S = s1 · · · sk as a queue of letters to emit: at each new sentence start, we bias tokens whose first letter is the head of the queue, and pop the queue either when the model successfully emits that letter or fails in three consecutive sentences. Thus, the perturbation is stateful .
+
+State. Per request we keep two integer counters: (1) a target index τ ∈ { 0, . . . , k }, the index of the next letter of S we want to emit; (2) a fail counter f ∈ { 0, 1, 2, 3}, the number of sentences that have failed to match the current target letter sτ . Both start at 0.
+
+When to perturb logits. A decoding step t is marked as active for logits perturbation iff (i) τ < k (the secret S is not yet fully emitted) and (ii) the generated text y<t ends a sentence which can be detected by the extractor Φ.
+
+What logit bias to apply. Let ϕ(v) be the first ASCII letter of v. When the step is active , we bias every token whose first letter is the current target: 
+
+∆SA  
+
+> t
+
+[v] = δSA · 1[ϕ(v) = sτ ] (active step ),
+
+and ∆SA  
+
+> t
+
+= 0 otherwise. Table 5: Cold-start dataset Dcs statistics by instruction family. z-scores and perplexities are computed on each split independently; H1 samples carry the in-context watermark, H0 samples do not.                            
+
+> Size Mean zPerplexity Family DH1DH0DH1DH0DH1DH0
+> TSP 3,379 1,000 7.86 −1.07 4.18 3.20
+> WIP 1,865 800 9.68 −2.06 4.35 3.20
+> SA 2,906 800 7.91 −0.09 3.86 3.21
+
+18 A.2 Cold-Start Dataset Dcs Statistics 
+
+This section reports the size and z-statistics of the cold-start dataset Dcs = DH1 ∪ D H0 defined in (3). Each (ψ, κ, q (i), y (i)) ∈ D H1 is generated by sampling y(i) ∼ M ( · | q(i)) with the family-specific perturbation ∆t(ψ; κ) injected at decoding time, and each (ˆ q(i), ˆy(i)) ∈ D H0 is generated from M on a clean query with no perturbation. All queries are drawn from the LFQA training split, disjoint from the 500 evaluation queries. Table 5 reports |D H1 |, |D H0 |, and the average verifier score on DH1 . For all three families, mean z on 
+
+DH1 is well above the detection threshold at 1% FPR, confirming that Dcs contains a strong watermark signal. 
+
+A.3 Instruction Templates and Key Instantiation 
+
+This section gives the prompt text of the three ICW instruction families and the procedure that maps a seed to a watermark key. For every query, the paired negative response is generated from the query alone, so a positive/negative pair differs only by the presence of the instruction. 
+
+> TSP instruction template
+
+<green> {green_tokens} </green> Respond to the user query. Seamlessly incorporate as many tokens from <green> as possible without compromising text quality. 
+
+> WIP instruction template
+
+<green> {green_letters} </green> <red> {red_letters} </red> Given the <green> and <red> letter lists, respond to the user query with clarity, accuracy, informativeness, and relevance. Favor words beginning with letters from <green> and minimize those beginning with letters from <red>. Never reveal the <green> and <red> letter lists in your reply. 
+
+> SA instruction template
+
+You will receive a SECRET STRING and a user query. Answer the query naturally and helpfully. While doing so, structure the answer so the first letters of your sentences can spell out the secret string in order. Treat the acrostic as a soft guide that you follow whenever it does not hurt the response. Rules: 1. Track the next unmatched letter in the secret string as the target letter. It starts at the first letter and only advances when a sentence successfully starts with it. 2. Prefer to start each new sentence with the target letter. If starting with the target letter would clearly hurt the response 
+
+19 quality, write a non-matching sentence instead. After three consecutive misses, drop that letter and advance to the next. 3. Once the secret string is fully consumed, continue answering naturally with no further letter constraints. 4. Write in plain narrative prose. Do not visually highlight first letters in any way. 
+
+In every family the key is a deterministic function of a seed, so an instruction instance is described by the triple (family, seed, length or ratio parameter). Table 6 states the mapping. Training and evaluation draw from disjoint seed pools, so no evaluation key is seen during training. Table 6: Key instantiation per instruction family. Training and evaluation use disjoint seeds.                                             
+
+> Family Key Instantiation from a seed Training instances
+> TSP Token set T⊆Ven
+> Sample T⊆ V en tokens uniformly from Vwith the seed, γ∈
+> (0 ,1) .One seed per exam-ple; γdrawn from
+> {0.1,0.2,0.3}.WIP Letter set LSample |L|letters uniformly from the alphabet with the seed. One seed per example;
+> γ= 0 .5.SA Secret string SSample |S|letters with a seeded RNG and concatenate them into a string. One seed per example;
+> |S|drawn uniformly from
+> {18 ,19 ,20 }.
+
+# B Generalization of ICW Instruction Following 
+
+Section 3.1 describes an ICW instance by an instruction π, a key κ, and a query q. Training draws different keys, uses one instruction template per family and takes queries from LFQA. We therefore vary all three at evaluation time: Appendix B.1 reports how detection varies across evaluation keys, drawn from seeds disjoint from training; Appendix B.2 replaces the instruction template; and Appendix B.3 replaces the query domain. All results here use our trained Qwen3-14B; we refer to it as Ours and to the untrained Qwen3-14B as Base. 
+
+B.1 Detectability across watermark keys 
+
+κ and ψ are two parameters used by the RL reward, since that reward is Vψ ( · ; κ). Our evaluation uses keys generated from seeds that are disjoint from those used during training, ensuring that the reported performance does not reflect memorization of specific keys. Table 7 reports the distribution of the verifier z-statistic over the evaluation set. The median sits between 4.29 and 4.98 across the three families. Table 7: Distribution of the verifier z-statistic across watermark keys, for our trained Qwen3-14B on the evaluation queries. Each response uses a key drawn from a seed disjoint from those used in training.                       
+
+> Family Mean zSD p5Median zp95
+> TSP 4.22 1.55 1.84 4.29 6.53
+> WIP 4.27 1.47 1.75 4.32 6.49
+> SA 4.95 1.20 3.09 4.98 6.89
+
+B.2 Held-out instruction templates 
+
+We rewrote each family’s instruction into a template distinct from the one used during training, keeping the task identical. Table 8 reports the result. Under the reconstructed template, our method retains high detectability across all three families, and shows stable improvement over the base model. 20 Table 8: ICW IF performance under a held-out instruction template, on the LFQA evaluation queries. Ours is our trained Qwen3-14B, Base is the untrained Qwen3-14B, and ∆ is Ours − Base.                         
+
+> Template TSP AUC ↑WIP AUC ↑SA AUC ↑
+> Original Base 0.564 0.583 0.830
+> Ours 0.993 0.999 0.999 ∆+0 .429 +0 .416 +0 .169
+> Reconstructed Base 0.463 0.588 0.788
+> Ours 0.997 0.980 0.977 ∆+0 .534 +0 .392 +0 .189
+
+B.3 Unseen query domains 
+
+We evaluate on two query sets that are different from training: BioASQ [77] for the biomedical domain and FiQA [78] for the finance domain. Table 9 reports the result. The gap between Ours and Base is preserved outside the LFQA distribution the model was trained on. Table 9: ICW IF performance on two unseen query domains, under the original instruction template.                             
+
+> Query set Model TSP AUC ↑WIP AUC ↑SA AUC ↑
+> LFQA (training domain) Base 0.564 0.583 0.830
+> Ours 0.993 0.999 0.999
+> BioASQ (biomedical) Base 0.585 0.502 0.817
+> Ours 0.941 0.996 0.993
+> FiQA (finance) Base 0.584 0.510 0.842
+> Ours 0.949 0.999 0.996
+
+# C Robustness under Stronger and Adaptive Attacks 
+
+Figure 3 evaluates paraphrase, word replacement, and word deletion. This section adds attacks that edit the response more aggressively, and one attack trained specifically to remove watermarks. As in Appendix B, all results use our trained Qwen3-14B. 
+
+C.1 Multi-round paraphrasing and back-translation 
+
+We apply three further edits. Multi-round paraphrasing paraphrases the response for one, two, or three successive rounds. Back-translation translates the response into French and back into English. 
+
+Summarize-then-expand summarizes the response and then expands the summary back to full length. Table 10 reports detection AUC. After three rounds of paraphrasing the watermark stays detectable, at AUC 0.853 , 0.872 , and 0.796 for TSP, WIP, and SA. Back-translation costs at most 0.065 AUC on any family. Summarize-then-expand hurts SA the most, cutting it to 0.597 ; on TSP and WIP it stays at 0.757 and 0.887 .Table 10: Detection AUC of our trained Qwen3-14B under three stronger edits.                            
+
+> Family No attack Paraphrase ×1Paraphrase ×2Paraphrase ×3Back-translation Summarize-expand TSP 0.993 0.890 0.911 0.853 0.932 0.757
+> WIP 0.999 0.897 0.962 0.872 0.977 0.887
+> SA 0.999 0.873 0.850 0.796 0.979 0.597
+
+C.2 Adaptive attack 
+
+We evaluate against RLCracker [42], an RL-trained removal attack effective against logit-based and sampling-based watermarks. The attack needs watermarked text to train on. That requirement is harder to satisfy for ICWs than for conventional watermarks: a logit-based or sampling-based watermark is embedded by the model 21 provider, so an attacker can collect many watermarked outputs from one system, whereas an ICW is introduced by a third-party user. We nonetheless grant the attacker 100 ICW-bearing samples. We measure two quantities. The evasion success rate (ESR) is the fraction of attacked responses that fall below the detection threshold set at 1% FPR. Semantic utility is measured by P-SP [79], the cosine similarity between averaged subword embeddings trained on paraphrase data, and by an LLM judge that scores on a 1–5 scale how much of the reference answer’s substance survives (Coverage) and whether what survives is unchanged in meaning (Fidelity). Table 11 reports both together. Under the loosest constraint reported (Coverage ≥ 2), RLCracker evades detection on more than 97% of responses, but it pays for this with semantic damage: P-SP falls from about 0.96 to about 0.78 and Coverage from about 4.95 to about 3.5. Once the attacked response is required to retain content, its advantage narrows. At Coverage ≥ 4 its ESR drops to 
+
+0.261 /0.373 /0.378 , and at Coverage ≥ 4.5 to 0.011 /0.370 /0.073 , at which point it no longer exceeds plain LLM paraphrasing on any family. The same pattern holds under a P-SP constraint. These findings are consistent with Zhang et al. [80], which establishes that a strong (robust) watermark is theoretically impossible when attackers are allowed to alter semantic content without restriction. Table 11: RLCracker [42] against LLM paraphrasing on our trained Qwen3-14B. Semantic utility is averaged over attacked responses. ESR is the fraction of responses that evade the 1% FPR detection threshold, restricted to responses meeting the stated utility constraint. Lower ESR is better for the defender. Coverage 5: every substantive claim, entity, number, and qualification is present; 4: one or two minor details missing; 3: several substantive points missing but the main answer is still delivered; 
+
+2: most substance gone.                                                                                                  
+
+> Attack Semantic utility ESR ↓at Coverage ESR ↓at P-SP
+> P-SP ↑Cov. ↑Fid. ↑≥2≥3≥4≥4.5≥0.6≥0.7≥0.8≥0.9
+> TSP LLM paraphrase 0.960 4.945 4.992 0.549 0.549 0.546 0.541 0.549 0.546 0.546 0.532
+> RLCracker 0.785 3.412 4.239 0.983 0.888 0.261 0.011 0.952 0.860 0.473 0.022
+> WIP LLM paraphrase 0.965 4.957 4.996 0.370 0.370 0.370 0.370 0.370 0.370 0.370 0.364
+> RLCracker 0.801 3.556 4.338 0.978 0.919 0.373 0.370 0.969 0.880 0.560 0.039
+> SA LLM paraphrase 0.967 4.944 4.976 0.392 0.392 0.392 0.387 0.389 0.389 0.389 0.384
+> RLCracker 0.762 3.605 4.235 0.986 0.941 0.378 0.073 0.969 0.843 0.300 0.003
+
+22

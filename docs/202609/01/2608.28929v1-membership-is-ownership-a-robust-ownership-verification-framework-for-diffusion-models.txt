@@ -1,0 +1,647 @@
+Title: Membership is Ownership: A Robust Ownership Verification Framework for Diffusion Models
+
+URL Source: https://arxiv.org/pdf/2608.28929v1
+
+Published Time: Tue, 01 Sep 2026 00:19:12 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Membership is Ownership: A Robust Ownership Verification Framework for Diffusion Models 
+
+Feng Jiang ∗, Zuobin Xiong †, An Huang †, Zhipeng Cai ∗, and Yingshu Li ∗∗Department of Computer Science, Georgia State University, Atlanta, USA 
+
+†Department of Computer Science, University of Nevada Las Vegas, Las Vegas, USA 
+
+∗ fjiang4@student.gsu.edu, {yili, zcai }@gsu.edu ; † {zuobin.xiong, an.huang }@unlv.edu 
+
+Abstract —Large-scale diffusion models have fueled numerous profitable downstream applications for AI-related businesses, including visual editing and content creation. Meanwhile, due to the huge amount of resource consumption (e.g., computation and high-quality data) during training, such diffusion models are deemed valuable intellectual property (IP) for tech companies like OpenAI and Google. Yet, the IP assets are vulnerable to various unauthorized uses by adversaries seeking to steal models for customized, usually commercial applications. Some existing approaches have explored IP protection for AI models; however, they mostly face structural limitations in common — using a training-time watermarking by injecting artifacts in the model, which can impose a measurable utility cost and can be weakened by post-hoc fine-tuning. To address these challenges, this work investigates IP protection (i.e., model ownership verification) for diffusion models in a realistic commercial scenario with minimal model utility loss. Specifically, the proposed method builds a framework for model ownership verification, termed “Membership is Ownership (MiO)”, based on a population-level hypothesis test on a private member evidence dataset. MiO verifies ownership using two criteria: model attribution through membership inference and model separation from public references. Both are tested at p < 10 −6. We evaluate MiO on DDIM and Stable Diffusion models without modifying the owner model or its sampling pipeline, and report ROC-AUC and true-positive rates at fixed nominal false-positive targets. Furthermore, MiO stays stable under different post-theft fine-tuning and weight perturbation in adversarial scenarios, reflecting better robustness compared to the watermarking methods. 
+
+Index Terms —Ownership Verification, Diffusion Models, Intel-lectual Property Protection, Model Watermarking 
+
+I. I NTRODUCTION 
+
+Large-scale generative diffusion models have become the critical infrastructure for image generation [1], producing numerous profitable downstream applications. However, the impressive capability of these models is bought at considerable costs: the intensive computational resources and high-quality training data, which make the resulting generative AI models valuable intellectual property (IP) for the institutions and companies that own them. Yet these IP assets are a vulnerable mining target to malicious theft, an adversary who aims to steal the model, which can then fine-tune and redeploy the model for other purposes without contribution, sabotaging the IP copyright and ownership. Establishing model ownership 
+
+Corresponding Author: Zuobin Xiong This paper has been accepted to IEEE International Conference on Data Mining (ICDM) 2026 
+
+verification framework, therefore, is a pressing issue of practical economic and legal significance. 
+
+Ownership verification is to assert whether a suspect model/checkpoint originates from a particular owner’s (i.e., victim) base model. Existing approaches to diffusion model IP protection address this problem along two complementary lines. (1) Training-time watermarking embeds an explicit signature into model parameters or output behavior [2]–[4], e.g., adding invisible noise into parameter space or output space for later identification, which are effective in some controlled settings, but imposes a measurable utility cost and can be progressively weakened by post-hoc fine-tuning, a common strategy used by adversaries. (2) Data memorization verification for diffusion models [5]–[7] exploit the model’s intrinsic memorization gap – reconstruction error on training samples is systematically lower than on unseen samples – and can verify used training data. However, the memorization verification is fundamentally a per-sample classifier where a low reconstruction error on a single sample cannot certify a model ownership claim, because some individual samples may be easy to reconstruct. The challenges above suggest another approach: conducting model ownership verification at the population level while minimizing impact on model utility. In this paper, we present 
+
+Membership is Ownership (MiO), a verification framework built on a principled observation: although the per-sample memorization signal is weak to claim ownership, the population-level memorization pattern over a privately-curated evidence set is both robust and statistically auditable. Particularly, the model trainer/owner reserves a private subset W of the training data, which is never disclosed to the public, and serves as a non-invasive watermark that leaves model parameters and output quality entirely intact. To extract a robust signal from a suspect model for ownership verification, we introduce a multi-timestep t-error score via forward noising and single-step reconstruction by using different statistics (e.g., the 25th percentile) to suppress noise while retaining the memorization. We use Gaussian quantile-regression networks to derive closed-form thresholds for specified FPR targets under the conditional Gaussian model. We validate the framework across two evaluation scenarios in naive diffusion models, like DDIMs trained from scratch and commercialized diffusion models, like Stable Diffusion fine-tuned from the production-scale datasets. For both scenarios, we report detection performance at fixed FPR targets. arXiv:2608.28929v1 [cs.CR] 28 Aug 2026 In summary, the contributions of this work are as follows.  
+
+> •
+
+We reframe the model ownership verification into a population-level hypothesis test problem, which leads to a statistically auditable framework.  
+
+> •
+
+The ownership verification process introduces minimal impact (i.e., 0 change in FID score) on the generation qual-ity of original models by using a non-invasive evidence dataset.  
+
+> •
+
+The proposed two-point verification protocol uses Gaus-sian quantile regression for attribution and Cohen’s d for reference separation, with a closed-form threshold for a chosen nominal per-sample false-positive rate under the conditional Gaussian model.  
+
+> •
+
+We validate the framework on two scenarios across multiple datasets with different configurations, showing that MiO outperforms existing methods in verification accuracy, costs, utility loss, and post-theft robustness. II. R ELATED WORKS 
+
+Model Watermarking. Watermarking embeds an owner-specific signal that can be recovered later to prove provenance. The methods differ mainly in where the signal lives, which decides how hard it is to remove. One line places it in the gen-eration process. Gaussian Shading [8] hides the message in the initial latent while keeping its distribution Gaussian, so training and image quality are less affected. Newer variants, Gaussian Shading++ [9], turn repeated latent embeddings into a per-bit likelihood ratio for soft decoding, the pseudorandom-code watermark of Gunn et al. [10] makes the mark cryptographically undetectable in the sampled noise, ROBIN [11] moves the mark to an intermediate denoising state, and GaussMarker [12] adds a spatial-domain channel. Because the signal rides on the seed and the sampling path, a user who controls generation can drop it by resampling the initial latent. A second line binds the signal to the model. The watermark diffusion process [2] and the trigger-based recipe of Zhao et al. [3] install it at training time; Stable Signature [13] fine-tunes the latent decoder so every output carries a fixed bitstring; ProMark [14] marks the training images and trains the model to reproduce them. SleeperMark [4] carries this to diffusion models by separating watermark knowledge from semantic knowledge during training, so the trigger is not forgotten when the stolen model is fine-tuned for a new task. Those model-related marks resist resampling, but they cost measurable utility and can be mitigated by removal attacks that weaken such watermarks while preserving image quality [15]–[20]. 
+
+Data Memorization Verification. The memorization of training data in model parameters can be used to check model or data attribution [21], [22]. Specifically, membership inference attack (MIA), an attack to decide whether an input is part of a model’s training data [23]–[25], has been used in literature to verify models. For diffusion models, recent works investigate MIA using reconstruction-based signals [5], [26], [27], loss/likelihood-based criteria [6], [7], or scalable quantile-regression formulations [28], [29]. These methods are primarily evaluated as per-example membership decision (i.e., a binary classification of member or non-member) and are typically reported via attack metrics. Ownership verification, however, requires comparative, population-level evidence: the ownership claim must be supported by the aggregate evidence on a designated evidence set via comparison with calibrated reference models to show separation, and tested against the suspect model via a statistically interpretable hypothesis rather than single-sample predictions. One recent work, CDI [22], adopted a similar idea to ours by aggregating several per-sample MIA, but they focused on data ownership, not the model ownership. MiO differs by curating a private evidence set as the ownership anchor and applying a closed-form threshold for a specified FPR target before the population test. III. P ROBLEM FORMULATION 
+
+A. Problem Statement 1) Diffusion Models.: A diffusion model corrupts a clean sample x via a forward noising process, 
+
+xt = √¯αt x + √1 − ¯αt ϵ, ϵ ∼ N (0 , I ), (1) where ¯αt = Qts=1 αs, xt is the noised image at timestep 
+
+t ∈ { 1, . . . , T } and trains a network ϵθ (xt, t ) to predict the added noise. The network ϵθ is optimized by minimizing the denoising objective with t drawn uniformly from {1, . . . , T }.
+
+L(θ) = Ex, t, ϵ ϵ − ϵθ (xt, t ) 22, (2) New samples are produced by iteratively denoising from 
+
+xT ∼ N (0 , I ); we adopt the deterministic DDIM sampler, which drops the stochastic term and admits a closed-form estimate ˆx0 of the clean signal from any (xt, t ) through 
+
+ϵθ. This ˆx0 estimate is precisely the quantity on which our reconstruction score et is built (Section IV-A). Latent diffusion models (LDMs), e.g. Stable Diffusion [1], run the diffusion process in a compressed latent space, where a pretrained autoencoder maps an image x to z = E(x) and decodes it as D(z). The forward process and training objective (Eqs. (1)–(2)) then act on z in place of x, and the denoiser 
+
+ϵθ (zt, t, c ) is conditioned on a text embedding c injected through the U-Net cross-attention layers, which are the same layers LoRA adapters modify. For LDMs, the reconstruction error et can be evaluated in either latent space or pixel space, and the ablation study is evaluated in Section V-F. Both diffusion models systematically memorize portions of their training data [26], [30] – a memorization gap our framework exploits in Section IV. 
+
+2) Membership Inference vs. Ownership Verification: MIA leverages the memorization gap to determine whether a single query sample belongs to the training set of a target model [5], [27], while the ownership verification is different. We state this problem formally: 
+
+Definition 1 (Membership Inference Attack) . Given a target model M trained from Dtrain and a query sample x, MIA is a binary classifier A : ( M, x ) → { 0, 1} that predicts whether 
+
+x ∈ D train .Threat Model Step 3 — Two-point verification (C1 + C2) MiO Pipeline Verification 
+
+Model Owner Binary Decision 
+
+C1 AND C2?  
+
+> Verified (Owner) Rejected (Not owner)
+> Holds private evidence set W
+
+Adversary 
+
+> Steals checkpoint M A
+
+Verifier  
+
+> Receives M A, M B, and public reference set { 𝑀 !"# $}Fine-tunes Prunes Quantizes Adds weight noise
+
+Test Statistics Output                      
+
+> Criterion 1: TPR @0.1% FPR
+> p-value Criterion 2: 𝑑 !" value
+> p-value Final Result: {Verified, Rejected}
+> Step 1 — Reconstruction t-error scoring and Q 25 aggregation
+> 𝑥 ∼ 𝑊 𝑥 𝑡 𝑥̂ 0
+> Forward noising
+> 𝑞(𝑥 𝑡 | 𝑥)
+> Single-step reconstruction
+> Step 2 — Gaussian Quantile Regression for adaptive FPR
+> Bensemble of ResNet-18 + MLP-head
+> Step 3 — Two-point Verification
+> Input: 𝑥 , mean, std, ℓ 2
+> Output: 𝜇(𝑥), log 𝜎(𝑥)
+> C1: Memorization Detection on 𝑊 C2: Separation against References 𝑀 !"# $
+> Hypothesis Test: vs. Pass if 𝑝 < 10 "#
+> Hypothesis Test: vs. Pass if 𝑝 < 10 "# and 𝑑 $% > 2
+
+t-error: 𝑒 " 𝑥 =Fig. 1. The framework and operation steps in the proposed MiO method. 
+
+However, ownership verification requires a population-level test: significant memorization on a designated evidence set 
+
+relative to independent reference models. 
+
+Definition 2 (Model Ownership Verification) . Let MA be the owner’s base model, MB be a suspect model to be verified, and W ⊂ D train (MA) be a private evidence set. An ownership verification protocol is a hypothesis test that decides whether 
+
+MB is stolen from MA under a controlled false-positive rate 
+
+α. V : ( MB , W, {M (i) 
+
+> ref
+
+}) → { VERIFIED , REJECTED }
+
+Reference Models. The reference model set {M (i) 
+
+> ref
+
+}|R| 
+
+> i=1
+
+in the definition above should satisfy three conditions: (i) its training data is disjoint from the private set W; (ii) it has inde-pendent provenance from MA; and (iii) it is type-compatible with the t-error computation procedure of Section IV-A – i.e., a diffusion model on which a per-sample reconstruction score on W is well-defined. 
+
+B. Threat Model 
+
+We consider three parties in the verification framework: the model owner who trained MA and holds W, the adversary 
+
+A who obtained MA through theft (e.g., reverse engineering attacks or insider attacks) and produced a derivative model 
+
+MB via fine-tuning, and the verifier V who judges whether 
+
+MB is derived from MA.We assume the adversary A has white-box access to MA
+
+(due to theft) and may possess similar domain data disjoint from 
+
+W. The adversary can apply adaptations, such as fine-tuning, weight perturbation, quantization, or pruning, to the stolen model weights to escape from the verification protocol. Our threat model focuses on adaptations of the stolen model weights and excludes independent retraining from scratch. Nonetheless, we still examine distillation as a threat-model boundary case in Section V-D (Table IV). The verifier V (i.e., copyright judge or court) has white-box access to both MA, MB , and a set of public reference models {M (i) 
+
+> ref
+
+}|R| 
+
+> i=1
+
+, representing the null hypothesis. The verification framework is established on the core fact that the adversary cannot access the owner’s private evidence set W, which should be the confidential informa-tion of a company. In the worst case, even if Dtrain were leaked, selecting the exact subset W from training samples 
+
+Dtrain is computationally impossible with probability at most 
+
+P (exact match ) = 1
+
+( N
+
+> |W|
+
+) ≤
+
+ |W| 
+
+> N
+
+|W| 
+
+, which is 0.15000 
+
+under the small CIFAR-10 setting ( N = 50 ,000 , |W| = 5 ,000 ). IV. M IO: O WNERSHIP VERIFICATION FRAMEWORK 
+
+The MiO is a three-step verification framework that combines the following parts: (1) a reconstruction error et(x) to quantify model memorization on each timestep t; (2) a Gaussian quantile regression-based function to derive a closed-form member distribution at any chosen false positive level; and (3) a two-point verification criterion for ownership verification. The framework of MiO is described in Fig. 1. 
+
+A. Reconstruction t-error Scoring 
+
+Diffusion models reconstruct their training data with lower error than unseen data [26] and thus, the memorization gap can Algorithm 1 t-error Computation 
+
+Require: Diffusion model ϵθ , sample x∈ RH×W ×C , timesteps 
+
+T = {t1, . . . , t K }, noise schedule {¯αt}
+
+Ensure: Aggregated score s(x)
+
+errors ← [] 
+
+for t ∈ T do 
+
+ϵ ∼ N (0 , I )
+
+xt ← √¯αt · x + √1 − ¯αt · ϵ
+
+ˆϵ ← ϵθ (xt, t )ˆx0 ← (xt − √1 − ¯αt · ˆϵ)/√¯αt
+
+et ← ∥ x − ˆx0∥22/(H × W × C)
+
+errors .append (et)
+
+end for return s(x) ← Q25 (errors )
+
+be used to quantify membership. Specifically, given a clean sample x, we first corrupt it via the forward diffusion schedule as shown in Eq. (1) to obtain xt. The model then predicts the added noise ˆϵθ (xt, t ), from which we can recover x0 from xt
+
+via ˆx0 = xt−√1− ¯αt·ˆϵθ (xt,t )  
+
+> √¯αt
+
+.We define the reconstruction t-error , et(x), as the pixel-level mean squared error at timestep t between the original and reconstructed data as follows: 
+
+et(x) = ∥x − ˆx0∥22
+
+H × W × C (3) where H, W , and C denote the height, width, and number of channels, respectively. For latent diffusion models such as Stable Diffusion, the reconstruction error calculation is applied in the VAE latent space without modification. The empirical pixel-vs-latent comparison is in Section V-F. The full procedure is summarized in Algorithm 1, distinct from the single training timestep t in Eq. (2), the timestep set T =
+
+{t1, . . . , t K } collects K timesteps drawn independently and uniformly from {1, . . . , T }.
+
+B. Gaussian Quantile Regression for Adaptive Threshold 
+
+A single timestep t-error provides a noisy estimate of reconstruction quality, since the magnitude of et(x) varies substantially with t. To obtain a more stable statistic s(x), we aggregate t-errors over K uniformly sampled timesteps via different percentiles Qd. That is 
+
+s(x) = Qd
+
+ {eti (x)}Ki=1 
+
+. (4) We use K = 50 in the experiments, and an ablation study in Section V-F shows that K ≥ 25 will produce a stable regime. For the percentile Qd, a low percentile is preferred because the memorization gap between members and non-members is more pronounced at the timesteps where reconstruction is more accurate on members. The 25th percentile ( Q25 ) is selected based on our empirical evaluation in Section V-F, which retains the best performance while suppressing the upper tail. We therefore model the conditional distribution of s(x)
+
+for adaptive threshold construction. Concretely, we apply a log transform to the score and parameterize the result as a conditional Gaussian distribution whose parameters are learned from x:
+
+y = log(1 + s(x)) ∼ N  μ(x), σ 2(x). (5) The conditional Gaussian parameters are produced by a learned predictor fψ with parameters ψ that takes sample x
+
+and a 3-dimensional summary (mean , std , ℓ 2) of the t-error se-quence {eti (x)}Ki=1 , and outputs the mean and the log standard deviation, fψ : ( x, summary ) 7 → (μ(x), log σ(x)) . Predicting 
+
+log σ rather than σ leaves the head output unconstrained while guaranteeing a positive scale and avoiding the σ → 0 blow-up of the likelihood. We then recover σ(x) = exp(log σ(x)) . In the experiment design, the Gaussian learner fψ is a ResNet-18 backbone, and the feature is concatenated and passed through an MLP head. fψ is trained on an auxiliary set Daux , drawn from the same domain as MA’s training data but disjoint from it, by minimizing the Gaussian negative log-likelihood shown in Eq. (6). This disjointness matters because Daux defines the 
+
+non-member score distribution that calibrates the threshold. In practice, we use a held-out split of the same dataset or public data of the same domain and exclude both W and the rest of 
+
+Dtrain (MA).
+
+L(ψ) = Ex∼D aux 
+
+" 
+
+> 12
+
+log σ2(x) + 
+
+ y − μ(x)2
+
+2σ2(x)
+
+#
+
+(6) Members produce systematically lower scores s(x) than non-members, so the membership signal lies in the lower tail of the non-member score distribution. For a target FPR α, we set the adaptive threshold ˆqα(x) to the modeled α-quantile of 
+
+log(1 + s(x)) for non-members conditional on x. Under the conditional Gaussian model, this quantile admits the closed form 
+
+ˆqα(x) = μ(x) + σ(x) Φ −1(α), (7) where Φ−1 is the standard-Gaussian quantile function. The threshold gives a per-sample, FPR-calibrated instruction for membership claim: we flag x as a likely member if log(1 + 
+
+s(x)) ≤ ˆqα(x), or equivalently by the threshold: 
+
+s(x) ≤ exp  ˆqα(x) − 1. (8) To reduce the predictor variance, we replace the single fψ
+
+with a bagging ensemble of B = 50 predictors trained on 80% 
+
+bootstrap resamples of Daux , and use the averaged ˆqα(x) at test time. 
+
+C. Two-Point Verification Criteria 
+
+Built on the quantile score s(x) from Section IV-B, this section defines the model ownership verification criterion. Given the owner model MA, the suspect model MB , a set of public references {M (i) 
+
+> ref
+
+}, and the private evidence set 
+
+W, the following criteria must be satisfied to declare verified ownership. 
+
+Criterion 1: Memorization Detection on W. For the target FPR α, we apply the per-sample threshold ˆqα(x) from Algorithm 2 Gaussian Quantile Regression Training 
+
+Require: Auxiliary non-member data Daux , ensemble size B,bootstrap ratio r, max epochs E
+
+Ensure: Trained ensemble {fψ(b) }Bb=1 
+
+for b = 1 to B do 
+
+Db ← BootstrapSample (Daux , r ) {r = 0 .8, with replace-ment }Dfit  
+
+> b
+
+, Dval  
+
+> b
+
+← Split (Db, 0.9) 
+
+Initialize fψ(b) with ResNet-18 backbone 
+
+for epoch = 1 to E do for batch (x, s (x), ϕ (x)) in Dfit  
+
+> b
+
+do 
+
+y ← log(1 + s(x)) (μ, log σ) ← fψ(b) (x, ϕ (x)) 
+
+σ ← exp(log σ) {positive scale }L ← 12 log σ2 + ( y − μ)2/(2 σ2)
+
+Update ψ(b) by gradient descent on L
+
+end for if validation loss on Dval  
+
+> b
+
+has not improved for 10 
+
+epochs then break {early stopping }
+
+end if end for end for return {fψ(b) }Bb=1 
+
+Section IV-B to each x ∈ W under the suspect model MB
+
+and compute the empirical hit rate ˆr:
+
+ˆr = 1
+
+|W| 
+
+X
+
+> x∈W
+
+1sMB (x) ≤ exp(ˆ qα(x)) − 1. (9) Let r denote the population hit rate Pr x∈W 
+
+sMB (x) ≤
+
+exp(ˆ qα(x)) − 1 that ˆr estimates, and test the one-sided pair 
+
+HC1  
+
+> 0
+
+: r ≤ α vs. HC1  
+
+> 1
+
+: r > α, 
+
+where the null hypothesis HC1  
+
+> 0
+
+states that MB has no memorization of W beyond the calibrated false-positive rate, whereas HC1  
+
+> 1
+
+states that MB retains memorization of W
+
+beyond it. At the null boundary r = α, the count |W| · ˆr
+
+follows Binomial( |W| , α ), so a one-sided exact binomial test can be applied. The criterion 1 is declared passed when its 
+
+p-value falls below 10 −6.
+
+Criterion 2: Separation against Reference Models. The owner model MA must reconstruct evidence-set samples significantly better than any public reference model, verifying the unique memorization of MA on the private dataset W. For each reference model M(i) 
+
+> ref
+
+, we first compute the per-sample difference δC2 (i) (x) = sMA (x) − sM(i)
+
+> ref
+
+(x), and aggregate it across the evidence set into Cohen’s distance d as follows: 
+
+|d|C2 = | mean (δC2 (W)) |
+
+std (δC2 (W)) . (10) Then we test the null hypothesis HC2  
+
+> 0
+
+: Ex∈W [δC2 (x)] = 0 
+
+against the one-sided alternative HC2  
+
+> 1
+
+: Ex∈W [δC2 (x)] < 0.
+
+HC2  
+
+> 0
+
+says the owner reconstructs W no better than a public 
+
+Algorithm 3 Ownership Verification Protocol 
+
+Require: Models MA, MB , references {M (i) 
+
+> ref
+
+}|R| 
+
+> i=1
+
+, evidence set W, calibrated quantile ˆqα(·) from Section IV-B with 
+
+α = 10 −3
+
+Ensure: VERIFIED or R EJECTED 
+
+SA ← { sMA (x) : x ∈ W} ; SB ← { sMB (x) : x ∈ W} 
+
+C1 (memorization detection, binomial): 
+
+k ← P 
+
+> x∈W
+
+1sMB (x) ≤ exp(ˆ qα(x)) − 1
+
+p1 ← Pr X ≥ k X ∼ Binomial( |W| , α )
+
+if p1 > 10 −6 then return REJECTED 
+
+end if C2 (separation, paired): for each reference i ∈{1, . . . , |R|} :
+
+S(i) 
+
+> ref
+
+← { sM(i)
+
+> ref
+
+(x) : x ∈ W} 
+
+δ(i) 
+
+> C2
+
+← SA − S(i) 
+
+> ref
+
+{element-wise on W} 
+
+p(i)2 ← OneSidedTTest <
+
+ δ(i) 
+
+> C2
+
+, μ 0 = 0  {lower-tail: HC2  
+
+> 1
+
+:
+
+E[δC2 ] < 0}|d|(i) 
+
+> C2
+
+← mean (δ(i) 
+
+> C2
+
+) std (δ(i) 
+
+> C2
+
+)
+
+if ∃i : p(i)2 > 10 −6 or |d|(i) 
+
+> C2
+
+< 2.0 then return REJECTED 
+
+end if return VERIFIED 
+
+model that never saw it. HC2  
+
+> 1
+
+says the owner’s t-error on W
+
+is strictly lower than the reference’s, a gap that only training on W can produce. Criterion 2 passes when a one-sided t-test rejects HC2  
+
+> 0
+
+at p < 10 −6 and |d|C2 > 2.The verifier declares V ERIFIED only if both the memorization criterion (C1) and the separation criterion (C2) pass, and REJECTED otherwise. The two criteria target different null hypotheses and different risks. C1 asks whether the suspect 
+
+MB has actually memorized W; C2 asks whether the owner 
+
+MA genuinely stands apart from public references that never saw W. A V ERIFIED verdict therefore requires both criteria to satisfy their respective decision rules. Both use the p-value cutoff 10 −6, and C2 additionally requires |d|C2 > 2.Because the probability that both tests reject at once cannot exceed the smaller of their two individual rejection probabilities, the type-I error of the joint decision is itself at most 10 −6, and this inequality holds without assuming that the two tests are independent. The 10 −6 thresholds here are the criterion-level significance applied to the C1 and C2 p-values; they should not be confused with the per-sample operating point α that fixes ˆqα(x) inside C1. The conjunction is in fact conservative. In the false-accusation setting, MB is neither derived from MA nor trained on W. The null HC1  
+
+> 0
+
+therefore holds, so the exact binomial test for C1 alone caps the false-positive rate at 10 −6; C2 provides an additional safeguard but is not needed for this bound. Algorithm 3 states the complete procedure. V. E XPERIMENTS 
+
+A. Experimental Setup 
+
+We use two evaluation scenarios in our experiments: (1) DDIM trained from scratch provides a controlled measurement of the protocol’s quantitative properties. (2) Stable Diffusion models with a fine-tuning dataset instantiate the production-scale threat surface. 
+
+Datasets. We evaluate the DDIM model on four datasets spanning different resolutions and scales: CIFAR-10 and CIFAR-100 (both 32 ×32, 50k training images with 5k reserved as the evidence set), STL-10 (96 ×96, 5k training images with 1k as the evidence set), and CelebA (64 ×64, 162k training images with 5k as the evidence set). For the Stable Diffusion experiments, the owner’s private training set consists of 1,000 images from COCO 2014 while the adversaries fine-tune on a disjoint COCO subset (also 1,000 images) plus a synthetic-image set. 
+
+Baselines and Reference Models. For the baseline compar-ison in Section V-E, we compare MiO against three diffusion-model IP protection methods: WDM [2], a training-time water-marking method that learns a secondary watermark diffusion process; Zhao et al. [3], which embeds StegaStamp fingerprints into training images before EDM training; and CDI [22], an inference-time MIA-aggregation method. For Stable Diffusion, we additionally compare against SleeperMark [4], a trigger-prompt-coupled, LoRA-resistant watermark method. As public references for the verification protocol, we use pretrained checkpoints from HuggingFace: 
+
+google/ddpm-cifar10-32 serves as the reference for both CIFAR-10 and CIFAR-100 datasets, 
+
+google/ddpm-ema-bedroom-256 (resized) is for STL-10, and google/ddpm-celebahq-256 is for CelebA. These references are trained on disjoint data from our evidence sets and represent the null hypothesis in the two-point verification protocol. 
+
+B. RQ1: How Reliable is MIA in Criteria 1 at Restricted FPR? 
+
+The calibrated quantile ˆqα(x) turns the per-sample t-error into an FPR-α decision: we flag x as a member when 
+
+log(1 + sMA (x)) ≤ ˆqα(x). For each owner family, we fit the Gaussian quantile regression ensemble in Section IV-B and hold it fixed across all suspect variants derived from that owner. We then evaluate this indicator on held-out members and non-members for each owner, reporting ROC-AUC and TPR at the restricted FPR budgets α ∈ { 10 −3, 10 −4}. Because an ownership verification in practice must be held at a controlled false-accusation rate, we treat TPR at a fixed low FPR as the primary reliability metric. Table I reports per-sample MIA performance for the four DDIM owner models and the three different Stable Diffusion v1.4 owner configurations. First, the AUC is uniformly high where every owner model attains at least 0.879 AUC. Second, the TPR at the two target operating points varies substantially across owner models. Consequently, even at these restricted-FPR operating points, the detection rate remains far above the                                
+
+> TABLE I PER -SAMPLE MIA PERFORMANCE UNDER GAUSSIAN QR CALIBRATION .
+> Owner AUC TPR
+> α=10 −3α=10 −4
+> DDIM (from scratch)
+> CIFAR-10 0.982 0.753 0.629 CIFAR-100 0.975 0.729 0.594 STL-10 0.999 0.993 0.987 CelebA 0.879 0.853 0.785
+> Stable Diffusion v1.4
+> LoRA r=64 0.991 0.857 0.793 LoRA r=256 0.996 0.911 0.838 Full FT 0.995 0.879 0.799
+
+corresponding chance level, indicating that the t-error signal underlying the MIA is sufficiently reliable in the low-FPR regime. These results answer RQ1 in the affirmative for the case we test: the t-error MIA retains usable true-positive rates at false-positive budgets as low as 10 −4. Criterion 1 aggregates these per-sample decisions through the hit rate ˆr and tests the null HC1  
+
+> 0
+
+: r ≤ α. Interpreting α as the binomial null rate requires the per-sample decision rule to attain the corresponding false-positive rate. 
+
+C. RQ2: Is Memorization Unique to the Owner? 
+
+In Criteria 2 of the two-point verification, we aim to separate the owner’s model from public reference models by checking if the memorization on the private evidence set is only unique to the owner’s model. Table II reports |d|C2 (Eq. (10)) for seven owner models: four DDIM models on CIFAR-10, CIFAR-100, STL-10, CelebA trained from scratch and three Stable Diffusion v1.4 models fine-tuned on a 1,000-image COCO subset with LoRA at rank 64, LoRA at rank 256, full UNet fine-tuning. Each model is evaluated against three reference models from different settings: semantic-similar, cross-domain, and random initialization. Semantic-similar means the reference model is trained/fine-tuned on data of the same type and distribution as the owner, but has never seen the owner’s private evidence set W. Take DDIM as an example: for the CIFAR-10, CIFAR-100, and STL-10 owners, the semantic-similar ref-erence models are uniformly google/ddpm-cifar10-32 
+
+(trained on CIFAR-10, likewise 32 ×32 natural images); for the CelebA owner, it is google/ddpm-celebahq-256 
+
+(trained from the face domain). Cross-domain means the reference model is trained/fine-tuned on data from an entirely different category. Trained on indoor bedroom scenes, LSUN’s 
+
+google/ddpm-bedroom-256 is the cross-domain refer-ence for CIFAR-10, CIFAR-100, and CelebA. For STL-10, we adopt google/ddpm-church-256 to avoid a domain-match confound with some of STL-10’s classes since its train-ing dataset is church images. Random initialization reference model is a network at the dataset’s native resolution with fully random weights and no training at all. TABLE II PAIRED |d|C2 ACROSS DDIM AND SD OWNERS AGAINST THREE REFERENCE ROLES .                                               
+
+> Owner Semantic-similar Cross-domain Random init
+> DDIM (from scratch)
+> CIFAR-10 ✓(23.9) ✓(31.6) ✓(45.1) CIFAR-100 ✓(16.3) ✓(25.2) ✓(44.1) STL-10 ✓(87.3) ✓(22.2) ✓(41.5) CelebA ✓(20.5) ✓(23.5) ✓(63.0)
+> Stable Diffusion v1.4
+> LoRA r=64 ✓(2.54) ✓(2.49) ✓(19.0) LoRA r=256 ✓(2.61) ✓(2.65) ✓(19.1) Full FT ✓(2.36) ✓(2.44) ✓(19.1)
+
+Stable Diffusion is analogous, except that the models are not trained from scratch but fine-tuned from SD v1.4. Its semantic-similar reference is therefore the un-fine-tuned base 
+
+CompVis/stable-diffusion-v1-4 : the owner model is fine-tuned from it on a 1,000-image COCO subset, so this reference shares the same SD v1.4 backbone as the owner yet was never fine-tuned on the owner’s evidence set W. The cross-domain reference is hakurei/waifu-diffusion-v1-3 
+
+(anime style), whose fine-tuning data is entirely disjoint from COCO. The random-init reference is a randomly initialized UNet that reuses only the SD v1.4 VAE. In the DDIM part of Table II, all separations are significant. Across all 12 (owner, reference) cells, |d|C2 ranges from a minimum of 16.3 to a maximum of 87.3, far beyond the threshold 2.0 in Criterion 2. The reason is that the owner model 
+
+MA is trained entirely from scratch by us, so its memorization of W is way stronger than that of any reference model naturally. For the latent-space SD owners, any reference that shares the SD v1.4 backbone reconstructs the same image to a comparable error, so the gap is compressed and |d|C2 falls in a smaller range (e.g, between 2 and 3). Only the randomly initialized UNet, which does not share the backbone, drives the separation up to about 19. Yet, across all 9 cells, |d|C2 remains greater than 2, so the separation still holds under the threshold. It is worth noting that no matter for DDIM or SD, the random-init reference gives the largest separation, further showing that the owner’s memorization of its dedicated evidence set W is clearly stronger than that of any model not trained on it. In summary, across both architecture families, all owners’ models are separate from the corresponding reference models, reflecting the uniqueness of MA’s memorization on W that Criterion 2 demands. 
+
+D. RQ3: Post-Theft Robustness 
+
+In the real scenario, the adversary can apply various post-theft modifications to the stolen model, trying to evade IP detection methods. Therefore, an ownership verification protocol is only useful when its signal survives realistic post-theft attacks. We test whether MIA memorization from Section IV-A can continue to flag members of the private evidence set W after the adversary mutates the stolen MA into                           
+
+> TABLE III POST -THEFT ROBUSTNESS OF THE MIOFRAMEWORK .
+> Attack on MAAUC TPR
+> α=10 −3α=10 −4
+> None (positive control: MA)0.982 0.753 0.629 MMD-FT 0.982 0.755 0.629 SGD-FT 0.981 0.754 0.623 Noise σ= 10 −30.981 0.744 0.614 Noise σ= 10 −20.976 0.796 0.684
+
+MB via five attacks: MMD-FT, SGD-FT, Gaussian perturbation with noise scale of σ = 10 −3, 10 −2, and LoRA update. We first describe the attack methods and experimental settings. For MMD-FT, we use 500 iterations with a cubic-polynomial kernel over a frozen CLIP ViT-B/32 to train MMD-FT, an aggressive method that reshapes the owner’s model output distribution by matching CLIP features to the training distribution. SGD-FT serves as a controlled version for MMD-FT, which is trained with exactly the same budget, but on clean data and under its own loss. Since both methods receive the same amount of training, any difference in their results must come from the type of attack rather than from unequal computing. Gaussian weight noise has no training, but the isotropic perturbations of standard deviation σ ∈ { 10 −3, 10 −2}
+
+are added in place, standing in for a quantization or noise-injection adversary. For Stable Diffusion, we apply a 2,000-step cross-attention LoRA fine-tune to each of the three owner configurations, varying the adversary rank between 64 and 256 and the fine-tuning data between a disjoint COCO subset and synthetic images, for a total of twelve configurations. The un-attacked positive control, i.e., the CIFAR-10 owner model of Table I, attains TPR @10 −4 of 0.629. Each adversarial attack on MB degrades this only partially. Across the four weight-space attacks on the CIFAR-10 owner, the residual AUC remains at least 0.976. Table III reports the four post-theft attacks evaluated on the CIFAR-10 owner. Overall, the ownership signal persists under MMD and SGD fine-tuning, weight noise at both magnitudes, and the latent-space LoRA attack, which retains a TPR@ 10 −4 of 0.614. Furthermore, we tested the robustness of MiO against a TABLE IV DISTILLATION ATTACK PERFORMANCE ON CIFAR-10           
+
+> Model AUC TPR
+> α=10 −3α=10 −4
+> Owner MA0.982 0.753 0.629 Distilled student 0.492 0.000 0.000
+
+stronger attack. All attacks above start from the stolen model weights and modify them, while a more aggressive adversary could instead sample a large synthetic dataset from the stolen model and train a fresh model on it, which is a knowledge distillation-based attack. The distillation attack is evaluated in Table IV. 50,000 synthetic CIFAR-10 images are sampled from the stolen model 
+
+MA with 10-step DDIM, and then a student model is trained from scratch for 100,000 iterations at batch 128. On the student model, the per-sample MIA collapses toward a random chance, where the student’s hit rate on W stays at the α floor, so Criterion 1’s binomial test fails to reject HC1  
+
+> 0
+
+and the protocol returns R EJECTED . Our protocol rejects the distilled student even though it was trained on samples from MA (Table IV). 
+
+E. RQ4: Controlled Baseline Comparison 
+
+Existing ownership verification methods are difficult to com-pare head-to-head on verification effectiveness, because each defines “verification” through a different statistical instrument, evaluated at a different operating point and sample-size regime. For example, SSIM-based watermark similarity is used in WDM [2], bit-accuracy on a fixed message is used in Zhao et al. [3] and SleeperMark [4], and Welch’s t-test on aggregated MIA features is used in CDI [22]. Since these protocols share no common operating framework, we instead report each method under its own native detection score in Table VI. Under its own metric, every baseline attains near-perfect verification on a clean protected model: WDM extracts its watermark at an SSIM of 0.997, Zhao and SleeperMark recover their embedded message at 0.999 and 0.99 bit-accuracy, and CDI identifies its dataset with over 99% confidence. MiO attains a residual AUC of 0.982 on the CIFAR-10 owner. However, these scores cannot be collapsed into a single comparable number, such as TPR at a fixed FPR. We therefore organize the baseline methods not by a single effectiveness score but along two cost axes in Table VI: (a) whether the protocol modifies the owner model’s weights, which risks degrading generation quality (FID); and (b) whether verification requires an auxiliary component coupled to the deployed model, as opposed to being performed offline on an unmodified model. MiO sits on the favorable end of both axes: (1) It never modifies the owner model’s weights because the ownership signal is injected by a private dataset in a non-invasive way, and (2) its Gaussian quantile regression ensemble is constructed offline on the verifier side, so the ownership verification operates on an unmodified model without auxiliary components. As shown in Table VI, MiO requires no weight                    
+
+> TABLE V COMPUTATIONAL COST BREAKDOWN ON CIFAR-10 DATASET .
+> Component Time Parameters DDIM training (owner model) ∼34 h 30.5M Gaussian QR ( ×1model) ∼2 h 11.57M Gaussian QR ensemble ( B=50 )∼100 h †579M total
+> Inference (per verification query)
+> t-error scoring (5k samples) ∼10 min —Ensemble prediction <1 min —Two-point criteria <1 s —
+> Total query time ∼11 min —
+
+modification, adds no overhead to the owner’s training pipeline, and introduces no post-training embedding step. WDM, Zhao et al., and SleeperMark instead rely on training-time or model-level embedding, with the FID changes reported under their default configurations. Specifically, CDI is the only baseline on the membership-based side amongst baselines, and the only prior method like MiO that requires zero weight modification or any deployment-time component. However, it is a dataset-ownership verification method rather than a model-ownership verification method. Furthermore, we tested the training overhead of the MiO method in Table V. Even though MiO does not need extra computation in embedding watermarks, building the Gaussian quantile regression ensemble offline on the verifier’s side also takes a certain amount of cost. The first part of the cost is a one-time, upfront training cost. Note that, although training the ensemble takes ≈100 V100-hours for B=50 when run serially on a single V100, it is parallelable across the B=50 models and can be reused for every query. The second part of the cost is the actual cost when an auditor judges the ownership. It covers ≈10 minutes to score the 5,000 evidence-set samples on a single V100, plus one minute for ensemble quantile prediction, and an immediate two-point verification. Unlike watermarking-based methods, which spend much computation on re-training the diffusion model under a watermark objective, our MiO instead moves the verification to the verifier in an offline manner. 
+
+F. Hyperparameters 
+
+There are a few hyperparameters in our MiO framework. In this section, we conduct an ablation study for each of them and test the best combination of them. 
+
+t-error Aggregation Strategy. Table VII compares four strategies for collapsing the t-error sequence into a single membership score: mean, median, and two lower quantiles Q10 and Q25. We rank them by |d|C2 as IV-C defined, so a larger value is preferable. Q25 yields the strongest separation (|d|C2 = 23 .93 ), surpassing the mean ( 18 .2), the median ( 19 .8), and the more aggressive Q10 ( 21 .5). The same observation holds in the latent-space diffusion setting, so we adopt Q25 in this setting. TABLE VI COMPARISON ACROSS DIFFUSION -MODEL OWNERSHIP -VERIFICATION METHODS .
+
+Method Modifies weights Training overhead ∆FID Detection score WDM ✓ High (extra WDP) +0 .58 (CIFAR-10) SSIM 0.997 
+
+Zhao ✓ High (encoder + DM) +4 .87 (CIFAR-10) Bit-acc 0.999 
+
+CDI ✗ None N/A > 99% conf. (dataset) SleeperMark ✓ Medium (LoRA backdoor) +0 .48 (SD v1.4) Bit-acc ≈ 0.99 
+
+MiO (ours) ✗ None N/A AUC 0.982  
+
+> TABLE VII AGGREGATION ABLATION ON CIFAR-10.
+
+Aggregation |d|C2 
+
+Mean 18 .2
+
+Q10 21 .5
+
+Q25 (ours) 23 .93 
+
+Median 19 .8
+
+The Size of Ensemble B. Varying the bagging ensemble of Gaussian quantile regression from B = 1 to 100 , we measure the standard deviation of the predicted quantile ˆqτ (x) over five runs on CIFAR-10 at FPR 0.1% . Table VIII shows that the prediction variance drops sharply from B = 1 to 20 , keeps falling through B = 50 , and plateaus when beyond. So, we adopt B = 50 as a favorable stability and cost trade-off. 
+
+The Number of Sampled Timesteps. We vary K from 10 to 100 and find out that |d| plateaus once K ≥ 25 and changes negligibly beyond K = 50 . Therefore, we use the fixed K = 50 throughout. 
+
+Gaussian QR vs. Pinball-loss QR. There are two main-stream approaches to quantile regression: Gaussian QR and pinball-loss QR. Pinball-loss QR estimates a target quantile directly: it trains a regressor under the pinball-loss to calibrate at FPR α, an asymmetric loss whose minimizer is the conditional 
+
+α-quantile of the score. At the extreme low FPR operating points we report, α ∈ { 10 −3, 10 −4}, the two approaches yield comparable TPR. Gaussian QR’s advantage is flexibility: one fitted model returns the threshold ˆqα(x) for any α in closed form via Φ−1(α), whereas pinball-loss QR requires a separate model per quantile level. In our experiments, each model is evaluated across datasets at several FPR levels rather than one fixed operating point, so we need a calibrator that supplies every α from a single training, which leads to the adoption of Gaussian quantile regression. 
+
+Latent vs. Pixel Space in Stable Diffusion. As established in Section III, the reconstruction error et for Stable Diffusion can be computed in either latent or pixel space. On SD v1.4, latent-space scoring with per-image caption conditioning yields a higher AUC = 0 .9956 , compared to 0.959 for pixel-space scoring since the VAE decode step dilutes the membership signal in pixel space. So all SD experiments in our settings use the latent space configuration.   
+
+> TABLE VIII EFFECT OF ENSEMBLE SIZE BON QUANTILE PREDICTION STABILITY
+
+Ensemble B Std( ˆqτ ) TPR @ FPR 0.1% 1 0.142 0.83 ± 0.05 10 0.068 0.87 ± 0.03 20 0.041 0.88 ± 0.03 50 (ours) 0.019 0.89 ± 0.03 100 0.016 0.89 ± 0.02 
+
+VI. C ONCLUSION 
+
+This work studies ownership verification for diffusion models using a protocol that does not modify the owner model or its sampling pipeline. To overcome the limitations of existing watermarking methods, which often inject artificial signals into model weights or outputs and may degrade utility, this paper proposes Membership is Ownership (MiO), a method that relies on the private member set as a non-invasive watermark. MiO leverages the model’s natural memorization behavior on the private member evidence dataset and formulates ownership verification as a population-level hypothesis test. Specifically, MiO combines membership-based attribution on the private evidence set with statistical separation from public reference models. Each criterion uses a p-value cutoff of 10 −6.Experimental results show that MiO achieves stable and reliable ownership verification with negligible impact on model utility, and remains robust under post-theft fine-tuning and weight perturbation attacks. Overall, MiO provides a non-invasive approach to ownership verification for diffusion models. ACKNOWLEDGMENT 
+
+This work was supported in part by the U.S. National Science Foundation (NSF) under Grant Nos. 2416872, 2315596, 2244219, 2146497, 2551417, 2548961, 2343619, 2429960, 2434899, and 2548041. REFERENCES [1] R. Rombach, A. Blattmann, D. Lorenz, P. Esser, and B. Ommer, “High-resolution image synthesis with latent diffusion models,” in IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2022, pp. 10 684–10 695. [2] S. Peng, Y. Nie, Y. Zhang, and J. Xiong, “Protecting the intellectual property of diffusion models by the watermark diffusion process,” arXiv preprint arXiv:2306.03436 , 2023. [3] Y. Zhao, T. Pang, C. Du, X. Yang, N.-M. Cheung, and M. Lin, “A recipe for watermarking diffusion models,” arXiv preprint arXiv:2303.10137 ,2023. [4] Z. Wang, J. Guo, J. Zhu, Y. Li, H. Huang, and M. Chen, “Sleepermark: Towards robust watermark against fine-tuning text-to-image diffusion models,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2025. [5] F. Kong, J. Duan, R. Ma, H. T. Shen, X. Shi, X. Zhu, and K. Xu, “An efficient membership inference attack for the diffusion model by proximal initialization,” in Proceedings of the 12th International Conference on Learning Representations (ICLR) , 2024. [6] T. Matsumoto, T. Miura, and N. Yanai, “Membership inference attacks against diffusion models,” in IEEE Security and Privacy Workshops (SPW) , 2023, pp. 77–83. [7] H. Hu and J. Pang, “Loss and likelihood based membership inference of diffusion models,” in Proceedings of the 26th Information Security Conference (ISC) , ser. Lecture Notes in Computer Science, vol. 14411. Springer, 2023, pp. 121–141. [8] Z. Yang, K. Zeng, K. Chen, H. Fang, W. Zhang, and N. Yu, “Gaussian shading: Provable performance-lossless image watermarking for diffusion models,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2024, pp. 12 162–12 171. [9] ——, “Gaussian shading++: Rethinking the realistic deployment chal-lenge of performance-lossless image watermark for diffusion models,” 
+
+arXiv preprint arXiv:2504.15026 , 2025. [10] S. Gunn, X. Zhao, and D. Song, “An undetectable watermark for generative image models,” in International Conference on Learning Representations (ICLR) , 2025, pRC watermark; arXiv:2410.07369. [11] H. Huang, Y. Wu, and Q. Wang, “ROBIN: Robust and invisible watermarks for diffusion models with adversarial optimization,” in 
+
+Advances in Neural Information Processing Systems (NeurIPS) , 2024, arXiv:2411.03862. [12] K. Li, Z. Huang, X. Hou, and C. Hong, “Gaussmarker: Robust dual-domain watermark for diffusion models,” in Proceedings of the 42nd International Conference on Machine Learning (ICML) , 2025. [13] P. Fernandez, G. Couairon, H. J´ egou, M. Douze, and T. Furon, “The stable signature: Rooting watermarks in latent diffusion models,” in 
+
+Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV) , 2023. [14] V. Asnani, J. Collomosse, T. Bui, X. Liu, and S. Agarwal, “ProMark: Proactive diffusion watermarking for causal attribution,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2024, pp. 10 802–10 811, arXiv:2403.09914. [15] X. Zhao, K. Zhang, Z. Su, S. Vasan, I. Grishchenko, C. Kruegel, G. Vigna, Y.-X. Wang, and L. Li, “Invisible image watermarks are provably removable using generative AI,” in Advances in Neural Information Processing Systems (NeurIPS) , 2024, regeneration attack; arXiv:2306.01953. [16] Y. Hu, Z. Jiang, M. Guo, and N. Z. Gong, “A transfer attack to image watermarks,” in International Conference on Learning Representations (ICLR) , 2025, arXiv:2403.15365. [17] F. Shamshad, T. Bakr, Y. Shaaban, N. Hussein, K. Nandakumar, and N. Lukas, “First-place solution to neurips 2024 invisible watermark removal challenge,” arXiv preprint arXiv:2508.21072 , 2025. [18] I. Alam, M. T. Islam, and S. S. Woo, “Saliency-aware diffusion reconstruction for effective invisible watermark removal,” in Companion Proceedings of the ACM Web Conference (WWW Companion) , 2025, arXiv:2504.12809. [19] J. Duan, J. Guan, W. Yang, and R. He, “Visual watermarking in the era of diffusion models: Advances and challenges,” arXiv preprint arXiv:2505.08197 , 2025. [20] M. Pautov, N. Bogdanov, S. Pyatkin, O. Rogov, and I. Oseledets, “Prob-abilistically robust watermarking of neural networks,” in Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence (IJCAI) , 2024. [21] P. Maini, M. Yaghini, and N. Papernot, “Dataset inference: Ownership resolution in machine learning,” in International Conference on Learning Representations , 2021. [22] J. Dubi´ nski, A. Kowalczuk, F. Boenisch, and A. Dziedzic, “CDI: Copyrighted data identification in diffusion models,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2025. [23] R. Shokri, M. Stronati, C. Song, and V. Shmatikov, “Membership inference attacks against machine learning models,” in IEEE Symposium on Security and Privacy (S&P) , 2017, pp. 3–18. [24] S. Yeom, I. Giacomelli, M. Fredrikson, and S. Jha, “Privacy risk in machine learning: Analyzing the connection to overfitting,” in IEEE Computer Security Foundations Symposium (CSF) , 2018, pp. 268–282. [25] A. Salem, Y. Zhang, M. Humbert, P. Berrang, M. Fritz, and M. Backes, “ML-Leaks: Model and data independent membership inference attacks and defenses on machine learning models,” in Network and Distributed System Security Symposium (NDSS) , 2019. [26] N. Carlini, J. Hayes, M. Nasr, M. Jagielski, V. Sehwag, F. Tram` er, B. Balle, D. Ippolito, and E. Wallace, “Extracting training data from dif-fusion models,” in Proceedings of the 32nd USENIX Security Symposium (USENIX Security 2023) , 2023, pp. 5253–5270. [27] J. Duan, F. Kong, S. Wang, X. Shi, and K. Xu, “Are diffusion models vulnerable to membership inference attacks?” in Proceedings of the 40th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, vol. 202. PMLR, 2023, pp. 8717–8730. [Online]. Available: https://proceedings.mlr.press/v202/duan23b.html [28] M. Bertran, S. Tang, M. Kearns, J. Morgenstern, A. Roth, and Z. S. Wu, “Scalable membership inference attacks via quantile regression,” in 
+
+Advances in Neural Information Processing Systems (NeurIPS) , vol. 36, 2023. [29] S. Tang, Z. S. Wu, S. Ayd¨ ore, M. Kearns, and A. Roth, “Membership inference attacks on diffusion models via quantile regression,” in 
+
+Proceedings of the 41st International Conference on Machine Learning (ICML) , ser. Proceedings of Machine Learning Research, vol. 235, 2024. [30] G. Somepalli, V. Singla, M. Goldblum, J. Geiping, and T. Goldstein, “Diffusion art or digital forgery? investigating data replication in diffusion models,” in IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2023, pp. 6048–6058.
