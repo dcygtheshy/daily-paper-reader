@@ -1,0 +1,95 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-02T22:57:58.377833+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.01050v1",
+      "source": "arxiv",
+      "title": "What Limits Robustness in Deep Image Watermarking: An Analysis of Mechanisms and Their Scaling Across Capacities",
+      "abstract": "Robustness remains the principal open problem in deep image watermarking, and what limits it becomes sharper as payload grows. This paper asks whether capacity is itself the limit or only makes other limits visible, and answers in two parts. The first organizes the distortions a watermark must survive and the strategies developed to resist them, ordering each by the axis that governs it: payload capacity for the distortions, differentiability for the strategies. The second identifies and measures three mechanisms that limit robustness in schemes mapping the payload onto a spatial block grid with extraction trained separately from a frozen embedder: desynchronization of the payload grid, the resistance of codec-induced distortion to training, and the narrowing of the usable embedding-strength window. Payloads from 64 to 16384 bits are measured, well beyond the range those strategies address. Training the extraction stage against a codec proves not merely ineffective but harmful, degrading the reading at the operating points used in training. The limits follow the class of distortion rather than capacity itself, and none is removed by further training on the extraction side, because all three arise before extraction. An evaluation protocol making claims of generalization verifiable is also contributed. The conclusions are properties of a class of designs rather than of one implementation.",
+      "authors": [
+        "Marta Bistroń",
+        "Zbigniew Piotrowski"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-01T10:46:58+00:00",
+      "link": "https://arxiv.org/pdf/2609.01050v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Analyzes mechanisms that limit robustness in deep image watermarking under distortions and payload capacity scaling",
+      "llm_evidence_cn": "分析深度图像水印受失真与容量影响时鲁棒性受限的机制",
+      "llm_evidence": "分析深度图像水印受失真与容量影响时鲁棒性受限的机制",
+      "canonical_evidence": "分析深度图像水印受失真与容量影响时鲁棒性受限的机制",
+      "llm_tldr_en": "Analyzes what limits robustness in deep image watermarking as payload grows, organizes distortions and resistance strategies, and measures three mechanisms that reduce performance in spatial block-grid schemes with frozen embedders.",
+      "llm_tldr_cn": "该文系统分析深度图像水印鲁棒性的限制因素，探讨容量增加时瓶颈是否来自容量本身。作者将水印需要抵御的失真与已有抵抗策略按载荷和可微性等轴重新组织，并重点刻画了在空间分块网格方案中嵌入器冻结、提取器分开训练时出现的三类机制，包括载荷网格失同步与编解码器抗性等。实验测量表明这些机制随载荷增加而凸显，说明容量只是让其他瓶颈变得可见。研究为鲁棒水印在设计容量与失真类型时提供系统化的分析视角。",
+      "llm_tldr": "该文系统分析深度图像水印鲁棒性的限制因素，探讨容量增加时瓶颈是否来自容量本身。作者将水印需要抵御的失真与已有抵抗策略按载荷和可微性等轴重新组织，并重点刻画了在空间分块网格方案中嵌入器冻结、提取器分开训练时出现的三类机制，包括载荷网格失同步与编解码器抗性等。实验测量表明这些机制随载荷增加而凸显，说明容量只是让其他瓶颈变得可见。研究为鲁棒水印在设计容量与失真类型时提供系统化的分析视角。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.01249v1",
+      "source": "arxiv",
+      "title": "One Prompt Is Enough: Watermark Laundering Through Foundation Image Models",
+      "abstract": "Invisible watermarks are typically evaluated against predefined perturbations such as compression, blur, noise, cropping, and denoising. Public foundation image models expose a distinct threat: an attacker can submit a watermarked image with a single reconstruction prompt and obtain a visually faithful output from which the invisible watermark can no longer be decoded reliably. We formalize this failure mode as watermark laundering and evaluate it using a joint payload-fidelity profile that combines bit error rate (BER) with visual and semantic preservation. Across six OpenAI and Google image editing models, three representative watermarking schemes, and 1,800 reconstructed outputs, we identify two complementary laundering regimes: OpenAI models produce the strongest payload disruption across the evaluated schemes, whereas Nano Banana 2 shows that DwtDct remains vulnerable under high-fidelity reconstruction. Prompt ablations show that no single removal-oriented instruction is necessary for payload disruption, indicating that the effect is primarily induced by the reconstruction pathway rather than by explicit attack wording. Comparisons with conventional attacks further show that prompt-conditioned reconstruction constitutes a distinct operational attack interface. These findings motivate foundation-model reconstruction as a missing robustness condition in invisible watermark evaluation.",
+      "authors": [
+        "Jidong Yang",
+        "Qi Li",
+        "Wei Zong",
+        "Yang-Wai Chow",
+        "Willy Susilo",
+        "Huaike Yu",
+        "Chunpeng Wang",
+        "Suo Gao"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.CR"
+      ],
+      "published": "2026-09-01T13:46:31+00:00",
+      "link": "https://arxiv.org/pdf/2609.01249v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Formalizes watermark laundering attacks on invisible watermarks via public foundation image models and evaluates robustness of watermarking schemes",
+      "llm_evidence_cn": "将基础图像模型去除不可见水印的攻击形式化为水印清洗，并评估水印方案的鲁棒性",
+      "llm_evidence": "将基础图像模型去除不可见水印的攻击形式化为水印清洗，并评估水印方案的鲁棒性",
+      "canonical_evidence": "将基础图像模型去除不可见水印的攻击形式化为水印清洗，并评估水印方案的鲁棒性",
+      "llm_tldr_en": "Demonstrates that public foundation image models can launder invisible watermarks with a single prompt; formalizes watermark laundering and evaluates three schemes over six editing models with a joint payload-fidelity metric, exposing two laundering regimes.",
+      "llm_tldr_cn": "该文指出不可见水印的现有评估仅针对压缩、模糊等预定扰动，而公开基础图像模型可用单条重建提示造成新的水印清洗威胁。作者将这种失败模式形式化，并结合比特错误率与视觉/语义保持提出联合载荷-保真度评测。作者在六个OpenAI与Google图像编辑模型、三个代表性水印方案和1800个重建输出上实验，识别出两类互补清洗机制。结果表明水印在该威胁下无法可靠解码，强调水印鲁棒性评估需要纳入基础模型重建攻击。",
+      "llm_tldr": "该文指出不可见水印的现有评估仅针对压缩、模糊等预定扰动，而公开基础图像模型可用单条重建提示造成新的水印清洗威胁。作者将这种失败模式形式化，并结合比特错误率与视觉/语义保持提出联合载荷-保真度评测。作者在六个OpenAI与Google图像编辑模型、三个代表性水印方案和1800个重建输出上实验，识别出两类互补清洗机制。结果表明水印在该威胁下无法可靠解码，强调水印鲁棒性评估需要纳入基础模型重建攻击。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

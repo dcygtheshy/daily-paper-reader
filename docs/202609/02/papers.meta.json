@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-02",
+  "date": "2026-09-02",
+  "generated_at": "2026-09-02T23:02:56",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/02/2609.01050v1-what-limits-robustness-in-deep-image-watermarking-an-analysis-of-mechanisms-and-their-scaling-across-capacities",
+      "section": "deep",
+      "title_en": "What Limits Robustness in Deep Image Watermarking: An Analysis of Mechanisms and Their Scaling Across Capacities",
+      "authors": "Marta Bistroń, Zbigniew Piotrowski",
+      "date": "2026-09-01",
+      "pdf": "https://arxiv.org/pdf/2609.01050v1",
+      "score": "9.0",
+      "evidence": "分析深度图像水印受失真与容量影响时鲁棒性受限的机制",
+      "tldr": "鲁棒性是深度图像水印的关键瓶颈，载荷增加让限制暴露。通过分析将载荷映射到块网格、提取器与冻结嵌入器分离的典型设计，归纳出三种制约机制：网格失同步、编解码器失真难以训练、嵌入强度窗口收紧。在64至16384比特容量上的实验显示，对编解码器训练提取器不仅无效还会降低测试性能，限制随失真类别转移而非容量本身。作为补充，提出可验证泛化声明的协议，结论指向该类设计的结构性缺陷而非具体实现。",
+      "tags": "query:watermarking",
+      "abstract_en": "Robustness remains the principal open problem in deep image watermarking, and what limits it becomes sharper as payload grows. This paper asks whether capacity is itself the limit or only makes other limits visible, and answers in two parts. The first organizes the distortions a watermark must survive and the strategies developed to resist them, ordering each by the axis that governs it: payload capacity for the distortions, differentiability for the strategies. The second identifies and measures three mechanisms that limit robustness in schemes mapping the payload onto a spatial block grid with extraction trained separately from a frozen embedder: desynchronization of the payload grid, the resistance of codec-induced distortion to training, and the narrowing of the usable embedding-strength window. Payloads from 64 to 16384 bits are measured, well beyond the range those strategies address. Training the extraction stage against a codec proves not merely ineffective but harmful, degrading the reading at the operating points used in training. The limits follow the class of distortion rather than capacity itself, and none is removed by further training on the extraction side, because all three arise before extraction. An evaluation protocol making claims of generalization verifiable is also contributed. The conclusions are properties of a class of designs rather than of one implementation.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/02/2609.01249v1-one-prompt-is-enough-watermark-laundering-through-foundation-image-models",
+      "section": "deep",
+      "title_en": "One Prompt Is Enough: Watermark Laundering Through Foundation Image Models",
+      "authors": "Jidong Yang, Qi Li, Wei Zong, Yang-Wai Chow, Willy Susilo, Huaike Yu, Chunpeng Wang, Suo Gao",
+      "date": "2026-09-01",
+      "pdf": "https://arxiv.org/pdf/2609.01249v1",
+      "score": "9.0",
+      "evidence": "将基础图像模型去除不可见水印的攻击形式化为水印清洗，并评估水印方案的鲁棒性",
+      "tldr": "隐形水印评测传统上只关注压缩、模糊、噪声等预设扰动，尚未把基础图像模型的单提示重建视为潜在威胁。本文提出“水印洗白”框架，用自然语言重建请求驱动模型输出，让隐形水印无法被解码。在多个OpenAI与Google模型及三种水印方案中验证，重建可显著提高误比特率，且效果不依赖特定移除指令，而是模型重建路径的固有行为。这证明基础模型重建是独立的水印清洗攻击面，应将其加入隐形水印鲁棒性评测。",
+      "tags": "query:watermarking",
+      "abstract_en": "Invisible watermarks are typically evaluated against predefined perturbations such as compression, blur, noise, cropping, and denoising. Public foundation image models expose a distinct threat: an attacker can submit a watermarked image with a single reconstruction prompt and obtain a visually faithful output from which the invisible watermark can no longer be decoded reliably. We formalize this failure mode as watermark laundering and evaluate it using a joint payload-fidelity profile that combines bit error rate (BER) with visual and semantic preservation. Across six OpenAI and Google image editing models, three representative watermarking schemes, and 1,800 reconstructed outputs, we identify two complementary laundering regimes: OpenAI models produce the strongest payload disruption across the evaluated schemes, whereas Nano Banana 2 shows that DwtDct remains vulnerable under high-fidelity reconstruction. Prompt ablations show that no single removal-oriented instruction is necessary for payload disruption, indicating that the effect is primarily induced by the reconstruction pathway rather than by explicit attack wording. Comparisons with conventional attacks further show that prompt-conditioned reconstruction constitutes a distinct operational attack interface. These findings motivate foundation-model reconstruction as a missing robustness condition in invisible watermark evaluation.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
