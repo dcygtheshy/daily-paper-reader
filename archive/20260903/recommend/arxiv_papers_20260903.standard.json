@@ -1,0 +1,96 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-03T23:01:26.353841+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.02177v1",
+      "source": "arxiv",
+      "title": "WeaveMark: Robust and Scalable Multi-bit LLM Watermarking via Coded Payload Spreading",
+      "abstract": "Multi-bit watermarking for large language models (LLMs) enables content source tracing by embedding user-identifiable messages into generated text. Existing methods face a fundamental trade-off among extraction accuracy, text quality, and payload capacity. We propose WeaveMark, a robust and scalable multi-bit LLM watermarking scheme based on coded payload spreading. WeaveMark shifts this trade-off frontier by improving payload capacity through multi-bit-per-token spreading, improving extraction accuracy through soft-decision error-correcting code, and preserving text quality through unbiased multilayer reweighting. It further introduces dedicated zero-bit layers for reliable watermark presence detection. Experiments show large gains, especially for long messages and edited text. WeaveMark achieves 89.8% match rate for 32-bit messages at 200 tokens, compared with 20.8% for BiMark. Under 10% substitution attacks on 16-bit messages at 200 tokens, it maintains 86.0% versus 30.7%, while preserving text quality. Our code is available at https://github.com/qkrrkd90-source/WeaveMark.",
+      "authors": [
+        "Gang-Hyun Park",
+        "Ju-Hyeong Lee",
+        "Hee-Youl Kwak",
+        "Dae-Young Yun"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-09-02T06:39:43+00:00",
+      "link": "https://arxiv.org/pdf/2609.02177v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Robust multi-bit watermarking algorithm for LLM text using coded payload spreading",
+      "llm_evidence_cn": "基于编码载荷扩频的鲁棒多比特大语言模型文本水印方法",
+      "llm_evidence": "基于编码载荷扩频的鲁棒多比特大语言模型文本水印方法",
+      "canonical_evidence": "基于编码载荷扩频的鲁棒多比特大语言模型文本水印方法",
+      "llm_tldr_en": "WeaveMark addresses the trade-off among extraction accuracy, text quality, and payload capacity in multi-bit LLM watermarking. It spreads coded payloads over multiple tokens, applies soft-decision error correction, and uses unbiased reweighting, with dedicated zero-bit layers for presence detection, achieving large performance gains.",
+      "llm_tldr_cn": "多比特水印通过对生成文本嵌入用户可辨识信息实现来源追踪，但现有方法难以兼顾提取精度、文本质量和载荷容量。WeaveMark基于编码载荷扩频，实现每token多比特扩频以提升容量，用软判决纠错码提升提取精度，并用无偏多层重加权保持文本质量，同时引入专用零比特层进行可靠的水印存在检测。实验表明该方法相比现有方案取得大幅综合提升，推进了多比特LLM水印的可扩展性和实用性。",
+      "llm_tldr": "多比特水印通过对生成文本嵌入用户可辨识信息实现来源追踪，但现有方法难以兼顾提取精度、文本质量和载荷容量。WeaveMark基于编码载荷扩频，实现每token多比特扩频以提升容量，用软判决纠错码提升提取精度，并用无偏多层重加权保持文本质量，同时引入专用零比特层进行可靠的水印存在检测。实验表明该方法相比现有方案取得大幅综合提升，推进了多比特LLM水印的可扩展性和实用性。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.02268v1",
+      "source": "arxiv",
+      "title": "Retrosynthesis of Synthetic Media for Explainable AI Provenance Forensics",
+      "abstract": "With the rapid proliferation of generative models on Machine Learning as a Service (MLaaS) platforms, reliably tracing the provenance of synthetic media without modifying generator architectures or parameters remains a major challenge. In this work, we propose a self-referential retrosynthesis framework for explainable AI provenance forensics under a fixed-generator setting. The framework leverages a jointly optimized encoder-decoder pair to implement a self-embedding mechanism that enables round-trip consistency verification. During inference, client inputs are first encoded and then processed by the generator to produce outputs with high visual fidelity. For forensic verification, the consistency between the resynthesized image and the query image is analyzed to determine whether the image originates from the target generative model. Our approach eliminates the need for watermark embedding or modifications to the generation process. Experimental results show that images generated from encoded inputs maintain visual quality comparable to original generator outputs, while decoded images reliably trace back to their corresponding source inputs. Furthermore, the framework provides interpretable evidence for generative content provenance, establishing a practical tool for explainable generative AI forensics.",
+      "authors": [
+        "Yijie Lin",
+        "Ching-Chun Chang",
+        "Isao Echizen",
+        "Hui Li",
+        "Chin-Chen Chang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.CV",
+        "cs.MM"
+      ],
+      "published": "2026-09-02T08:15:52+00:00",
+      "link": "https://arxiv.org/pdf/2609.02268v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "self-referential retrosynthesis framework for provenance forensics of synthetic media, using self-embedding and round-trip consistency without modifying the generator",
+      "llm_evidence_cn": "提出自引用逆合成溯源框架，在不修改生成器的前提下通过自嵌入与往返一致性实现生成媒体指纹/溯源",
+      "llm_evidence": "提出自引用逆合成溯源框架，在不修改生成器的前提下通过自嵌入与往返一致性实现生成媒体指纹/溯源",
+      "canonical_evidence": "提出自引用逆合成溯源框架，在不修改生成器的前提下通过自嵌入与往返一致性实现生成媒体指纹/溯源",
+      "llm_tldr_en": "Proposes a fixed-generator retrosynthesis framework for provenance forensics: a self-embedding encoder-decoder enables round-trip consistency checks, tracing synthetic media provenance without architecture changes.",
+      "llm_tldr_cn": "针对机器学习即服务平台上生成媒体来源难以追溯、且不能改动生成器架构与参数的痛点，现有方法通常无能为力。论文提出自指逆合成框架，利用联合优化的编码器-解码器对实现自嵌入，使生成输出在不可见地携带可验证信息后仍保持高保真。推理阶段通过重合成图像与查询图像的往返一致性完成取证验证，不需要修改原生成器。实验表明该框架在固定生成器条件下能够提供可解释的AI溯源证据，为生成媒体出处验证提供了新的后验手段。",
+      "llm_tldr": "针对机器学习即服务平台上生成媒体来源难以追溯、且不能改动生成器架构与参数的痛点，现有方法通常无能为力。论文提出自指逆合成框架，利用联合优化的编码器-解码器对实现自嵌入，使生成输出在不可见地携带可验证信息后仍保持高保真。推理阶段通过重合成图像与查询图像的往返一致性完成取证验证，不需要修改原生成器。实验表明该框架在固定生成器条件下能够提供可解释的AI溯源证据，为生成媒体出处验证提供了新的后验手段。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-03",
+  "date": "2026-09-03",
+  "generated_at": "2026-09-03T23:03:47",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/03/2609.02177v1-weavemark-robust-and-scalable-multi-bit-llm-watermarking-via-coded-payload-spreading",
+      "section": "deep",
+      "title_en": "WeaveMark: Robust and Scalable Multi-bit LLM Watermarking via Coded Payload Spreading",
+      "authors": "Gang-Hyun Park, Ju-Hyeong Lee, Hee-Youl Kwak, Dae-Young Yun",
+      "date": "2026-09-02",
+      "pdf": "https://arxiv.org/pdf/2609.02177v1",
+      "score": "8.0",
+      "evidence": "基于编码载荷扩频的鲁棒多比特大语言模型文本水印方法",
+      "tldr": "现有LLM多比特水印在提取准确率、文本质量和有效载荷容量之间难以兼顾。WeaveMark提出基于编码载荷扩展的鲁棒水印：逐token承载多比特以扩大容量，借助软判决纠错码提升提取精度，通过无偏多层重加权保持文本自然性，并增设零比特层用于可靠检测。在长消息与编辑场景下效果显著：200词内嵌入32比特时匹配率达89.8%，远超BiMark的20.8%；10%替换攻击下16比特仍保持86.0%。该方案突破了既有权衡边界，为高容量内容溯源提供了可扩展且质量友好的新路径。",
+      "tags": "query:watermarking",
+      "abstract_en": "Multi-bit watermarking for large language models (LLMs) enables content source tracing by embedding user-identifiable messages into generated text. Existing methods face a fundamental trade-off among extraction accuracy, text quality, and payload capacity. We propose WeaveMark, a robust and scalable multi-bit LLM watermarking scheme based on coded payload spreading. WeaveMark shifts this trade-off frontier by improving payload capacity through multi-bit-per-token spreading, improving extraction accuracy through soft-decision error-correcting code, and preserving text quality through unbiased multilayer reweighting. It further introduces dedicated zero-bit layers for reliable watermark presence detection. Experiments show large gains, especially for long messages and edited text. WeaveMark achieves 89.8% match rate for 32-bit messages at 200 tokens, compared with 20.8% for BiMark. Under 10% substitution attacks on 16-bit messages at 200 tokens, it maintains 86.0% versus 30.7%, while preserving text quality. Our code is available at https://github.com/qkrrkd90-source/WeaveMark.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/03/2609.02268v1-retrosynthesis-of-synthetic-media-for-explainable-ai-provenance-forensics",
+      "section": "deep",
+      "title_en": "Retrosynthesis of Synthetic Media for Explainable AI Provenance Forensics",
+      "authors": "Yijie Lin, Ching-Chun Chang, Isao Echizen, Hui Li, Chin-Chen Chang",
+      "date": "2026-09-02",
+      "pdf": "https://arxiv.org/pdf/2609.02268v1",
+      "score": "8.0",
+      "evidence": "提出自引用逆合成溯源框架，在不修改生成器的前提下通过自嵌入与往返一致性实现生成媒体指纹/溯源",
+      "tldr": "生成模型在MLaaS平台快速普及，但固定生成器下追溯合成媒体来源仍困难。提出自引用逆向合成框架，通过联合优化编码器-解码器实现自我嵌入与往返一致性验证。推理时编码输入再生成，验证时分析重合成图像与查询图像的一致性，无需水印或改动生成过程。实验表明图像质量与可追溯性兼得，提供可解释取证证据。",
+      "tags": "query:watermarking",
+      "abstract_en": "With the rapid proliferation of generative models on Machine Learning as a Service (MLaaS) platforms, reliably tracing the provenance of synthetic media without modifying generator architectures or parameters remains a major challenge. In this work, we propose a self-referential retrosynthesis framework for explainable AI provenance forensics under a fixed-generator setting. The framework leverages a jointly optimized encoder-decoder pair to implement a self-embedding mechanism that enables round-trip consistency verification. During inference, client inputs are first encoded and then processed by the generator to produce outputs with high visual fidelity. For forensic verification, the consistency between the resynthesized image and the query image is analyzed to determine whether the image originates from the target generative model. Our approach eliminates the need for watermark embedding or modifications to the generation process. Experimental results show that images generated from encoded inputs maintain visual quality comparable to original generator outputs, while decoded images reliably trace back to their corresponding source inputs. Furthermore, the framework provides interpretable evidence for generative content provenance, establishing a practical tool for explainable generative AI forensics.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -6,24 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-02
-- 运行时间：2026-09-02 23:02:49 UTC
+- 最新运行日期：2026-09-03
+- 运行时间：2026-09-03 23:03:43 UTC
 - 运行状态：成功
 - 本次总论文数：2
 - 精读区：2
 - 速读区：0
 
 ### 今日简报（AI）
-今日精读两篇高分论文，聚焦深度图像水印的鲁棒性机制与基础模型下的水印清洗风险。值得关注的是，水印在不同容量下的失效机理，以及仅需一个提示词即可通过基础图像模型清除水印的漏洞。建议普通读者留意：随着生成模型普及，图像水印的可靠性正面临新威胁。
-- 详情：[/202609/02/README](/202609/02/README)
+今日精读2篇，聚焦AI内容安全与溯源方向，均获8.0高分。最值得关注LLM多比特水印的鲁棒扩展，以及合成媒体可解释溯源取证。建议深入比较两者与现有工具的兼容性，探索联合应用场景。
+- 详情：[/202609/03/README](/202609/03/README)
 
 ### 精读区论文标签
-1. [What Limits Robustness in Deep Image Watermarking: An Analysis of Mechanisms and Their Scaling Across Capacities](/202609/02/2609.01050v1-what-limits-robustness-in-deep-image-watermarking-an-analysis-of-mechanisms-and-their-scaling-across-capacities)  
-   标签：评分：9.0/10、query:watermarking
-   evidence：分析深度图像水印受失真与容量影响时鲁棒性受限的机制
-2. [One Prompt Is Enough: Watermark Laundering Through Foundation Image Models](/202609/02/2609.01249v1-one-prompt-is-enough-watermark-laundering-through-foundation-image-models)  
-   标签：评分：9.0/10、query:watermarking
-   evidence：将基础图像模型去除不可见水印的攻击形式化为水印清洗，并评估水印方案的鲁棒性
+1. [WeaveMark: Robust and Scalable Multi-bit LLM Watermarking via Coded Payload Spreading](/202609/03/2609.02177v1-weavemark-robust-and-scalable-multi-bit-llm-watermarking-via-coded-payload-spreading)  
+   标签：评分：8.0/10、query:watermarking
+   evidence：基于编码载荷扩频的鲁棒多比特大语言模型文本水印方法
+2. [Retrosynthesis of Synthetic Media for Explainable AI Provenance Forensics](/202609/03/2609.02268v1-retrosynthesis-of-synthetic-media-for-explainable-ai-provenance-forensics)  
+   标签：评分：8.0/10、query:watermarking
+   evidence：提出自引用逆合成溯源框架，在不修改生成器的前提下通过自嵌入与往返一致性实现生成媒体指纹/溯源
 
 ### 速读区论文标签
 - 本次无速读推荐。
