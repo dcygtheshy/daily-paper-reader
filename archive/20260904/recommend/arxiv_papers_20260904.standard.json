@@ -1,0 +1,93 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-04T22:15:06.507126+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.03107v1",
+      "source": "arxiv",
+      "title": "CRAW: Codec Robust Audio Watermarking",
+      "abstract": "Recent advances in generative speech models have made it increasingly difficult to distinguish authentic from synthetic audio, enabling new forms of fraud and misinformation. Audio watermarking offers a promising defense by embedding an imperceptible signal into generated speech that can later be detected to verify its provenance. However, recent studies have shown that existing post-hoc watermarking methods fail under neural codecs and denoisers, transformations routinely applied during real-world storage, transmission, and processing, severely limiting their practical utility. Here we introduce CRAW, a codec-robust audio watermarking framework that jointly improves robustness against neural re-synthesis while maintaining high perceptual quality. CRAW combines distortion-aware training with an attention-based pooling mechanism, inference-time perceptual mask- ing, and an error-correcting code to recover the fidelity lost during robust training. Experiments demonstrate that CRAW achieves state-of-the-art robustness against neural codecs, denoisers, and vocoders while maintaining perceptual quality comparable to existing post-hoc watermarking methods. The code is available at https://github.com/DavidC1212/craw.",
+      "authors": [
+        "David Chernin",
+        "Ethan Fetaya"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-09-02T19:44:04+00:00",
+      "link": "https://arxiv.org/pdf/2609.03107v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Codec-robust audio watermarking for generated speech robust against neural codecs and denoisers, directly meets robust watermarking against perturbations",
+      "llm_evidence_cn": "提出抗神经编解码和去噪扰动的音频水印框架，直接对应鲁棒水印算法需求",
+      "llm_evidence": "提出抗神经编解码和去噪扰动的音频水印框架，直接对应鲁棒水印算法需求",
+      "canonical_evidence": "提出抗神经编解码和去噪扰动的音频水印框架，直接对应鲁棒水印算法需求",
+      "llm_tldr_en": "Real-world storage codecs and denoisers break post-hoc audio watermarks. CRAW combines distortion-aware training with codec-robust watermarking to resist neural re-synthesis while preserving perceptual quality, enabling provenance checks on generated speech.",
+      "llm_tldr_cn": "针对真实传输、存储中神经编解码器和去噪器会使现有事后音频水印失效的问题，提出CRAW抗编解码音频水印框架。该框架结合失真感知训练，在保持高感知质量的同时联合提升对神经再合成的鲁棒性，使生成语音的来源验证在实际处理条件下依然可靠。与现有事后加水印方法相比，所提方案在真实世界扰动下具有更强实用性，为语音伪造与虚假信息治理提供了有效的水印防御途径。",
+      "llm_tldr": "针对真实传输、存储中神经编解码器和去噪器会使现有事后音频水印失效的问题，提出CRAW抗编解码音频水印框架。该框架结合失真感知训练，在保持高感知质量的同时联合提升对神经再合成的鲁棒性，使生成语音的来源验证在实际处理条件下依然可靠。与现有事后加水印方法相比，所提方案在真实世界扰动下具有更强实用性，为语音伪造与虚假信息治理提供了有效的水印防御途径。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.03844v1",
+      "source": "arxiv",
+      "title": "Flip, Don't Shuffle: Watermarking LLMs at the Speed of Inference",
+      "abstract": "We introduce Stateless Bernoulli Watermarking (SBW), a new statistical watermark for Large Language Models that determines green list membership through independent per-token Bernoulli trials. Unlike KGW's vocabulary permutation or SynthID's multi-layer tournament, SBW requires only a single comparison per token against a counter-based random number generator, reducing membership complexity to $O(1)$ and enabling single-kernel execution with zero intermediate allocations. We prove that this formulation preserves the same detection guarantees as fixed-size green lists: the z-score test remains $\\mathcal{N}(0,1)$ under the null. The stateless architecture enables capabilities unavailable to existing methods: full-vocabulary self-salt watermarking (over 6000$\\times$ faster than KGW's self-salt and 2$\\times$ faster than SynthID despite biasing the entire vocabulary with candidate-dependent seeding) and architectural compatibility with distributed inference. In end-to-end generation benchmarks, SBW adds less than 1\\% overhead at all batch sizes. We additionally identify hash function design as a previously unexplored axis for watermark quality, showing that a GPU-native Jenkins hash improves null calibration by 1.8$\\times$ while producing more diverse text. Experiments across two seeding schemes and eight $(γ, δ)$ configurations confirm statistical equivalence with ROC-AUC differences below 0.01.",
+      "authors": [
+        "Simone Ceppi",
+        "Ignacio Sanchez"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-09-03T13:38:49+00:00",
+      "link": "https://arxiv.org/pdf/2609.03844v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Statistical watermarking scheme for text generated by LLMs, matching the general watermarking query",
+      "llm_evidence_cn": "面向大模型生成文本的统计水印方法，匹配水印检索需求",
+      "llm_evidence": "面向大模型生成文本的统计水印方法，匹配水印检索需求",
+      "canonical_evidence": "面向大模型生成文本的统计水印方法，匹配水印检索需求",
+      "llm_tldr_en": "Introduces Stateless Bernoulli Watermarking for LLMs, replacing KGW or SynthID per-token membership checks with O(1) Bernoulli trials while preserving z-score detection guarantees.",
+      "llm_tldr_cn": "大语言模型水印常用词表置换或多层锦标赛，成员判定开销较高，难以满足高速推理需求。本文提出无状态伯努利水印（SBW），用逐token独立的伯努利试验决定绿表成员，使每个token的判定复杂度降至O(1)并支持单核执行。作者证明其z分数零假设分布与固定绿表方案一致，检测保证得到保留，同时支持全词表自盐等新能力。该方法为高速、可扩展的大模型文本水印提供了轻量方案。",
+      "llm_tldr": "大语言模型水印常用词表置换或多层锦标赛，成员判定开销较高，难以满足高速推理需求。本文提出无状态伯努利水印（SBW），用逐token独立的伯努利试验决定绿表成员，使每个token的判定复杂度降至O(1)并支持单核执行。作者证明其z分数零假设分布与固定绿表方案一致，检测保证得到保留，同时支持全词表自盐等新能力。该方法为高速、可扩展的大模型文本水印提供了轻量方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

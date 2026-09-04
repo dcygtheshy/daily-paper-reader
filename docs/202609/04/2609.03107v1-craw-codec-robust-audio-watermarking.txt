@@ -1,0 +1,798 @@
+Title: CRAW: Codec Robust Audio Watermarking
+
+URL Source: https://arxiv.org/pdf/2609.03107v1
+
+Published Time: Fri, 04 Sep 2026 00:10:29 GMT
+
+Number of Pages: 18
+
+Markdown Content:
+# CRAW: Codec Robust Audio Watermarking 
+
+# David Chernin 1, Ethan Fetaya 1,2 
+
+> 1
+
+Bar-Ilan University, Ramat Gan, Israel 
+
+> 2
+
+NVIDIA chernid@biu.ac.il, ethan.fetaya@biu.ac.il 
+
+Abstract 
+
+Recent advances in generative speech models have made it increasingly difficult to distinguish authentic from syn-thetic audio, enabling new forms of fraud and misinforma-tion. Audio watermarking offers a promising defense by em-bedding an imperceptible signal into generated speech that can later be detected to verify its provenance. However, re-cent studies have shown that existing post-hoc watermarking methods fail under neural codecs and denoisers, transforma-tions routinely applied during real-world storage, transmis-sion, and processing, severely limiting their practical utility. Here we introduce CRAW, a codec-robust audio watermark-ing framework that jointly improves robustness against neu-ral re-synthesis while maintaining high perceptual quality. CRAW combines distortion-aware training with an attention-based pooling mechanism, inference-time perceptual mask-ing, and an error-correcting code to recover the fidelity lost during robust training. Experiments demonstrate that CRAW achieves state-of-the-art robustness against neural codecs, de-noisers, and vocoders while maintaining perceptual quality comparable to existing post-hoc watermarking methods. The code is available at https://github.com/DavidC1212/craw. 
+
+# 1 Introduction 
+
+Recent advancements in voice cloning, the ability to generate speech that impersonates a specific speaker, have enabled increasingly convincing synthetic speech, but have also been misused for fraud and the spread of misinformation (Shaaban et al. 2023). As these systems become more capable, reliably distinguishing authentic recordings from AI-generated speech has become an important challenge with significant societal implications. One promising approach is audio watermarking, which embeds an imperceptible signal into generated speech that can later be detected to verify its provenance. This can be done during generation or post-hoc on a given audio sample. For watermarking to be practical, the embedded signal must remain detectable after the audio undergoes both malicious modifications and benign processing. In practice, audio is rarely stored or transmitted in its original form: voice calls, video conferencing, and online platforms routinely process speech using codecs, denoisers, and other enhancement models before delivery. Recent work by O’Reilly et al. (2025) demonstrated that although existing post-hoc watermarking methods remain robust to many traditional distortions, such as waveform dropout and time stretching, they fail almost completely under neural codecs and denoisers. This exposes a substantial gap between benchmark performance and real-world deployment. In this work, we address this limitation with CRAW (Codec Robust Audio Watermarking), a post-hoc wa-termarking framework designed specifically to withstand neural re-synthesis attacks while preserving perceptual audio quality. Building on TimbreWatermark (Liu et al. 2024a), we first strengthen the training distortion layer, which distorts the audio signal before it reaches the detector during training, by incorporating neural codec re-synthesis and other realistic attacks, substantially improving robustness to these transformations. However, training against this broader attack distribution introduces a significant degradation in perceptual fidelity. CRAW addresses this robustness-fidelity trade-off through four complementary components. First, we broaden the train-ing distortion layer to include neural codec resynthesis, clos-ing the codec-robustness gap at a cost to fidelity. Second, we replace TimbreWatermark’s uniform temporal averag-ing with an attention-based pooling mechanism inspired by Q-Former (Li et al. 2023), allowing the embedding and de-tection to be more targeted. Third, we introduce an inference-time masking strategy that selectively removes the watermark from spectrogram regions that contribute most to perceptual degradation, measured by PESQ, recovering much of the lost audio quality. Finally, we incorporate an error-correcting code to compensate for the robustness reduction introduced by masking, producing a watermarking system that simulta-neously achieves high robustness and high perceptual fidelity. Concretely, our contributions are: 
+
+• We introduce CRAW, a post-hoc audio watermarking framework designed for robustness against neural codecs, denoisers, vocoders, and other neural re-synthesis attacks that significantly degrade existing watermarking meth-ods. 
+
+• We propose an attention-based pooling mechanism, in-spired by Q-Former, that substantially improves percep-tual fidelity while maintaining robustness. arXiv:2609.03107v1 [cs.SD] 2 Sep 2026 • We introduce a fidelity-aware inference strategy com-bining perceptual-gradient masking with error-correcting codes to recover audio quality without sacrificing robust-ness. 
+
+• We demonstrate through extensive experiments that CRAW achieves state-of-the-art robustness across a wide range of neural and traditional distortions while maintain-ing perceptual quality comparable to existing watermark-ing methods. 
+
+# 2 Related Work 
+
+In the post-hoc paradigm, a watermark is embedded into audio after it’s created. TimbreWatermark (Liu et al. 2024a) repeats a short-time-Fourier-transform message along the time axis and trains against a distortion layer simulating voice-conversion and TTS pipelines; AudioSeal (Roman et al. 2024) adds a learned waveform signature with a jointly trained sample-level detector for per-timestep localization; WavMark (Chen et al. 2023) uses an invertible network with a brute-force positional search in place of a synchronization code. More recent methods attack the same weakness differently: AWARE (Pavlović et al. 2025) replaces attack-simulation training with adversarial optimization under a perceptual budget and a desynchronization-robust detector; WMCodec (Zhou et al. 2025) trains the watermark jointly with a neural codec’s compression and reconstruction rather than as a separate stage. Recently, O’Reilly et al. (2025) and RAW-Bench (Özer et al. 2025) both found that post-hoc methods collapse under low-bitrate neural codecs regardless of embedding scheme, with O’Reilly et al. (2025) additionally showing the same collapse under denoisers. In-generation methods embed the watermark inside the synthesis process itself, trading generality for robustness by construction: they cannot watermark audio that already exists, and require retraining or fine-tuning the generator. GROOT (Liu et al. 2024b) conditions a diffusion-based vocoder’s reverse process on the watermark as a latent vari-able; SOLIDO (Li, Liu, and Lin 2025) fine-tunes a speech diffusion model via low-rank adaptation with a decoder built for variable-length audio; Smark (Zhang, Li, and Gu 2025) embeds into the low-frequency wavelet sub-bands of the re-verse diffusion process, generalizing across diffusion archi-tectures. While O’Reilly et al. (2025) only tested post-hoc watermarking methods, they conjecture that in-generation methods would probably have the same robustness limita-tion due to the low-magnitude of the watermarked signal. 
+
+# 3 Background 
+
+CRAW builds on the TimbreWatermark framework (Liu et al. 2024a), whose embedder, extractor, and training objective we summarize here. Section 4 describes the four compo-nents CRAW adds on top of this architecture to address its limitations. 
+
+Embedding Given the carrier waveform x ∈ RL, Tim-breWatermark applies the Short-Time Fourier Transform to obtain a spectrogram and phase, each of shape F × T for F
+
+frequency bins and T (flexible) time frames, 
+
+S, P = STFT( x), S, P ∈ RF ×T . (1) The magnitude spectrogram S is the carrier: the embedder operates on this spectrogram, not the waveform itself, and 
+
+S is passed through the carrier encoder to obtain carrier features, 
+
+fc = EN c(S) ∈ RCv ×F ×T . (2) The message m ∈ { 0, 1}K is passed through a watermark encoder, 
+
+fm = EN w(m) ∈ RCw ×F ×1. (3) Since S has a flexible temporal length, fm is repeated along the time axis; a skip connection also carries S itself forward so the embedder keeps direct access to the original carrier, and all three are concatenated along the channel axis to form the embedder’s input, 
+
+f+ = Concat  fc, S, Repeat( fm, T ) ∈ R(Cv +1+ Cw )×F ×T .
+
+(4) The watermark embedder produces the watermarked spec-trogram, 
+
+Sw = EM( f+) ∈ RF ×T , (5) and the inverse STFT reconstructs the watermarked wave-form using the original phase, 
+
+xw = ISTFT( Sw, P ) ∈ RL. (6) 
+
+Extraction The received waveform ˜x ∈ RL is converted back to the spectrogram domain, 
+
+˜S, ˜P = STFT(˜ x), ˜S, ˜P ∈ RF ×T . (7) As in the embedding phase, only the magnitude spectro-gram is used. The watermark extractor produces per-frame features, 
+
+f ′ 
+
+> w
+
+= EX( ˜S) ∈ RF ×T . (8) These per-frame features are pooled into a single vector by simple averaging across time, 
+
+¯fw = Average( f ′
+
+> w
+
+) ∈ RF , (9) and the pooled feature is passed through the message decoder to recover the message, 
+
+ˆm = DE( ¯fw) ∈ { 0, 1}K . (10) 
+
+Distortion Layer To make the watermarking robust to how watermarked audio might be altered before it is verified, Tim-breWatermark inserts a distortion layer DP( ·) between em-bedding and extraction, targeting voice-cloning-style resyn-thesis: it renormalizes the watermarked waveform by its peak amplitude, converts it to a mel-spectrogram via Mel( ·), and reconstructs a waveform from that mel-spectrogram with the Griffin-Lim algorithm GL( ·), mimicking the mel-to-waveform step of a typical voice-cloning pipeline, 
+
+˜x = DP( xw) = GL 
+
+
+
+Mel 
+
+ xw
+
+max( |xw|)
+
+ 
+
+∈ RL. (11) The same extraction pipeline above runs on both the clean watermarked audio xw and its distorted counterpart ˜x each step, so the detector learns to recover the message from either. Losses Fidelity is enforced with an MSE loss between the clean and watermarked waveforms, 
+
+Le = 1
+
+L
+
+> L
+
+X
+
+> i=1
+
+ (xw)i − xi
+
+2, (12) plus an adversarial loss against a discriminator D trained to distinguish xw from clean audio, 
+
+Ladv = − log  σ(D(xw)) , (13) where σ(·) is the sigmoid function. D itself is trained each step with its own loss via a separate optimizer, 
+
+Ld = − log( σ(D(x))) − log(1 − σ(D(xw))) . (14) Since extraction runs on both the clean and distorted branches (Eq. 11), we also get a message loss on each, 
+
+Lmsg = 1
+
+K
+
+> K
+
+X
+
+> i=1
+
+( ˆ mi − mi)2, (15) with Lmsg computed on the distorted branch and ˆLmsg (of the same form) on the clean branch. The total training objective is given by 
+
+L = λeLe + λaLadv + λm
+
+ Lmsg + ˆLmsg 
+
+. (16) 
+
+# 4 Method 
+
+CRAW adds four components to fix robustness and maintain fidelity. The entire pipeline is shown in Figure 1. The original distortion layer only simulates voice-cloning-style vocoder resynthesis, so we first broaden it to cover additional distor-tions, including codecs (Section 4.1). This closes the codec-robustness gap, but at a significant cost to fidelity. Q-Former pooling (Section 4.2) and masking (Section 4.3) then regain that fidelity: Q-Former allows the detector to down-weight corrupted frames instead of averaging them in uniformly, and masking withholds the watermark from the spectrogram cells that cost the most, together recovering most of the fi-delity loss. An error-correcting code (Section 4.4) is added last, recovering the codec robustness Q-Former and masking alone give up, at a negligible further cost to fidelity. The embedder, detector, Q-Former, and ECC are trained jointly (Eq. 16); masking is applied only afterward, at inference, and does not enter this objective. 
+
+## 4.1 Distortion Layer 
+
+The original distortion layer (Eq. 11) is never trained against codec perturbation, so it is not surprising that it offers no codec robustness (Table 3). We broaden its attack pool to in-clude neural codec resynthesis via FACodec (Ju et al. 2024) alongside classical signal-processing perturbations. This al-lows the embedder and detector to cope with the attacks seen during training and generalize to unseen members of the same attack family. Each step, an attack is drawn according to a fixed per-attack probability, 
+
+˜x = A(xw), A ∼ p(A), A ∈ {A 1, . . . , AN }. (17) The exact perturbations used and their sampling probabilities are detailed in the supplementary material. 
+
+## 4.2 Q-Former Pooling 
+
+Broadening the distortion layer forces the watermark em-bedding to withstand a harder, more diverse attack pool. However, this comes at a high cost to fidelity, which must be mitigated for this watermarking approach to be practi-cal. We first notice that features are pooled over frames into a single vector by simple averaging across time (Eq. 9), which weighs every frame equally. This pushes the em-bedding to appear everywhere, even when it conflicts with the reconstruction loss. We instead propose to pool with a mechanism inspired by Q-Former (Li et al. 2023): a single learnable query q ∈ R1×F cross-attends over the T frames of f ′ 
+
+> w
+
+∈ RF ×T , treated here as T tokens f ′⊤  
+
+> w
+
+∈ RT ×F ,letting the extractor select which timesteps to extract the embedding from. The query, key, and value projections 
+
+WQ, W K , W V ∈ RF ×F are split into h parallel attention heads, each outputs a d-dimensional subspace ( d=F/h ) and attending independently, with head j ∈ { 1, . . . , h } using its own slice W (j) 
+
+> Q
+
+, W (j) 
+
+> K
+
+, W (j) 
+
+> V
+
+∈ RF ×d.
+
+αj = softmax (qW (j) 
+
+> Q
+
+)( f ′⊤  
+
+> w
+
+W (j) 
+
+> K
+
+)⊤
+
+√d
+
+!
+
+∈ R1×T , (18) 
+
+head j = αj f ′⊤  
+
+> w
+
+W (j) 
+
+> V
+
+∈ Rd. (19) The heads are concatenated and passed through an output projection WO ∈ RF ×F back to dimension F ,
+
+¯fw = Concat(head 1, . . . , head h) WO ∈ RF , (20) followed by a feed-forward block with a residual connection, as is standard in transformer attention blocks. This pooled feature replaces Background’s averaged ¯fw (Eq. 9) at the same output dimension F .
+
+## 4.3 Inference-Time Masking 
+
+The Q-Former pooling recovers much of the fidelity, but does not close the gap completely. We further propose inference-time masking, applied after the embedder has already pro-duced xw, to recover the rest. To find the regions of the spectrogram most responsible for perceptual degradation, we reconstruct the clean spectrogram S back to a waveform via the inverse STFT so it can be compared against xw under a differentiable PESQ implementation. 1 We then take the gra-dient of the resulting PESQ loss with respect to S itself: since we want to increase the watermarked audio’s PESQ score, this gradient marks exactly the pixels most responsible for degrading it, giving a per-pixel sensitivity map, 
+
+G = ∂ PESQ( x, xw)
+
+∂S . (21) Let M ∈ { 0, 1}F ×T mark the top-k% of the pixels by G:these are the pixels the listener is most sensitive to (Figure 2). The final spectrogram is given by removing the watermark signal using the mask M .
+
+S′ 
+
+> w
+
+= M ⊙ S + (1 − M ) ⊙ Sw. (22)                         
+
+> 1We use torch-pesq : https://github.com/audiolabs/torch-pesq. Waveform x
+> Carrier Encoder +Watermark Embedder Watermarked xw
+> Discriminator
+> b0
+> b1
+> ...
+> bn
+> Message m
+> c0
+> c1
+> ...
+> cN
+> Codeword c
+> Watermark Encoder
+> f10
+> f11
+> ...
+> f1
+> l
+> f20
+> f21
+> ...
+> f2
+> l
+> ft
+> 0
+> ft
+> 1
+> ...
+> ftl
+> · · ·
+> [noise, codec, mp3 · · · ]
+> Distortion Layer
+> Distorted ˜x
+> Watermark Extractor Q-Former Pooling
+> f0
+> f1
+> ...
+> fl
+> Watermark Decoder
+> ˆc0
+> ˆc1
+> ...
+> ˆcN
+> Codeword ˆc
+> b0
+> b1
+> ...
+> bn
+> Decoded ˆm
+> STFT ISTFT clean or watermarked?
+> Phase
+> ECC Encode
+> f0
+> f1
+> ...
+> fl
+> repeat STFT ECC Decode
+> Embedder Detector
+
+Figure 1: CRAW training pipeline. The embedder encodes message m via ECC and embeds it into carrier speech x. The distortion layer simulates attacks during training. The detector recovers ˆm via Q-Former pooling and ECC decoding. We recover the watermarked waveform with an inverse STFT. This entire process is performed at inference time; therefore, it does not affect the training process. 
+
+## 4.4 Error-Correcting Code 
+
+The main challenge in this work is to achieve both robustness and fidelity simultaneously, as changes that improve one goal hurt the other. The final change we made to recover the robustness that was degraded by the masking operation is to include an error-correcting code (ECC). An ECC adds a further, independent form of redundancy on top of the time repetition already present in the embedding (Eq. 4). We quantify this in the ablation study (Section 5.4). The message m ∈ { 0, 1}K first goes through an ECC which encodes m into a longer codeword c ∈ { 0, 1}N ,
+
+c = ECC enc (m), (23) and the codeword c, rather than the raw message, is what we feed and train the watermark encoder on 
+
+fm = EN w(c). (24) Because CRAW operates on the codeword rather than the raw message, Q-Former’s pooled feature ¯fw (Eq. 20) is passed through the message decoder to recover the code-word, 
+
+ˆc = DE( ¯fw), (25) and the message loss is applied at the codeword level rather than the raw-message level, 
+
+Lmsg = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+(ˆ ci − ci)2, (26) where N is the codeword length, with Lmsg and ˆLmsg both taking this form. At inference, the ECC’s decoder recovers the raw message from the decoded codeword, 
+
+ˆm = ECC dec (ˆ c). (27) 
+
+# 5 Experiments 
+
+In this section, we show how our method achieves strong robustness results on a variety of perturbations while main-taining high fidelity, measured by PESQ. Most important are codec perturbations, where the best competing method achieves at most 25.2% F1 score. 
+
+## 5.1 Experimental Setup 
+
+Dataset For watermark training we use the standard 
+
+train_clean100 split of LibriSpeech (Panayotov et al. 2015), with the same 2620-clip test set. Audio is resam-pled to 22.05kHz. In Section 5.5 we also evaluate zero-shot generalization to LJSpeech (Ito and Johnson 2017), without retraining. 
+
+Metrics For fidelity evaluation, we adopt three objective metrics: Scale-Invariant Signal-to-Noise Ratio (SI-SNR), Perceptual Evaluation of Speech Quality (PESQ), and Short-Time Objective Intelligibility (STOI). Out of these three PESQ is commonly considered the metric that best aligns with human auditory sensitivity, which is why the masking policy uses it as its criteria. We report detection (whether the watermark is judged present or absent) since that is the operative goal at inference: for every model we calibrate a threshold on the fraction of Figure 2: Masking on a real clip from the test set ( k=10% ). Left to right: the clean spectrogram S, the binary mask M (teal pixels are kept clean; dark pixels carry the watermark), the watermarked spectrogram Sw before masking, and the final spectrogram 
+
+S′
+
+> w
+
+. Insets zoom into a harmonic burst: the mask protects the loud region and pushes the watermark into the quieter gaps between bursts. 
+
+Category Attack Baseline +DL +QFormer +Mask +ECC Sig.-Proc. 
+
+Crop Front 0.998 ±0.000 0.994 ±0.000 0.964 ±0.009 0.965 ±0.009 0.994 ±0.000 Crop Middle 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.992 ±0.003 Crop Back 0.998 ±0.000 0.994 ±0.000 0.993 ±0.003 0.993 ±0.003 0.992 ±0.003 Resample 16kHz 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Resample 8kHz 0.995 ±0.002 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 White Noise 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Amp Scale 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (8 kbps) 0.861 ±0.020 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Recount 8bps 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Median Filt (35) 0.893 ±0.016 0.855 ±0.021 0.982 ±0.005 0.983 ±0.005 0.976 ±0.007 
+
+Time Stretch 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Filter LowPass 2kHz 0.855 ±0.020 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 HighPass 500Hz 0.998 ±0.000 0.979 ±0.006 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Codec 
+
+FACodec 0.029 ±0.016 0.994 ±0.000 0.934 ±0.013 0.937 ±0.012 0.982 ±0.005 EnCodec 6kbps † 0.077 ±0.026 0.994 ±0.000 0.993 ±0.003 0.926 ±0.014 0.982 ±0.006 TiCodec 1g4r † 0.029 ±0.016 0.895 ±0.016 0.948 ±0.011 0.684 ±0.030 0.838 ±0.021 
+
+Denoiser 
+
+FRCRN+Denoise (0 dB) † 0.067 ±0.024 0.818 ±0.022 0.942 ±0.012 0.943 ±0.012 0.913 ±0.015 FRCRN+Denoise (5 dB) † 0.372 ±0.040 0.981 ±0.006 0.987 ±0.004 0.988 ±0.004 0.989 ±0.003 
+
+MossFormer+Denoise (0 dB) † 0.104 ±0.027 0.963 ±0.009 0.953 ±0.010 0.954 ±0.010 0.942 ±0.012 
+
+MossFormer+Denoise (5 dB) † 0.325 ±0.039 0.989 ±0.004 0.995 ±0.000 0.996 ±0.000 0.987 ±0.004 
+
+Vocoder HiFi-GAN † 0.778 ±0.025 0.994 ±0.000 0.993 ±0.002 0.990 ±0.003 0.994 ±0.000 
+
+Vocos † 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Worst Case 0.029 ±0.016 0.818 ±0.022 0.934 ±0.013 0.684 ±0.030 0.838 ±0.021 
+
+Table 1: Component ablation of CRAW: robustness (F1 ±SE) at each incremental stage, on a 200-clip subset. † denotes unseen attacks. 
+
+Model SI-SNR (dB) ↑ PESQ ↑ STOI ↑
+
+Baseline 27.89 ±0.17 4.018 ±0.010 0.993 ±0.000 
+
++DL 14.64 ±0.20 3.061 ±0.014 0.926 ±0.002 +QFormer 17.85 ±0.20 3.576 ±0.014 0.961 ±0.001 +Mask 19.12 ±0.20 4.085 ±0.008 0.974 ±0.001 +ECC (CRAW) 18.39 ±0.17 4.005 ±0.011 0.966 ±0.001 
+
+Table 2: Fidelity metrics (mean ±SE) for each incremental component of CRAW (200-clip subset). correctly decoded bits, using clean audio to fix a 1% false-positive rate, then measure detection F1 under each attack at that operating point. Since F1 is a single aggregate number over the whole test set rather than a per-clip quantity, we estimate its standard error via a paired bootstrap: for each attack we resample the positive test clips with replacement 1000 times, sharing resample indices across all models for a valid paired comparison, and take the standard error of the resulting F1 distribution. Fidelity metrics (SI-SNR, PESQ, STOI), by contrast, are computed directly per clip, so we report the standard error of the per-clip mean across the test set rather than a bootstrap estimate. In both cases, bold Category Attack WavMark AudioSeal TimbreWM WMCodec AWARE CRAW (Ours) Sig.-Proc. 
+
+Crop Front 0.014 ±0.003 0.101 ±0.008 0.992 ±0.000 0.308 ±0.011 0.022 ±0.004 0.992 ±0.001 
+
+Crop Middle 0.023 ±0.004 0.995 ±0.000 0.992 ±0.000 0.163 ±0.009 0.015 ±0.003 0.991 ±0.001 Crop Back 0.048 ±0.006 0.995 ±0.000 0.992 ±0.000 0.296 ±0.010 0.073 ±0.007 0.988 ±0.001 Resample 16kHz 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 Resample 8kHz 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.738 ±0.008 0.997 ±0.000 0.995 ±0.000 White Noise 0.394 ±0.011 0.992 ±0.001 0.991 ±0.001 0.960 ±0.003 0.996 ±0.000 0.995 ±0.000 Amp Scale 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 MP3 Comp (8 kbps) 0.000 ±0.000 0.858 ±0.005 0.885 ±0.005 0.039 ±0.005 0.458 ±0.011 0.994 ±0.000 
+
+Recount 8bps 0.926 ±0.004 0.995 ±0.000 0.992 ±0.000 0.993 ±0.001 0.997 ±0.000 0.995 ±0.000 Median Filt (35) 0.014 ±0.003 0.096 ±0.007 0.922 ±0.004 0.127 ±0.008 0.039 ±0.005 0.975 ±0.002 
+
+Time Stretch 0.950 ±0.003 0.982 ±0.002 0.992 ±0.000 0.888 ±0.005 0.970 ±0.002 0.995 ±0.000 Filter LowPass 2kHz 0.000 ±0.000 0.995 ±0.000 0.835 ±0.006 0.530 ±0.010 0.875 ±0.005 0.995 ±0.000 
+
+HighPass 500Hz 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 
+
+Codec 
+
+FACodec 0.000 ±0.000 0.021 ±0.004 0.041 ±0.005 0.019 ±0.004 0.149 ±0.009 0.974 ±0.002 
+
+EnCodec 6kbps † 0.000 ±0.000 0.150 ±0.009 0.072 ±0.007 0.033 ±0.005 0.252 ±0.010 0.987 ±0.001 
+
+TiCodec 1g4r † 0.000 ±0.000 0.023 ±0.004 0.033 ±0.005 0.027 ±0.004 0.075 ±0.007 0.826 ±0.006 Denoiser 
+
+FRCRN+Denoise (0 dB) † 0.000 ±0.000 0.034 ±0.005 0.117 ±0.008 0.073 ±0.007 0.629 ±0.009 0.944 ±0.003 
+
+FRCRN+Denoise (5 dB) † 0.000 ±0.000 0.079 ±0.007 0.437 ±0.011 0.224 ±0.010 0.863 ±0.005 0.991 ±0.001 
+
+MossFormer+Denoise (0 dB) † 0.000 ±0.000 0.029 ±0.004 0.107 ±0.008 0.111 ±0.008 0.614 ±0.009 0.956 ±0.003 
+
+MossFormer+Denoise (5 dB) † 0.000 ±0.000 0.073 ±0.007 0.368 ±0.011 0.281 ±0.011 0.860 ±0.005 0.991 ±0.001 Vocoder HiFi-GAN † 0.000 ±0.000 0.014 ±0.003 0.809 ±0.006 0.302 ±0.010 0.713 ±0.008 0.995 ±0.000 
+
+Vocos † 0.000 ±0.000 0.029 ±0.005 0.992 ±0.000 0.994 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Worst Case 0.000 ±0.000 0.014 ±0.003 0.033 ±0.005 0.019 ±0.004 0.015 ±0.003 0.826 ±0.006 
+
+Table 3: Main robustness comparison: F1 ±SE across attacks, all models. † denotes unseen attacks. 
+
+Model SI-SNR (dB) ↑ PESQ ↑ STOI ↑
+
+WavMark 36.25 ±0.03 4.160 ±0.003 0.997 ±0.000 AudioSeal 26.82 ±0.06 4.247 ±0.001 0.998 ±0.000 
+
+TimbreWM 27.87 ±0.05 4.011 ±0.003 0.993 ±0.000 WMCodec 1.52 ±0.09 3.168 ±0.007 0.934 ±0.001 AWARE 17.34 ±0.08 4.086 ±0.002 0.985 ±0.000 CRAW (Ours) 18.29 ±0.05 3.990 ±0.003 0.966 ±0.000 
+
+Table 4: Fidelity comparison across baselines (mean ±SE). marks the model(s) tied for best, i.e. not significantly below the top performer (for F1, in ≥95% of resamples, p< 0.05 ;for fidelity metrics, by more than one combined standard error). Unless otherwise stated, crops are reported at 95% removal, and the full attack suite (all crop ratios and distortion levels) is reported in the supplementary material. The default watermark length is 10 bits. The main baseline comparison (Table 3) runs on the full 2620-clip test set. Ablation and ECC-variant studies use a fixed 200-clip subset for speed, as does the zero-shot evaluation on LJSpeech (Section 5.5). 
+
+Distortions We evaluate robustness against a broad set of distortions, split between classical signal-processing attacks (cropping, resampling, etc.) and neural re-synthesis, which regenerates rather than perturbs the waveform: three neural codecs (FACodec (Ju et al. 2024), EnCodec (Défossez et al. 2023), TiCodec (Ren et al. 2024)), two denoisers from the ClearVoice toolkit 2 (FRCRN and MossFormerGAN), and two neural vocoders (HiFi-GAN (Kong, Kim, and Bae 2020), Vocos (Siuzdak 2024)). FACodec is present in the training-time distortion layer and is therefore a seen attack. TiCodec, EnCodec, HiFi-GAN, Vocos, and denoiser chains are held out during training. 
+
+Watermarking Methods We compare against five water-marking methods using their official released implementa-tions and checkpoints: TimbreWatermark (Liu et al. 2024a), AudioSeal (Roman et al. 2024), WavMark (Chen et al. 2023), AWARE (Pavlović et al. 2025), and WMCodec (Zhou et al. 2025). AudioSeal and WavMark support only a 16-bit pay-load, TimbreWatermark’s original checkpoint is 10-bit, we evaluate AWARE at its higher-capacity 20-bit configuration, and WMCodec uses a 16-bit payload embedded jointly with its neural codec. 
+
+## 5.2 Component Ablation 
+
+Tables 1 and 2 show robustness and fidelity side by side across the same five incremental stages: a Baseline repro-ducing TimbreWatermark (Liu et al. 2024a), plus the ro-bust distortion layer (+DL), Q-Former pooling (+QFormer), PESQ-gradient masking (+Mask), and the error-correcting code (+ECC, full CRAW). +DL alone accounts for nearly all of the robustness gain over the Baseline but at a steep fidelity cost. The added +QFormer improves fidelity substantially, as well as pushes robustness past +DL on several of the hardest 
+
+> 2
+
+https://github.com/modelscope/ClearerVoice-Studio attacks. +Mask recovers fidelity further still, pushing PESQ past even the timbre baseline (4.085 vs. 4.018), but this comes at a cost to codec robustness specifically: TiCodec drops from 0.948 to 0.684. We add an error-correcting code specifically to close this gap: +ECC recovers most of the drop across all three codecs at a small further cost to fidelity. 
+
+## 5.3 Comparison with Existing Watermarking Methods 
+
+Robustness We evaluate robustness under two categories of distortions: neural re-synthesis (codecs, denoisers, and vocoders) and traditional signal-level distortions (cropping, resampling, filtering, and the like). Table 3 shows F1 across every attack. Under neural re-synthesis, CRAW beats every baseline on nearly every attack, most decisively on codecs, where all five baselines degrade substantially, collapsing to-ward chance in several cases, and even the strongest baseline never exceeds an F1 score of 0.252. Under traditional signal-level distortions, CRAW is comparable to prior work in most conditions, with clear improvements under MP3 compres-sion and median filtering. 
+
+Fidelity PESQ is the metric we treat as the primary fidelity criterion, since it best predicts what a listener perceives and is what CRAW’s masking policy directly optimizes against. CRAW reaches a PESQ of 3.99, comparable to the baselines (3.17–4.25) and well above the weakest, WMCodec (3.17); scores above 4 are considered perceptually near-transparent. SI-SNR and STOI follow the same pattern: good scores that show we maintain high fidelity, though lower than the best results. Overall, CRAW offers a good trade-off between robustness and fidelity: it offers significantly stronger robustness results while maintaining fidelity at levels that are imperceptible to the casual listener. 3
+
+## 5.4 Ablation Studies 
+
+Masking Threshold We sweep the masking ratio k from 0% to 100% and measure robustness and fidelity at each point. We find that robustness degrades slowly as k increases while fidelity increases sharply. We set k=10% as our oper-ating point, as it gives a good tradeoff between fidelity and robustness. We also compare our PESQ-gradient mask with random masks at equivalent k values and show that it re-covers substantially more fidelity throughout the sweep. (see supplementary material). 
+
+Error-Correcting Code To evaluate the error-correcting code, we test a few variants: a repetition code, Reed– Solomon, LDPC, and no coding at all, all with the same 
+
+k=10% masking applied (per-attack robustness and fidelity tables in the supplementary material). Rep3 is the simplest of the four, but surprisingly it wins against every alternative and improves robustness on codecs over no coding at all. We note that codec corruption spreads bit errors roughly uni-formly across the codeword rather than concentrating them 
+
+> 3Audio samples are available at https://davidc1212.github.io/ craw-audio-samples/.
+
+in bursts, exactly the pattern repetition coding is built to cor-rect, which is why Rep3 outperforms the more structured alternatives specifically there. Fidelity is comparable across all variants, so the ECC costs little on that front. 
+
+## 5.5 Cross-Domain Generalization 
+
+We evaluate how CRAW generalizes to a different dataset within the same speech domain. LJSpeech is a single-speaker corpus recorded under different conditions than LibriSpeech; without any retraining, CRAW transfers zero-shot to this new dataset (see full per-attack tables in the supplementary ma-terial). Codec F1 score mostly transfers or improves, with a modest decline on TiCodec (0.838 →0.794); PESQ is un-changed at 4.005 in both domains. This shows that CRAW can generalize to other speech datasets without fine-tuning. 
+
+## 5.6 Limitations 
+
+PESQ-gradient masking is computed once per clip at infer-ence time and is not free: it adds roughly 150 ms of GPU latency per clip on top of the base embedder, an 8× increase over encoder-only inference (21 ms vs. 171 ms, measured over 100 clips ranging 1.82–10.52 s, see supplementary ma-terial). While a significant increase in relative terms, 171 ms is not a significant overhead for non-real-time applications. For real-time application, this would depend on the RTF of the generation method. Reducing this overhead would be the focus of future work. 
+
+# 6 Conclusion 
+
+This paper introduced CRAW, a codec-robust audio wa-termarking framework built on TimbreWatermark to close its remaining robustness gap to neural re-synthesis, specifi-cally neural codecs. CRAW combines distortion-aware train-ing with an attention-based pooling mechanism, inference-time perceptual masking, and an error-correcting code to recover the fidelity lost during robust training. As a result, CRAW achieves state-of-the-art robustness against neural re-synthesis, most notably codec attacks that collapse current methods, while maintaining fidelity that is comparable to other baselines. 
+
+# References        
+
+> Chen, G.; Wu, Y.; Liu, S.; Liu, T.; Du, X.; and Wei, F. 2023. WavMark: Watermarking for Audio Generation. arXiv:2308.12770. Défossez, A.; Copet, J.; Synnaeve, G.; and Adi, Y. 2023. High Fi-delity Neural Audio Compression. Transactions on Machine Learn-ing Research .Ito, K.; and Johnson, L. 2017. The LJ Speech Dataset. https: //keithito.com/LJ-Speech-Dataset/. Ju, Z.; Wang, Y.; Shen, K.; Tan, X.; Xin, D.; Yang, D.; Liu, E.; Leng, Y.; Song, K.; Tang, S.; Wu, Z.; Qin, T.; Li, X.; Ye, W.; Zhang, S.; Bian, J.; He, L.; Li, J.; and Zhao, S. 2024. NaturalSpeech 3: Zero-Shot Speech Synthesis with Factorized Codec and Diffusion Models. In Proceedings of the 41st International Conference on Machine Learning (ICML) , 22605–22623. Kong, J.; Kim, J.; and Bae, J. 2020. HiFi-GAN: Generative Adver-sarial Networks for Efficient and High Fidelity Speech Synthesis. In Advances in Neural Information Processing Systems (NeurIPS) .
+
+Li, J.; Li, D.; Savarese, S.; and Hoi, S. 2023. BLIP-2: Bootstrap-ping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. In Proceedings of the 40th International Conference on Machine Learning (ICML) , 19730–19742. Li, Y.; Liu, W.; and Lin, D. 2025. SOLIDO: A Robust Water-marking Method for Speech Synthesis via Low-Rank Adaptation. arXiv:2504.15035. Liu, C.; Zhang, J.; Zhang, T.; Yang, X.; Zhang, W.; and Yu, N. 2024a. Detecting Voice Cloning Attacks via Timbre Watermarking. In Proceedings of the 31st Network and Distributed System Security Symposium (NDSS) , 1–18. Liu, W.; Li, Y.; Lin, D.; Tian, H.; and Li, H. 2024b. GROOT: Generating Robust Watermark for Diffusion-Model-Based Audio Synthesis. In Proceedings of the 32nd ACM International Confer-ence on Multimedia (ACM MM) , 3294–3302. O’Reilly, P.; Pardo, B.; Jin, Z.; and Su, J. 2025. Deep Audio Water-marks Are Shallow: Limitations of Post-Hoc Watermarking Tech-niques for Speech. In 1st Workshop on GenAI Watermarking, ICLR .Özer, Y.; Choi, W.; Serrà, J.; Singh, M. K.; Liao, W.-H.; and Mitsu-fuji, Y. 2025. A Comprehensive Real-World Assessment of Audio Watermarking Algorithms: Will They Survive Neural Codecs? In 
+
+Proceedings of INTERSPEECH 2025 .Panayotov, V.; Chen, G.; Povey, D.; and Khudanpur, S. 2015. Lib-rispeech: An ASR Corpus Based on Public Domain Audio Books. In Proceedings of the IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 5206–5210. Pavlović, K.; Stanarević, L.; Nedić, P.; Nešović, E.; Kovačević, S.; and Djurović, I. 2025. AWARE: Audio Watermarking via Adver-sarial Resistance to Edits. arXiv:2510.17512. Ren, Y.; Wang, T.; Yi, J.; Xu, L.; Tao, J.; Zhang, C. Y.; and Zhou, J. 2024. Fewer-Token Neural Speech Codec with Time-Invariant Codes. In Proceedings of the IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 12737–12741. Roman, R. S.; Fernandez, P.; Elsahar, H.; Défossez, A.; Furon, T.; and Tran, T. 2024. Proactive Detection of Voice Cloning with Localized Watermarking. In Proceedings of the 41st International Conference on Machine Learning (ICML) .Shaaban, O. A.; Yildirim, R.; and Alguttar, A. A. 2023. Audio Deepfake Approaches. IEEE Access , 11: 132652–132682. Siuzdak, H. 2024. Vocos: Closing the Gap between Time-Domain and Fourier-Based Neural Vocoders for High-Quality Audio Syn-thesis. In Proceedings of the International Conference on Learning Representations (ICLR) .Zhang, Y.; Li, C.; and Gu, Y. 2025. Smark: A Watermark for Text-to-Speech Diffusion Models via Discrete Wavelet Transform. arXiv:2512.18791. Zhou, J.; Yi, J.; Ren, Y.; Tao, J.; Wang, T.; and Zhang, C. Y. 2025. WMCodec: End-to-End Neural Speech Codec with Deep Water-marking for Authenticity Verification. In Proceedings of the 2025 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) .S1 Implementation Details and Hyperparameters 
+
+CRAW reuses TimbreWatermark’s convolutional encoder– embedder–extractor architecture (skip-gated convolutional blocks, hidden dimension 64: 3 layers for the carrier encoder, 4 for the embedder, 6 for the extractor) and its STFT front end (1024-point FFT, 256-sample hop, Hann window, audio resampled to 22.05kHz), apart from the Q-Former pooling change described above. The Q-Former replaces uniform frame averaging with a single learnable query attending over all frames through one multi-head cross-attention block (3 heads, feed-forward expansion 4×, dropout 0.1) followed by a feed-forward block, each with a pre-norm residual connec-tion. The 10-bit message is expanded by Rep3 to a 30-bit codeword before embedding. We train on a single GPU with Adam (lr = 2 × 10 −5, β1 = 0 .9, β2 = 0 .98 , ϵ = 10 −9, no weight decay, gradients clipped to norm 1.0; a separate Adam instance with identical settings trains the discriminator), de-cayed via StepLR (step size 5000, γ = 0 .98 ), for 20 epochs at batch size 1. The training objective weights the fidelity loss at 1.0, the message loss at 10.0 on distorted audio and 0.01 on clean audio, and the adversarial term at 0.01. The PESQ-gradient masking threshold ( k=10% ) is applied only at inference time and does not affect training. All models are trained with a single fixed random seed (2022), covering Python, NumPy, and PyTorch/CUDA RNGs. Experiments are run on a single NVIDIA L4 GPU (22.5GB) with an Intel Xeon Gold 6530 CPU, on Rocky Linux 9.8, using PyTorch 2.1.2 (CUDA 12.1). 
+
+# S2 Distortion and Attack Details 
+
+We elaborate below on every audio editing augmentation used in this work, covering both the stochastic pool applied during training and the full attack suite applied during eval-uation. 
+
+• Identity. No distortion is applied. Included in the training pool so the model also sees clean audio and is not forced to trade off fidelity against robustness on every single step. 
+
+• Additive noise. During training, Gaussian noise is added directly to the waveform with a standard deviation sam-pled uniformly between 0.01 and 0.08 each step. At eval-uation, noise is instead added at a fixed target SNR rather than a fixed standard deviation, swept from 20 to 40 dB. 
+
+• Low-pass filter. During training, the cutoff frequency is re-sampled uniformly between 2 and 8 kHz every step, so the model sees a range of severities rather than one fixed filter. At evaluation this is replaced by a single fixed cutoff of 2 kHz. 
+
+• High-pass filter. Evaluation only, at a fixed cutoff of 500 Hz; there is no high-pass filter in the training pool. 
+
+• Amplitude scaling. During training, the waveform is multiplied by a factor sampled between 0.8 and 1.2, i.e. mild loudness changes in either direction. At evaluation, the waveform is instead only ever scaled down, swept from 20% to 80% of its original amplitude. 
+
+• Mel-spectrogram resynthesis. Training only: the wave-form is converted to a mel-spectrogram and reconstructed with the Griffin-Lim algorithm, simulating the lossy analysis-synthesis step common to vocoder-based resyn-thesis pipelines. 
+
+• Spectral gating. Training only: frequency bins more than a threshold, sampled between 10 and 30 dB, below the frame’s peak energy are zeroed out. This acts as a dif-ferentiable proxy for a denoiser stripping out the quiet regions of the spectrum where watermarks often hide. 
+
+• FACodec resynthesis. The watermarked waveform is encoded, quantized, and decoded through the Natural-Speech3 FACodec neural codec. During training this at-tack is drawn 10% of the time (the other six training-time attacks above share the remaining 15% each). It is the only codec seen during training, so at evaluation it is also the only codec attack CRAW is scored on as a seen rather than an unseen attack. 
+
+• Crop front / middle / back. Evaluation only: a contigu-ous chunk of the waveform is removed from its start, mid-dle, or end, swept from 20% to 80% removed in coarse steps and then densely from 90% to 98% removed, where robustness begins to degrade. 
+
+• Resample. Evaluation only: the waveform is downsam-pled to 16 kHz or to 8 kHz and then upsampled back to the original rate, introducing the quantization and aliasing artifacts of the round trip. 
+
+• MP3 compression. Evaluation only: the waveform is re-encoded through an MP3 codec at a fixed bitrate, swept from 8 to 64 kbps. 
+
+• Recount 8bps. Evaluation only: the waveform is requan-tized to 8 bits per sample, a fixed, single-severity attack. 
+
+• Median filtering. Evaluation only: a median filter slides over the waveform, evaluated at window sizes of 5, 15, 25, and 35 samples. 
+
+• Time stretch. Evaluation only: playback speed is changed without altering pitch, swept from −20% to 20% (i.e. up to 20% slower or 20% faster). 
+
+• Denoising. Evaluation only: Gaussian noise is added at a target SNR and then removed with a neural denoiser, either ClearVoice FRCRN or ClearVoice MossFormer-GAN, to test whether the denoiser strips the watermark out along with the noise, swept from 0 to 20 dB SNR. 
+
+• Unseen neural codecs. Evaluation only: TiCodec and EnCodec, neither of which the model encounters during training. 
+
+• Neural vocoders. Evaluation only: HiFi-GAN and Vo-cos, both re-synthesizing the waveform through a mel-spectrogram intermediate; neither is seen during training. 
+
+# S3 Masking Threshold Sweep 
+
+Figures S1 and S2 show robustness as a function of the masking ratio k under neural and signal-processing attacks respectively, with the error-correcting code (Rep3) enabled throughout; only k varies. Figure S3 shows the corresponding fidelity sweep, comparing the PESQ-gradient mask against a random mask of the same size at equivalent k.Figure S1: Robustness (F1@1%FPR) vs. masking ratio under neural attacks. Robustness degrades steadily with masking. 
+
+Figure S2: Robustness (F1@1%FPR) vs. masking ratio under signal-processing attacks. 
+
+Figure S3: Fidelity as a function of the PESQ-gradient mask-ing threshold, comparing dynamic masking (top-k% gated by PESQ gradient) against random masking. The PESQ-gradient mask recovers substantially more fidelity than ran-dom masks at equivalent k.
+
+# S4 Masking Overhead 
+
+Table S1 reports the per-clip GPU inference latency added by PESQ-gradient dynamic masking, referenced in the Lim-itations subsection.     
+
+> Condition Latency (ms) ↓
+> Baseline (encoder only) 21.20 ±4.53 Full pipeline (encoder + mask) 170.93 ±7.83
+
+Table S1: Per-clip GPU inference latency (mean ±SE, n=100 
+
+LibriSpeech test clips, durations 1.82–10.52 s) for the embed-der alone vs. the full pipeline with PESQ-gradient dynamic masking (10% masking). Masking adds ∼150 ms/clip. 
+
+# S5 Component Ablation: Full Ratio Sweep 
+
+Tables S4 and S5 report the full ratio sweep un-derlying the component ablation above, split by tra-ditional signal-level distortions and neural re-synthesis attacks respectively, across all five incremental stages (Baseline →+DL →+QFormer →+Mask →+ECC). 
+
+# S6 Baseline Comparison: Full Ratio Sweep 
+
+Tables S6 and S7 report the full ratio sweep underlying the main robustness comparison, split by signal-level and neural re-synthesis attacks. 
+
+# S7 Error-Correcting Code Variants 
+
+For each error-correcting code variant, we train a separate model with that ECC wired into the embedding and ex-traction pipeline, apply dynamic PESQ masking ( k=10% )at inference time, and evaluate robustness and fidelity un-der the full attack suite (fidelity reported above in Ta-ble S2). We compare five variants: Rep3, Reed–Solomon (RS(4,2), RS(6,2)), LDPC, and no coding, referenced in the Error-Correcting Code paragraph of Ablation Studies above. RS(4,2) and RS(6,2) operate over GF( 28) with n−k=2 and 4
+
+parity bytes respectively, correcting up to 1 and 2 byte errors per codeword (32 and 48 codeword bits for a 16-bit mes-sage). LDPC uses a regular Gallager (1962) construction at rate 1/2 (n=20 , k=10 , variable-node degree dv =3 , check-node degree dc=6 ), decoded with min-sum belief propaga-tion. Tables S8 and S9 report the full ratio sweep, split by signal-level and neural re-synthesis attacks.                      
+
+> Variant SI-SNR (dB) ↑PESQ ↑STOI ↑
+> No ECC 19.12 ±0.20 4.085 ±0.008 0.974 ±0.001
+> Rep3 18.39 ±0.17 4.005 ±0.011 0.966 ±0.001 RS(4,2) 14.63 ±0.18 3.876 ±0.013 0.952 ±0.001 RS(6,2) 14.32 ±0.18 4.033 ±0.011 0.960 ±0.001 LDPC 15.92 ±0.17 4.069 ±0.007 0.963 ±0.001
+
+Table S2: ECC variant fidelity (mean ±SE) with dynamic PESQ masking (10%), 200-clip subset. 
+
+# S8 Cross-Domain Generalization: LJSpeech 
+
+Tables S10 and S11 report the full ratio sweep of per-attack robustness, in-domain (LibriSpeech) vs. zero-shot (LJSpeech), split by signal-level and neural re-synthesis at-tacks (corresponding fidelity reported above in Table S3).            
+
+> Model SI-SNR (dB) ↑PESQ ↑STOI ↑
+> CRAW (LibriSpeech) 18.39 ±0.17 4.005 ±0.011 0.966 ±0.001 Zero-shot (LJSpeech) 19.40 ±0.07 4.005 ±0.005 0.976 ±0.000
+
+Table S3: Fidelity comparison (mean ±SE): CRAW in-domain (LibriSpeech) vs. zero-shot on LJSpeech, 200-clip subset per domain. Category Attack Baseline +DL +QFormer +Mask +ECC Sig.-Proc. 
+
+Crop Front (20%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Front (40%) 0.998 ±0.000 0.994 ±0.000 0.993 ±0.002 0.993 ±0.002 0.994 ±0.000 Crop Front (60%) 0.998 ±0.000 0.994 ±0.000 0.993 ±0.002 0.993 ±0.002 0.994 ±0.000 Crop Front (80%) 0.998 ±0.000 0.994 ±0.000 0.980 ±0.006 0.980 ±0.006 0.994 ±0.000 Crop Front (90%) 0.998 ±0.000 0.994 ±0.000 0.959 ±0.010 0.959 ±0.010 0.994 ±0.000 Crop Front (95%) 0.998 ±0.000 0.994 ±0.000 0.964 ±0.009 0.965 ±0.009 0.994 ±0.000 Crop Front (96%) 0.998 ±0.000 0.992 ±0.002 0.961 ±0.009 0.962 ±0.009 0.994 ±0.000 Crop Front (97%) 0.995 ±0.003 0.986 ±0.004 0.982 ±0.006 0.983 ±0.006 0.994 ±0.000 
+
+Crop Front (98%) 0.972 ±0.008 0.974 ±0.007 0.982 ±0.006 0.985 ±0.005 0.984 ±0.005 
+
+Crop Middle (20%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Middle (40%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Middle (60%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Middle (80%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Middle (90%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Middle (95%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.992 ±0.003 Crop Middle (96%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Middle (97%) 0.995 ±0.003 0.986 ±0.004 0.995 ±0.000 0.996 ±0.000 0.987 ±0.004 Crop Middle (98%) 0.995 ±0.002 0.952 ±0.010 0.993 ±0.002 0.993 ±0.002 0.974 ±0.007 Crop Back (20%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Back (40%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Back (60%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Back (80%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Crop Back (90%) 0.998 ±0.000 0.994 ±0.000 0.993 ±0.003 0.993 ±0.003 0.992 ±0.003 Crop Back (95%) 0.998 ±0.000 0.994 ±0.000 0.993 ±0.003 0.993 ±0.003 0.992 ±0.003 Crop Back (96%) 0.998 ±0.000 0.994 ±0.000 0.990 ±0.003 0.990 ±0.003 0.984 ±0.005 Crop Back (97%) 0.998 ±0.000 0.989 ±0.004 0.987 ±0.004 0.988 ±0.004 0.974 ±0.007 Crop Back (98%) 0.998 ±0.000 0.981 ±0.006 0.985 ±0.005 0.985 ±0.005 0.969 ±0.008 Resample 16kHz 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Resample 8kHz 0.995 ±0.002 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 White Noise (20 dB) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 White Noise (25 dB) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 White Noise (30 dB) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 White Noise (35 dB) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 White Noise (40 dB) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Amp Scale (20%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Amp Scale (40%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Amp Scale (60%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Amp Scale (80%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (8 kbps) 0.861 ±0.020 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (16 kbps) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (24 kbps) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (32 kbps) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (40 kbps) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (48 kbps) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (56 kbps) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MP3 Comp (64 kbps) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Recount 8bps 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Median Filt (5) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Median Filt (15) 0.995 ±0.003 0.992 ±0.002 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Median Filt (25) 0.974 ±0.008 0.950 ±0.011 0.995 ±0.000 0.996 ±0.000 0.989 ±0.003 Median Filt (35) 0.893 ±0.016 0.855 ±0.021 0.982 ±0.005 0.983 ±0.005 0.976 ±0.007 
+
+Time Stretch (-20%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Time Stretch (-10%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Time Stretch (-5%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Time Stretch (5%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Time Stretch (10%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 Time Stretch (20%) 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Filter LowPass 2kHz 0.855 ±0.020 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 HighPass 500Hz 0.998 ±0.000 0.979 ±0.006 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Table S4: Full ratio sweep of the component ablation under traditional signal-level distortions (F1 ±SE at each incremental stage, 200-clip subset). Supplementary version of the component ablation table above, part 1 of 2. Category Attack Baseline +DL +QFormer +Mask +ECC Codec 
+
+FACodec 0.029 ±0.016 0.994 ±0.000 0.934 ±0.013 0.937 ±0.012 0.982 ±0.005 EnCodec 6kbps † 0.077 ±0.026 0.994 ±0.000 0.993 ±0.003 0.926 ±0.014 0.982 ±0.006 TiCodec 1g4r † 0.029 ±0.016 0.895 ±0.016 0.948 ±0.011 0.684 ±0.030 0.838 ±0.021 
+
+Denoiser 
+
+FRCRN+Denoise (0 dB) † 0.067 ±0.024 0.818 ±0.022 0.942 ±0.012 0.943 ±0.012 0.913 ±0.015 FRCRN+Denoise (5 dB) † 0.372 ±0.040 0.981 ±0.006 0.987 ±0.004 0.988 ±0.004 0.989 ±0.003 
+
+FRCRN+Denoise (10 dB) † 0.800 ±0.023 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.992 ±0.003 FRCRN+Denoise (15 dB) † 0.969 ±0.008 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 FRCRN+Denoise (20 dB) † 0.992 ±0.004 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MossFormer+Denoise (0 dB) † 0.104 ±0.027 0.963 ±0.009 0.953 ±0.010 0.954 ±0.010 0.942 ±0.012 
+
+MossFormer+Denoise (5 dB) † 0.325 ±0.039 0.989 ±0.004 0.995 ±0.000 0.996 ±0.000 0.987 ±0.004 MossFormer+Denoise (10 dB) † 0.695 ±0.030 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MossFormer+Denoise (15 dB) † 0.899 ±0.016 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 MossFormer+Denoise (20 dB) † 0.964 ±0.009 0.992 ±0.003 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Vocoder HiFi-GAN † 0.778 ±0.025 0.994 ±0.000 0.993 ±0.002 0.990 ±0.003 0.994 ±0.000 
+
+Vocos † 0.998 ±0.000 0.994 ±0.000 0.995 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Table S5: Full ratio sweep of the component ablation under neural re-synthesis attacks (F1 ±SE at each incremental stage, 200-clip subset). † denotes unseen attacks. Supplementary version of the component ablation table above, part 2 of 2. Category Attack WavMark AudioSeal TimbreWM WMCodec AWARE CRAW (Ours) Sig.-Proc. 
+
+Crop Front (20%) 0.981 ±0.002 0.335 ±0.011 0.992 ±0.000 0.994 ±0.000 0.995 ±0.001 0.995 ±0.000 
+
+Crop Front (40%) 0.973 ±0.002 0.324 ±0.011 0.992 ±0.000 0.986 ±0.001 0.969 ±0.002 0.995 ±0.000 
+
+Crop Front (60%) 0.860 ±0.005 0.282 ±0.011 0.992 ±0.000 0.962 ±0.002 0.864 ±0.005 0.995 ±0.000 
+
+Crop Front (80%) 0.562 ±0.010 0.371 ±0.011 0.992 ±0.000 0.840 ±0.006 0.491 ±0.011 0.994 ±0.000 
+
+Crop Front (90%) 0.194 ±0.010 0.183 ±0.010 0.992 ±0.000 0.593 ±0.009 0.131 ±0.009 0.994 ±0.000 
+
+Crop Front (95%) 0.014 ±0.003 0.101 ±0.008 0.992 ±0.000 0.308 ±0.011 0.022 ±0.004 0.992 ±0.001 
+
+Crop Front (96%) 0.002 ±0.001 0.100 ±0.008 0.991 ±0.000 0.240 ±0.010 0.017 ±0.004 0.991 ±0.001 
+
+Crop Front (97%) 0.000 ±0.000 0.058 ±0.006 0.986 ±0.001 0.160 ±0.009 0.012 ±0.003 0.988 ±0.001 
+
+Crop Front (98%) 0.000 ±0.000 0.054 ±0.006 0.970 ±0.002 0.098 ±0.008 0.014 ±0.003 0.980 ±0.002 
+
+Crop Middle (20%) 0.997 ±0.001 0.995 ±0.000 0.992 ±0.000 0.991 ±0.001 0.994 ±0.001 0.995 ±0.000 Crop Middle (40%) 0.986 ±0.002 0.995 ±0.000 0.992 ±0.000 0.977 ±0.002 0.965 ±0.003 0.995 ±0.000 Crop Middle (60%) 0.907 ±0.004 0.995 ±0.000 0.992 ±0.000 0.921 ±0.004 0.857 ±0.005 0.995 ±0.000 Crop Middle (80%) 0.639 ±0.009 0.995 ±0.000 0.992 ±0.000 0.726 ±0.008 0.477 ±0.010 0.994 ±0.000 Crop Middle (90%) 0.271 ±0.011 0.995 ±0.000 0.992 ±0.000 0.421 ±0.011 0.114 ±0.008 0.994 ±0.000 Crop Middle (95%) 0.023 ±0.004 0.995 ±0.000 0.992 ±0.000 0.163 ±0.009 0.015 ±0.003 0.991 ±0.001 Crop Middle (96%) 0.007 ±0.002 0.995 ±0.000 0.991 ±0.001 0.133 ±0.009 0.012 ±0.003 0.991 ±0.001 Crop Middle (97%) 0.000 ±0.000 0.994 ±0.000 0.989 ±0.001 0.097 ±0.007 0.008 ±0.002 0.986 ±0.001 Crop Middle (98%) 0.000 ±0.000 0.988 ±0.001 0.982 ±0.001 0.096 ±0.008 0.009 ±0.003 0.973 ±0.002 Crop Back (20%) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.994 ±0.000 0.997 ±0.000 0.995 ±0.000 Crop Back (40%) 0.998 ±0.001 0.995 ±0.000 0.992 ±0.000 0.989 ±0.001 0.994 ±0.001 0.995 ±0.000 Crop Back (60%) 0.954 ±0.003 0.995 ±0.000 0.992 ±0.000 0.966 ±0.002 0.967 ±0.002 0.995 ±0.000 Crop Back (80%) 0.713 ±0.008 0.995 ±0.000 0.992 ±0.000 0.839 ±0.006 0.763 ±0.007 0.994 ±0.000 Crop Back (90%) 0.353 ±0.011 0.995 ±0.000 0.992 ±0.000 0.593 ±0.010 0.380 ±0.010 0.991 ±0.001 Crop Back (95%) 0.048 ±0.006 0.995 ±0.000 0.992 ±0.000 0.296 ±0.010 0.073 ±0.007 0.988 ±0.001 Crop Back (96%) 0.015 ±0.003 0.995 ±0.000 0.992 ±0.000 0.212 ±0.010 0.041 ±0.005 0.985 ±0.001 Crop Back (97%) 0.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.131 ±0.009 0.018 ±0.004 0.981 ±0.002 Crop Back (98%) 0.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.072 ±0.007 0.010 ±0.003 0.970 ±0.002 Resample 16kHz 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 Resample 8kHz 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.738 ±0.008 0.997 ±0.000 0.995 ±0.000 White Noise (20 dB) 0.394 ±0.011 0.992 ±0.001 0.991 ±0.001 0.960 ±0.003 0.996 ±0.000 0.995 ±0.000 White Noise (25 dB) 0.833 ±0.006 0.995 ±0.000 0.992 ±0.000 0.990 ±0.001 0.997 ±0.000 0.995 ±0.000 White Noise (30 dB) 0.976 ±0.002 0.995 ±0.000 0.992 ±0.000 0.994 ±0.000 0.997 ±0.000 0.995 ±0.000 White Noise (35 dB) 0.996 ±0.001 0.995 ±0.000 0.992 ±0.000 0.994 ±0.000 0.997 ±0.000 0.995 ±0.000 White Noise (40 dB) 0.999 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 Amp Scale (20%) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 Amp Scale (40%) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 Amp Scale (60%) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 Amp Scale (80%) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 MP3 Comp (8 kbps) 0.000 ±0.000 0.858 ±0.005 0.885 ±0.005 0.039 ±0.005 0.458 ±0.011 0.994 ±0.000 
+
+MP3 Comp (16 kbps) 0.386 ±0.011 0.995 ±0.000 0.992 ±0.000 0.431 ±0.011 0.995 ±0.001 0.995 ±0.000 MP3 Comp (24 kbps) 0.962 ±0.003 0.995 ±0.000 0.992 ±0.000 0.884 ±0.005 0.997 ±0.000 0.995 ±0.000 MP3 Comp (32 kbps) 0.998 ±0.001 0.995 ±0.000 0.992 ±0.000 0.972 ±0.002 0.997 ±0.000 0.995 ±0.000 MP3 Comp (40 kbps) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.989 ±0.001 0.997 ±0.000 0.995 ±0.000 MP3 Comp (48 kbps) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.993 ±0.001 0.997 ±0.000 0.995 ±0.000 MP3 Comp (56 kbps) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.994 ±0.000 0.997 ±0.000 0.995 ±0.000 MP3 Comp (64 kbps) 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 Recount 8bps 0.926 ±0.004 0.995 ±0.000 0.992 ±0.000 0.993 ±0.001 0.997 ±0.000 0.995 ±0.000 Median Filt (5) 0.993 ±0.001 0.995 ±0.000 0.992 ±0.000 0.866 ±0.005 0.997 ±0.000 0.995 ±0.000 Median Filt (15) 0.163 ±0.009 0.995 ±0.000 0.991 ±0.001 0.331 ±0.011 0.230 ±0.010 0.994 ±0.000 Median Filt (25) 0.055 ±0.006 0.361 ±0.011 0.978 ±0.002 0.120 ±0.008 0.047 ±0.006 0.991 ±0.001 
+
+Median Filt (35) 0.014 ±0.003 0.096 ±0.007 0.922 ±0.004 0.127 ±0.008 0.039 ±0.005 0.975 ±0.002 
+
+Time Stretch (-20%) 0.950 ±0.003 0.982 ±0.002 0.992 ±0.000 0.888 ±0.005 0.970 ±0.002 0.995 ±0.000 
+
+Time Stretch (-10%) 0.965 ±0.003 0.982 ±0.002 0.992 ±0.000 0.885 ±0.005 0.975 ±0.002 0.995 ±0.000 
+
+Time Stretch (-5%) 0.975 ±0.002 0.979 ±0.002 0.992 ±0.000 0.882 ±0.005 0.982 ±0.002 0.995 ±0.000 
+
+Time Stretch (5%) 0.993 ±0.001 0.995 ±0.000 0.992 ±0.000 0.905 ±0.004 0.985 ±0.001 0.995 ±0.000 
+
+Time Stretch (10%) 0.973 ±0.002 0.993 ±0.001 0.992 ±0.000 0.867 ±0.005 0.970 ±0.002 0.995 ±0.000 
+
+Time Stretch (20%) 0.907 ±0.004 0.989 ±0.001 0.992 ±0.000 0.843 ±0.006 0.954 ±0.003 0.994 ±0.000 Filter LowPass 2kHz 0.000 ±0.000 0.995 ±0.000 0.835 ±0.006 0.530 ±0.010 0.875 ±0.005 0.995 ±0.000 HighPass 500Hz 1.000 ±0.000 0.995 ±0.000 0.992 ±0.000 0.995 ±0.000 0.997 ±0.000 0.995 ±0.000 
+
+Table S6: Full ratio sweep of the main robustness comparison under traditional signal-level distortions (F1 ±SE across attacks, all models). Supplementary version of the baseline comparison table above, part 1 of 2. Category Attack WavMark AudioSeal TimbreWM WMCodec AWARE CRAW (Ours) Codec 
+
+FACodec 0.000 ±0.000 0.021 ±0.004 0.041 ±0.005 0.019 ±0.004 0.149 ±0.009 0.974 ±0.002 
+
+EnCodec 6kbps † 0.000 ±0.000 0.150 ±0.009 0.072 ±0.007 0.033 ±0.005 0.252 ±0.010 0.987 ±0.001 
+
+TiCodec 1g4r † 0.000 ±0.000 0.023 ±0.004 0.033 ±0.005 0.027 ±0.004 0.075 ±0.007 0.826 ±0.006 Denoiser 
+
+FRCRN+Denoise (0 dB) † 0.000 ±0.000 0.034 ±0.005 0.117 ±0.008 0.073 ±0.007 0.629 ±0.009 0.944 ±0.003 
+
+FRCRN+Denoise (5 dB) † 0.000 ±0.000 0.079 ±0.007 0.437 ±0.011 0.224 ±0.010 0.863 ±0.005 0.991 ±0.001 
+
+FRCRN+Denoise (10 dB) † 0.000 ±0.000 0.342 ±0.011 0.814 ±0.006 0.536 ±0.010 0.967 ±0.002 0.994 ±0.000 
+
+FRCRN+Denoise (15 dB) † 0.000 ±0.000 0.739 ±0.008 0.962 ±0.002 0.833 ±0.006 0.992 ±0.001 0.994 ±0.000 
+
+FRCRN+Denoise (20 dB) † 0.047 ±0.006 0.940 ±0.003 0.990 ±0.001 0.956 ±0.003 0.996 ±0.000 0.995 ±0.000 MossFormer+Denoise (0 dB) † 0.000 ±0.000 0.029 ±0.004 0.107 ±0.008 0.111 ±0.008 0.614 ±0.009 0.956 ±0.003 
+
+MossFormer+Denoise (5 dB) † 0.000 ±0.000 0.073 ±0.007 0.368 ±0.011 0.281 ±0.011 0.860 ±0.005 0.991 ±0.001 
+
+MossFormer+Denoise (10 dB) † 0.000 ±0.000 0.296 ±0.011 0.717 ±0.008 0.554 ±0.010 0.965 ±0.002 0.994 ±0.000 
+
+MossFormer+Denoise (15 dB) † 0.001 ±0.001 0.670 ±0.009 0.910 ±0.004 0.813 ±0.006 0.991 ±0.001 0.994 ±0.000 
+
+MossFormer+Denoise (20 dB) † 0.036 ±0.005 0.910 ±0.004 0.975 ±0.002 0.950 ±0.003 0.996 ±0.000 0.995 ±0.000 
+
+Vocoder HiFi-GAN † 0.000 ±0.000 0.014 ±0.003 0.809 ±0.006 0.302 ±0.010 0.713 ±0.008 0.995 ±0.000 
+
+Vocos † 0.000 ±0.000 0.029 ±0.005 0.992 ±0.000 0.994 ±0.000 0.996 ±0.000 0.994 ±0.000 
+
+Table S7: Full ratio sweep of the main robustness comparison under neural re-synthesis attacks (F1 ±SE across attacks, all models). † denotes unseen attacks. Supplementary version of the baseline comparison table above, part 2 of 2. Category Attack No ECC Rep3 RS(4,2) RS(6,2) LDPC Sig.-Proc. 
+
+Crop Front (20%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Front (40%) 0.993 ±0.002 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (60%) 0.993 ±0.002 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (80%) 0.980 ±0.006 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (90%) 0.959 ±0.010 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.993 ±0.003 
+
+Crop Front (95%) 0.965 ±0.009 0.994 ±0.000 0.990 ±0.003 0.992 ±0.002 0.972 ±0.007 Crop Front (96%) 0.962 ±0.009 0.994 ±0.000 0.992 ±0.003 0.994 ±0.000 0.982 ±0.006 Crop Front (97%) 0.983 ±0.006 0.994 ±0.000 0.992 ±0.003 0.992 ±0.003 0.980 ±0.006 Crop Front (98%) 0.985 ±0.005 0.984 ±0.005 0.959 ±0.010 0.979 ±0.006 0.942 ±0.012 Crop Middle (20%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Middle (40%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Middle (60%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Middle (80%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Middle (90%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Middle (95%) 0.996 ±0.000 0.992 ±0.003 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Middle (96%) 0.996 ±0.000 0.994 ±0.000 0.992 ±0.003 0.992 ±0.003 0.993 ±0.003 Crop Middle (97%) 0.996 ±0.000 0.987 ±0.004 0.992 ±0.003 0.992 ±0.003 0.972 ±0.008 Crop Middle (98%) 0.993 ±0.002 0.974 ±0.007 0.974 ±0.007 0.966 ±0.008 0.928 ±0.014 Crop Back (20%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Back (40%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Back (60%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Back (80%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Crop Back (90%) 0.993 ±0.003 0.992 ±0.003 0.992 ±0.003 0.992 ±0.003 0.995 ±0.000 
+
+Crop Back (95%) 0.993 ±0.003 0.992 ±0.003 0.992 ±0.003 0.992 ±0.003 0.995 ±0.000 
+
+Crop Back (96%) 0.990 ±0.003 0.984 ±0.005 0.992 ±0.003 0.989 ±0.003 0.990 ±0.004 
+
+Crop Back (97%) 0.988 ±0.004 0.974 ±0.007 0.987 ±0.004 0.986 ±0.004 0.977 ±0.007 Crop Back (98%) 0.985 ±0.005 0.969 ±0.008 0.982 ±0.005 0.979 ±0.006 0.937 ±0.013 Resample 16kHz 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Resample 8kHz 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 White Noise (20 dB) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 White Noise (25 dB) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 White Noise (30 dB) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 White Noise (35 dB) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 White Noise (40 dB) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Amp Scale (20%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Amp Scale (40%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Amp Scale (60%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Amp Scale (80%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MP3 Comp (8 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.992 ±0.002 0.995 ±0.000 MP3 Comp (16 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MP3 Comp (24 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MP3 Comp (32 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MP3 Comp (40 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MP3 Comp (48 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MP3 Comp (56 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MP3 Comp (64 kbps) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Recount 8bps 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Median Filt (5) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Median Filt (15) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.992 ±0.003 0.995 ±0.000 Median Filt (25) 0.996 ±0.000 0.989 ±0.003 0.980 ±0.006 0.958 ±0.010 0.969 ±0.008 Median Filt (35) 0.983 ±0.005 0.976 ±0.007 0.928 ±0.014 0.925 ±0.014 0.920 ±0.015 Time Stretch (-20%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Time Stretch (-10%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Time Stretch (-5%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Time Stretch (5%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Time Stretch (10%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 Time Stretch (20%) 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 
+
+Filter LowPass 2kHz 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.993 ±0.002 HighPass 500Hz 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 
+
+Table S8: Full ratio sweep of ECC variant robustness under traditional signal-level distortions (F1 ±SE, 200-clip subset), referenced in the Error-Correcting Code paragraph of Ablation Studies above, part 1 of 2. Category Attack No ECC Rep3 RS(4,2) RS(6,2) LDPC Codec 
+
+FACodec 0.937 ±0.012 0.982 ±0.005 0.969 ±0.008 0.835 ±0.020 0.945 ±0.012 EnCodec 6kbps † 0.926 ±0.014 0.982 ±0.006 0.902 ±0.016 0.486 ±0.038 0.839 ±0.021 TiCodec 1g4r † 0.684 ±0.030 0.838 ±0.021 0.611 ±0.033 0.288 ±0.038 0.428 ±0.039 
+
+Denoiser 
+
+FRCRN+Denoise (0 dB) † 0.943 ±0.012 0.913 ±0.015 0.977 ±0.007 0.976 ±0.007 0.931 ±0.014 FRCRN+Denoise (5 dB) † 0.988 ±0.004 0.989 ±0.003 0.992 ±0.003 0.992 ±0.003 0.985 ±0.005 
+
+FRCRN+Denoise (10 dB) † 0.996 ±0.000 0.992 ±0.003 0.995 ±0.000 0.994 ±0.000 0.993 ±0.002 FRCRN+Denoise (15 dB) † 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 FRCRN+Denoise (20 dB) † 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MossFormer+Denoise (0 dB) † 0.954 ±0.010 0.942 ±0.012 0.985 ±0.005 0.981 ±0.006 0.951 ±0.011 MossFormer+Denoise (5 dB) † 0.996 ±0.000 0.987 ±0.004 0.992 ±0.002 0.994 ±0.000 0.993 ±0.002 MossFormer+Denoise (10 dB) † 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MossFormer+Denoise (15 dB) † 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 MossFormer+Denoise (20 dB) † 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 
+
+Vocoder HiFi-GAN † 0.990 ±0.003 0.994 ±0.000 0.990 ±0.004 0.855 ±0.020 0.977 ±0.007 Vocos † 0.996 ±0.000 0.994 ±0.000 0.995 ±0.000 0.994 ±0.000 0.995 ±0.000 
+
+Table S9: Full ratio sweep of ECC variant robustness under neural re-synthesis attacks (F1 ±SE, 200-clip subset). † denotes unseen attacks. Referenced in the Error-Correcting Code paragraph of Ablation Studies above, part 2 of 2. Category Attack CRAW Zero-shot (LJSpeech) Sig.-Proc. 
+
+Crop Front (20%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (40%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (60%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (80%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (90%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (95%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (96%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (97%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Front (98%) 0.984 ±0.005 0.984 ±0.005 
+
+Crop Middle (20%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Middle (40%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Middle (60%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Middle (80%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Middle (90%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Middle (95%) 0.992 ±0.003 0.950 ±0.010 Crop Middle (96%) 0.994 ±0.000 0.928 ±0.013 Crop Middle (97%) 0.987 ±0.004 0.871 ±0.019 Crop Middle (98%) 0.974 ±0.007 0.671 ±0.031 Crop Back (20%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Back (40%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Back (60%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Back (80%) 0.994 ±0.000 0.995 ±0.000 
+
+Crop Back (90%) 0.992 ±0.003 0.992 ±0.002 
+
+Crop Back (95%) 0.992 ±0.003 0.992 ±0.003 
+
+Crop Back (96%) 0.984 ±0.005 0.984 ±0.005 
+
+Crop Back (97%) 0.974 ±0.007 0.958 ±0.010 
+
+Crop Back (98%) 0.969 ±0.008 0.890 ±0.017 Resample 16kHz 0.994 ±0.000 0.995 ±0.000 
+
+Resample 8kHz 0.994 ±0.000 0.995 ±0.000 
+
+White Noise (20 dB) 0.994 ±0.000 0.995 ±0.000 
+
+White Noise (25 dB) 0.994 ±0.000 0.995 ±0.000 
+
+White Noise (30 dB) 0.994 ±0.000 0.995 ±0.000 
+
+White Noise (35 dB) 0.994 ±0.000 0.995 ±0.000 
+
+White Noise (40 dB) 0.994 ±0.000 0.995 ±0.000 
+
+Amp Scale (20%) 0.994 ±0.000 0.995 ±0.000 
+
+Amp Scale (40%) 0.994 ±0.000 0.995 ±0.000 
+
+Amp Scale (60%) 0.994 ±0.000 0.995 ±0.000 
+
+Amp Scale (80%) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (8 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (16 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (24 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (32 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (40 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (48 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (56 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+MP3 Comp (64 kbps) 0.994 ±0.000 0.995 ±0.000 
+
+Recount 8bps 0.994 ±0.000 0.995 ±0.000 
+
+Median Filt (5) 0.994 ±0.000 0.995 ±0.000 
+
+Median Filt (15) 0.994 ±0.000 0.995 ±0.000 
+
+Median Filt (25) 0.989 ±0.003 0.995 ±0.000 
+
+Median Filt (35) 0.976 ±0.007 0.990 ±0.004 
+
+Time Stretch (-20%) 0.994 ±0.000 0.995 ±0.000 
+
+Time Stretch (-10%) 0.994 ±0.000 0.995 ±0.000 
+
+Time Stretch (-5%) 0.994 ±0.000 0.995 ±0.000 
+
+Time Stretch (5%) 0.994 ±0.000 0.995 ±0.000 
+
+Time Stretch (10%) 0.994 ±0.000 0.995 ±0.000 
+
+Time Stretch (20%) 0.994 ±0.000 0.995 ±0.000 Filter LowPass 2kHz 0.994 ±0.000 0.995 ±0.000 
+
+HighPass 500Hz 0.994 ±0.000 0.995 ±0.000 
+
+Table S10: Full ratio sweep of zero-shot generalization to LJSpeech under traditional signal-level distortions (F1 ±SE, 200-clip subset per domain), referenced in the Cross-Domain Generalization subsection above, part 1 of 2. Category Attack CRAW Zero-shot (LJSpeech) Codec 
+
+FACodec 0.982 ±0.005 0.992 ±0.002 
+
+EnCodec 6kbps 0.982 ±0.006 0.995 ±0.000 
+
+TiCodec 1g4r 0.838 ±0.021 0.794 ±0.025 Denoiser 
+
+FRCRN+Denoise (0 dB) 0.913 ±0.015 0.966 ±0.008 
+
+FRCRN+Denoise (5 dB) 0.989 ±0.003 0.995 ±0.000 
+
+FRCRN+Denoise (10 dB) 0.992 ±0.003 0.995 ±0.000 
+
+FRCRN+Denoise (15 dB) 0.994 ±0.000 0.995 ±0.000 
+
+FRCRN+Denoise (20 dB) 0.994 ±0.000 0.995 ±0.000 
+
+MossFormer+Denoise (0 dB) 0.942 ±0.012 0.974 ±0.007 
+
+MossFormer+Denoise (5 dB) 0.987 ±0.004 0.995 ±0.000 
+
+MossFormer+Denoise (10 dB) 0.994 ±0.000 0.995 ±0.000 
+
+MossFormer+Denoise (15 dB) 0.994 ±0.000 0.995 ±0.000 
+
+MossFormer+Denoise (20 dB) 0.994 ±0.000 0.995 ±0.000 Vocoder HiFi-GAN 0.994 ±0.000 0.995 ±0.000 
+
+Vocos 0.994 ±0.000 0.995 ±0.000 
+
+Table S11: Full ratio sweep of zero-shot generalization to LJSpeech under neural re-synthesis attacks (F1 ±SE, 200-clip subset per domain), referenced in the Cross-Domain Generalization subsection above, part 2 of 2.

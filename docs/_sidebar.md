@@ -1,6 +1,11 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-04 <!--dpr-date:20260904-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/04/2609.03107v1-craw-codec-robust-audio-watermarking" data-sidebar-item="{&quot;title&quot;: &quot;CRAW: Codec Robust Audio Watermarking&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.03107v1-craw-codec-robust-audio-watermarking&quot;, &quot;score&quot;: &quot;9.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;提出抗神经编解码和去噪扰动的音频水印框架，直接对应鲁棒水印算法需求&quot;}">CRAW: Codec Robust Audio Watermarking</a>
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/04/2609.03844v1-flip-dont-shuffle-watermarking-llms-at-the-speed-of-inference" data-sidebar-item="{&quot;title&quot;: &quot;Flip, Don&#x27;t Shuffle: Watermarking LLMs at the Speed of Inference&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.03844v1-flip-dont-shuffle-watermarking-llms-at-the-speed-of-inference&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;面向大模型生成文本的统计水印方法，匹配水印检索需求&quot;}">Flip, Don&#x27;t Shuffle: Watermarking LLMs at the Speed of Inference</a>
   * 2026-09-03 <!--dpr-date:20260903-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/03/2609.02177v1-weavemark-robust-and-scalable-multi-bit-llm-watermarking-via-coded-payload-spreading" data-sidebar-item="{&quot;title&quot;: &quot;WeaveMark: Robust and Scalable Multi-bit LLM Watermarking via Coded Payload Spreading&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.02177v1-weavemark-robust-and-scalable-multi-bit-llm-watermarking-via-coded-payload-spreading&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;基于编码载荷扩频的鲁棒多比特大语言模型文本水印方法&quot;}">WeaveMark: Robust and Scalable Multi-bit LLM Watermarking via Coded Payload Spreading</a>

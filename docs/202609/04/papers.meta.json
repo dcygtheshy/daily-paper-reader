@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-04",
+  "date": "2026-09-04",
+  "generated_at": "2026-09-04T22:17:29",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/04/2609.03107v1-craw-codec-robust-audio-watermarking",
+      "section": "deep",
+      "title_en": "CRAW: Codec Robust Audio Watermarking",
+      "authors": "David Chernin, Ethan Fetaya",
+      "date": "2026-09-02",
+      "pdf": "https://arxiv.org/pdf/2609.03107v1",
+      "score": "9.0",
+      "evidence": "提出抗神经编解码和去噪扰动的音频水印框架，直接对应鲁棒水印算法需求",
+      "tldr": "生成语音模型令真实与合成音频难以分辨，欺诈与虚假信息风险加剧；现有事后水印在神经编解码器等常规处理下容易失效，限制实际应用。为此提出CRAW鲁棒水印框架，通过失真感知训练、注意力池化、推理时感知掩蔽与纠错码的协同设计，在提升对神经再合成鲁棒性的同时保障高感知质量。实验表明，CRAW在神经编解码器、降噪器和声码器条件下均实现最先进鲁棒性，感知质量与现有事后水印方法相当，为音频溯源与防伪提供了可落地的解决方案。",
+      "tags": "query:watermarking",
+      "abstract_en": "Recent advances in generative speech models have made it increasingly difficult to distinguish authentic from synthetic audio, enabling new forms of fraud and misinformation. Audio watermarking offers a promising defense by embedding an imperceptible signal into generated speech that can later be detected to verify its provenance. However, recent studies have shown that existing post-hoc watermarking methods fail under neural codecs and denoisers, transformations routinely applied during real-world storage, transmission, and processing, severely limiting their practical utility. Here we introduce CRAW, a codec-robust audio watermarking framework that jointly improves robustness against neural re-synthesis while maintaining high perceptual quality. CRAW combines distortion-aware training with an attention-based pooling mechanism, inference-time perceptual mask- ing, and an error-correcting code to recover the fidelity lost during robust training. Experiments demonstrate that CRAW achieves state-of-the-art robustness against neural codecs, denoisers, and vocoders while maintaining perceptual quality comparable to existing post-hoc watermarking methods. The code is available at https://github.com/DavidC1212/craw.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/04/2609.03844v1-flip-dont-shuffle-watermarking-llms-at-the-speed-of-inference",
+      "section": "quick",
+      "title_en": "Flip, Don't Shuffle: Watermarking LLMs at the Speed of Inference",
+      "authors": "Simone Ceppi, Ignacio Sanchez",
+      "date": "2026-09-03",
+      "pdf": "https://arxiv.org/pdf/2609.03844v1",
+      "score": "7.0",
+      "evidence": "面向大模型生成文本的统计水印方法，匹配水印检索需求",
+      "tldr": "LLM水印现有方案依赖词表置换或多层锦标赛，推理开销显著。本文提出无状态伯努利水印SBW，用每token独立伯努利试验替代置换，实现O(1)成员判定与零分配单核执行。相比全词表自盐设定，SBW比KGW快6000倍、比SynthID快2倍，且生成开销低于1%。检测统计性质不变，并兼容分布式推理，开辟了高速水印设计的新方向。",
+      "tags": "query:watermarking",
+      "abstract_en": "We introduce Stateless Bernoulli Watermarking (SBW), a new statistical watermark for Large Language Models that determines green list membership through independent per-token Bernoulli trials. Unlike KGW's vocabulary permutation or SynthID's multi-layer tournament, SBW requires only a single comparison per token against a counter-based random number generator, reducing membership complexity to $O(1)$ and enabling single-kernel execution with zero intermediate allocations. We prove that this formulation preserves the same detection guarantees as fixed-size green lists: the z-score test remains $\\mathcal{N}(0,1)$ under the null. The stateless architecture enables capabilities unavailable to existing methods: full-vocabulary self-salt watermarking (over 6000$\\times$ faster than KGW's self-salt and 2$\\times$ faster than SynthID despite biasing the entire vocabulary with candidate-dependent seeding) and architectural compatibility with distributed inference. In end-to-end generation benchmarks, SBW adds less than 1\\% overhead at all batch sizes. We additionally identify hash function design as a previously unexplored axis for watermark quality, showing that a GPU-native Jenkins hash improves null calibration by 1.8$\\times$ while producing more diverse text. Experiments across two seeding schemes and eight $(γ, δ)$ configurations confirm statistical equivalence with ROC-AUC differences below 0.01.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
