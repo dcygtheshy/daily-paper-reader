@@ -6,26 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-04
-- 运行时间：2026-09-04 22:17:25 UTC
+- 最新运行日期：2026-09-05
+- 运行时间：2026-09-05 21:54:47 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：0
+- 精读区：0
+- 速读区：0
 
 ### 今日简报（AI）
-今日精读2篇论文，聚焦音视频与LLM水印技术，最高分为《CRAW: Codec Robust Audio Watermarking》（9.0/10）。最值得关注的方向是抗编解码失真的音频水印，以及兼顾推理速度的LLM水印方案。若想快速了解水印前沿，优先精读音视频鲁棒性方向，再按需浏览模型水印提速思路。
-- 详情：[/202609/04/README](/202609/04/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202609/05/README](/202609/05/README)
 
 ### 精读区论文标签
-1. [CRAW: Codec Robust Audio Watermarking](/202609/04/2609.03107v1-craw-codec-robust-audio-watermarking)  
-   标签：评分：9.0/10、query:watermarking
-   evidence：提出抗神经编解码和去噪扰动的音频水印框架，直接对应鲁棒水印算法需求
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Flip, Don't Shuffle: Watermarking LLMs at the Speed of Inference](/202609/04/2609.03844v1-flip-dont-shuffle-watermarking-llms-at-the-speed-of-inference)  
-   标签：评分：7.0/10、query:watermarking
-   evidence：面向大模型生成文本的统计水印方法，匹配水印检索需求
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
