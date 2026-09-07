@@ -1,0 +1,135 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-07T23:10:00.491144+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.04709v1",
+      "source": "arxiv",
+      "title": "AngelFingerprint: A Traceable, Explainable, and White-Box Stealthy Watermark for Text-Guided Image Editing",
+      "abstract": "Text-guided diffusion editing raises disinformation concerns, making reliable image provenance essential. While watermarks are commonly used for this purpose, most methods carry a fixed ID that cannot explain what was changed and which prompt produced it. Furthermore, under open-source white-box access, attackers can easily locate and remove watermarks added as separate modules. Targeting this setting, we propose AngelFingerprint, a novel watermarking framework ensuring edit traceability, explainability, and white-box stealthiness. It integrates a LoRA into the diffusion model to embed the editing prompt's CLIP text embedding directly into the model's weights. An extractor then recovers this embedding from the image pixels alone. This semantic payload explains the edit, while the weight-integrated design makes it hard to detect and isolate even under full white-box access. Two techniques make this possible: a velocity-alignment anchor that preserves edit quality, and a specially designed frequency filter that keeps the watermark imperceptible yet recoverable and robust. On the MagicBrush dataset, our extractor achieves $86\\%$ top-1 accuracy in a 200-way prompt retrieval, versus $20\\%$ for prompt inversion.",
+      "authors": [
+        "Bo-Han Kung",
+        "Futa Waseda",
+        "Ching-Chun Chang",
+        "Isao Echizen",
+        "Shang-Tse Chen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-04T04:29:23+00:00",
+      "link": "https://arxiv.org/pdf/2609.04709v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Directly proposes a watermarking technique for text-guided diffusion image editing; embeds prompt CLIP embeddings into diffusion weights via LoRA and recovers them from images",
+      "llm_evidence_cn": "直接面向文本引导扩散编辑提出水印框架，将提示嵌入注入扩散模型权重并恢复，实现可追溯、可解释和白盒隐匿水印",
+      "llm_evidence": "直接面向文本引导扩散编辑提出水印框架，将提示嵌入注入扩散模型权重并恢复，实现可追溯、可解释和白盒隐匿水印",
+      "canonical_evidence": "直接面向文本引导扩散编辑提出水印框架，将提示嵌入注入扩散模型权重并恢复，实现可追溯、可解释和白盒隐匿水印",
+      "llm_tldr_en": "AngelFingerprint embeds text prompts' CLIP embeddings into diffusion model weights via LoRA and recovers them from edited images, providing traceable, explainable, and white-box stealthy watermarking for text-guided image editing.",
+      "llm_tldr_cn": "文本引导扩散编辑带来虚假信息风险，现有水印常携带固定ID，无法解释被修改的内容与生成提示，且在白盒开源条件下独立水印模块易被定位移除。本文提出AngelFingerprint，通过将LoRA集成进扩散模型，把编辑提示对应的CLIP文本嵌入直接写入模型权重，再以提取器从生成图像中恢复该嵌入。该方法可同时实现编辑可追溯、可解释和白盒隐匿水印能力，为基于扩散模型的图像内容溯源与指纹识别提供了新的可直接应用方案。",
+      "llm_tldr": "文本引导扩散编辑带来虚假信息风险，现有水印常携带固定ID，无法解释被修改的内容与生成提示，且在白盒开源条件下独立水印模块易被定位移除。本文提出AngelFingerprint，通过将LoRA集成进扩散模型，把编辑提示对应的CLIP文本嵌入直接写入模型权重，再以提取器从生成图像中恢复该嵌入。该方法可同时实现编辑可追溯、可解释和白盒隐匿水印能力，为基于扩散模型的图像内容溯源与指纹识别提供了新的可直接应用方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking techniques for diffusion models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.02553v1",
+      "source": "arxiv",
+      "title": "The Shape of Ownership: Verifying LLM Provenance through Semantic Structures",
+      "abstract": "As large language models (LLMs) are increasingly redistributed, adapted, and served behind opaque APIs, model ownership can no longer be established reliably by inspecting model internals or deployment records. This creates a need for behavioral signatures that remain observable through black-box interaction. Yet most existing black-box fingerprints instantiate ownership signals through fixed query-key associations, reducing model identity to sparse memorized associations detached from ordinary behavior and limiting both robustness and stealth (e.g., fine-tuning or quantization) and stealthiness. A stronger fingerprint should instead be distributed, naturally elicited, and expressed at a higher semantic level. To this end, we introduce PROSE (Provenance through Relational Organization of Semantic Expression), replacing fixed query sets with a target semantical domain and brittle response keys with semantic structures internalized as domain-conditioned response behavior. Specifically, the fingerprint is encoded in how the model semantically organizes its in-domain conclusions, rather than in particular tokens or prescribed outputs. PROSE constructs a private bank of domain-specific semantic templates, internalizes them through mixed fine-tuning on structurally verified and clean responses, and verifies ownership by detecting the designated structures in responses to held-out natural queries. Extensive experiments across multiple model architectures, scales, and target domains show that PROSE achieves a 100% fingerprint detection rate on unmodified models with no observed false positives, preserves model utility, and retains strong detectability under downstream modifications and output transformations.",
+      "authors": [
+        "Zhongrui Sun",
+        "Jiahao Chen",
+        "Oubo Ma",
+        "Yuwen Pu",
+        "Zhou Feng",
+        "Haibo Hu",
+        "Shouling Ji"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-02T13:04:51+00:00",
+      "link": "https://arxiv.org/pdf/2609.02553v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "LLM provenance verification using semantic-structure fingerprints",
+      "llm_evidence_cn": "利用语义结构验证大模型来源的指纹方法",
+      "llm_evidence": "利用语义结构验证大模型来源的指纹方法",
+      "canonical_evidence": "利用语义结构验证大模型来源的指纹方法",
+      "llm_tldr_en": "Proposes PROSE, a black-box fingerprinting method that distributes LLM ownership signals across semantic structures rather than fixed query-response pairs, improving robustness and stealth against fine-tuning and quantization.",
+      "llm_tldr_cn": "针对大型语言模型在分发给第三方并被黑盒API部署后难以通过内部参数验证所有权、现有黑盒指纹依赖固定问答关联而脆弱且不隐蔽的问题，论文提出PROSE语义结构指纹方案。PROSE不再使用稀疏记忆触发器，而是把模型身份信号分布到模型自然呈现的高层语义结构中，通过普通交互即可提取。实验表明该方法在微调、量化等模型改动后仍保持高精度的来源识别和良好隐蔽性。这项工作为生成式模型（尤其是LLM）的版权保护与来源追踪提供了新的技术基础。",
+      "llm_tldr": "针对大型语言模型在分发给第三方并被黑盒API部署后难以通过内部参数验证所有权、现有黑盒指纹依赖固定问答关联而脆弱且不隐蔽的问题，论文提出PROSE语义结构指纹方案。PROSE不再使用稀疏记忆触发器，而是把模型身份信号分布到模型自然呈现的高层语义结构中，通过普通交互即可提取。实验表明该方法在微调、量化等模型改动后仍保持高精度的来源识别和良好隐蔽性。这项工作为生成式模型（尤其是LLM）的版权保护与来源追踪提供了新的技术基础。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.03749v1",
+      "source": "arxiv",
+      "title": "Rent-a-RAG: Embedding-Space Watermarks for Auditing Third-Party RAG",
+      "abstract": "Third-party retrieval-augmented generation (RAG) marketplaces create a new auditing problem: data providers may license corpora to a RAG operator, yet later have no visibility into whether their documents are being reused without compensation. Auditing this misuse is difficult because the operator is non-cooperative, answers are paraphrased by the generator, and one response may combine evidence from many providers. We propose DirBucket, a provider-side semantic watermarking and black-box auditing framework for document-level reuse in multi-provider RAG. DirBucket watermarks documents by meaning-preserving paraphrases whose embeddings are biased toward provider-bucket secret directions, enabling detection from black-box answers while preserving retrieval utility. On a challenging benchmark that reflects mixed-provider reuse under black-box access, DirBucket is the only method that consistently achieves strong target detection with no non-target activation, detecting non-compliance in every audit within 23 audited answers on our primary benchmark. The watermark survives adversarial post-answer laundering, and none of the evaluated evasion strategies simultaneously defeats detection while preserving user-perceived answer quality. Detection transfers unchanged to a second benchmark built from real clinical, cyber-threat-intelligence, and legal provider corpora. These results suggest that embedding-space watermarking can make document reuse in third-party RAG statistically auditable.",
+      "authors": [
+        "Alexandr Goultiaev Tolstokorov",
+        "Kyriakos Mouratidis",
+        "Javad Dogani",
+        "Nikolaos Laoutaris"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL"
+      ],
+      "published": "2026-09-03T12:20:00+00:00",
+      "link": "https://arxiv.org/pdf/2609.03749v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "embedding-space watermarking and black-box auditing for document reuse in third-party RAG",
+      "llm_evidence_cn": "面向第三方RAG文档复用的嵌入空间水印与黑盒审计方法",
+      "llm_evidence": "面向第三方RAG文档复用的嵌入空间水印与黑盒审计方法",
+      "canonical_evidence": "面向第三方RAG文档复用的嵌入空间水印与黑盒审计方法",
+      "llm_tldr_en": "Proposes DirBucket, embedding-space watermarks for third-party RAG audits, enabling document-level reuse detection from black-box paraphrased answers despite non-cooperative operators.",
+      "llm_tldr_cn": "第三方RAG市场中数据提供方很难确认自己的文档是否被运营商复用。DirBucket采用保持语义的同义改写，将文档嵌入向量偏向特定的提供方桶秘密方向，从而能从黑盒回答中判断文档是否被使用。即使在生成器改写回答且多个提供方证据混在一起时仍能有效审计，并且不破坏检索质量。该方法为生成式模型的数据溯源提供了一种可用的水印化审计范式。",
+      "llm_tldr": "第三方RAG市场中数据提供方很难确认自己的文档是否被运营商复用。DirBucket采用保持语义的同义改写，将文档嵌入向量偏向特定的提供方桶秘密方向，从而能从黑盒回答中判断文档是否被使用。即使在生成器改写回答且多个提供方证据混在一起时仍能有效审计，并且不破坏检索质量。该方法为生成式模型的数据溯源提供了一种可用的水印化审计范式。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
