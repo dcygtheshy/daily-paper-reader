@@ -6,19 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-08
-- 运行时间：2026-09-08 21:50:23 UTC
+- 最新运行日期：2026-09-09
+- 运行时间：2026-09-09 22:10:42 UTC
 - 运行状态：成功
-- 本次总论文数：0
-- 精读区：0
+- 本次总论文数：3
+- 精读区：3
 - 速读区：0
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-- 详情：[/202609/08/README](/202609/08/README)
+1) 今日精读两篇高星论文，聚焦数字水印攻防前沿。  
+2) 值得关注：统计力学框架下的水印恢复稳定性，以及DRIFT方法通过偏转生成轨迹破解扩散水印。  
+3) 建议普通读者先理解水印鲁棒与安全的博弈，再跟进对抗样本的实用影响。
+- 详情：[/202609/09/README](/202609/09/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Statistical mechanical evaluation of a spread-spectrum watermarking model with image restoration II AT stability of a hybrid system with message decoding and image](/202609/09/2609.06405v1-statistical-mechanical-evaluation-of-a-spread-spectrum-watermarking-model-with-image-restoration-ii-at-stability-of-a-hybrid-system-with-message-decoding-and-image)  
+   标签：评分：9.0/10、query:watermarking
+   evidence：面向攻击信道与图像恢复的鲁棒扩频水印稳定性分析
+2. [DRIFT: Removing Diffusion Watermarks by Deflecting the Generative Trajectory](/202609/09/2609.08213v1-drift-removing-diffusion-watermarks-by-deflecting-the-generative-trajectory)  
+   标签：评分：9.0/10、query:watermarking
+   evidence：针对扩散模型水印的攻击方法，利用部分前向加噪和随机反向重采样偏转生成轨迹以移除轨迹依赖的水印证据
+3. [A Robust Watermark-based Fingerprint Framework for GNNs Ownership Verification](/202609/09/2609.04772v1-a-robust-watermark-based-fingerprint-framework-for-gnns-ownership-verification)  
+   标签：评分：8.0/10、query:watermarking
+   evidence：面向GNN所有权验证的鲁棒水印指纹框架
 
 ### 速读区论文标签
 - 本次无速读推荐。

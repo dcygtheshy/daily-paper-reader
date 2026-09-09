@@ -1,0 +1,132 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-09T22:07:17.709265+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 3,
+    "deep_cap": 6,
+    "deep_selected": 3,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.06405v1",
+      "source": "arxiv",
+      "title": "Statistical mechanical evaluation of a spread-spectrum watermarking model with image restoration II AT stability of a hybrid system with message decoding and image",
+      "abstract": "In the previous paper (arxiv.org/abs/1209.4772), we proposed a spread-spectrum watermarking model with image restoration based on Bayes estimation assuming several prior probabilities and adopting the Gaussian channel model to represent attacks from unauthorized users. When an image is generated from the infinite range Ising model, we analyzed the model using the statistical mechanical method, the replica method, and derived the replica symmetric (RS) solution and performed Markov chain Monte Carlo simulations. The theoretical results of the RS solution and the simulation results were in good agreement except for some range of parameters. We treated the informed case where only the original image is known and the blind case where both the original message and the original image are unknown and found that the difference between these cases was small as long as the embedding and attack rates were small. In this paper, we treat the blind case and investigate the de Almeida-Thouless (AT) stability of the RS solution and reveal that the AT stability is broken in the range of parameters where theoretical and simulation results do not agree.",
+      "authors": [
+        "Tatsuya Uezu",
+        "Kao Hayashi",
+        "Masaki Kawamura"
+      ],
+      "primary_category": "cond-mat.stat-mech",
+      "categories": [
+        "cond-mat.stat-mech"
+      ],
+      "published": "2026-09-06T05:48:37+00:00",
+      "link": "https://arxiv.org/pdf/2609.06405v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "robust spread-spectrum watermarking model with image restoration and attack stability analysis",
+      "llm_evidence_cn": "面向攻击信道与图像恢复的鲁棒扩频水印稳定性分析",
+      "llm_evidence": "面向攻击信道与图像恢复的鲁棒扩频水印稳定性分析",
+      "canonical_evidence": "面向攻击信道与图像恢复的鲁棒扩频水印稳定性分析",
+      "llm_tldr_en": "Analyzes a spread-spectrum watermarking model with image restoration under a Gaussian attack channel using statistical mechanics and replica methods; RS predictions match Monte Carlo simulations, guiding robust watermark-decoding design.",
+      "llm_tldr_cn": "该文针对攻击信道下带图像恢复的扩频水印混合系统，采用统计力学与复制方法推导水印解码与图像恢复联合系统的副本对称解，并给出系统稳定条件。蒙特卡洛模拟在大部分参数区间与理论结果吻合，验证了理论分析的正确性。研究为鲁棒扩频水印结合图像恢复的实际设计提供统计力学层面的评估框架，对水印鲁棒性分析和参数选择具有指导意义。",
+      "llm_tldr": "该文针对攻击信道下带图像恢复的扩频水印混合系统，采用统计力学与复制方法推导水印解码与图像恢复联合系统的副本对称解，并给出系统稳定条件。蒙特卡洛模拟在大部分参数区间与理论结果吻合，验证了理论分析的正确性。研究为鲁棒扩频水印结合图像恢复的实际设计提供统计力学层面的评估框架，对水印鲁棒性分析和参数选择具有指导意义。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.08213v1",
+      "source": "arxiv",
+      "title": "DRIFT: Removing Diffusion Watermarks by Deflecting the Generative Trajectory",
+      "abstract": "Diffusion watermarking embeds verifiable signals into the generative process and commonly verifies them by recovering trajectory-dependent evidence, making the marks robust to conventional pixel-space distortions. Existing removal attacks either regenerate along deterministic trajectories, which often preserve the watermark-bearing latent structure, or optimize every image separately. We identify the reliance on a recoverable generative trajectory as a common attack surface among the schemes we study. Based on this observation, we propose DRIFT, a black-box attack that combines partial forward diffusion with stochastic reverse resampling. Forward re-noising limits source information available to a fixed-depth recovery pipeline, while stochastic reversal supplies alternative noise-driven paths whose removal benefit we isolate through matched sampler comparisons. Adaptive DRIFT searches a selected ladder for each image's first verifier-rejected rung and refines fidelity while retaining only updates rejected by the same verifier. At fixed depth, we derive information-theoretic and Wasserstein source-dependence bounds; under realized-ladder monotonicity, the first rejected rung is least distorted among rejected rungs on that ladder, and verifier-gated refinement preserves rejection. Across nine watermarks spanning three paradigms, DRIFT achieves 98-100% attack success and the best image quality among the compared attacks, without secret keys, verifier internals, or per-image gradient optimization.",
+      "authors": [
+        "Rui Bao",
+        "Zheng Gao",
+        "Xiaoyu Li",
+        "Xiaoyan Feng",
+        "Yang Song",
+        "Jiaojiao Jiang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-09-08T03:54:17+00:00",
+      "link": "https://arxiv.org/pdf/2609.08213v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Direct attack paper against diffusion watermarking: removes watermark evidence by deflecting generative trajectory through partial re-noising and stochastic reverse resampling",
+      "llm_evidence_cn": "针对扩散模型水印的攻击方法，利用部分前向加噪和随机反向重采样偏转生成轨迹以移除轨迹依赖的水印证据",
+      "llm_evidence": "针对扩散模型水印的攻击方法，利用部分前向加噪和随机反向重采样偏转生成轨迹以移除轨迹依赖的水印证据",
+      "canonical_evidence": "针对扩散模型水印的攻击方法，利用部分前向加噪和随机反向重采样偏转生成轨迹以移除轨迹依赖的水印证据",
+      "llm_tldr_en": "DRIFT removes diffusion watermarks by partial forward re-noising plus stochastic reverse resampling, deflecting the generative trajectory away from fixed-depth recovery and breaking trajectory-dependent detection.",
+      "llm_tldr_cn": "扩散水印往往把可恢复的生成轨迹作为验证依据，因此对像素域扰动鲁棒，但已有移除攻击在确定性轨迹下难以奏效。作者提出DRIFT这一黑盒攻击，将部分前向扩散加噪与随机反向重采样结合，使固定深度复原流水线只能获得残缺源信息。该方法以较低逐图优化代价削弱水印证据，揭示了生成轨迹可恢复性是扩散水印的公共攻击面，为设计抗轨迹偏转的稳健水印提供了重要参考。",
+      "llm_tldr": "扩散水印往往把可恢复的生成轨迹作为验证依据，因此对像素域扰动鲁棒，但已有移除攻击在确定性轨迹下难以奏效。作者提出DRIFT这一黑盒攻击，将部分前向扩散加噪与随机反向重采样结合，使固定深度复原流水线只能获得残缺源信息。该方法以较低逐图优化代价削弱水印证据，揭示了生成轨迹可恢复性是扩散水印的公共攻击面，为设计抗轨迹偏转的稳健水印提供了重要参考。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.04772v1",
+      "source": "arxiv",
+      "title": "A Robust Watermark-based Fingerprint Framework for GNNs Ownership Verification",
+      "abstract": "The high training cost of Graph Neural Networks (GNNs) has raised growing concerns regarding model ownership infringement, such as model stealing and unauthorized misuse. To verify model ownership and prevent significant economic losses, two groups of GNN Ownership Verification (OV) methods have been proposed: watermark-based methods and fingerprint-based methods. However, these methods typically face three limitations: (1) the performance degradation of protected models caused by out-of-distribution (OOD) watermark graphs with respect to the training set; (2) the unrealistic assumption that surrogate models have been trained on a watermark-containing training set; and (3) over-reliance on specific output levels for fingerprint extraction. In this paper, we propose a Robust watErMArk-based fingeRprint frameworK for GNNs, named REMARK. REMARK first generates carefully crafted in-distribution watermark graphs that maximize output differences between GNN models, thus mitigating OOD-induced performance degradation. REMARK then extracts robust fingerprints from these output differences to verify GNN ownership, thereby removing the assumptions that surrogate models must be trained on a watermark-containing dataset or expose specific output levels. Extensive experiments across widely used real-world datasets and GNN architectures demonstrate that REMARK achieves state-of-the-art OV accuracy and robustness while preserving the utility of protected models.",
+      "authors": [
+        "Han Zhang",
+        "Yan Wang",
+        "Guanfeng Liu",
+        "Pengfei Ding",
+        "Huaxiong Wang",
+        "Kwok-Yan Lam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-04T06:06:54+00:00",
+      "link": "https://arxiv.org/pdf/2609.04772v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Robust watermark-based fingerprint framework for GNN ownership verification",
+      "llm_evidence_cn": "面向GNN所有权验证的鲁棒水印指纹框架",
+      "llm_evidence": "面向GNN所有权验证的鲁棒水印指纹框架",
+      "canonical_evidence": "面向GNN所有权验证的鲁棒水印指纹框架",
+      "llm_tldr_en": "GNN model stealing is costly, but existing watermark and fingerprint ownership verification suffers from OOD watermark graphs, unrealistic surrogate assumptions, and output-level constraints. The proposed robust watermark-based fingerprint framework addresses all three limitations while keeping model utility, offering a practical path for GNN ownership verification.",
+      "llm_tldr_cn": "GNN训练成本高，模型窃取和未经授权滥用亟需所有权验证，但现有水印与指纹方法存在三大问题：OOD水印图导致模型性能下降、假设替代模型在水印训练集上训练不现实、提取过程过度依赖特定输出层。该文提出一种鲁棒的水印指纹联合验证框架，通过更贴合训练分布的水印嵌入与更通用的指纹提取来缓解上述局限。该框架在保护模型可用性的同时增强了GNN所有权验证的可靠性，对图神经网络知识产权保护具有实际价值。",
+      "llm_tldr": "GNN训练成本高，模型窃取和未经授权滥用亟需所有权验证，但现有水印与指纹方法存在三大问题：OOD水印图导致模型性能下降、假设替代模型在水印训练集上训练不现实、提取过程过度依赖特定输出层。该文提出一种鲁棒的水印指纹联合验证框架，通过更贴合训练分布的水印嵌入与更通用的指纹提取来缓解上述局限。该框架在保护模型可用性的同时增强了GNN所有权验证的可靠性，对图神经网络知识产权保护具有实际价值。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

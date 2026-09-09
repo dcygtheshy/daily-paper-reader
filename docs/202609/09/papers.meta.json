@@ -1,0 +1,54 @@
+{
+  "label": "2026-09-09",
+  "date": "2026-09-09",
+  "generated_at": "2026-09-09T22:10:46",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202609/09/2609.06405v1-statistical-mechanical-evaluation-of-a-spread-spectrum-watermarking-model-with-image-restoration-ii-at-stability-of-a-hybrid-system-with-message-decoding-and-image",
+      "section": "deep",
+      "title_en": "Statistical mechanical evaluation of a spread-spectrum watermarking model with image restoration II AT stability of a hybrid system with message decoding and image",
+      "authors": "Tatsuya Uezu, Kao Hayashi, Masaki Kawamura",
+      "date": "2026-09-06",
+      "pdf": "https://arxiv.org/pdf/2609.06405v1",
+      "score": "9.0",
+      "evidence": "面向攻击信道与图像恢复的鲁棒扩频水印稳定性分析",
+      "tldr": "该文针对基于图像恢复的扩频水印模型，在盲检测条件下研究其统计力学性质。上篇论文使用复制方法推导了复制对称解，并通过蒙特卡洛模拟验证。本文重点分析该解的AT稳定性，发现在模拟与理论不一致的参数区间内，AT稳定性被破坏。这一发现解释了理论偏差的成因。",
+      "tags": "query:watermarking",
+      "abstract_en": "In the previous paper (arxiv.org/abs/1209.4772), we proposed a spread-spectrum watermarking model with image restoration based on Bayes estimation assuming several prior probabilities and adopting the Gaussian channel model to represent attacks from unauthorized users. When an image is generated from the infinite range Ising model, we analyzed the model using the statistical mechanical method, the replica method, and derived the replica symmetric (RS) solution and performed Markov chain Monte Carlo simulations. The theoretical results of the RS solution and the simulation results were in good agreement except for some range of parameters. We treated the informed case where only the original image is known and the blind case where both the original message and the original image are unknown and found that the difference between these cases was small as long as the embedding and attack rates were small. In this paper, we treat the blind case and investigate the de Almeida-Thouless (AT) stability of the RS solution and reveal that the AT stability is broken in the range of parameters where theoretical and simulation results do not agree.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/09/2609.08213v1-drift-removing-diffusion-watermarks-by-deflecting-the-generative-trajectory",
+      "section": "deep",
+      "title_en": "DRIFT: Removing Diffusion Watermarks by Deflecting the Generative Trajectory",
+      "authors": "Rui Bao, Zheng Gao, Xiaoyu Li, Xiaoyan Feng, Yang Song, Jiaojiao Jiang",
+      "date": "2026-09-08",
+      "pdf": "https://arxiv.org/pdf/2609.08213v1",
+      "score": "9.0",
+      "evidence": "针对扩散模型水印的攻击方法，利用部分前向加噪和随机反向重采样偏转生成轨迹以移除轨迹依赖的水印证据",
+      "tldr": "扩散水印依赖可恢复的生成轨迹来验证信号，现有攻击多沿确定性轨迹再生或逐图优化，难以通用。DRIFT提出黑盒攻击，结合部分前向噪声与随机反向重采样，打断轨迹恢复路径并寻找首个验证器拒绝的阶梯，辅以验证器门控的保真优化。在九种水印、三类范式上实现98-100%去除成功率，且图像质量优于对比攻击，无需密钥或内部细节。",
+      "tags": "query:watermarking",
+      "abstract_en": "Diffusion watermarking embeds verifiable signals into the generative process and commonly verifies them by recovering trajectory-dependent evidence, making the marks robust to conventional pixel-space distortions. Existing removal attacks either regenerate along deterministic trajectories, which often preserve the watermark-bearing latent structure, or optimize every image separately. We identify the reliance on a recoverable generative trajectory as a common attack surface among the schemes we study. Based on this observation, we propose DRIFT, a black-box attack that combines partial forward diffusion with stochastic reverse resampling. Forward re-noising limits source information available to a fixed-depth recovery pipeline, while stochastic reversal supplies alternative noise-driven paths whose removal benefit we isolate through matched sampler comparisons. Adaptive DRIFT searches a selected ladder for each image's first verifier-rejected rung and refines fidelity while retaining only updates rejected by the same verifier. At fixed depth, we derive information-theoretic and Wasserstein source-dependence bounds; under realized-ladder monotonicity, the first rejected rung is least distorted among rejected rungs on that ladder, and verifier-gated refinement preserves rejection. Across nine watermarks spanning three paradigms, DRIFT achieves 98-100% attack success and the best image quality among the compared attacks, without secret keys, verifier internals, or per-image gradient optimization.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/09/2609.04772v1-a-robust-watermark-based-fingerprint-framework-for-gnns-ownership-verification",
+      "section": "deep",
+      "title_en": "A Robust Watermark-based Fingerprint Framework for GNNs Ownership Verification",
+      "authors": "Han Zhang, Yan Wang, Guanfeng Liu, Pengfei Ding, Huaxiong Wang, Kwok-Yan Lam",
+      "date": "2026-09-04",
+      "pdf": "https://arxiv.org/pdf/2609.04772v1",
+      "score": "8.0",
+      "evidence": "面向GNN所有权验证的鲁棒水印指纹框架",
+      "tldr": "现有GNN所有权验证存在水印图分布外导致模型性能下降、假设替代模型用过含水印训练集、依赖特定输出层等问题。提出REMARK框架，首先生成与训练集同分布的水印图并最大化模型间输出差异，避免OOD损害；然后根据输出差异提取鲁棒指纹进行归属验证，不依赖上述假设。在真实数据集和多种GNN架构上，该方法达到最优验证准确率与鲁棒性，同时保持模型效用。",
+      "tags": "query:watermarking",
+      "abstract_en": "The high training cost of Graph Neural Networks (GNNs) has raised growing concerns regarding model ownership infringement, such as model stealing and unauthorized misuse. To verify model ownership and prevent significant economic losses, two groups of GNN Ownership Verification (OV) methods have been proposed: watermark-based methods and fingerprint-based methods. However, these methods typically face three limitations: (1) the performance degradation of protected models caused by out-of-distribution (OOD) watermark graphs with respect to the training set; (2) the unrealistic assumption that surrogate models have been trained on a watermark-containing training set; and (3) over-reliance on specific output levels for fingerprint extraction. In this paper, we propose a Robust watErMArk-based fingeRprint frameworK for GNNs, named REMARK. REMARK first generates carefully crafted in-distribution watermark graphs that maximize output differences between GNN models, thus mitigating OOD-induced performance degradation. REMARK then extracts robust fingerprints from these output differences to verify GNN ownership, thereby removing the assumptions that surrogate models must be trained on a watermark-containing dataset or expose specific output levels. Extensive experiments across widely used real-world datasets and GNN architectures demonstrate that REMARK achieves state-of-the-art OV accuracy and robustness while preserving the utility of protected models.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
