@@ -1,0 +1,99 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-10T21:30:50.315039+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.10416v1",
+      "source": "arxiv",
+      "title": "TrajMark: Ownership Attribution and Segment-Level Tamper Localization for Coding-Agent Trajectories",
+      "abstract": "Watermarking the final patch produced by a coding agent provides provenance evidence for the submitted artifact, but does not authenticate the visible process that produced it. Behavioral watermarking methods primarily provide a global detection or identifier-recovery signal, so a locally edited trajectory may retain sufficient ownership evidence without revealing which protected region has become inconsistent. To address this limitation, we propose TrajMark, a training-free, symmetric-key, visible-only trajectory watermarking framework that separates robust ownership attribution from fragile local integrity verification. Our framework consists of two complementary layers: a sparse owner layer that encodes a six-bit deployment identifier by rewriting a keyed subset of naturally occurring READ actions into masked linear equations, and a localization layer that inserts linked Q12 ordinary, group, and terminal seals to commit to protected critical-action segments. This separation allows ownership evidence to accumulate robustly across trajectories, while local modifications perturb nearby keyed commitments and expose the affected protocol region. We further provide a design-level analysis of owner recoverability, integrity collision probability, structural overhead, and localization behavior. Across three coding-agent frameworks and three LLMs, TrajMark recovers the exact owner in all evaluated clean full-watermark batches. Under exhaustive eligible single-site attacks it detects 95.5%-100% of edits, and under random single-action corruption it localizes 95.8% of modified sites to an accepted protocol region rather than to the individual action. Owner marking adds no trajectory actions; the integrity layer adds explicit read-only seals, and matched Pass@1 is 26.9% versus 26.3% for unwatermarked runs.",
+      "authors": [
+        "Bokang Zeng",
+        "Zheng Gao",
+        "Xiaoyu Li",
+        "Xiaoyan Feng",
+        "Jiaojiao Jiang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.SE"
+      ],
+      "published": "2026-09-09T16:33:02+00:00",
+      "link": "https://arxiv.org/pdf/2609.10416v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "trajectory watermarking with symmetric-key ownership attribution and tamper localization",
+      "llm_evidence_cn": "轨迹水印、对称密钥归属与篡改定位",
+      "llm_evidence": "轨迹水印、对称密钥归属与篡改定位",
+      "canonical_evidence": "轨迹水印、对称密钥归属与篡改定位",
+      "llm_tldr_en": "TrajMark is a training-free, symmetric-key, visible-only trajectory watermarking framework that separates robust ownership attribution from fragile segment-level tamper localization for coding-agent trajectories.",
+      "llm_tldr_cn": "针对现有编码智能体水印只能对最终补丁提供来源证据、无法认证生成过程的问题，本文提出 TrajMark 轨迹水印框架。该方法免训练、采用对称密钥且仅依赖可见信息，将鲁棒的所有权归属与脆弱的局部完整性校验分为两层，稀疏所有者层可编码六位部署标识。实验表明其能在保持归属检测的同时定位被篡改的轨迹片段。该工作把行为水印从全局标识扩展到片段级完整性验证，为智能体过程溯源提供新思路。",
+      "llm_tldr": "针对现有编码智能体水印只能对最终补丁提供来源证据、无法认证生成过程的问题，本文提出 TrajMark 轨迹水印框架。该方法免训练、采用对称密钥且仅依赖可见信息，将鲁棒的所有权归属与脆弱的局部完整性校验分为两层，稀疏所有者层可编码六位部署标识。实验表明其能在保持归属检测的同时定位被篡改的轨迹片段。该工作把行为水印从全局标识扩展到片段级完整性验证，为智能体过程溯源提供新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.06708v1",
+      "source": "arxiv",
+      "title": "A Trustworthy Watermarking Framework for LLM-Generated Food Safety Content",
+      "abstract": "Large language models are transforming many industries with their text generation abilities. However, their outputs can be easily tampered with, creating serious risks in critical areas such as food safety reporting. To protect the integrity and traceability of AI-generated content, this paper introduces ToSS (Token Oriented Repartitioning and Strategic Selection), a reliable authentication method using adaptive dual watermarking. The key innovation of ToSS is its dual watermark encoding approach that divides vocabulary tokens into black and white sublists, enabling precise bit-level embedding of traceability information. Additionally, an entropy adaptive mechanism dynamically selects text regions with high prediction uncertainty for watermark insertion, maintaining text fluency and factual accuracy while ensuring reliable traceability. Experiments on multiple datasets, including food domain texts, demonstrate that ToSS achieves leading performance in both watermark capacity and decoding accuracy.",
+      "authors": [
+        "Zhongli Fang",
+        "Yiran Chen",
+        "Lingyun Zhang",
+        "Yu Liu",
+        "Ping Chen",
+        "Xiaoyan Sun",
+        "Jun Dai"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-09-06T16:27:57+00:00",
+      "link": "https://arxiv.org/pdf/2609.06708v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "adaptive dual watermarking for AI-generated content authentication and traceability",
+      "llm_evidence_cn": "面向AI生成内容的双水印认证与溯源",
+      "llm_evidence": "面向AI生成内容的双水印认证与溯源",
+      "canonical_evidence": "面向AI生成内容的双水印认证与溯源",
+      "llm_tldr_en": "LLM outputs can be tampered with, harming trust in critical domains. This paper proposes ToSS, an adaptive dual watermarking scheme that splits vocabulary into black and white sublists for bit-level traceability and uses entropy to pick high-uncertainty regions. It improves watermark reliability and integrity for AI-generated text.",
+      "llm_tldr_cn": "大语言模型生成的文本容易被篡改，在食品安全等关键领域带来严重的可信与溯源风险。为此本文提出ToSS框架，采用自适应双水印编码，将词表划分为黑白子表以实现比特级溯源信息嵌入，并利用熵自适应机制选取预测不确定性高的文本区域进行水印注入。该工作提升了AI生成内容的完整性与可追溯性，为生成模型水印的可信认证提供了新思路。",
+      "llm_tldr": "大语言模型生成的文本容易被篡改，在食品安全等关键领域带来严重的可信与溯源风险。为此本文提出ToSS框架，采用自适应双水印编码，将词表划分为黑白子表以实现比特级溯源信息嵌入，并利用熵自适应机制选取预测不确定性高的文本区域进行水印注入。该工作提升了AI生成内容的完整性与可追溯性，为生成模型水印的可信认证提供了新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
