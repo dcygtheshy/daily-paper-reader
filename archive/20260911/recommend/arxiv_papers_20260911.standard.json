@@ -1,0 +1,89 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-11T21:28:56.040756+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.06330v1",
+      "source": "arxiv",
+      "title": "Beyond QA Matching: Perturbation-Response Fingerprinting via Probability Distributions for Large Language Models",
+      "abstract": "Large language models are often instruction-tuned, specialized, quantized, or otherwise transformed, making fine-grained provenance difficult. In this paper, we introduce BReF, a training-free fingerprint that compares how probability distributions over four answer-option labels A/B/C/D move under controlled textual perturbations. For each pair of models, BReF selects 25 jointly responsive probes and compares their perturbation log-ratio (PLR) response directions by global cosine similarity. On a unified benchmark with 34 checkpoints, 22 documented direct-parent relations, and 411 suspect-candidate pairs, BReF retrieves the documented parent in 22/22 cases (MRR=1.0000), with DP-DF AUC 1.0000. Same-family discrimination is harder (DP-SF AUC 0.8969), and paired tests show a significant exact-retrieval gain over a magnitude-only Top-25 control. Together with static, random-probe, permutation, calibration, and transformation-level controls, the results show that strong pooled separation does not guarantee correct parent ranking among closely related checkpoints, verifying the superiority of our work.",
+      "authors": [
+        "Jichao Zeng",
+        "Yanli Chen",
+        "Hanzhou Wu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-06T01:35:07+00:00",
+      "link": "https://arxiv.org/pdf/2609.06330v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "training-free perturbation-response fingerprinting for LLM provenance",
+      "llm_evidence_cn": "面向大模型溯源的扰动响应指纹技术",
+      "llm_evidence": "面向大模型溯源的扰动响应指纹技术",
+      "canonical_evidence": "面向大模型溯源的扰动响应指纹技术",
+      "llm_tldr_en": "BReF is a training-free fingerprint that tracks how answer-option probability distributions shift under controlled textual perturbations, retrieving documented model parents with perfect MRR on a 34-checkpoint benchmark.",
+      "llm_tldr_cn": "该文针对大模型经指令微调、量化或改造后难以进行细粒度来源溯源的问题，提出免训练的指纹方法BReF。它通过受控文本扰动观察四个选项标签概率分布的变化方向，选取25个联合响应探针并以全局余弦相似度比较扰动对数比响应方向。在包含34个检查点、22组已知父子关系的基准上，BReF以MRR=1.0000全部找回真实父模型，DP-DF AUC达1.0000，为生成模型来源鉴定提供了可迁移的指纹思路。",
+      "llm_tldr": "该文针对大模型经指令微调、量化或改造后难以进行细粒度来源溯源的问题，提出免训练的指纹方法BReF。它通过受控文本扰动观察四个选项标签概率分布的变化方向，选取25个联合响应探针并以全局余弦相似度比较扰动对数比响应方向。在包含34个检查点、22组已知父子关系的基准上，BReF以MRR=1.0000全部找回真实父模型，DP-DF AUC达1.0000，为生成模型来源鉴定提供了可迁移的指纹思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.11188v1",
+      "source": "arxiv",
+      "title": "A Multi-View and Confusion-Guided Ensemble Framework for Robust Synthetic Image Attribution",
+      "abstract": "Synthetic image attribution (SIA) has become increasingly important with the rapid advancement of text-to-image generation models. However, accurately identifying the source model of a generated image remains challenging due to the growing similarity among modern diffusion-based generators and the presence of diverse post-processing operations. In this report, we present a multi-view and confusion-guided ensemble framework for the Synthetic Image Attribution Challenge of the DLMMDD Workshop at ICANN 2026. Our approach integrates multiple complementary architectures, including FFT-ConvNeXt, DINOv2, CLIP, and Xception, to capture diverse attribution cues from frequency, semantic, and forensic perspectives. To improve robustness against unknown degradations and image manipulations, extensive data augmentation strategies are employed during training, simulating realistic post-processing operations such as compression, resizing, grayscale conversion, and blur. Furthermore, we analyze the confusion patterns of the ensemble model and observe severe ambiguity between Stable Diffusion 3 and Stable Diffusion 3.5. To address this issue, we introduce a dedicated binary expert classifier that is selectively activated under low-confidence conditions. We additionally apply class-adaptive confidence calibration to improve the discrimination of challenging classes such as Tencent Hunyuan. The proposed framework achieved 99.53% on the public leaderboard and 99.20% on the private leaderboard. The source code and implementation details are publicly available at https://github.com/ZOMIN28/SIA.",
+      "authors": [
+        "Zuomin Qu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-10T07:54:25+00:00",
+      "link": "https://arxiv.org/pdf/2609.11188v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "synthetic image attribution to source generative model",
+      "llm_evidence_cn": "合成图像溯源到源生成模型",
+      "llm_evidence": "合成图像溯源到源生成模型",
+      "canonical_evidence": "合成图像溯源到源生成模型",
+      "llm_tldr_en": "Presents a multi-view, confusion-guided ensemble (FFT-ConvNeXt, DINOv2, CLIP, Xception) for robustly attributing generated images to their source text-to-image models under post-processing.",
+      "llm_tldr_cn": "该文针对文本到图像生成模型日益相似、图像经多种后处理后难以准确识别来源模型的问题，提出面向合成图像溯源的多视角集成框架。方法融合FFT-ConvNeXt、DINOv2、CLIP与Xception等互补架构，从频率、语义与取证视角提取溯源线索，并以混淆引导策略增强鲁棒性。结果在ICANN 2026合成图像溯源挑战中提升了对扩散生成器的识别鲁棒性，与生成模型指纹识别方向密切相关。",
+      "llm_tldr": "该文针对文本到图像生成模型日益相似、图像经多种后处理后难以准确识别来源模型的问题，提出面向合成图像溯源的多视角集成框架。方法融合FFT-ConvNeXt、DINOv2、CLIP与Xception等互补架构，从频率、语义与取证视角提取溯源线索，并以混淆引导策略增强鲁棒性。结果在ICANN 2026合成图像溯源挑战中提升了对扩散生成器的识别鲁棒性，与生成模型指纹识别方向密切相关。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
