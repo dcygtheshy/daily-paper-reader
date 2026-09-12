@@ -1,0 +1,678 @@
+Title: CARTS: Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding
+
+URL Source: https://arxiv.org/pdf/2609.10744v1
+
+Published Time: Fri, 11 Sep 2026 00:09:54 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# CARTS: Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding 
+
+# Wissam Ghantous 
+
+University of Central Florida Orlando, Florida, USA wissam.ghantous@ucf.edu 
+
+# Alexander V. Mantzaris 
+
+University of Central Florida Orlando, Florida, USA alexander.mantzaris@ucf.edu 
+
+## Abstract 
+
+Autoregressive language models can be used to transform a payload text into a stegotext of identical token length by preserving per-position rank information across contexts — a methodology we for-malize as Contextual Autoregressive Rank Transcoding Steganogra-phy (CARTS). While the Calgacus construction [20] demonstrated this phenomenon experimentally, no formal security analysis ex-isted. This paper provides the first rigorous treatment of CARTS. We show its exact correctness under deterministic model assump-tions, introduce a rank-coordinate representation in which keys act as bijections on rank-vector space, define relevant security notions and the computational problems naturally associated with the con-struction — context search, key collisions, message equivocation, and non-commutativity of the encoding maps — and study the the-oretical relationships between them, including the characterization of message equivocation in terms of context search, and the tension between key collisions and message equivocation. An empirical study on Llama 3 8B confirms exact recovery of the original payload in all tested cases, finds no key collisions under random key gener-ation, establishes that a hand-crafted collision is local rather than global, and finds no commuting key pairs — suggesting resistance to the attack vectors studied. This work opens a formally grounded research agenda for the constructive use of language models in cryptography and privacy-preserving communication. 
+
+## Keywords 
+
+Steganography, Linguistic steganography, Information hiding, Large language models, Security analysis 
+
+## 1 Introduction 
+
+Recent years have seen growing interaction between artificial in-telligence and cybersecurity, with researchers studying both how cryptographic techniques can be used to analyze or attack machine-learning systems, and conversely how AI systems can be used to attack or weaken existing cryptographic constructions. For exam-ple, prior work has investigated cryptographic approaches to model extraction and parameter recovery attacks [5, 7], while other di-rections study the use of machine learning for cryptanalysis or automated attacks on security systems [13, 25, 27]. In contrast, the present work considers a different direction: the use of autoregres-sive language models themselves as the foundation for security primitives. Steganography aims to embed a secret payload into an innocuous-looking cover object so that a third party cannot reliably determine whether hidden communication is taking place [4, 16]. It therefore complements cryptography: encryption protects message content, while steganography targets the observability of communication itself, which matters for censorship resistance, and deniable com-munication. Recent advances in neural language modeling have enabled prac-tical linguistic steganography, where natural language is the cover channel. Early neural approaches used language models to generate covertext while encoding bits through constrained sampling or cod-ing schemes [23, 29]. From a provable security perspective, security oriented work has investigated how to achieve indistinguishabil-ity relative to realistic text distributions by combining universal steganography ideas with modern generative models [17]. In paral-lel, black-box settings (where only an interface or API is available) motivate alternative constructions and threat models [26]. In a conventional linguistic steganography setting, the sender begins with an existing cover text and modifies it using a shared key to produce a stegotext carrying the hidden payload. A receiver possessing the same key can then recover the secret message. The Calgacus construction of [20] proposes a new way, exploiting the use of LLMs, to achieve steganography, producing a new text of the same length as the payload. Instead of editing a fixed cover text, Calgacus uses a secret prompt as the key to steer the topic and style of the generated output. The payload text is first converted into LLM token ranks, then the LLM is run under the key and forced to emit tokens whose ranks match that sequence. Decoding repeats the same process backwards, obtaining the original message. This allows the user to achieve full-capacity, length-preserving text-to-text transcoding , where a meaningful message can be hidden inside another coherent text of exactly the same token length. This new construction opens up a whole area of research on the constructive use of LLMs in privacy-preserving communication, with the goal of building new primitives, and has not yet garnered too much attention. Only limited prior work has studied the sen-sitivity of the Calgacus construction to variations in the secret context, showing that small perturbations of the key can induce substantially different generated outputs [18]. As a consequence, many theoretical and practical questions remain unanswered. In particular, this construction has only been demonstrated to work experimentally, via examples, without a formal security analysis. The initial paper [20] does not provide any concrete security defini-tions, nor does it identify the computational problems underlying the security properties for their construction. The goal of this paper is to fill this gap, and provide an initial concrete empirical study of the assumptions underlying the security of this new construction. 
+
+Terminology. We propose the formal term Contextual Autoregres-sive Rank Transcoding Steganography (CARTS) to describe this methodology. Informally, CARTS takes (i) a payload sentence, (ii) a private key realized as a secret context/prompt, and (iii) a fixed autoregressive language model, and outputs a new sentence of the arXiv:2609.10744v1 [cs.CR] 9 Sep 2026 Ghantous et al. 
+
+same token length. Decoding with the same key deterministically maps the generated stegotext back to the original payload. The sur-face text can appear benign (or policy-compliant when used over public communications channels) while the payload is recoverable only by parties holding the key and the model specification. 
+
+Contributions. In this paper, we (i) formalize CARTS as a keyed rank-transcoding steganographic primitive and present the Calga-cus construction of [20] within this framework; (ii) introduce a set of computational problems and associated assumptions naturally motivated by the underlying LLM; (iii) formally define some desir-able security notions for CARTS as a steganographic protocol; (iv) characterize the security properties of CARTS and the correspond-ing attacker tasks in terms of these computational problems (e.g., context search and key collisions) and (v) provide an initial theo-retical and experimental study of these computational problems to assess their difficulty. 
+
+Roadmap. In Section 2, we explain the subtle conceptual difference between CARTS and the prior types of steganography. In Section 3, we formally introduce the general CARTS steganography frame-work and view Calgacus as a natural instantiation, using LLMs. In Section 4, we begin by discussing scope and adversarial models, then introduce various desirable security properties that a stegano-graphic scheme could have, and the corresponding computational problems, naturally motivated by the underlying LLM used. At a second stage, we study these problems theoretically, from various angles. In particular, we discuss matters of equivocation, key colli-sions, as well as the issue of commuting keys and its implications on security. Lastly, in Section 5, we initiate an empirical study into the relevant computational problems that arose in the body of the paper. In the conclusion, we provide some concrete problems to be studied next, to further solidify our theoretical and practical understanding of LLMs, as a basis for steganography. 
+
+## 2 Conceptual Framework 
+
+Formally, in steganography, the sender begins with an innocent-looking cover object 𝑐 (for example, an ordinary piece of text) and embeds a secret payload 𝑚 into that cover. The output, called a 
+
+stegotext 𝑠 , should look like a normal cover while allowing an in-tended receiver to recover 𝑚 . Many formulations include a shared secret key 𝑘 that controls the embedding and extraction procedures [2, 4, 16, 24]. At a high level, the interface is: 
+
+𝑠 ← Embed (𝑐, 𝑚 ; 𝑘 ),
+
+ˆ𝑚 ← Extract (𝑠 ; 𝑘 ).
+
+Intuitively, Embed makes small, hard-to-notice changes to the cover 
+
+𝑐 so that the payload 𝑚 is hidden in 𝑠 , and Extract reverses the process (given 𝑘 ) to recover ˆ 𝑚 .In classical linguistic steganography, the cover object is sim-ply text. Traditional techniques often modify the existing text via substitutions or syntactic changes [21], while neural methods in-stead generate text under constraints that encode a secret [29]. Arithmetic-coding style constructions can improve capacity and imperceptibility by using the language model distribution directly during generation [23]. All these methods, however, share the same methodology: they hide a message (either fully, or in parts) inside another text. On the other hand, the approach suggested in [20] is completely different. It allows one to deterministically transform a message into a new meaningful one, with a completely unrelated meaning. This can be viewed as the purest form of steganography. There is no need for a cover object anymore, as the initial message, under the secret key, is entirely transformed into a new unrelated text, becoming the covertext, so to speak. More concretely, CARTS dif-fers from typical bit-encoding approaches in that the payload is itself a natural-language token sequence rather than a low-rate bitstream, enabling one output token per payload token, thus of-fering full capacity encoding. Given a fixed model, CARTS records the payload’s per-position rank trace under an empty context and regenerates a stegotext that realizes the same ranks under a secret keyed context, yielding a length-preserving and deterministically invertible encoding. A detailed description of this scheme is given in Section 3. 
+
+## 3 CARTS protocol 3.1 The standard protocol 
+
+Fix an autoregressive language model M, and let 𝑉 raw be its fi-nite tokenizer vocabulary. We fix two token sets, 𝑉 ⊆ 𝑉 raw and 
+
+𝐶 ⊆ 𝑉 raw , where 𝑉 is the admissible output vocabulary over which next-token rankings and deterministic generation are performed, and 𝐶 is the context vocabulary used for prompts and previously generated tokens. We assume 𝑉 ⊆ 𝐶 , so that generated tokens can be appended to a context. We also assume that special tokens or any tokens that are masked by the implementation are either removed from 𝑉 or included with a fixed deterministic masking convention. All rankings below are rankings over this same admissible output vocabulary 𝑉 .Let 𝑁 := |𝑉 |. We write 𝑉 𝑛 for the set of admissible generated token sequences of length 𝑛 , and 𝐶 ∗ for the set of finite token contexts. For compactness, write 
+
+[𝑁 ] := {1, . . . , 𝑁 }, X𝑛 := [𝑁 ]𝑛 .
+
+Here, length is always measured in tokens under the fixed tokenizer associated with the model. The protocol described further below runs for exactly 𝑛 genera-tion steps. If an end-of-sequence token is retained in 𝑉 , it is treated as an ordinary token for the purposes of ranking and generation, and it does not cause early termination. 
+
+Definition 1 (General CARTS protocol) . Fix a key space K ⊆ 
+
+𝐶 ∗. A length-preserving CARTS protocol on 𝑉 𝑛 is a keyed pair of algorithms 
+
+𝐸 𝑘 , 𝐷 𝑘 : 𝑉 𝑛 −→ 𝑉 𝑛 , 𝑘 ∈ K ,
+
+such that 
+
+𝐷 𝑘 (𝐸 𝑘 (𝑥 )) = 𝑥 
+
+for every payload token sequence 𝑥 ∈ 𝑉 𝑛 and every key 𝑘 ∈ K .We say that 𝐸 𝑘 encodes a payload text into a stegotext, and that 
+
+𝐷 𝑘 decodes the stegotext back into the payload. In CARTS, the key 
+
+𝑘 is realized as a secret context or prompt. We now describe the Calgacus [20] instantiation of CARTS. For our fixed model M, and a context 𝑐 ∈ 𝐶 ∗, we write 𝑝 M (· | 𝑐 )
+
+for the restricted and renormalized next-token distribution on 𝑉 .CARTS : Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding 
+
+This induces a fixed, deterministic ordering on 𝑉 , by decreasing probability under 𝑝 M (· | 𝑐 ), which we denote by 
+
+𝜋 𝑐 : [𝑁 ] −→ 𝑉 . 
+
+We assume this ordering to have no ties, as they can be broken deterministically. Thus, 𝜋 𝑐 ( 𝑗 ) is the token of rank 𝑗 , given the context 𝑐 .For a token 𝑎 ∈ 𝑉 and a context 𝑐 ∈ 𝐶 ∗, we define rank M (𝑎 | 𝑐 ) = 𝑗 ⇐⇒ 𝜋 𝑐 ( 𝑗 ) = 𝑎. 
+
+As M is fixed, we often will omit the subscript. For a sequence 𝑥 = (𝑥 1, . . . , 𝑥 𝑛 ) ∈ 𝑉 𝑛 and context 𝑐 ∈ 𝐶 ∗, define the autoregressive rank trace 
+
+𝑅 𝑐 (𝑥 ) = (rank (𝑥 𝑖 | 𝑐, 𝑥 1, . . . , 𝑥 𝑖 −1)) 𝑛 𝑖 =1 ∈ X 𝑛 .
+
+This is the vector of ranks obtained by reading 𝑥 from left to right while updating the context with the previously read tokens. Con-versely, for a rank vector 𝑟 = (𝑟 1, . . . , 𝑟 𝑛 ) ∈ X 𝑛 and context 𝑐 ∈ 𝐶 ∗,define the autoregressive rank generator 
+
+𝐺 𝑐 (𝑟 ) = 𝑦 = (𝑦 1, . . . , 𝑦 𝑛 ) ∈ 𝑉 𝑛 
+
+recursively by 
+
+𝑦 𝑖 = 𝜋 (𝑐,𝑦 1,...,𝑦 𝑖 −1 ) (𝑟 𝑖 ), 𝑖 = 1, . . . , 𝑛. 
+
+Thus, 𝐺 𝑐 generates one token at a time, always selecting the token whose current rank is prescribed by 𝑟 𝑖 .
+
+Lemma 1 (Rank-trace inversion) . For every context 𝑐 ∈ 𝐶 ∗, every token sequence 𝑥 ∈ 𝑉 𝑛 , and every rank vector 𝑟 ∈ X 𝑛 ,
+
+𝑅 𝑐 (𝐺 𝑐 (𝑟 )) = 𝑟, 𝐺 𝑐 (𝑅 𝑐 (𝑥 )) = 𝑥 . 
+
+Proof. Both identities follow position by position from the defi-nition of 𝜋 𝑐 . At step 𝑖 , the rank trace and the rank generator use the same updated context 𝑐 followed by the tokens already processed or generated. Since 𝜋 𝑐 is a deterministic ordering of the vocabulary, selecting a token by rank and then measuring its rank gives back the same rank, and measuring a token’s rank and then selecting that rank gives back the initial token. □
+
+The Calgacus CARTS encoder and decoder are 
+
+𝐸 𝑘 (𝑥 ) := 𝐺 𝑘 (𝑅 ∅ (𝑥 )) , 𝐷 𝑘 (𝑦 ) := 𝐺 ∅ (𝑅 𝑘 (𝑦 )) ,
+
+where ∅ denotes the empty context. We thus directly have the following correctness result, whose proof follows directly from Lemma 1. 
+
+Theorem 1 (Correctness) . For every 𝑥 ∈ 𝑉 𝑛 and every key 𝑘 ∈ K ,
+
+𝐷 𝑘 (𝐸 𝑘 (𝑥 )) = 𝑥 . 
+
+The above theorem is a mathematical statement about a fixed deterministic next-token ordering, which works computationally only when the encoder and decoder compute exactly the same token rankings at every step. In practice, this requires identical tokenization, admissible vocabulary, prompt serialization, model weights, masking convention, numerical precision, and tie-breaking rule between sender and receiver; if any of these differ, correctness may fail. 
+
+Remark 1 (Token perturbations and error propagation) . These re-sults assume that the received stegotext is identical to the transmit-ted stegotext. The protocol is generally not robust to token edits. If two stegotexts 𝑦, ˜𝑦 ∈ 𝑉 𝑛 agree up to position 𝑗 − 1 but differ at position 𝑗 , then their rank traces under the same key 𝑘 agree up to position 𝑗 − 1, but the rank at position 𝑗 differs: 
+
+𝑅 𝑘 (𝑦 )𝑖 = 𝑅 𝑘 ( ˜𝑦 )𝑖 for 𝑖 < 𝑗, 𝑅 𝑘 (𝑦 )𝑗 ≠ 𝑅 𝑘 ( ˜𝑦 )𝑗 .
+
+For positions 𝑖 > 𝑗 , there is no general guarantee, because the autoregressive contexts have diverged. Thus a single token edit can affect the decoded suffix. Robust variants would require additional redundancy, synchronization, or error-correction mechanisms. We do not address these concerns here, as we focus instead on the se-curity concerns and assume that the messages are well transmitted. 
+
+## 3.2 Generalized two-context rank transforms 
+
+The base Calgacus construction uses the empty context to read the payload rank trace and the key context to generate the ste-gotext. The same formalism supports a more general two-context construction. Let 𝑎, 𝑏 ∈ 𝐶 ∗ be two contexts, and let 
+
+𝜙 : X𝑛 → X 𝑛 
+
+be a bijection on the rank space. Define 
+
+𝐸 𝑎,𝑏,𝜙 (𝑥 ) := 𝐺 𝑏 (𝜙 (𝑅 𝑎 (𝑥 ))) ,
+
+and 
+
+𝐷 𝑎,𝑏,𝜙 (𝑦 ) := 𝐺 𝑎 (𝜙 −1 (𝑅 𝑏 (𝑦 ))) .
+
+Theorem 2 (Generalized two-context correctness) . For every 𝑎, 𝑏 ∈
+
+𝐶 ∗, every bijection 𝜙 : X𝑛 → X 𝑛 , and every 𝑥, 𝑦 ∈ 𝑉 𝑛 ,
+
+𝐷 𝑎,𝑏,𝜙 (𝐸 𝑎,𝑏,𝜙 (𝑥 )) = 𝑥, 𝐸 𝑎,𝑏,𝜙 (𝐷 𝑎,𝑏,𝜙 (𝑦 )) = 𝑦. 
+
+Proof. For 𝑥 ∈ 𝑉 𝑛 , and 𝑎, 𝑏 and 𝜙 as above, we have 
+
+𝐷 𝑎,𝑏,𝜙 (𝐸 𝑎,𝑏,𝜙 (𝑥 )) = 𝐺 𝑎 
+
+ 𝜙 −1 (𝑅 𝑏 (𝐺 𝑏 (𝜙 (𝑅 𝑎 (𝑥 ))))) 
+
+= 𝐺 𝑎 
+
+ 𝜙 −1 (𝜙 (𝑅 𝑎 (𝑥 ))) 
+
+= 𝐺 𝑎 (𝑅 𝑎 (𝑥 )) 
+
+= 𝑥 . 
+
+Similarly, for 𝑦 ∈ 𝑉 𝑛 , 𝐸 𝑎,𝑏,𝜙 (𝐷 𝑎,𝑏,𝜙 (𝑦 )) = 𝑦 . □
+
+Remark 2. The generalized construction above preserves exact invertibility for every bijection 𝜙 : X𝑛 → X 𝑛 . However, the qual-ity of the generated stegotext depends strongly on the choice of 
+
+𝜙 . The autoregressive model typically assigns high probability to only a small subset of low-rank tokens at each step. Consequently, transformations 𝜙 that map low ranks to substantially larger ranks will tend to force the generator to select improbable tokens, often degrading fluency and semantic coherence. In particular, an arbitrary permutation of X𝑛 will generally not preserve the distributional structure of natural language rank traces, and the resulting stegotext may appear nonsensical and unnatural. Practical constructions therefore require transformations 𝜙 that preserve, approximately preserve, or otherwise control rank mag-nitude and local rank statistics. Ghantous et al. 
+
+The original Calgacus instantiation is recovered by taking 
+
+𝑎 = ∅, 𝑏 = 𝑘, 𝜙 = id X𝑛 .
+
+Other choices of 𝑎 , 𝑏 , and 𝜙 can model other deterministic transfor-mations of the rank trace, such as prompt-before-payload variants or rank permutations. This more general construction could be used to build more interesting primitives, beyond the scope of steganography. It also remains an open question to build natural generalizations allowing for more than two contexts. We leave this task for future work, and focus here on the formalization of the security properties the existing CARTS scheme. 
+
+Remark 3. It is not necessary, in principle, to use large language models to define a CARTS scheme. However, autoregressive LLMs provide a natural carrier distribution and a rich conditional ranking structure. Future developments in generative modeling [14] (or alternative probabilistic sequence models) may yield additional instantiations of CARTS-like protocols with different security and robustness tradeoffs. 
+
+## 4 Security assumptions and protocol properties 
+
+In this section, we investigate several security properties and com-putational problems naturally associated with CARTS schemes. We formalize and study notions including message equivocation, key collisions, and key commutativity, and explore their relationships and implications for security 
+
+## 4.1 Scope and adversarial model 
+
+The classical notion of security in steganography is distributional in-distinguishability: the stegotext should be statistically indistinguish-able from an ordinary cover object, so that an adversary cannot reliably detect that hidden communication is taking place [9, 10, 28]. In the CARTS setting, this reduces to the question of whether LLM-generated text can be made indistinguishable from ordinary human-written or model-generated text. This question has received substantial attention in recent years [19, 22], and will continue to do so as language models become more capable. It also stands to reason that, as more research and resources are poured into LLMs, they will get better at mimicking human text, and detection will become significantly harder. Rather than revisiting this well-studied question, the present work targets a different and largely unexplored set of security properties specific to the rank-transcoding structure of CARTS. These properties — equivocation, key collisions, context search, and non-commutativity of key-induced maps — arise naturally from the algebraic and computational structure of the construction, and have not previously been studied in the setting of LLM-based steganography. They lead to questions that are novel from both a machine learning and a cryptographic perspective. When it comes to the adversarial model, we consider a sender and receiver who share a private key 𝑘 , realized as a secret context or prompt supplied to a fixed autoregressive language model M.The sender transforms a payload token sequence 𝑥 ∈ 𝑉 𝑛 into a generated stegotext 𝑦 ∈ 𝑉 𝑛 of the same token length, and the receiver deterministically recovers 𝑥 from 𝑦 using 𝑘 and the same model specification. The adversary may observe 𝑦 and is assumed to know the proto-col family, the tokenizer, and the model M. We distinguish several levels of adversarial access. In a ciphertext-only setting, the adver-sary observes only the stegotext 𝑦 . In a known-plaintext setting, the adversary observes one or more payload-stegotext pairs (𝑥 𝑖 , 𝑦 𝑖 )
+
+with 𝑦 𝑖 = 𝐸 𝑘 (𝑥 𝑖 ) for a fixed unknown key 𝑘 . Lastly, in a chosen-plaintext setting, the adversary can additionally select payloads and obtain their encodings under the same fixed unknown key. The formal analysis in this paper focuses primarily on the known-plaintext model, where the attacker can observe payload-stegotext pairs and knows the protocol family, the tokenizer, and the model 
+
+M.
+
+## 4.2 The rank-coordinate notation 
+
+We first introduce the rank-coordinate form of the Calgacus pro-tocol. This removes any ambiguity between token sequences and rank vectors. Fix 𝑛 and let X𝑛 = [𝑁 ]𝑛 . For every key 𝑘 ∈ K , define 
+
+𝐹 𝑘 : X𝑛 −→ X 𝑛 , 𝐹 𝑘 (𝑟 ) := 𝑅 ∅ (𝐺 𝑘 (𝑟 )) .
+
+Thus 𝐹 𝑘 maps the empty-context rank representation of a payload to the empty-context rank representation of the resulting stegotext. One can easily check that the inverse of 𝐹 𝑘 is 
+
+𝐹 −1 
+
+> 𝑘
+
+(𝑤 ) = 𝑅 𝑘 (𝐺 ∅ (𝑤 )) .
+
+Therefore, for each fixed key 𝑘 , the map 𝐹 𝑘 is a bijection of X𝑛 .
+
+Proposition 1 (Rank-coordinate conjugacy) . For every admissible key 𝑘 ∈ K ,
+
+𝐹 𝑘 = 𝑅 ∅ ◦ 𝐸 𝑘 ◦ 𝐺 ∅,
+
+and equivalently, 
+
+𝐸 𝑘 = 𝐺 ∅ ◦ 𝐹 𝑘 ◦ 𝑅 ∅.
+
+Moreover, 
+
+𝐷 𝑘 = 𝐺 ∅ ◦ 𝐹 −1 
+
+> 𝑘
+
+◦ 𝑅 ∅.
+
+Consequently, for any keys 𝑘 1, 𝑘 2 ∈ K ,
+
+𝐸 𝑘 2 ◦ 𝐸 𝑘 1 = 𝐺 ∅ ◦ ( 𝐹 𝑘 2 ◦ 𝐹 𝑘 1 ) ◦ 𝑅 ∅.
+
+Proof. First, for any 𝑟 ∈ X 𝑛 ,
+
+(𝑅 ∅ ◦ 𝐸 𝑘 ◦ 𝐺 ∅)( 𝑟 ) = 𝑅 ∅ (𝐺 𝑘 (𝑅 ∅ (𝐺 ∅ (𝑟 )))) 
+
+= 𝑅 ∅ (𝐺 𝑘 (𝑟 )) = 𝐹 𝑘 (𝑟 ).
+
+This proves 𝐹 𝑘 = 𝑅 ∅ ◦ 𝐸 𝑘 ◦ 𝐺 ∅. Next, composing on the left by 𝐺 ∅
+
+and on the right by 𝑅 ∅ gives 
+
+𝐸 𝑘 = 𝐺 ∅ ◦ 𝐹 𝑘 ◦ 𝑅 ∅.
+
+Using the inverse formula 𝐹 −1 
+
+> 𝑘
+
+(𝑤 ) = 𝑅 𝑘 (𝐺 ∅ (𝑤 )) , we obtain, for 
+
+𝑦 ∈ 𝑉 𝑛 ,
+
+(𝐺 ∅ ◦ 𝐹 −1 
+
+> 𝑘
+
+◦ 𝑅 ∅)( 𝑦 ) = 𝐺 ∅ (𝑅 𝑘 (𝐺 ∅ (𝑅 ∅ (𝑦 )))) 
+
+= 𝐺 ∅ (𝑅 𝑘 (𝑦 )) = 𝐷 𝑘 (𝑦 ).
+
+The composition identity for 𝐸 𝑘 2 ◦ 𝐸 𝑘 1 follows by applying the expression 𝐸 𝑘 = 𝐺 ∅ ◦ 𝐹 𝑘 ◦ 𝑅 ∅ twice and using 𝑅 ∅ ◦ 𝐺 ∅ = id X𝑛 . □
+
+Remark 4 (Keys versus key-coordinate vectors) . The formal key is always a token context 𝑘 ∈ 𝐶 ∗. However, in examples, it is sometimes convenient to describe a key text by its empty-context rank coordinates. If 𝑞 ∈ X 𝑡 , then 
+
+𝑘 = 𝐺 ∅ (𝑞 ) ∈ 𝑉 𝑡 ⊆ 𝐶 ∗CARTS : Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding 
+
+is the corresponding key context. Thus, 𝑞 is not itself the key; it is a coordinate representation of a key context whose tokens lie in the admissible output vocabulary 𝑉 . Key collisions are always collisions between contexts 𝑘 1, 𝑘 2 ∈ K , but can be displayed through the coordinate vectors 𝑞 1, 𝑞 2.
+
+## 4.3 Definitions and Computational Problems 
+
+With the above notation and formalism in place, we can now in-troduce the main computational problems and security notions associated with a CARTS protocol. We begin by defining several forms of message equivocation, which capture the extent to which an observed stegotext admits multiple plausible payload interpre-tations under different keys. These notions formalize deniability properties of the protocol and will serve as the foundation for the computational problems introduced later in this section. 
+
+Definition 2 (Full message equivocation) . We say that a CARTS protocol (𝐸 𝑘 , 𝐷 𝑘 ) satisfies full message equivocation on 𝑉 𝑛 if, for every observed stegotext 𝑦 ∈ 𝑉 𝑛 and every payload 𝑥 ∈ 𝑉 𝑛 , there exists a key 𝑘 ∈ K such that 
+
+𝐷 𝑘 (𝑦 ) = 𝑥 . 
+
+Definition 3 (Weak ℓ-message equivocation) . For an integer ℓ ≤|𝑉 |𝑛 , we say that a CARTS protocol (𝐸 𝑘 , 𝐷 𝑘 ) satisfies weak ℓ-message equivocation on 𝑉 𝑛 if, for every observed stegotext 𝑦 ∈ 𝑉 𝑛 , there exist distinct payloads 
+
+𝑥 1, ..., 𝑥 ℓ ∈ 𝑉 𝑛 
+
+and keys 
+
+𝑘 1, ..., 𝑘 ℓ ∈ K 
+
+such that 
+
+𝐷 𝑘 𝑖 (𝑦 ) = 𝑥 𝑖 , ∀𝑖 = 1, ..., ℓ. 
+
+Message equivocation (whether it is full or weak) can also be referred to as encryption deniability (in the spirit of [6, 12]). Intu-itively, this property means that a given key 𝑘 does not uniquely determine a single underlying message. Instead, multiple plausible payloads may correspond to the same observed covertext when different keys are used. Consequently, even if a computationally unbounded adversary intercepts 𝑘 , they cannot definitively deter-mine which message was encoded, since several alternative mes-sages remain consistent with the observed data under different keys. A party may thus plausibly claim that a different message was intended. Moreover, full message equivocation implies weak ℓ-message equivocation (for ℓ within the bound of existing messages in |𝑉 |𝑛 ). 
+
+Remark 5. The practical relevance of message equivocation depends strongly on the threat model and the surrounding social or political environment. Indeed, in highly coercive settings, such as under an authoritarian regime, the mere existence of a key capable of explaining a stegotext as corresponding to an incriminating or “undesirable” payload may itself be sufficient to justify retaliation, regardless of whether alternative benign explanations also exist. In such contexts, message equivocation alone may therefore provide limited practical protection. By contrast, in more typical institutional settings governed by stronger procedural protections, where individuals are not pre-sumed guilty solely on the basis of a possible incriminating inter-pretation, equivocation can provide a meaningful form of deniabil-ity. In such cases, the existence of a plausible alternative payload consistent with the same observed stegotext may be sufficient to prevent definitive attribution. Consequently, the operational sig-nificance of equivocation depends not only on the mathematical properties of the protocol, but also on the standards of evidence and coercion present in the intended application environment. For completeness, we also introduce a restricted variant of mes-sage equivocation in which the admissible payloads, observed ste-gotexts, and keys are constrained to prescribed subsets. This for-mulation is useful in practical settings where only certain payloads are considered plausible, only certain stegotexts are observable, or only a restricted family of keys is operationally realistic. 
+
+Definition 4 (Restricted-support equivocation) . Let Padm ⊆ 𝑉 𝑛 
+
+be a set of admissible payloads, let Yadm ⊆ 𝑉 𝑛 be a set of admissi-ble observed stegotexts, and let Kadm ⊆ K be a set of admissible or plausible keys. The protocol has restricted-support full message equivocation relative to (P adm , Yadm , Kadm ) if, for every 𝑥 ∈ P adm 
+
+and every 𝑦 ∈ Y adm , there exists 𝑘 ∈ K adm such that 
+
+𝐷 𝑘 (𝑦 ) = 𝑥 . 
+
+For an integer ℓ ≤ |P adm |, it has restricted-support weak ℓ-message equivocation relative to (P adm , Yadm , Kadm ) if, for every 𝑦 ∈ Y adm ,there exist distinct 𝑥 1, ..., 𝑥 ℓ ∈ P adm and keys 𝑘 1, ..., 𝑘 ℓ ∈ K adm such that 
+
+𝐷 𝑘 𝑖 (𝑦 ) = 𝑥 𝑖 , ∀𝑖 = 1, ..., ℓ. 
+
+Having introduced the relevant security definitions, we now turn to the computational problems naturally associated with a CARTS protocol. These problems formalize the algorithmic tasks underlying the security and deniability properties discussed above. We work with the same setup as Section 3, and we assume that our large language model M is fixed. For unconditional properties, we allow the key space K ⊆ 𝐶 ∗ to be arbitrary. For algorithmic search problems, however, the key do-main must be specified more concretely, for instance, by restricting to a finite admissible key set Kadm ⊆ K , or by giving a specified key-generation distribution with an explicit search budget. With-out such a restriction, non-existence over all of 𝐶 ∗ is not a finite computational task. For convenience, we use the rank-coordinate notation introduced in Section 4.2 to emphasize the action of the key 𝑘 on the messages, viewed as rank vectors. 
+
+Definition 5 (Key collision) . Fix a model M, a key space K, and a length 𝑛 . For a rank vector 𝑟 ∈ X 𝑛 , two distinct keys 𝑘 1, 𝑘 2 ∈ K 
+
+form a key collision if 
+
+𝐹 𝑘 1 (𝑟 ) = 𝐹 𝑘 2 (𝑟 ).
+
+Equivalently, the same payload rank vector 𝑟 maps to the same stegotext rank vector under two different keys. 
+
+Problem 1 (The key collision problem) . Given 𝑟 ∈ X 𝑛 and an admissible key set Kadm ⊆ K , find distinct keys 𝑘 1, 𝑘 2 ∈ K adm such Ghantous et al. 
+
+that 
+
+𝐹 𝑘 1 (𝑟 ) = 𝐹 𝑘 2 (𝑟 ),
+
+or determine that no such pair exists within Kadm .
+
+Problem 2 (The promise context search problem) . Given 𝑟, 𝑤 ∈ X 𝑛 
+
+and an admissible key set Kadm ⊆ K , with the promise that there exists 𝑘 ∈ K adm satisfying 
+
+𝐹 𝑘 (𝑟 ) = 𝑤, 
+
+find one such key 𝑘 .Problem 2 is the most direct known-message key-search problem. It is very close in spirit to the vectorization problem (see Problem 6 in [8]) because one is searching for a key that transports one rank vector to another. The main difference with the usual vectorization problem is that the key space does not carry a natural algebraic composition law (as in [1]), and the family {𝐹 𝑘 } is not assumed to form a group action. The context-search problem is therefore a transport problem on rank-vector space without the algebraic structure that underlies the vectorization setting. 
+
+Problem 3 (The unconditional context search problem) . Given 
+
+𝑟, 𝑤 ∈ X 𝑛 and an admissible key set Kadm ⊆ K , find a key 𝑘 ∈ K adm 
+
+such that 
+
+𝐹 𝑘 (𝑟 ) = 𝑤 . 
+
+Problem 4 (The unconditional partial ℓ-context search problem) .
+
+Given 𝑤 ∈ X 𝑛 and an admissible key set Kadm ⊆ K , find ℓ rank vectors 𝑟 1, ..., 𝑟 ℓ ∈ X 𝑛 and keys 𝑘 1, ..., 𝑘 ℓ ∈ K adm such that 
+
+𝐹 𝑘 𝑖 (𝑟 𝑖 ) = 𝑤 . 
+
+Note, of course, that for an arbitrary CARTS protocol, a solution to Problems 3 or 4 need not exist. Furthermore, it is clear that Problem 4 is not harder than Problem 3. With the above notions in hand, we can discuss message equivocation for a CARTS protocol. This will be done in the following subsection. Finally, for completeness, we mention a more general version of Problem 3 that will be addressed further in subsequent work, when building a different primitive. 
+
+Problem 5 (Pre-image resistance problem) . Given 𝑤 ∈ X 𝑛 and an admissible key set Kadm ⊆ K , find a key 𝑘 ∈ K adm and a rank vector 𝑟 ∈ X 𝑛 such that 
+
+𝐹 𝑘 (𝑟 ) = 𝑤 . 
+
+Although this problem looks similar to Problem 3, the key differ-ence is that the message 𝑟 is not fixed here. More generally, all the above definitions and problems look similar but differ in very subtle ways, as they target different privacy concerns and applications. 
+
+Remark 6. (1) An unconstrained preimage-search problem of the form “given 𝑤 , find 𝑟 and 𝑘 such that 𝐹 𝑘 (𝑟 ) = 𝑤 ” is trivial whenever the empty context is admissible: take 𝑟 = 𝑤 and 
+
+𝑘 = ∅. One can thus consider additional constraints, such as 
+
+𝑟 ≠ 𝑤 , non-empty keys, plausible keys, plausible payloads, or bounded key length. (2) If the empty context ∅ is included in the admissible key space 
+
+K, then 𝐹 ∅ (𝑟 ) = 𝑟 for every 𝑟 ∈ X 𝑛 . Therefore, every stegotext 
+
+𝑦 has the trivial explanation 𝐸 ∅ (𝑦 ) = 𝑦 . Consequently, the un-conditional partial 1-context search problem (and hence, weak 1-message equivocation, as we will see in Section 4.4) is trivial whenever the empty key is admissible. Nontrivial equivocation claims should therefore impose additional constraints. Lastly, we note that all of the computational problems intro-duced above can be defined for a general CARTS protocol in terms of the encoding and decoding maps 𝐸 𝑘 and 𝐷 𝑘 alone. The rank-coordinate formulation via 𝐹 𝑘 : X𝑛 → X 𝑛 is specific to the Calgacus instantiation and its induced rank representation, and is introduced primarily for convenience of analysis and notation. The underlying problem structure, however, is independent of this representation. 
+
+## 4.4 Security Properties of the Protocol 
+
+4.4.1 Message Equivocation. 
+
+Theorem 3. A CARTS protocol has full message equivocation on 𝑉 𝑛 
+
+if and only if the unconditional context search problem (Problem 3) is solvable for all 𝑟, 𝑤 ∈ X 𝑛 .Similarly, for an integer ℓ ≤ |X 𝑛 |, it has weak ℓ-message equivoca-tion on 𝑉 𝑛 if and only if the unconditional partial ℓ-context search problem (Problem 4) is solvable for every 𝑤 ∈ X 𝑛 .
+
+Proof. The result follows directly from unpacking the defini-tions. For notational convenience, we present the proof for the Calgacus construction; the same argument applies to any CARTS protocol. Recall that 𝑅 ∅ : 𝑉 𝑛 → X 𝑛 is a bijection with inverse 𝐺 ∅,and that 𝐹 𝑘 = 𝑅 ∅ ◦ 𝐸 𝑘 ◦ 𝐺 ∅. Let 𝑥, 𝑦 ∈ 𝑉 𝑛 and define 𝑟 = 𝑅 ∅ (𝑥 ) and 
+
+𝑤 = 𝑅 ∅ (𝑦 ). Then, 
+
+𝐷 𝑘 (𝑦 ) = 𝑥 ⇐⇒ 𝐺 ∅ (𝑅 𝑘 (𝑦 )) = 𝐺 ∅ (𝑟 ) ⇐⇒ 𝑅 𝑘 (𝑦 ) = 𝑟 . 
+
+Substituting 𝑦 = 𝐺 ∅ (𝑤 ) and using the definition of 𝐹 𝑘 , this is equivalent to 𝐹 𝑘 (𝑟 ) = 𝑤 . This establishes the equivalence between the full-message equivocation condition and the existence of a key solving the unconditional context search problem in rank space. The weak ℓ-message statement follows by applying the same argument to ℓ distinct pairs. □
+
+We now state a direct consequence of the above characterization, which extends to the restricted-support setting via the same rank-coordinate transformation. 
+
+Corollary 1. Let RP := 𝑅 ∅ (P adm ) and RY := 𝑅 ∅ (Y adm ), then the Calgacus CARTS protocol has restricted-support full message equivocation relative to (P adm , Yadm , Kadm ) if and only if 
+
+∀𝑟 ∈ R P, ∀𝑤 ∈ R Y, ∃𝑘 ∈ K adm such that 𝐹 𝑘 (𝑟 ) = 𝑤 . 
+
+Similarly, it has restricted-support weak ℓ-message equivocation if and only if, for every 𝑤 ∈ R Y , there exist distinct 𝑟 1, . . . , 𝑟 ℓ ∈ R P
+
+and keys 𝑘 1, . . . , 𝑘 ℓ ∈ K adm such that 𝐹 𝑘 𝑖 (𝑟 𝑖 ) = 𝑤 for all 𝑖 = 1, ..., ℓ .
+
+4.4.2 Key collision. Let us now discuss Problem 1 more closely. Key collisions do not affect correctness: for any fixed key 𝑘 , the decoder still inverts the encoder by Theorem 1. They are however interesting from a security standpoint. Suppose an adversary knows a payload-stegotext pair (𝑥, 𝑦 ), or equivalently the rank-coordinate pair 
+
+𝑟 = 𝑅 ∅ (𝑥 ), 𝑤 = 𝑅 ∅ (𝑦 ).
+
+Denote the set of keys consistent with this observation by 
+
+ValidKeys (𝑟, 𝑤 ) := {𝑘 ∈ K : 𝐹 𝑘 (𝑟 ) = 𝑤 }.CARTS : Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding 
+
+If |ValidKeys (𝑟, 𝑤 )| > 1, then the key is not information-theoretically identifiable (even for a computationally unbounded adversary) from this single transcript, and thus cannot be used to decode future mes-sages from the sender. In practice however, this is slightly weaker than saying that future communications are secure, as additional known plaintexts, side information about the key, or a prior over plausible prompts may reduce (or even eliminate) the candidate set. Indeed, as additional payload-stegotext pairs are observed, the can-didate key set can only shrink, since each new transcript imposes an additional constraint of the form 𝐹 𝑘 (𝑟 𝑖 ) = 𝑤 𝑖 .For a finite key set K′ ⊆ K , define the collision multiplicity 
+
+𝜇 K′ (𝑟, 𝑤 ) := |{ 𝑘 ∈ K ′ : 𝐹 𝑘 (𝑟 ) = 𝑤 }| .
+
+Thus, 𝜇 K′ (𝑟, 𝑤 ) = 0 means that 𝑤 is unreachable from 𝑟 using keys in K′, 𝜇 K′ (𝑟, 𝑤 ) = 1 means that the key is identifiable within K′
+
+from this single pair, and 𝜇 K′ (𝑟, 𝑤 ) > 1 means that the pair admits a key collision within Kadm .If keys are generated by a distribution KeyGen , a distributional collision probability for fixed 𝑟 is Coll (𝑟 ) = Pr 
+
+> 𝑘 1,𝑘 2←KeyGen
+
+𝑘 1 ≠ 𝑘 2 ∧ 𝐹 𝑘 1 𝑟 ) = 𝐹 𝑘 2 (𝑟 ) .
+
+This quantity is different from the existence of a collision. A single collision may exist while having negligible probability under the key distribution, whereas a large collision probability indicates that key non-identifiability is common for the chosen key-generation procedure. Here, we present an initial investigation of the key-collision behavior in the Calgacus CARTS protocol, leaving more extensive analysis for future work. Preliminary experiments suggest that key collisions are unlikely but can still occur in specific finite key searches. All numeric ranks in the following example are computed using the Llama-3-8B-Instruct GGUF model. Since the underlying sen-tences (token sequences) are explicitly provided, the example can be reproduced (with potentially different values for 𝑞 1 and 𝑞 2). 
+
+Example 1. Using a specific version of the Llama-3-8B-Instruct GGUF model, we can observe that the following two key-coordinate vectors 
+
+𝑞 1 = [88599 , 1087 , 1, 1, 1],𝑞 2 = [88599 , 1087 , 47 , 646 , 1]
+
+both map the rank-coordinate vector 𝑟 := [1, 1, 1, 1, 1] to 𝑤 :=
+
+[126444 , 1, 3736 , 2, 4], thus producing a collision. Letting 
+
+𝑘 1 := 𝐺 ∅ (𝑞 1) and 𝑘 2 := 𝐺 ∅ (𝑞 2)
+
+denote the corresponding key contexts, we write 
+
+𝐹 𝑘 1 (𝑟 ) = 𝐹 𝑘 2 (𝑟 ) = 𝑤 . 
+
+While this is a priori intriguing, examining the corresponding sen-tences reveals only a minor (typographical) difference between the keys’ token sequences: 
+
+𝐺 ∅ (𝑞 1) = The quick brown fox jumps 
+
+𝐺 ∅ (𝑞 2) = The quick brow fox jumps 
+
+𝐺 ∅ (𝑤 ) = over the lazy dog. 
+
+Notice the typo in 𝐺 ∅ (𝑞 2), and that all vectors above have the same length, corresponding to sentences with an equal number of tokens (the period at the end of 𝐺 ∅ (𝑤 ) is one of the tokens). In view of our previous example, one can ask if two distinct but nearly identical keys will encode a message into two nearly iden-tical stegotexts (and decode a stegotext into two nearly identical messages). In general, for a key collision to provide meaningful security for the sender, the alternative keys must decode the new stegotexts to semantically distinct messages . If all collisions corre-spond only to minor variations (e.g., typos or trivial rewordings), an adversary could easily recover the original key by correcting these minor differences. But this only makes sense if such a correction only affects stegotexts minimally. Additional considerations are whether the alternative keys are plausible under the adversary’s key prior, how large the candi-date set ValidKeys (𝑟, 𝑤 ) is, and whether the candidate keys remain consistent across additional transcripts. This motivates natural empirical questions: how often do non-trivial collisions occur, how large can |ValidKeys (𝑟, 𝑤 )| become for a given pair (𝑟, 𝑤 ), and how quickly do candidate keys separate when tested on additional messages? We investigate these questions in Section 5.3. Although the two keys in Example 1 are semantically very close, this does not by itself determine whether the collision is crypto-graphically meaningful. A small textual perturbation in a key (as in Example 1) may either remain localized (leading to a collision for only a single payload) or may lead to substantially different behavior on a multitude of payloads. We therefore distinguish local key collisions , which occur only for a specific 𝑟 , from stronger forms of key ambiguity in which the same key pairs remain indistinguish-able globally, across many payloads. We study this stability question empirically in Section 5.4 and see that even though the keys 𝑘 1 and 
+
+𝑘 2 are nearly identical, and agree on the input [1, 1, 1, 1, 1], they disagree on other random inputs. 
+
+Remark 7. If one does not restrict the lengths of the keys, nor require them to be equal, it becomes considerably easier to find collisions, for instance, by looking for extremely common phrases that end with the same words, such as: “ the capital city of Italy is Rome ” and “ all roads lead to Rome ”. For this reason, collision experiments should specify the admissible key set Kadm , the key-length policy, and the key-generation distribution. The relevant empirical quantities are not merely whether a collision exists, but the size of the candidate fiber 𝜇 Kadm (𝑟, 𝑤 ) and the probability that independently generated keys collide. 
+
+4.4.3 Finite cardinality effects. We now revisit the previous prob-lem from a new perspective. Fix a payload rank vector 𝑟 ∈ X 𝑛 and let Kadm := X𝑛 = [𝑁 ]𝑛 , that is, we assume that the keys have the same length 𝑛 as the input message. Define 
+
+𝑓 𝑟 : X𝑛 −→ X 𝑛 ,𝑓 𝑟 (𝑘 ) := 𝐹 𝑘 (𝑟 ).
+
+The fiber 
+
+𝑓 −1 
+
+> 𝑟
+
+{𝑤 } = {𝑘 ∈ X 𝑛 : 𝐹 𝑘 (𝑟 ) = 𝑤 }
+
+is the set of keys that map payload rank vector 𝑟 to stegotext rank vector 𝑤 .Ghantous et al. 
+
+This allows us to rephrase the existence of key collisions for a given 𝑟 ∈ X 𝑛 (Problem 1) in terms of 𝑓 𝑟 being non-injective . On the other hand, we see that the unconditional context search problem (Problem 3) has a solution if and only if the functions 𝑓 𝑟 are surjective 
+
+for all 𝑟 . In particular, we have the following result. 
+
+Proposition 2. For fixed 𝑟 ∈ X 𝑛 , the following are equivalent: (1) 𝑓 𝑟 is injective. (2) 𝑓 𝑟 is surjective. (3) There are no key collisions for this fixed 𝑟 within Kadm .(4) For every 𝑤 ∈ X 𝑛 , there exists a key 𝑘 ∈ K adm such that 
+
+𝐹 𝑘 (𝑟 ) = 𝑤 .Consequently, if a key collision exists for some output 𝑤 , then 𝑓 𝑟 is not injective and hence not surjective. Therefore, at least one output 
+
+𝑤 ′ ∈ X 𝑛 is unreachable from 𝑟 using keys in Kadm . However, for the colliding output 𝑤 itself, the context-search instance 𝐹 𝑘 (𝑟 ) = 𝑤 is solvable and has more than one solution. 
+
+Proof. The equivalence between injectivity and surjectivity follows from the fact that 𝑓 𝑟 is a map between two finite sets of equal cardinality. Condition 3 is the statement that no two distinct keys map 𝑟 to the same output, which is injectivity. Condition 4 is exactly the statement that every output has a preimage under 𝑓 𝑟 , which is equivalent to surjectivity. The final claim follows immediately: a collision makes 𝑓 𝑟 non-injective, and therefore non-surjective, but the particular output at which the collision occurs has at least two preimages. □
+
+Proposition 2 and Corollary 2 (below) highlight the natural ten-sion between the existence of key collisions and the existence of a solution to the context search problem, i.e. the tension between Problems 1 and 3. For a fixed payload rank vector 𝑟 and an equal-size finite key space, one cannot have both a collision-free map and missing outputs. 
+
+Corollary 2 (Key-length cardinality regimes) . Let A ⊆ 𝐶 be an admissible key alphabet of size 𝑀 := |A| , and let K𝑡 := A𝑡 be the set of all key contexts of length 𝑡 over A. Fix 𝑟 ∈ X 𝑛 , and define 
+
+𝑓 𝑟 : K𝑡 → X 𝑛 , 𝑓 𝑟 (𝑘 ) = 𝐹 𝑘 (𝑟 ).
+
+Then: (1) If 𝑀 𝑡 < 𝑁 𝑛 , then 𝑓 𝑟 cannot be surjective. Hence some output rank vectors are unreachable from 𝑟 using keys in K𝑡 .(2) If 𝑀 𝑡 > 𝑁 𝑛 , then 𝑓 𝑟 cannot be injective. Hence at least one key collision exists for this fixed 𝑟 within K𝑡 .(3) If 𝑀 𝑡 = 𝑁 𝑛 , then injectivity, surjectivity, unique reachability, and absence of key collisions are equivalent, as in Proposi-tion 2. In the special case 𝑀 = 𝑁 , the regimes are 𝑡 < 𝑛 , 𝑡 = 𝑛 , and 𝑡 > 𝑛 .Thus, shorter-than-message key spaces cannot reach every output for a fixed payload rank vector, while longer-than-message key spaces force collisions by cardinality alone. 
+
+Finally, we briefly mention that one can reinterpret the above scheme in terms of set actions . Let 𝑋 := X𝑛 , then the set of keys 
+
+Kadm acts on 𝑋 via 𝑘 ★ 𝑟 := 𝐹 𝑘 (𝑟 ) ∈ 𝑋 . Then, the unconditional context search problem (Problem 3) has a solution if and only if the set action is transitive. Although set actions are not often stud-ied—since, unlike group actions, they lack algebraic structure—they provide a natural viewpoint in our setting. Indeed, the LLM con-struction does not naturally induce a group structure, so this is the most appropriate formalism available. Moreover, due to the lack of structure and algebraicity behind this action, there aren’t any natural approaches or interpretations that could lead to potential algebraic attacks or exploits. 
+
+4.4.4 Non-commutativity. For completeness, we record an addi-tional algebraic question related to possible instance-generation attacks. In many cryptographic problems, a single hard instance can be transformed into multiple related instances with the same hidden secret. If enough such related instances are available, the original recovery problem may become easier. A concrete example of this phenomenon appears in the lattice isomorphism problem (LIP) [11]. In one formulation, the task is to find a unimodular matrix 𝐴 such that 
+
+𝑄 ′ = 𝐴 𝑇 𝑄𝐴 
+
+from input (𝑄, 𝑄 ′). The authors of [3] explain that if a second unimodular matrix 𝑈 commutes with 𝐴 , then one can form a second instance of the LIP problem, with the same solution 𝐴 , by letting ¯𝑄 := 𝑈 𝑇 𝑄𝑈 , ¯𝑄 ′ := 𝑈 𝑇 𝑄 ′𝑈 . 
+
+Indeed, by commutativity, we have ¯ 𝑄 ′ = 𝐴 𝑇 ¯𝑄𝐴 . They then show that if we have enough such LIP instances, with the same secret 
+
+𝐴 , we can recover 𝐴 . This in turn creates the requirement that it should not be easy for the attacker to find too many matrices that commute with 𝐴 .This example motivates asking whether an analogous instance-generation structure applies to the context search problems (see Problems 2 and 3), which underlie the privacy of the CARTS system. In other words, we are asking whether 
+
+𝐸 𝑘 1 (𝐸 𝑘 2 (𝑚 )) = 𝐸 𝑘 2 (𝐸 𝑘 1 (𝑚 )) 
+
+holds for certain messages 𝑚 and keys 𝑘 1, 𝑘 2. We illustrate this question using the diagram in Figure 1. The diagram highlights two possible paths from 𝑚 to a doubly encoded message. The question is whether these two paths can lead to the same result, i.e., whether the diagram commutes. 
+
+𝑚 𝐸 𝑘 1 (𝑚 )
+
+𝐸 𝑘 2 (𝑚 )
+
+𝐸 𝑘 2 (𝐸 𝑘 1 (𝑚 )) 
+
+𝐸 𝑘 1 (𝐸 𝑘 2 (𝑚 )) 
+
+?
+
+𝐸 𝑘 1
+
+𝐸 𝑘 2
+
+𝐸 𝑘 2
+
+𝐸 𝑘 1
+
+Figure 1: Commutativity test for the encoding operators. Starting from a message 𝑚 , the diagram compares the two compositions 𝐸 𝑘 2 ◦ 𝐸 𝑘 1 and 𝐸 𝑘 1 ◦ 𝐸 𝑘 2 . The diagram is said to commute if both paths yield the same output for all messages 
+
+𝑚 .CARTS : Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding 
+
+Table 1: Empirical experiments summary.                   
+
+> Experiment Description Runtime
+> Implementation correctness 40 payload-key encoding-decoding tests; forward and reverse recovery checked. 607.6 s Key-collisions and finite key search 16 collision-search transcripts; 60 finite keys searched per transcript, for 16 ×60 =960 finite-key evaluations. 3727.7 s Collision stability across new payloads Hand-crafted collision from Example 1, tested across 9 additional rank vectors. 105.4 s Non-commutativity of encoding maps 36 sampled key pairs; 8 payload rank vectors tested per key pair. 2265.8 s Robustness to token perturbations 20 base stegotexts; 80 length-preserving perturbation cases. 561.9 s
+
+If such commutativity were to hold (for a sufficiently large family of keys), then the order in which encoding operators are applied would be irrelevant and this symmetry can be used to generate multiple related instances of the context search problem, sharing the same secret key. Namely, given a single context search problem instance (𝑚, 𝐸 𝑘 (𝑚 )) , where one is looking for 𝑘 , we would be able to generate multiple instances 
+
+I := {  𝑚 𝑖 , 𝐸 𝑘 (𝑚 𝑖 ) : 𝑖 = 1, 2, ... },
+
+all with the same secret 𝑘 , where 𝑚 𝑖 := 𝐸 𝑘 𝑖 (𝑚 ) for keys 𝑘 1, 𝑘 2, ... 
+
+satisfying the commutativity property 
+
+𝐸 𝑘 𝑖 (𝐸 𝑘 (𝑚 )) = 𝐸 𝑘 (𝐸 𝑘 𝑖 (𝑚 )) .
+
+This additional information, namely the knowledge of the set I
+
+above, instead of simply the single instance (𝑚, 𝐸 𝑘 (𝑚 )) , could sig-nificantly reduce the hardness of recovering the secret key 𝑘 .We investigate this commutativity question further in Section 5.5, from an experimental point of view, to gain a better initial un-derstanding of the situation, and leave the theoretical study of this question for future work. Furthermore, it would be interesting to study, from a theoretical point of view, what assumptions one must put on a language model, in order to obtain specific commuting keys, and from a practical point of view the number of commuting key pairs needed to recover the secret 𝑘 .
+
+## 5 Empirical Explorations 
+
+The theoretical framework developed in the preceding sections raises many concrete empirical questions such as: do key collisions arise in practice, are the key-induced maps far from commuting, and how brittle is the protocol to channel noise? This section reports five experiments that investigate these questions and more, under a fixed Llama 3 8B configuration. 
+
+## 5.1 Experimental Configuration and Common Metrics 
+
+All experiments use the llama3_8b_q4_k_m (Q4_K_M GGUF) model [15] via llama-cpp-python , with 𝑛 ctx = 4096, logits_all=true ,and CPU-only inference ( n_gpu_layers=0 , default CPU-threading). The software environment was Python 3.12.3 on Linux 6.17.0-22-generic-x86_64 . Non-empty key contexts are tokenized with add_ bos=True , after which the initial BOS token is dropped to avoid duplicating the beginning-of-sequence marker; empty contexts use the model BOS token as the minimal autoregressive context. Pay-load and stegotext display strings were tokenized by prepending a leading space, tokenizing with add_bos=True , and then discarding the initial BOS token. This convention matches the implementation used for both encoding and decoding. The prefix was empty in this run. Ranks are 1-indexed and computed from full-vocabulary logits, sorted by decreasing logit value with ties broken by increasing to-ken id. No top-𝑘 , top-𝑝 , or additional experiment-level vocabulary restriction was applied. All experiments share the same prompt serialization, masking convention, ranking rule, and tie-breaking rule. The random seed was fixed to 123. The run used 24 natural-language payloads of 4 to 9 tokens, 60 prompt keys, 40 payload-key pairs for correctness experiments, 16 transcripts for the collision search, 36 key pairs for the non-commutativity experiment, and 80 perturbation cases for the ro-bustness experiment. Table 1 summarizes the experiments and their runtimes. 
+
+## 5.2 Experiment 1: Implementation Correctness 
+
+Theorem 1 guarantees exact payload recovery under idealized de-terministic assumptions, but this guarantee is only as strong as the implementation’s fidelity to those assumptions. In practice, subtle discrepancies in tokenization conventions, BOS token handling, numerical precision, or masking behavior could cause silent fail-ures even when the mathematical proof is correct. This experiment verifies that the implementation realizes the theorem’s assumptions exactly under the tested configuration. For 40 sampled payload-key pairs, we computed 𝑦 𝑖 = 𝐸 𝑘 𝑖 (𝑥 𝑖 ),decoded ˆ 𝑥 𝑖 = 𝐷 𝑘 𝑖 (𝑦 𝑖 ), and verified ˆ 𝑥 𝑖 = 𝑥 𝑖 . We also tested the reverse direction, verifying 𝐸 𝑘 𝑖 (𝐷 𝑘 𝑖 (𝑦 𝑖 )) = 𝑦 𝑖 .
+
+Table 2: Implementation correctness results. Check Successes 
+
+𝐷 𝑘 (𝐸 𝑘 (𝑥 )) = 𝑥 40 /40 
+
+𝐸 𝑘 (𝐷 𝑘 (𝑦 )) = 𝑦 40 /40 
+
+Results. As shown in Table 2, exact recovery succeeded in all 40 /40 cases in both directions, confirming that the implementation correctly realizes the deterministic rank-transcoding mechanism under the tested Llama 3 8B configuration. 
+
+## 5.3 Experiment 2: Key-collisions and finite key search 
+
+This experiment investigates key collisions via exhaustive search over a finite key set, which is the simplest possible attack on the promised context search problem (Problem 2). For the purpose of this experiment, we generated a finite admis-sible key set Kadm = {𝑘 1, . . . , 𝑘 60 } containing 60 prompt keys. The keys were constructed from a small set of natural-language seed prompts together with controlled local variants. The seed prompts covered mundane topics such as baking bread, mountain villages, forest animals, baseball practice, neutral product descriptions, and Ghantous et al. 
+
+the phrase The quick brown fox jumps . From these seeds, we generated near-duplicate and template-style variants, including one-character typos, one-token deletions, plural or singular sub-stitutions, punctuation changes, and short suffix additions. The composition of the resulting key set Kadm is given in Table 3. 
+
+Table 3: Composition of the finite admissible key set. Key category Count 
+
+Seed or near-duplicate prompts 7One-character typo variants 7One-token deletion variants 7Plural or singular variants 7Punctuation variants 14 Short suffix variants 18 
+
+Total 60 
+
+We also used 16 payload sequences ranging from 3 to 10 tokens. These finite payload and key sets are not intended to represent the full space of possible natural-language prompts, but rather an initial, concrete and reproducible investigation of the collisions question. For each sampled payload rank vectors 𝑟 and key 𝑘 , we com-pute 𝑤 = 𝐹 𝑘 (𝑟 ), and then search over 𝑘 ∈ K adm and compute the fiber ValidKeys Kadm (𝑟, 𝑤 ) = {𝑘 ∈ K adm : 𝐹 𝑘 (𝑟 ) = 𝑤 }, and its size 
+
+𝜇 Kadm (𝑟, 𝑤 ). By design, we always have 𝜇 Kadm (𝑟 𝑖 , 𝑤 𝑖 ) ≥ 1. 
+
+Results. For all the 960 finite-key evaluations (60 keys and 16 tran-scripts), the true key was contained in the candidate set in all 16 /16 cases, confirming consistency of the finite search. Furthermore, no key collisions were found: every tested transcript had candidate fiber size 1. Table 4 summarizes the results. 
+
+Table 4: Finite key-collision search results. Quantity Value 
+
+Finite key set size |K adm | 60 Tested transcripts 16 Finite-key evaluations 960 Observed collisions 0Largest candidate fiber 1True-key containment 16 /16 The hand-crafted collision of Example 1 was not reproduced in this randomized finite-search run, which is consistent with the observation that this collision was constructed by deliberately ex-ploiting subword tokenization nuances rather than discovered or-ganically. This suggests that key collisions do not arise naturally under random key generation. A more extensive empirical study of collision frequency and structure, across larger key spaces and payload distributions, remains an interesting direction for future work. 
+
+## 5.4 Experiment 3: Collision stability across new payloads 
+
+This experiment was designed to distinguish between key pairs producing local (one-off) collisions and key pairs producing global (multiple) collisions, thus providing stronger multi-payload key ambiguity. Namely, if a colliding key pair 𝑘 𝑎 ≠ 𝑘 𝑏 satisfying 
+
+𝐹 𝑘 𝑎 (𝑟 0) = 𝐹 𝑘 𝑏 (𝑟 0)
+
+is found, then one can ask whether the equality persists on new payload rank vectors 𝑟 1, . . . , 𝑟 𝑆 . In the present run, however, Ex-periment 2 in Section 5.3 found no colliding key pairs. We there-fore turn to the hand-crafted collision found in Example 1, which our randomized study did not encounter in Experiment 2. Re-call that the keys 𝑘 1 = The quick brown fox jumps and 𝑘 2 =
+
+The quick brow fox jumps were shown to collide on the rank message 𝑟 = [1, 1, 1, 1, 1]. We tested whether this collision persists across 9 additional length-5 rank vectors. 
+
+Results. The collision was confirmed on 𝑟 = [1, 1, 1, 1, 1]: both keys produced the stegotext "over the lazy dog." under the tested environment. Of the 9 additional rank vectors tested, only 
+
+𝑟 = [1, 1, 1, 1, 2] also produced a collision; the remaining 8 did not. Given that the two keys diverged on most tested inputs, confirming the local nature of the collision, we did not extend the search further. This confirms that 𝑘 1 and 𝑘 2 form a local collision: they agree on specific inputs but do not induce the same map 𝐹 𝑘 globally, which is particularly surprising given how similar these two keys are. We note that the exact numeric value of 𝑤 is environment-dependent: the value 𝑤 = 𝐹 𝑘 𝑖 (𝑟 ) = [126444 , 1, 3736 , 2, 4] reported in Example 1 was obtained under a specific model checkpoint, whereas the present run produced 𝑤 = [126166 , 1, 4408 , 2, 4]. The collision phenomenon itself — that 𝑘 1 and 𝑘 2 agree on 𝑟 = [1, 1, 1, 1, 1] — is consistent across both environments. 
+
+Table 5: Collision stability results for the hand-crafted key pair. Quantity Value 
+
+Key pair tested 𝑘 1, 𝑘 2 from Example 1 Rank vectors tested 10 Collisions confirmed 2 (on [1, 1, 1, 1, 1] and [1, 1, 1, 1, 2])Non-colliding inputs 8Global collision No 
+
+Interpretation. These results support the distinction introduced in Section 4.4.2 between local and global key collisions. The two keys agree on a small number of specific inputs, consistent with the tokenization structure that was deliberately exploited in Example 1, but diverge on most inputs. 
+
+## 5.5 Experiment 4: Non-commutativity of encoding maps 
+
+This experiment empirically studies the commutativity question raised in Section 4.4.4. For sampled key pairs (𝑘, ℎ ) and payload rank vectors 𝑟 1, . . . , 𝑟 𝑆 , we measure if the two compositions 
+
+𝐹 𝑘 (𝐹 ℎ (𝑟 𝑗 )) and 𝐹 ℎ (𝐹 𝑘 (𝑟 𝑗 )) 
+
+are equal or not. We also measure how much they differ, using the 
+
+commutation metric 
+
+b𝐷 log (𝑘, ℎ ) = 1
+
+𝑆 
+
+> 𝑆
+
+∑︁ 
+
+> 𝑗 =1
+
+𝑑 log (𝐹 𝑘 (𝐹 ℎ (𝑟 𝑗 )) , 𝐹 ℎ (𝐹 𝑘 (𝑟 𝑗 ))) ,CARTS : Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding 
+
+where 𝑑 log denotes the normalized log-rank distance, given by 
+
+𝑑 log (𝑢, 𝑣 ) = 1
+
+𝑛 
+
+> 𝑛
+
+∑︁ 
+
+> 𝑖 =1
+
+| log (1 + 𝑢 𝑖 ) − log (1 + 𝑣 𝑖 )| 
+
+log (1 + 𝑁 ) .
+
+This measures the normalized positional difference between two rank vectors, with logarithmic weighting so that differences among high-ranked tokens contribute less than differences among low-ranked tokens. 
+
+Results. No commuting key pairs were found among the 36 tested pairs. The median commutation distance was 0 .1813, with empirical 5th and 95th percentiles 0 .1424 and 0 .2237. Intuitively, this means that swapping the order of two randomly chosen keys produces rank vectors that differ by roughly 18% of the maximum possible log-rank distance, confirming that the two compositions lead to substantially different stegotexts in practice. 
+
+Table 6: Non-commutativity results for key-induced maps. Quantity Value 
+
+Sampled key pairs 36 Payload rank vectors per pair 8Commuting pairs found 0Median b𝐷 log 0.1813 5th percentile of b𝐷 log 0.1424 95th percentile of b𝐷 log 0.2237 Figure 2 shows the empirical CDF of the commutation distances. 
+
+Figure 2: Metric non-commutativity of key-induced maps. Empirical CDF of b𝐷 log (𝑘, ℎ ) over sampled key pairs. No exact sampled commuting pairs were observed; the nonzero dis-tances show that the order of applying 𝐹 𝑘 and 𝐹 ℎ generally changed the resulting rank vector in the tested sample. Interpretation. These results suggest that, in practice, the encod-ing maps 𝐸 𝑘 and 𝐸 ℎ do not commute for randomly sampled key pairs. This is a favorable property from a security perspective, as it indicates that the instance-generation attack described in Sec-tion 4.4.4 is unlikely to be applicable in typical usage scenarios. 
+
+## 5.6 Experiment 5: Robustness to token perturbations 
+
+This experiment studies the brittleness described in Remark 1, that is, whether small changes to the transmitted stegotext can disrupt exact decoding. For each generated stegotext 𝑦 = 𝐸 𝑘 (𝑥 ), we con-struct a perturbed stegotext ˜ 𝑦 in one of the following ways: (1) Random token substitution: one token position is selected and replaced by a different random admissible token. (2) Nearby-rank substitution: one token is replaced by a token selected from a nearby rank neighborhood under the local model ranking. (3) Adjacent-token transposition: adjacent tokens are swapped. (4) Punctuation-token substitution: one token is replaced by a punctuation-like token when such a replacement was available. We then decode 𝑥 := 𝐷 𝑘 (𝑦 ) and ˜ 𝑥 := 𝐷 𝑘 ( ˜𝑦 ) and compare them using the standard notion of normalized edit distance, as well as the suffix corruption fraction SuffixErr, which is given by SuffixErr = 1
+
+𝑛 − 𝑗 first + 1
+
+> 𝑛
+
+∑︁ 
+
+> 𝑗 =𝑗 first
+
+1[𝑥 𝑗 ≠ ˜𝑥 𝑗 ],
+
+where 𝑗 first = min { 𝑗 : 𝑥 𝑗 ≠ ˜𝑥 𝑗 } is the first mismatch position. 
+
+Results. The robustness experiment shows that the base CARTS construction is highly sensitive to token perturbations. Across 80 tested perturbations, decoding was corrupted in all cases. The aver-age token edit distance between the original and corrupted decoded payload was 4 .200. Suffix corruption was total (namely, equal to 1.000) in all perturbation types except adjacent-token transposition, which had average suffix corruption 0 .993. Table 7 summarizes the perturbation results by perturbation type. 
+
+Table 7: Robustness results under stegotext perturbations.           
+
+> Perturbation type Avg. edit distance Avg. suffix corruption
+> Random token substitution 3.95 1.000 Nearby-rank substitution 3.80 1.000 Adjacent-token transposition 4.60 0.993 Punctuation-token substitution 4.45 1.000
+
+Interpretation. The results shown in Table 7 and Figure 3 confirm that CARTS provides exact invertibility under matched conditions, but is brittle to channel noise. This is consistent with the autore-gressive error-propagation structure described in Remark 1. Robust variants would require additional error-correction mechanisms, and are left for future work. 
+
+## 5.7 Summary of empirical investigations 
+
+The five experiments give a consistent empirical picture of the base CARTS protocol. Exact token-level recovery succeeded in all 40 /40 tested payload-key pairs, confirming that the implementation cor-rectly realizes the deterministic rank-transcoding mechanism. The Ghantous et al. 
+
+Figure 3: Decoded token edit distance grouped by pertur-bation type. All perturbation types consistently disrupted decoding. 
+
+finite key-collision search found no collisions among 960 evalua-tions, and the hand-crafted collision of Example 1 was confirmed to be local, persisting on only 2 out of 10 tested rank vectors. No com-muting key pairs were found among the 36 tested pairs, suggesting that an instance-generation attack is unlikely to apply in practice. Finally, all 80 tested token perturbations corrupted decoding, con-firming the autoregressive error-propagation structure described in Remark 1. Together, these results validate the formal framework introduced in Sections 3 and 4: CARTS provides exact, full-token-rate, deter-ministic keyed rank-transcoding, and the empirical evidence sug-gests that the construction is resistant to the specific attack vectors studied here. 
+
+## 6 Conclusion 
+
+This paper introduced CARTS as a formal framework for keyed text-to-text rank-transcoding steganography, formalizing the Cal-gacus construction [20] and establishing its exact correctness under deterministic model assumptions. Within this framework, we de-fined the computational problems naturally associated with the construction — context search, key collisions, message equivoca-tion, and non-commutativity of key-induced maps — and studied their theoretical properties and empirical behavior, providing the first rigorous treatment of the security landscape of this promising but previously unstudied class of protocols. The experiments con-firmed exact encoding-decoding recovery, found no key collisions under random key generation, established that the hand-crafted collision of Example 1 is local, and found no commuting key pairs, suggesting that the construction is resistant to the specific attack vectors studied here. A primary goal of this work is to open up this area for systematic investigation. On the theoretical side, the hardness of the context search problem, the asymptotic structure of collision fibers, the conditions under which commuting key pairs exist, and the design of more general CARTS transforms are all concrete open prob-lems that follow naturally from the framework. On the empirical side, larger key spaces, more diverse payload distributions, and semantic quality metrics would give a more complete picture of the construction’s behavior. We hope the formal framework introduced here provides a solid foundation for the constructive use of autoregressive language models in steganography and privacy-preserving communication in general. 
+
+## References 
+
+[1] Navid Alamati, Luca De Feo, Hart Montgomery, and Sikhar Patranabis. 2020. Cryptographic group actions and applications. In International Conference on the Theory and Application of Cryptology and Information Security . Springer, 411–439. [2] Ross J Anderson and Fabien AP Petitcolas. 2002. On the limits of steganography. 
+
+IEEE Journal on selected areas in communications 16, 4 (2002), 474–481. [3] Benjamin Benčina, Alessandro Budroni, Jesús-Javier Chi-Domínguez, and Mukul Kulkarni. 2024. Properties of lattice isomorphism as a cryptographic group action. In International Conference on Post-Quantum Cryptography . Springer, 170–201. [4] Christian Cachin. 1998. An Information-Theoretic Model for Steganography. In 
+
+Information Hiding (Lecture Notes in Computer Science, Vol. 1525) , David Aucsmith (Ed.). Springer, 306–318. doi:10.1007/3-540-49380-8_21 [5] Isaac A Canales-Martínez and David Santos. 2025. Extracting some layers of deep neural networks in the hard-label setting. In International Conference on Cryptology and Information Security in Latin America . Springer, 399–421. [6] Rein Canetti, Cynthia Dwork, Moni Naor, and Rafail Ostrovsky. 1997. Deniable encryption. In Annual International Cryptology Conference . Springer, 90–104. [7] Nicholas Carlini, Jorge Chávez-Saab, Anna Hambitzer, Francisco Rodríguez-Henríquez, and Adi Shamir. 2025. Polynomial time cryptanalytic extraction of deep neural networks in the hard-label setting. In Annual International Conference on the Theory and Applications of Cryptographic Techniques . Springer, 364–396. [8] Jean-Marc Couveignes. 2006. Hard homogeneous spaces. (2006). [9] Christian Schroeder de Witt, Samuel Sokota, J Zico Kolter, Jakob Foerster, and Martin Strohmeier. 2022. Perfectly secure steganography using minimum entropy coupling. arXiv preprint arXiv:2210.14889 (2022). [10] Jinyang Ding, Kejiang Chen, Yaofei Wang, Na Zhao, Weiming Zhang, and Neng-hai Yu. 2023. Discop: Provably secure steganography in practice based on “distribution copies”. In 2023 IEEE Symposium on Security and Privacy (SP) . IEEE, 2238–2255. [11] Léo Ducas and Wessel van Woerden. 2022. On the lattice isomorphism problem, quadratic forms, remarkable lattices, and cryptography. In Annual International Conference on the Theory and Applications of Cryptographic Techniques . Springer, 643–673. [12] Markus Dürmuth and David Mandell Freeman. 2011. Deniable encryption with negligible detection probability: An interactive construction. In Annual Inter-national Conference on the Theory and Applications of Cryptographic Techniques .Springer, 610–626. [13] Aron Gohr. 2019. Improving attacks on round-reduced speck32/64 using deep learning. In Annual International Cryptology Conference . Springer, 150–179. [14] Ian J Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. 2014. Generative adversarial nets. Advances in neural information processing systems 27 (2014). [15] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Ab-hishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schel-ten, Alex Vaughan, et al. 2024. The llama 3 herd of models. arXiv preprint arXiv:2407.21783 (2024). [16] Nicholas J. Hopper, John Langford, and Luis von Ahn. 2002. Provably Secure Steganography. In Advances in Cryptology - CRYPTO 2002 (Lecture Notes in Computer Science, Vol. 2442) , Moti Yung (Ed.). Springer, 77–92. doi:10.1007/3-540-45708-9_6 [17] Gabriel Kaptchuk, Tushar M. Jois, Matthew Green, and Aviel D. Rubin. 2021. Meteor: Cryptographically Secure Steganography for Realistic Distributions. In 
+
+CCS ’21: 2021 ACM SIGSAC Conference on Computer and Communications Security, Virtual Event, Republic of Korea, November 15–19, 2021 , Yongdae Kim, Jong Kim, Giovanni Vigna, and Elaine Shi (Eds.). ACM, 1529–1548. doi:10.1145/3460120. 3484550 [18] Alexander V Mantzaris, Wissam Ghantous, Haley Stinebrickner, Samira Jahangiri, and Stephen Webinga. 2026. Steganography with Large Language Models: Key Sensitivity Analysis. The International FLAIRS Conference Proceedings 39, 1 (May 2026). doi:10.32473/flairs.39.1.141573 [19] Eric Mitchell, Yoonho Lee, Alexander Khazatsky, Christopher D Manning, and Chelsea Finn. 2023. Detectgpt: Zero-shot machine-generated text detection using probability curvature. In International conference on machine learning . PMLR, 24950–24962. [20] Antonio Norelli and Michael Bronstein. 2025. LLMs can hide text in other text of the same length. arXiv:2510.20075 [cs.AI] https://arxiv.org/abs/2510.20075 [21] Niels Provos and Peter Honeyman. 2003. Hide and seek: An introduction to steganography. IEEE security & privacy 1, 3 (2003), 32–44. CARTS : Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding 
+
+[22] Vinu Sankar Sadasivan, Aounon Kumar, Sriram Balasubramanian, Wenxiao Wang, and Soheil Feizi. 2023. Can AI-generated text be reliably detected? arXiv preprint arXiv:2303.11156 (2023). [23] Jiaming Shen, Heng Ji, and Jiawei Han. 2020. Near-imperceptible Neural Linguis-tic Steganography via Self-Adjusting Arithmetic Coding. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) ,Bonnie Webber, Trevor Cohn, Yulan He, and Yang Liu (Eds.). Association for Com-putational Linguistics, Online, 303–313. doi:10.18653/v1/2020.emnlp-main.22 [24] Gustavus J Simmons. 1984. The prisoners’ problem and the subliminal channel. In Advances in Cryptology: Proceedings of Crypto 83 . Springer, 51–67. [25] Emily Wenger, Mingjie Chen, Francois Charton, and Kristin E Lauter. 2022. Salsa: Attacking lattice cryptography with transformers. Advances in Neural Information Processing Systems 35 (2022), 34981–34994. [26] Jiaxuan Wu, Zhengxian Wu, Yiming Xue, Juan Wen, and Wanli Peng. 2024. Gen-erative Text Steganography with Large Language Model. In Proceedings of the 32nd ACM International Conference on Multimedia, MM 2024, Melbourne, VIC, Australia, 28 October 2024 - 1 November 2024 , Jianfei Cai, Mohan S. Kankan-halli, Balakrishnan Prabhakaran, Susanne Boll, Ramanathan Subramanian, Liang Zheng, Vivek K. Singh, Pablo César, Lexing Xie, and Dong Xu (Eds.). ACM, 10345–10353. doi:10.1145/3664647.3680562 [27] Liu Zhang, Yiran Yao, Danping Shi, Dongchen Chai, Jian Guo, and Zilong Wang. 2025. Neural-inspired advances in integral cryptanalysis. arXiv preprint arXiv:2505.10790 (2025). [28] Siyu Zhang, Zhongliang Yang, Jinshuai Yang, and Yongfeng Huang. 2021. Prov-ably secure generative linguistic steganography. In Findings of the Association for Computational Linguistics: ACL-IJCNLP 2021 . 3046–3055. [29] Zachary Ziegler, Yuntian Deng, and Alexander Rush. 2019. Neural Linguistic Steganography. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) , Kentaro Inui, Jing Jiang, Vincent Ng, and Xiaojun Wan (Eds.). Association for Computational Linguistics, Hong Kong, China, 1210–1215. doi:10.18653/v1/D19-1115

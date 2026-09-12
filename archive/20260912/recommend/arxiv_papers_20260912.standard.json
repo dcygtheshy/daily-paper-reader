@@ -1,0 +1,94 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-12T21:42:25.042300+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.09604v1",
+      "source": "arxiv",
+      "title": "Watermarks Without Verification: AI Text Watermarking After the EU AI Act",
+      "abstract": "On August 2, 2026, the obligations of Article 50 of the EU AI Act took effect, requiring generative AI providers to mark the content their systems produce and ensure it can be detected as AI-generated. Days later, Anthropic disclosed that every Claude model released after that date embeds a watermark based on SynthID-Text in all generated text, enabled by default with no user opt-out; Google has deployed SynthID-Text in Gemini since 2024. Users objected that the watermark degrades quality, particularly for code, that it secretly encodes identifying information, and, in mutual contradiction, that it is easily removable and inescapable; the vendor answered with assurances of unchanged quality, no identifying information, and robustness to light editing. In this work, we argue that neither the objections nor the assurances can currently be verified and that this unverifiability, rather than watermarking itself, is the substantive governance failure. We sort the contested assertions by what it would take to settle each and evaluate the open-source SynthID-Text implementation on two open-weight models, because no public tool can test the deployed systems. On prose, the measured effect of the watermark does not exceed that of changing the sampling seed. On code, the cost is three points of correctness on one model and below measurement on the other, while detection remains near chance, a limitation of detectability rather than quality. The remaining gaps trace to withheld access or missing institutions and we map each to a requirement: release of matched outputs, configuration disclosure, accredited audits, a shared evaluation protocol, and interoperable detection.",
+      "authors": [
+        "Alexander Nemecek",
+        "Vipin Chaudhary",
+        "Erman Ayday"
+      ],
+      "primary_category": "cs.CY",
+      "categories": [
+        "cs.CY",
+        "cs.AI",
+        "cs.CR"
+      ],
+      "published": "2026-09-09T01:56:17+00:00",
+      "link": "https://arxiv.org/pdf/2609.09604v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "AI text watermarking, detection requirements and robustness under the EU AI Act",
+      "llm_evidence_cn": "欧盟AI法案下的AI文本水印、检测要求与鲁棒性",
+      "llm_evidence": "欧盟AI法案下的AI文本水印、检测要求与鲁棒性",
+      "canonical_evidence": "欧盟AI法案下的AI文本水印、检测要求与鲁棒性",
+      "llm_tldr_en": "After the EU AI Act's Article 50 took effect, vendors embedded SynthID-Text watermarks by default, triggering complaints about quality loss, hidden identifiers and inconsistent robustness; the paper examines this governance gap in AI text watermarking.",
+      "llm_tldr_cn": "欧盟AI法案第50条生效后，生成式AI提供者被要求标记并检测其生成内容，Anthropic与Google相继在Claude和Gemini中默认嵌入基于SynthID-Text的文本水印，且用户无法选择关闭。然而用户质疑水印降低文本与代码质量、暗含身份信息，并对其易被移除与不可规避存在相互矛盾的抱怨。本文围绕这一现实争议，讨论AI文本水印在质量、隐私与鲁棒性之间的权衡。其价值在于揭示水印部署后缺乏有效验证机制的治理困境。",
+      "llm_tldr": "欧盟AI法案第50条生效后，生成式AI提供者被要求标记并检测其生成内容，Anthropic与Google相继在Claude和Gemini中默认嵌入基于SynthID-Text的文本水印，且用户无法选择关闭。然而用户质疑水印降低文本与代码质量、暗含身份信息，并对其易被移除与不可规避存在相互矛盾的抱怨。本文围绕这一现实争议，讨论AI文本水印在质量、隐私与鲁棒性之间的权衡。其价值在于揭示水印部署后缺乏有效验证机制的治理困境。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.10744v1",
+      "source": "arxiv",
+      "title": "CARTS: Contextual Autoregressive Rank Transcoding Steganography for Full-Capacity Keyed Text Encoding",
+      "abstract": "Autoregressive language models can be used to transform a payload text into a stegotext of identical token length by preserving per-position rank information across contexts - a methodology we formalize as Contextual Autoregressive Rank Transcoding Steganography (CARTS). While the Calgacus construction of Norelli et al. demonstrated this phenomenon experimentally, no formal security analysis existed. This paper provides the first rigorous treatment of CARTS. We show its exact correctness under deterministic model assumptions, introduce a rank-coordinate representation in which keys act as bijections on rank-vector space, define relevant security notions and the computational problems naturally associated with the construction - context search, key collisions, message equivocation, and non-commutativity of the encoding maps - and study the theoretical relationships between them, including the characterization of message equivocation in terms of context search, and the tension between key collisions and message equivocation. An empirical study on Llama 3 8B confirms exact recovery of the original payload in all tested cases, finds no key collisions under random key generation, establishes that a hand-crafted collision is local rather than global, and finds no commuting key pairs - suggesting resistance to the attack vectors studied. This work opens a formally grounded research agenda for the constructive use of language models in cryptography and privacy-preserving communication.",
+      "authors": [
+        "Wissam Ghantous",
+        "Alexander V. Mantzaris"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-09-09T18:41:11+00:00",
+      "link": "https://arxiv.org/pdf/2609.10744v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "keyed steganography with formal security analysis, cryptographic framing",
+      "llm_evidence_cn": "带形式化安全分析的密钥隐写，密码学视角",
+      "llm_evidence": "带形式化安全分析的密钥隐写，密码学视角",
+      "canonical_evidence": "带形式化安全分析的密钥隐写，密码学视角",
+      "llm_tldr_en": "Autoregressive language models can encode payload text as equal-length stegotext via per-position rank transcoding, yet prior work lacked formal security analysis. This paper formalizes Contextual Autoregressive Rank Transcoding Steganography, introduces rank-coordinate representations, and proves exact correctness under deterministic model assumptions.",
+      "llm_tldr_cn": "自回归语言模型可将载荷文本转换为同长度隐写文本，但此前仅有实验演示而缺乏形式化安全分析。本文形式化上下文自回归秩转码隐写（CARTS），引入秩坐标表示，并定义相关安全性概念与自然对应的计算问题。在确定性模型假设下，作者证明了该构造的精确正确性，并刻画了密钥在秩向量空间中的双射作用。该工作为自回归隐写提供了首个严格的安全理论基础，可支撑隐蔽通信与相关水印技术。",
+      "llm_tldr": "自回归语言模型可将载荷文本转换为同长度隐写文本，但此前仅有实验演示而缺乏形式化安全分析。本文形式化上下文自回归秩转码隐写（CARTS），引入秩坐标表示，并定义相关安全性概念与自然对应的计算问题。在确定性模型假设下，作者证明了该构造的精确正确性，并刻画了密钥在秩向量空间中的双射作用。该工作为自回归隐写提供了首个严格的安全理论基础，可支撑隐蔽通信与相关水印技术。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
