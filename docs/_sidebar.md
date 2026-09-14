@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-14 <!--dpr-date:20260914-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/14/2609.12909v1-forging-tree-ring-reproducing-and-instrumenting-black-box-semantic-watermark-forgery" data-sidebar-item="{&quot;title&quot;: &quot;Forging Tree-Ring: Reproducing and Instrumenting Black-Box Semantic Watermark Forgery&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.12909v1-forging-tree-ring-reproducing-and-instrumenting-black-box-semantic-watermark-forgery&quot;, &quot;score&quot;: &quot;9.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;针对扩散模型Tree-Ring语义水印的黑盒伪造攻击&quot;}">Forging Tree-Ring: Reproducing and Instrumenting Black-Box Semantic Watermark Forgery</a>
   * 2026-09-12 <!--dpr-date:20260912-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/12/2609.09604v1-watermarks-without-verification-ai-text-watermarking-after-the-eu-ai-act" data-sidebar-item="{&quot;title&quot;: &quot;Watermarks Without Verification: AI Text Watermarking After the EU AI Act&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.09604v1-watermarks-without-verification-ai-text-watermarking-after-the-eu-ai-act&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;欧盟AI法案下的AI文本水印、检测要求与鲁棒性&quot;}">Watermarks Without Verification: AI Text Watermarking After the EU AI Act</a>

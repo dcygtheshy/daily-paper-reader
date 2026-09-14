@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-14",
+  "date": "2026-09-14",
+  "generated_at": "2026-09-14T22:20:36",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/14/2609.12909v1-forging-tree-ring-reproducing-and-instrumenting-black-box-semantic-watermark-forgery",
+      "section": "deep",
+      "title_en": "Forging Tree-Ring: Reproducing and Instrumenting Black-Box Semantic Watermark Forgery",
+      "authors": "Saifur Rahman Tamim, Md Taslimul Hasan Toufique, A. M. Tayeful Islam",
+      "date": "2026-09-11",
+      "pdf": "https://arxiv.org/pdf/2609.12909v1",
+      "score": "9.0",
+      "evidence": "针对扩散模型Tree-Ring语义水印的黑盒伪造攻击",
+      "tldr": "Tree-Ring等语义水印把可检测模式嵌入扩散模型初始噪声隐变量，但近期工作显示其既可移除也可伪造。本文使用作者代码，在显存远低于原研究的双T4 GPU上，复现Müller等针对SDXL的Reprompt黑盒伪造攻击，并对检测器进行插桩。三臂六次试验中，真实图像检出6/6、干净图像0/6、伪造图像5/6，单次耗时325–332秒。受限条件下还恢复出检测器只返回CDF而丢弃的非中心χ²统计量，两个衍生分数在18个观测上以AUC 0.861和0.972区分伪造与干净零假设，半精度补丁经探针验证不改变检测统计量，并公开全部工件。",
+      "tags": "query:watermarking",
+      "abstract_en": "Semantic watermarking schemes such as Tree-Ring hide a detectable pattern in the initial noise latent of a diffusion model. Recent work shows these watermarks are not only removable but forgeable: an attacker who never sees the watermarking key can still produce images the genuine detector accepts. We reproduce the Reprompt forgery attack of Müller et al. against Tree-Ring on Stable Diffusion XL, using the authors' released code, on free-tier dual T4 GPUs with 14.6 GB of usable memory per device, substantially less per-GPU memory than the A40 hardware used in the original study. The attack reproduces. Over six trials of three arms we detect genuine images 6/6, clean images 0/6, and forged images 5/6, at 325-332 s per attack. Three further results came out of running it under constraint. The released detector computes a non-central $χ^2$ statistic and hands back only its CDF, so we recovered the discarded statistic; our recovery matches the released detector exactly, and two natural scores built from it separate the forged arm from the clean null at AUC 0.861 and 0.972 on the same eighteen observations. Running SDXL in half precision requires patching the pipeline's direct autoencoder calls, and a controlled probe confirms the patched path leaves the detector statistic unchanged. Finally, we report a prediction we made from reading the detector source that our measurements then contradicted. The notebook, the pinned fork and every measurement artifact are released with the paper.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

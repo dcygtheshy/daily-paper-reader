@@ -1,0 +1,53 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-14T22:18:10.425636+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.12909v1",
+      "source": "arxiv",
+      "title": "Forging Tree-Ring: Reproducing and Instrumenting Black-Box Semantic Watermark Forgery",
+      "abstract": "Semantic watermarking schemes such as Tree-Ring hide a detectable pattern in the initial noise latent of a diffusion model. Recent work shows these watermarks are not only removable but forgeable: an attacker who never sees the watermarking key can still produce images the genuine detector accepts. We reproduce the Reprompt forgery attack of Müller et al. against Tree-Ring on Stable Diffusion XL, using the authors' released code, on free-tier dual T4 GPUs with 14.6 GB of usable memory per device, substantially less per-GPU memory than the A40 hardware used in the original study. The attack reproduces. Over six trials of three arms we detect genuine images 6/6, clean images 0/6, and forged images 5/6, at 325-332 s per attack. Three further results came out of running it under constraint. The released detector computes a non-central $χ^2$ statistic and hands back only its CDF, so we recovered the discarded statistic; our recovery matches the released detector exactly, and two natural scores built from it separate the forged arm from the clean null at AUC 0.861 and 0.972 on the same eighteen observations. Running SDXL in half precision requires patching the pipeline's direct autoencoder calls, and a controlled probe confirms the patched path leaves the detector statistic unchanged. Finally, we report a prediction we made from reading the detector source that our measurements then contradicted. The notebook, the pinned fork and every measurement artifact are released with the paper.",
+      "authors": [
+        "Saifur Rahman Tamim",
+        "Md Taslimul Hasan Toufique",
+        "A. M. Tayeful Islam"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-11T14:35:42+00:00",
+      "link": "https://arxiv.org/pdf/2609.12909v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "black-box forgery attack on Tree-Ring semantic watermark for diffusion models",
+      "llm_evidence_cn": "针对扩散模型Tree-Ring语义水印的黑盒伪造攻击",
+      "llm_evidence": "针对扩散模型Tree-Ring语义水印的黑盒伪造攻击",
+      "canonical_evidence": "针对扩散模型Tree-Ring语义水印的黑盒伪造攻击",
+      "llm_tldr_en": "This work reproduces and instruments the Reprompt black-box forgery attack against Tree-Ring semantic watermarks in Stable Diffusion XL, showing attackers can generate images that genuine detectors accept without the key.",
+      "llm_tldr_cn": "语义水印方案（如Tree-Ring）将可检测模式隐藏在扩散模型的初始噪声潜变量中，但已有研究表明此类水印不仅可去除，还可被伪造。本文在Stable Diffusion XL上复现并改造了Müller等人的Reprompt伪造攻击，使用作者开源代码在显存受限的双T4显卡上运行。六组三臂实验显示真实图像检出6/6、干净图像0/6、伪造图像5/6，单次攻击约325至332秒。该结果说明扩散模型水印在无密钥条件下存在严重安全漏洞，为水印鲁棒性评估与防御设计提供了可复现的工具与证据。",
+      "llm_tldr": "语义水印方案（如Tree-Ring）将可检测模式隐藏在扩散模型的初始噪声潜变量中，但已有研究表明此类水印不仅可去除，还可被伪造。本文在Stable Diffusion XL上复现并改造了Müller等人的Reprompt伪造攻击，使用作者开源代码在显存受限的双T4显卡上运行。六组三臂实验显示真实图像检出6/6、干净图像0/6、伪造图像5/6，单次攻击约325至332秒。该结果说明扩散模型水印在无密钥条件下存在严重安全漏洞，为水印鲁棒性评估与防御设计提供了可复现的工具与证据。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
