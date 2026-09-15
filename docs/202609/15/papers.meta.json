@@ -1,0 +1,69 @@
+{
+  "label": "2026-09-15",
+  "date": "2026-09-15",
+  "generated_at": "2026-09-15T22:01:13",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202609/15/2609.14856v1-rain-region-aware-inversion-network-for-semantic-watermark-extraction",
+      "section": "deep",
+      "title_en": "RAIN: Region-Aware Inversion Network for Semantic Watermark Extraction",
+      "authors": "Zilai Li",
+      "date": "2026-09-14",
+      "pdf": "https://arxiv.org/pdf/2609.14856v1",
+      "score": "9.0",
+      "evidence": "扩散模型语义水印的基于反演的提取网络",
+      "tldr": "语义水印为扩散模型嵌入所有权信息且保持感知质量，但高斯阴影提取通常需多步扩散反演恢复初始噪声，成本高。本文从扩展流匹配与条件回归出发，观察到高信噪比图像端点附近，只需恢复首步输出中的有用噪声统计量，且水印仅要求潜变量落在正确决策区域。据此提出RAIN轻量无提示提取器，将端点恢复分解为类图像锚点与噪声残差，避免迭代反演和重复U-Net评估。提取成本低于OSI和FARI，实现高效单步语义水印提取。",
+      "tags": "query:watermarking",
+      "abstract_en": "Semantic watermarks for diffusion models embed ownership information into the generative process while preserving perceptual quality, but Gaussian-Shading extraction conventionally requires multi-step diffusion inversion to recover the initial noise. Recent one-step methods show that this cost can be reduced substantially. We study this problem through extended flow matching and conditional regression. The key observation is that, near the high-SNR image endpoint, recovering a useful noise statistic given by the first-step output of the extended flow matching in the high-SNR regime is much simpler than reconstructing the full inverse trajectory, and Gaussian Shading only requires the recovered latent to remain in the correct watermark decision region. Based on this observation, we propose a lightweight, prompt-free extractor that decomposes endpoint recovery into an image-like anchor and a noise-oriented residual, which increases the capability of the model to utilize GPU parallel computation. The resulting method avoids iterative inversion and repeated evaluation of a diffusion-scale U-Net, providing an efficient one-step extraction pipeline with a concise theoretical interpretation. The computational cost of extracting noise is lower than that of both OSI and FARI. The github repo is there: https://github.com/TheLovesOfLadyPurple/RAIN-lightweight-NN-for-one-step-semantic-watermark-extraction",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/15/2609.14257v1-denmark-robust-semantic-watermarking-for-diffusion-language-models",
+      "section": "deep",
+      "title_en": "DenMark: Robust Semantic Watermarking for Diffusion Language Models",
+      "authors": "Tianhao Ma, Weihao Xuan, Dong-Dong Wu, Farshid Nooshi, Takashi Ishida, Gang Niu, Naoto Yokoya, Masashi Sugiyama",
+      "date": "2026-09-13",
+      "pdf": "https://arxiv.org/pdf/2609.14257v1",
+      "score": "8.0",
+      "evidence": "向扩散语言模型去噪过程注入语义水印以增强鲁棒性",
+      "tldr": "语义文本水印对改写更鲁棒，但现有方法依赖自回归模型先补全候选单元再打分，难以适配扩散语言模型（DLM）：其中间去噪时语义单元不完整且 token 更新顺序灵活。DenMark 将密钥信号注入 DLM 去噪过程，按固定 token 区域划分输出，并用临时 rollout 做语义前瞻，估计不完整区域的最终语义，优先选择水印分数更高的局部更新以逐步累积证据。检测时校准扫描候选单元大小，以抵抗语义攻击的边界偏移。在四个 DLM、三个数据集、四种攻击的 48 种组合中，DenMark 在所有检测指标上均最优。",
+      "tags": "query:watermarking",
+      "abstract_en": "Semantic text watermarks encode signals in meaning rather than surface token choices, offering robustness to paraphrasing and other semantic-preserving edits. Existing semantic watermarking methods are primarily designed for autoregressive language models (ARLMs), where completed candidate units can be generated and scored before generation proceeds. This paradigm does not naturally extend to diffusion language models (DLMs), where semantic units remain incomplete during intermediate denoising steps and tokens may be updated in flexible orders. We propose DenMark, a semantic watermarking framework that injects key-dependent signals directly into the DLM denoising process. DenMark partitions the output into fixed token regions and uses temporary rollouts as semantic lookahead: conditional completions estimate the eventual semantics of an incomplete region, enabling DenMark to select local updates with higher estimated semantic watermark scores. Repeating this procedure across denoising steps progressively accumulates watermark evidence in the final output. For detection, DenMark uses calibrated scanning over candidate unit sizes to remain robust to boundary shifts introduced by semantic attacks. Across four DLMs, three datasets, and four semantic attacks, DenMark achieves the best results across all reported detection metrics in all 48 backbone-dataset-attack combinations. These results demonstrate that DenMark provides an effective mechanism for robust semantic watermarking in DLMs.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/15/2609.15657v1-predictive-likelihood-ratios-for-language-model-watermark-detection",
+      "section": "quick",
+      "title_en": "Predictive Likelihood Ratios for Language Model Watermark Detection",
+      "authors": "Li Ma",
+      "date": "2026-09-14",
+      "pdf": "https://arxiv.org/pdf/2609.15657v1",
+      "score": "7.0",
+      "evidence": "基于预测似然比的语言模型水印鲁棒检测",
+      "tldr": "语言模型水印检测需判断观测 token 与密钥伪随机变量是否相关。本文在 pivot 框架下构造预测似然比，对不确定概率赤字与残差尾分布做先验平均，并引入尾形/有效宽度混合及分层扩展。在多种尾形、尾宽和三个时间尺度上，联合尾混合的最大 II 类错误遗憾为 .0080，优于等尾混合的 .0962；在两个开源模型的八个温度匹配单元中 AUC 均优于等尾基线。该工作提升了检测对替代设定的稳健性，但未给出均匀功效保证或任意编辑鲁棒性。",
+      "tags": "query:watermarking",
+      "abstract_en": "Keyed watermark detection tests dependence between observed tokens and pseudorandom variables reconstructed from a secret key. Building on the pivotal framework of Li et al. (2025), we construct predictive likelihood ratios that average over uncertain probability deficits and residual-tail distributions. The aim is robust detection power across alternative specifications without requiring a single signal-strength tuning. A mixture prior combines tail shape and effective width; hierarchical extensions allow within-document variation in deficit or width. The test maximizes prior-averaged power at a fixed size, but is not generally uniformly most powerful or minimax. Under the exact conditional pivot null, normalized predictive alternatives selected before each observation yield a Bayes factor that is also a test martingale: Type I error control is unaffected by alternative misspecification and remains valid under optional stopping. This guarantee does not cover violations of the conditional null, and the interpolated implementation has no certified anytime guarantee. Gumbel marginal likelihoods are evaluated by fixed quadrature. Across the evaluated tail-shape and tail-width alternatives and three horizons, the union-tail mixture has maximum observed Type II error regret .0080, compared with .0962 for the equal-tail mixture, relative to the best tested rule. On temperature-matched outputs from two open models, it improves AUC over the equal-tail baseline in all eight non-saturated model-temperature cells, although the leading reference score generally has higher AUC. Supplementary experiments show retained power under independent null-like replacement and smaller changes from hierarchical dependence modeling. The evidence supports robustness across the evaluated alternatives, not uniform power guarantees or resistance to arbitrary text edits.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/15/2609.15799v1-rapid-a-real-time-defense-against-unauthorized-model-distillation-for-text-to-image-services",
+      "section": "quick",
+      "title_en": "RAPID: A Real-Time Defense Against Unauthorized Model Distillation for Text-to-Image Services",
+      "authors": "Zihan Wang, Boheng Li, Rui Zhang, Wenshu Fan, Qingchuan Zhao, Tianwei Zhang, Hongwei Li, Guowen Xu",
+      "date": "2026-09-14",
+      "pdf": "https://arxiv.org/pdf/2609.15799v1",
+      "score": "6.0",
+      "evidence": "面向文本到图像模型的防蒸馏防御",
+      "tldr": "扩散文本到图像模型的能力是重要知识产权，却易受黑盒输出蒸馏窃取。现有扰动防御依赖逐样本优化，计算与延迟高，损害在线服务可用性。RAPID将防御扰动集成到VAE解码器，以自参考潜变量最大化提升目标可达性，并用重建引导颜色正则阻断捷径、强化视觉破坏。在4个T2I模型和4个数据集上对比5种基线，RAPID持续降低替代模型生成质量，同时保持服务视觉保真。该工作为部署中的T2I系统提供实时防未授权蒸馏范式。",
+      "tags": "query:watermarking",
+      "abstract_en": "Diffusion-based text-to-image (T2I) models are increasingly used for visual content creation, making their generation capability a valuable intellectual property asset. However, this capability is vulnerable to black-box output-based distillation, where an adversary queries the service, collects prompt-image pairs, and trains an unauthorized substitute model that mimics its generation behavior. Existing perturbation-based defenses apply sample-wise optimization to make generated images disruptive to unauthorized training, but introduce substantial computation and latency that reduce the usability of online T2I services. A natural solution is to integrate defensive perturbations into the VAE decoder, allowing the protected model to generate defended images directly without online sample-wise optimization. However, existing sample-wise objectives struggle to transfer to the shared decoder setting. We empirically find that a defensive shared decoder induces a substantially smaller latent shift than sample-wise optimization, suggesting that objective reachability matters more than destructiveness in this setting. To overcome this limitation, we propose RAPID, a self-referenced latent maximization framework that removes external dependencies and encourages the same model update to induce consistently disruptive effects across training samples, thereby improving reachability. We further introduce reconstruction-guided color regularization that blocks the latent shortcut and reinforces visual disruption. Extensive experiments on four T2I models and four datasets, with comparisons against five representative baselines, show that RAPID consistently degrades substitute-model generation quality while preserving service visual fidelity. Our work establishes a paradigm for real-time protection against unauthorized distillation in deployed T2I systems.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

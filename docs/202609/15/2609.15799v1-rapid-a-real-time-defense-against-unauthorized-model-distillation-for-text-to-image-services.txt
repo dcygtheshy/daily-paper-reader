@@ -1,0 +1,2859 @@
+RAPID: A Real-Time Defense Against Unauthorized Model Distillation for
+Text-to-Image Services
+Zihan Wang1, Boheng Li2, Rui Zhang1, Wenshu Fan1, Qingchuan Zhao3,
+Tianwei Zhang2, Hongwei Li1, and Guowen Xu1,*
+1 University of Electronic Science and Technology of China, Chengdu, China
+2 Nanyang Technological University, Singapore
+3 City University of Hong Kong, Hong Kong SAR, China
+zihanwang@std.uestc.edu.cn, guowen.xu@uestc.edu.cn
+Abstract—Diffusion-based text-to-image (T2I) models are in-
+creasingly used for visual content creation, making their
+proprietary generation capability a valuable intellectual prop-
+erty asset. However, this capability is vulnerable to black-
+box output-based distillation, where an adversary queries the
+service, collects prompt-image pairs, and trains an unauthorized
+substitute model that mimics its generation behavior. Existing
+perturbation-based defenses mainly protect generated images
+by applying sample-wise optimization, making the perturbed
+images disruptive to unauthorized training. Although effective,
+such sample-wise optimization introduces substantial computa-
+tion and latency, significantly reducing the usability of online
+T2I services. A natural solution is to integrate the defensive
+perturbation into the generation process itself, such as the
+VAE decoder, allowing the protected model to generate de-
+fended images directly without sample-wise online optimization.
+However, existing sample-wise optimization designs struggle to
+transfer to the shared decoder setting. We empirically find that
+the defensive shared decoder induces a substantially smaller
+latent shift than sample-wise optimization, suggesting that
+objective reachability matters more than destructiveness in the
+shared decoder setting. To overcome this limitation, we propose
+RAPID, a self-referenced latent maximization framework that
+removes external dependencies and directly encourages the same
+model update to induce consistently disruptive effects across all
+training samples, thereby improving reachability. We further
+introduce a reconstruction-guided color regularization that
+blocks the latent shortcut and reinforces the visual disruption.
+Extensive experiments on four T2I models and four datasets,
+with comparisons against five representative baselines, show
+that RAPID consistently degrades the generation quality of the
+substitute model while preserving service visual fidelity. Our
+work establishes a paradigm for real-time protection against
+unauthorized distillation in deployed T2I systems.
+1. Introduction
+Diffusion-based text-to-image (T2I) generation has be-
+come a foundation of commercial image-generation services,
+with systems such as Stable Diffusion, DALL-E, Imagen,
+Clean
+ Images
+Perturbed
+ Images
+Unprotected
+ T2I Provider
+Anti-Distillation
+ T2I Provider
+Generated
+ Images
+Generated
+ Images
+ෞ
+𝐳0
+𝐳𝟎
+Unauthorized Model Distillation
+Unauthorized Model Distillation
+Encoder
+Decoder
+Encoder
+Decoder
+Decoder
+Encoder
+Encoder
+Decoder
+w/o Defense
+RAPID Defense
+ෞ
+𝐳0
+𝐳𝟎
+Generated
+ Images
+Clean
+Images
+Perturbed
+Images
+Figure 1. Application scenario and overview of RAPID. A provider adopting
+RAPID can substantially degrade the generation quality of the distilled
+model, whereas an unprotected provider cannot.
+Midjourney, and Adobe Firefly [1], [2], [3], [4], [5] achieving
+high-quality, controllable synthesis through large-scale diffu-
+sion modeling [6], [7], [8]. Building such systems demands
+substantial resources: curating and cleaning billion-scale
+image-text datasets [9], designing complex training pipelines,
+and sustaining large-scale distributed computing over ex-
+tended periods. These investments make their outstanding
+generative capabilities valuable intellectual property.
+However, there is a shortcut that avoids such substantial
+overhead. Existing studies on black-box model stealing and
+distillation show that model behavior can often be approx-
+imated through query access alone [10], [11], [12], [13]. By
+repeatedly querying the target service and collecting prompt-
+image pairs, a malicious user can train an unauthorized sub-
+stitute diffusion model to imitate the victim service’s prompt
+alignment, visual style, output distribution, subject and style
+handling, and specialized generation behaviors [12], [14],
+[15], [16]. Recent provider-facing reports also identify API-
+based distillation as an operational risk [17], [18]. This threat
+is difficult to prevent because it can be mounted through
+arXiv:2609.15799v1  [cs.CR]  14 Sep 2026
+
+
+black-box access to publicly returned outputs, and the behav-
+ior of a distiller is indistinguishable from that of a normal user.
+Unless large-scale industrial-level distillation is performed,
+it is difficult to distinguish such behavior [10], [12], [17].
+Recognizing this risk, major generative-AI service
+providers, including OpenAI, Google Gemini, Midjourney,
+and Stability AI, explicitly prohibit the use of generated
+outputs or API services for reverse engineering, developing
+competing services, or training competing models [19], [20],
+[4], [21]. However, policy restrictions alone do not technically
+prevent model distillation. A technical defense must reduce
+the training utility of the output stream collected by attackers
+while preserving the visual quality received by benign users.
+Existing defenses against unauthorized T2I training can
+be broadly divided into post-verification, anomaly query de-
+tection, and preventive image perturbation. Post-verification
+methods, including watermarking and fingerprinting, embed
+detectable signals into model parameters or generated outputs
+so that a provider can later test whether a suspicious model
+or output derives from protected assets [22], [23], [24], [25],
+[26], [27], [28], [29]. These methods support attribution
+and accountability, but the defender must first observe the
+suspicious model or its outputs before verification becomes
+possible. Anomaly query detection distinguishes benign user
+queries from suspicious distillation-oriented queries. For ex-
+ample, in Anthropic’s distillation-detection setting for Fable
+5, queries identified as distillation attempts may be routed
+to a weaker model Opus 4.8 [30]. However, false positives
+may incorrectly flag benign queries and thereby significantly
+degrade the user experience [31], [32]. Although perturbation-
+based defenses offer direct protection for copyrighted content,
+they are primarily designed for offline settings involving fixed
+images, subjects, styles, or editing scenarios, in which each
+image is carefully optimized before release. Consequently,
+these methods typically require a separate perturbation to be
+learned for each image, incurring substantial computational
+overhead and resource consumption [33], [34], [35], [36],
+[37]. Such a sample-wise paradigm leads to a deployment
+mismatch for online services, which must protect all public
+outputs while preserving low latency, high throughput, and
+feasible GPU capacity [38], as verified in Section 4.1.
+Motivated by previous work [25], a natural and effective
+solution is to internalize protection into the VAE decoder; this
+forward-pass design shifts protection from sample-wise post-
+processing to the deployed generation path, eliminating the
+online protection overhead. Nevertheless, existing sample-
+wise optimization designs show limited effectiveness in
+disrupting query-based service distillation, even though
+they exhibit strong disruptive capability in sample-wise
+offline settings, as empirically verified in our experiments.
+To investigate the underlying cause of this failure, we
+conduct a motivation study and obtain two key observations.
+First, under shared decoder optimization, the optimization
+bottleneck shifts from destructiveness to ensuring the
+reachability of the objective. Second, a large latent shift
+does not necessarily induce stronger visual disruption.
+Motivated by these observations, we propose RAPID, a
+forward-pass protection mechanism against T2I distillation.
+As illustrated in Figure 1, this forward-pass design relocates
+the protection mechanism from sample-wise post-processing
+to the generative pathway of the deployed decoder. To under-
+stand why sample-wise optimization objectives exhibit poor
+effectiveness when adapted to a shared decoder, we examine
+the fundamental differences between sample-wise perturba-
+tion optimization and shared decoder finetuning. Specifically,
+we identify two key constraints governing the optimization
+process: the parameter-sharing restriction and the visual-
+preservation restriction. Based on these constraints, we for-
+mulate the Reachable Set as a central requirement for reach-
+ability, which comprises visually feasible shared decoder
+updates capable of satisfying the objective up to a prescribed
+threshold τ. Guided by this, we further analyze two failure
+modes of existing methods: target dependence and stochastic-
+ity dependence. To address these limitations, we design a self-
+referenced objective that eliminates external dependence and
+better matches the shared decoder structure. Moreover, we
+introduce a reconstruction-guided color regularization term to
+avoid the latent shortcut and enhance disruption effectiveness
+against model distillation. Together, these designs produce
+perturbations that are more reachable for the shared decoder
+and more effective at disrupting downstream distillation.
+Extensive experiments on four T2I models and four
+datasets, together with comparisons against five representative
+baselines, show that RAPID consistently degrades substitute
+model generation quality while preserving benign service
+visual fidelity. Our work establishes a new service-level
+paradigm for real-time protection against unauthorized
+distillation in deployed T2I systems. Our contributions are
+summarized as follows:
+•
+We introduce forward-pass protection for T2I distilla-
+tion defense, which embeds defensive perturbations
+into the deployed generation pipeline through decoder
+finetuning, thereby eliminating the online overhead
+of sample-wise protection.
+•
+We provide a reachability analysis for shared decoder
+optimization by characterizing the reachable set of
+feasible decoder updates. This analysis motivates our
+self-referenced latent maximization objective. We
+further introduce reconstruction-guided color regu-
+larization to mitigate latent shortcuts and composite
+visual constraints to preserve visual quality.
+•
+We conduct a comprehensive evaluation on four T2I
+models and four datasets, together with comparisons
+against five representative baselines. The results
+show that RAPID achieves the strongest disruption
+across most evaluated configurations while preserving
+benign service visual fidelity.
+2. Preliminaries and Related Work
+2.1. Latent Diffusion Models
+Latent diffusion models (LDMs) reduce the cost of high-
+resolution image synthesis by running the diffusion process
+in a learned compressed representation rather than directly in
+
+
+the pixel space [6], [1], [39], [40]. An autoencoding module,
+commonly implemented as a variational autoencoder, first
+learns an encoder E that maps an image x into a latent code
+z = E(x) and a decoder D that reconstructs the image from
+this latent representation [41], [1]. The denoising network is
+then trained on noisy latents, often with text conditioning, to
+predict a clean latent representation whose semantics match
+the conditioning prompt [6], [1], [2], [3]. Most modern T2I
+systems, such as Stable Diffusion, follow this design as latent-
+space generation enables efficient high-resolution synthesis
+while largely preserving controllability and visual quality. [1],
+[42]. At inference time, an LDM starts from a sampled noisy
+latent and repeatedly applies the denoiser or sampler to obtain
+a prompt-aligned latent [43], [1]. The VAE decoder then con-
+verts this latent into the final image returned by the service.
+This separation between latent generation and image decod-
+ing is central to our threat setting. The denoiser and internal
+latents remain private to the provider, but the decoded image
+is released to the user and can therefore become training
+supervision for an unauthorized downstream model. Conse-
+quently, the decoder is the last provider-controlled component
+before the output crosses the black-box service boundary,
+making it a natural location for service-internal protection.
+2.2. Query-Based Model Distillation
+Query-based model distillation converts public model
+access into a training signal for an unauthorized substitute
+model. Prior work on model stealing, also widely referred
+to as model distillation, has shown that an adversary can
+approximate a victim model’s functionality by querying a
+prediction API and training a local model on the observed
+input-output pairs [10], [12], [11], [13]. In the T2I setting, the
+victim service Gv receives a prompt pi and returns an image
+yi = Gv(pi). An attacker can similarly build a stolen dataset
+Dsteal = {(pi, yi)}n
+i=1 through repeated service queries [44].
+The attacker then trains an unauthorized substitute model
+Ga on these collected pairs, often using an open-source
+diffusion backbone or a distilled diffusion architecture as
+the starting point [45], [14], [15], [16]. The goal of this
+attack is broader than copying individual returned images.
+The attacker seeks to transfer the victim service’s prompt
+alignment, visual style, output distribution, and specialized
+generation behavior into another model.
+2.3. Defenses Against Unauthorized Distillation
+Existing defenses against unauthorized training are
+mainly designed for dataset-level offline protection or
+service-level abuse response, and can be broadly divided
+into post-verification methods [25], [26], [29], [23], [28],
+service-side anomaly detection [46], [17], and preventive
+perturbation [33], [34], [35], [37], [36] methods.
+Post
+Verification.
+Post-verification
+methods,
+mainly
+watermarking and fingerprinting, embed detectable signals
+into model parameters, model behaviors, protected datasets,
+or generated outputs so that a provider can later test whether
+a suspicious model or output is derived from protected
+assets [22], [23], [24], [27], [28], [29]. Although these
+methods effectively support attribution and accountability,
+they are primarily retrospective: evidence can be verified
+only after a suspected model or its outputs are observed.
+As a result, they do not prevent collection at the source
+and offer limited protection against misuse that remains
+unobserved. Moreover, ordinary output watermarks may
+not reliably survive finetuning, retraining [47], and whether
+watermark traces remain detectable after distillation is
+uncertain. Thus, post-verification alone is insufficient for
+preventing unauthorized T2I distillation.
+Service-Side Anomaly Query Detection. Another line of
+defense monitors the public API interface and attempts to
+detect extraction behavior from usage traces. Such systems
+can score accounts or sessions by query volume, timing,
+prompt diversity, repeated exploration of prompt or image-
+embedding space, near-duplicate requests, and deviations
+from benign query distributions; suspicious clients may then
+be throttled, challenged, logged for investigation, or denied
+high-throughput access [46], [30]. For example, Anthropic
+recently reported that Claude Fable 5 uses a detector to
+identify requests related to distillation and automatically falls
+back to Claude Opus 4.8 when such requests are flagged [30].
+However, these detectors depend on behavioral assumptions
+that a defense-aware attacker can manipulate. An adaptive
+attacker can spread queries across accounts, mix extraction
+prompts with ordinary traffic, sample prompts from public
+distributions, slow down request rates, or use active-learning
+strategies that appear closer to benign usage [48]. Moreover,
+this does not prevent model distillation at its source; rather,
+it serves more as an auxiliary defense mechanism. Therefore,
+anomaly detection is valuable for operational monitoring and
+abuse triage, but it is not enough for source-level protection
+against model distillation.
+Preventive
+Image
+Perturbation.
+Preventive
+image-
+perturbation methods utilize adversarial optimization to mod-
+ify released images so that downstream generative training,
+personalization, or editing receives a harmful or unreliable
+signal [33], [34], [35], [36], [49], [37]. One line of work per-
+turbs latent representations. For example, Glaze [34] moves
+artwork toward a misleading target style in latent space, and
+PhotoGuard [37] includes an encoder-side protection that
+drives an editing model toward an incorrect representation.
+Such latent-space objectives are comparatively stable because
+they optimize against a fixed representation path rather than
+unrolling the full downstream training process. Another line
+of work directly targets diffusion learning or the personaliza-
+tion process. AdvDM [33], Anti-DreamBooth [36], and Meta-
+Cloak [49] optimize perturbations against diffusion training.
+These diffusion-process objectives are more expensive and
+less stable because they must approximate downstream train-
+ing dynamics; Anti-DreamBooth, for instance, uses bilevel
+optimization that alternates between adversarial-image up-
+dates and surrogate personalization training.Overall, although
+existing perturbation-based defenses are effective, they pri-
+marily operate as offline, sample-wise protections for fixed
+images, subjects, styles, or editing targets. These methods in-
+cur substantial computational and memory overhead, making
+
+
+them unsuitable for online service scenarios where additional
+per-output optimization is not permitted. We therefore study
+an intrinsic alternative, where protection is learned offline
+and embedded into the deployed generation path, such that
+each public output is protected within a single forward pass.
+3. Threat Model
+Scenario. We study black-box model distillation against a
+public T2I service. The defender is the service owner or
+operator who provides generation access to users through
+a public interface while keeping the model weights, train-
+ing data, internal latents, and defense parameters private.
+The attacker is a malicious user who accesses the same
+public interface as normal users. By repeatedly querying
+the service, the attacker records the submitted prompts and
+the corresponding returned images, thereby constructing a
+prompt-image dataset for unauthorized training.
+Attacker Capabilities. The attacker has only black-box
+access to the deployed service. The attacker can choose
+arbitrary prompts, issue repeated queries, store returned
+images, and train a substitute model using the collected
+prompt-image pairs. We consider a strict scenario in which
+the attack is not subject to a query budget, since stealing a
+state-of-the-art closed-source T2I model can bring substantial
+economic benefits.
+Defender Capabilities. The defender has full control over
+the deployed T2I model. Specifically, the defender can
+access and modify model parameters, train the full model or
+selected modules, and apply service-side output processing
+before returning images to users. The defender does not know
+the training strategy adopted by the downstream attacker.
+Defender Goals. The defender has two defense goals: quality-
+preserving for benign users and disrupting effectiveness for
+unauthorized T2I training. Quality-preserving means the
+protection should minimize visible quality loss in public
+service outputs. Protected images should remain close to
+normal service outputs and avoid obvious color shifts, high-
+frequency noise, local artifacts, or semantic drift that would
+degrade user experience. Disrupting effectiveness means the
+same protected images should disrupt their usefulness as
+supervision for model distillation. When an attacker trains a
+substitute model on collected protected outputs, the resulting
+model should exhibit degraded generation quality compared
+with a model trained on clean outputs.
+4. Challenge and Motivating Studies
+We
+analyze
+the
+challenges
+of
+applying
+existing
+perturbation-based methods to distillation scenarios and pro-
+vide insights for method design through motivation studies.
+4.1. Challenge I: Excessive Online Overhead
+Sample-wise protection optimizes a separate perturbation
+for each image as:
+δ∗
+i = arg min
+δi Lattack(xi + δi).
+(1)
+TABLE 1. ONLINE PROTECTION OVERHEAD. s DENOTES SECONDS AND
+MB DENOTES MEGABYTES.
+Additional Online Protection Overhead
+Method
+Opt Steps Latency CUDA Memory
+FGSM
+1
+4.53s
+33097.27MB
+PhotoGuard
+200
+118.94s
+33587.55MB
+Nightshade
+200
+120.27s
+33587.55MB
+Glaze
+200
+120.15s
+33587.55MB
+RAPID (Ours)
+0
+0s
+0MB
+Here, δ∗
+i is the optimized perturbation for image xi, δi is the
+perturbation variable, and Lattack is the downstream attack-
+oriented loss minimized by the sample-wise optimizer. This
+sample-wise optimization allows each image to receive an
+optimized perturbation tailored to its downstream objective,
+such as style cloaking, personalization disruption, prompt-
+specific poisoning, or diffusion-editing disruption [34], [36],
+[35], [37], [33], thereby exhibiting strong disruption effective-
+ness. However, the same sample-wise design creates a deploy-
+ment mismatch for online T2I services. The perturbation must
+be optimized after each image is generated, typically through
+repeated forward and backward passes on surrogate models.
+Adding this iterative loop to every public output increases
+GPU cost, average latency, and tail-latency unpredictability.
+To evaluate the online protection cost of prior methods,
+we conduct experiments on an RTX A6000 on Glaze [34],
+Nightshade [35], PhotoGuard [37], and one-step adversarial
+optimizers known for their efficiency, FGSM [50] on
+1024×1024 resolution images. The results are shown in
+Table 1. Although FGSM uses only a single optimization step,
+it still incurs 4.53 seconds of latency and 33 GB of memory
+overhead. Other optimization-based methods increase latency
+to approximately two minutes. More importantly, in high-
+throughput service deployments, such overhead scales
+proportionally with the service volume, leading to substantial
+resource waste and ultimately becoming unacceptable to both
+users and service providers. Such overhead makes sample-
+wise optimization impractical for online T2I services, where
+each user query must be answered with low latency and high
+throughput [38]. This limitation motivates a forward-pass
+protection mechanism that avoids query-time optimization
+altogether. Specifically, we internalize perturbation generation
+into the T2I model VAE decoder, so that protected images
+are produced during the standard forward generation process
+without adding sample-wise online optimization, eliminating
+the excessive overhead.
+4.2. Challenge II: Limited Disruption Effectiveness
+The second challenge is that existing optimization designs
+provide limited downstream disruption after being adapted
+to an intrinsic decoder-level defense. As shown in Figure 4,
+direct adaptations of representative protection objectives to
+intrinsic defense, including targeted optimization methods
+such as PhotoGuard [37], Glaze [34], and Nightshade [35],
+as well as proxy diffusion loss optimization methods such
+as AdvDM [33] and Anti-DreamBooth [36], lead to limited
+
+
+protection effectiveness, which is insufficient to disrupt unau-
+thorized model distillation. To investigate the reason why con-
+ventional perturbation objectives fail in this setting, we design
+the following motivating study using the CelebA [51] dataset,
+with PixArt [52] as the protected source model, and SSD [53]
+as the downstream distillation surrogate. For each objective,
+we optimize protected images under the same visual budget,
+and the settings are aligned with those in the main experi-
+ments. After the protection training, we feed each protected
+image xp into the downstream surrogate VAE to obtain its
+latent representation Es(xp) and reconstructed image ˆxp =
+Ds(Es(xp)), where Es and Ds denote the surrogate VAE
+encoder and decoder. For comparison, we also include a self-
+referenced latent maximization attack that maximizes down-
+stream latent discrepancy, as well as our RAPID. To quantify
+downstream disruption from both latent and visual perspec-
+tives, we compare the protected images xp with the clean
+outputs xr, which are generated from the same latents using
+a clean decoder, in terms of both latent deviation and VAE re-
+construction deviation. Specifically, we measure latent devia-
+tion using MSE, and quantify reconstruction-visible deviation
+using L2, LPIPS, CIEDE2000, SSIM, and PSNR between the
+reconstructed version of xp and the clean reference image xr.
+Table 2 shows the motivating study results. The key
+observations are as follows:
+⋆Observation I: Reachability matters more than nominal
+disruptiveness. As shown in Table 2, PhotoGuard, Glaze,
+Nightshade, AdvDM, and Anti-DreamBooth induce only
+limited downstream latent gaps under the same visual budget.
+These objectives are disruptive in their original sample-wise
+settings, where each perturbation is optimized independently,
+but this disruptiveness does not directly transfer to our shared
+decoder setting. For example, PhotoGuard yields a latent gap
+of only 37.63, whereas Latent Max reaches 115.24. This ob-
+servation suggests that the critical factor is not only whether
+an objective is destructive, but whether the optimization
+design is reachable by the shared decoder optimization. If
+their rewarded directions cannot be jointly expressed by one
+shared decoder, their downstream effect remains weak even
+when the original sample-wise objective is strong.
+⋆Observation II: A large latent gap does not necessarily
+imply large visible disruption. Direct latent maximization
+produces the largest latent discrepancy, reaching 115.24.
+However, the larger latent distance does not necessarily
+translate into stronger visual disruption, as its reconstruction-
+visible metrics remain much weaker than those of RAPID.
+Moreover, although Nightshade yields a smaller latent gap
+of 63.01 compared with 115.24 for Latent max, its visual
+discrepancy remains comparable or even more pronounced.
+This result suggests that latent-only maximization may
+exploit a shortcut in the downstream latent space, where the
+latent representation changes substantially while the recon-
+structed image quality remains comparatively less affected
+or even unaffected. We attribute this phenomenon to the
+constrained nature of shared decoder optimization: the model
+tends to find solutions that enlarge latent discrepancies while
+inducing limited visual changes, as these solutions are easier
+to reach within the feasible, narrow decoder optimization
+TABLE 2. MOTIVATING STUDY ON DISRUPTION EFFECTIVENESS. LG
+DENOTES LATENT MSE GAP; L2, LP, DE, SS, AND PN DENOTE L2,
+LPIPS, CIEDE2000, SSIM, AND PSNR, RESPECTIVELY.
+Motivating Disruption Study
+Method
+LG↑
+L2↑
+LP↑DE↑
+SS↓
+PN↓
+Clean
+1.93 0.0010 0.0001 0.06 0.999 60.74
+AdvDM
+30.50 0.0169 0.0431 1.48 0.959 35.56
+Anti-DB
+28.88 0.0114 0.0446 1.18 0.964 39.07
+PhotoGuard
+37.63 0.0158 0.0254 1.36 0.969 36.35
+Glaze
+41.50 0.0194 0.0953 1.91 0.914 34.41
+Nightshade
+63.01 0.0353 0.1335 3.47 0.872 29.19
+Latent max
+115.24 0.0256 0.1365 2.80 0.829 31.94
+RAPID
+103.55 0.0410 0.2086 7.17 0.830 27.89
+space. We refer to this behavior as the latent shortcut. This
+motivates an optimization strategy that explicitly avoids this
+shortcut, thereby converting targeted perturbations into more
+effective downstream reconstruction disruption.
+4.3. Challenge III: Poor Visual Quality
+Traditional adversarial optimization generally uses a
+single visual constraint to bound the visual difference of
+adversarial examples and preserve their stealthiness [50],
+[54]. Specifically, LPIPS-based constraints are used by
+Glaze and Nightshade, DSSIM-based constraints are used
+by Fawkes [55], and l∞-based constraints are widely used
+in prior image-protection systems [54]; these constraints
+have been verified effective in their original optimization set-
+tings [34], [35], [55], [33], [37]. However, when these losses
+are applied to our optimization setting, they fail to adequately
+preserve the visual quality of the generated images. The
+optimized images are shown in Figure 2. We find that the op-
+timized image may satisfy the single chosen constraint, such
+as LPIPS, DSSIM, or l∞, while still exhibiting visible color
+shifts, local artifacts, and high-frequency noise that would be
+unacceptable in a commercial T2I service. We speculate that,
+under the challenging shared decoder optimization setting,
+relying on a single visual constraint leads to metric-specific
+overfitting. Consequently, the optimized images may still
+suffer from noticeable perceptual degradation relative to the
+original images, even when they satisfy the prescribed metric
+constraint. Therefore, this observation motivates the use of
+multiple visual metrics in the optimization objective, with the
+visual fidelity term treated as the dominant serving constraint.
+5. Methodology
+RAPID is designed around the three service-level
+challenges identified above. First, it addresses the latency
+challenge by moving adversarial optimization offline into
+decoder protection training, which induces no sample-wise
+online optimization. Second, RAPID analyzes the factors that
+limit disruption effectiveness after sample-wise objectives
+are transferred to a shared decoder, and uses this analysis to
+guide the method design. Third, RAPID addresses the visual
+
+
+Reference
+LPIPS
+DSSIM
+l∞
+Figure 2. Visual quality under different visual constraints in RAPID
+optimization on the CelebA dataset. Following prior work, we adopt the
+following thresholds: LPIPS = 0.05, DSSIM = 0.007, and ϵ = 32/255.
+quality challenge with composite constraints that preserve
+color fidelity, perceptual structure, spatial smoothness, and
+local consistency.
+5.1. Service-Internal Forward-Pass Protection
+RAPID addresses the latency challenge by moving
+protection from online image optimization into the offline
+service-side VAE decoder optimization. Inspired by prior
+work [25], the provider learns a protected VAE decoder
+offline and deploys it as part of the normal generation path.
+Let θ0 be the parameters of the frozen reference decoder, with
+D0 = Dθ0, and let θ⋆be the protected decoder parameters
+learned offline. During offline optimization, Dθ denotes the
+trainable protected decoder with current parameters θ; after
+training, θ is set to θ⋆for deployment. For a service latent
+z, the clean reference output and protected public output
+are xr = Dθ0(z), xp = Dθ⋆(z). Here, z is produced by the
+denoiser, xr is the image the original decoder would have
+returned, and xp is the image returned by the protected
+decoder. At deployment, the provider replaces Dθ0 with
+Dθ⋆. This design separates offline training cost from online
+serving cost, so that serving-time cost no longer scales with
+the number of protection optimization steps.
+5.2. Reachable Shared Decoder Disruption
+Difficulty in the Shared Decoder Optimization. The
+motivating study in Section 4 shows that sample-wise
+objectives cannot be directly transferred to decoder training,
+because moving protection from image-level perturbations
+to a shared decoder update changes the feasible optimization
+geometry. This setting imposes two coupled restrictions.
+First, decoder protection is subject to a parameter-sharing
+restriction: instead of assigning an independent perturbation
+δi to each image, all protected outputs must be produced by
+a single shared update ∆θ = θ−θ0. Second, it is subject to a
+visual-preservation restriction: the update must remain within
+a small visual budget so that service outputs stay close to their
+clean references. We therefore define the visually feasible
+update set as Cϵ = ∆θ : Lvis(∆θ) ≤ϵ, where Lvis measures
+the visual deviation between protected outputs and their clean
+references. Because protected outputs for all inputs must
+remain visually close to their clean counterparts, the shared
+parameter update ∆θ is constrained to be small. Our analysis
+therefore stays in the first-order regime around θ0 and omits
+higher-order terms. Around the clean decoder, the image
+perturbation induced by ∆θ can be locally approximated as
+∆x(z) = Dθ0+∆θ(z)−Dθ0(z) ≈∂Dθ(z)
+∂θ
+
+θ=θ0
+[∆θ] = Jz[∆θ].
+(2)
+where Jz =
+∂Dθ(z)
+∂θ
+
+θ=θ0 denotes the Jacobian of the
+decoder output with respect to its parameters. This follows
+from a first-order Taylor expansion around θ0, with higher-
+order terms omitted under the small-update regime enforced
+by visual preservation. To compare objectives under the
+same constraints, we move to the surrogate VAE latent
+space. For training latents D = {zi}N
+i=1, let xi
+r = Dθ0(zi),
+xi
+p = Dθ0+∆θ(zi), hi
+r = Es(xi
+r), and hi
+p = Es(xi
+p).
+With Ji∆θ denoting the coordinate form of Jzi[∆θ] and
+Ki = ∂Es(x)/∂x|x=xir, the local latent response is
+hi
+p −hi
+r = Ai∆θ + O(∥∆θ∥2
+2),
+Ai = KiJi.
+(3)
+Every Ai is evaluated at the clean decoder and treated
+as fixed, rather than changing with the current decoder
+parameters, since ∆θ is small. We use Ai∆θ as the dominant
+reachable response throughout this local analysis.
+We now characterize reachability under the shared
+decoder setting. Specifically, reachability is measured by
+the volume of decoder parameter updates ∆θ that remain
+feasible and satisfy the current optimization objective within
+a prescribed loss threshold.
+Definition 1 (Reachable Set). Given the local shared re-
+sponse map A and the visual feasible set Cϵ, the reachable
+set of a minimization objective L at level τ is defined as
+ΩL(τ) = {∆θ ∈Cϵ : L(∆θ) ≤τ}.
+(4)
+The reachable set contains the visually feasible shared
+decoder updates that can satisfy the objective up to level
+τ. Since different objectives may have different numerical
+scales and geometries, we use this definition to compare
+their reachability under the same shared response map A
+and the same visual feasible set Cϵ.
+Failure Modes of Existing Objectives. Existing optimization
+objectives can be broadly categorized into two types: tar-
+geted perturbation objectives that operate in the VAE latent
+space [34], [35], [37], and diffusion-learning perturbation
+objectives that disrupt the diffusion learning stage [33], [36].
+They are effective in their original sample-wise settings, but
+they become restrictive once all samples must share one
+decoder update. For targeted perturbations with an external
+target, each image has its own perturbation δi, so the opti-
+mizer can move sample i toward its own target independently.
+The target latent ti therefore only constrains a sample-wise
+variable. In contrast, shared decoder optimization must fit all
+target residuals with one vector ∆θ. Let di = ti −hi
+r and
+d = [d1; . . . ; dN]. The local target-matching loss is
+Ltgt(∆θ) = 1
+N
+N
+X
+i=1
+∥Ai∆θ −di∥2
+2 = 1
+N ∥A∆θ −d∥2
+2. (5)
+
+
+𝜃0
+𝜃0
+𝜃0
+Targeted Pertubation 
+Diffusion-Learning Perturbation
+Self-Reference Maximization
+Ωtgt 𝜏
+Ωdiff 𝜏
+Ωself 𝜏
+Feasible Update 𝒞𝜖
+Loss Curve
+Stationary Point
+𝜃0
+Initial Decoder
+Reachable Set Ω 𝜏
+Negative Gradient
+Figure 3. Conceptual comparison of effective reachable sets across three
+loss categories under the same visually feasible region. The gray circle
+denotes the visually feasible update set Cϵ. The colored region represents
+the reachable set, and its area indicates the size of this set.
+Ωtgt(τ) =
+
+∆θ ∈Cϵ : ∥A∆θ −d∥2
+2 ≤Nτ
+	
+.
+(6)
+This reachable set is small because the shared response must
+land near a preassigned residual vector d, rather than merely
+become disruptive. As shown in Figure 3, the target often
+lies far from the original parameters that can be reached to
+achieve disruption effectiveness. The reachable set is given
+by the intersection between Cϵ and the set of parameters
+whose loss is below τ, and occupies only a limited region.
+Moreover, every response induced by the shared decoder lies
+in Col(A). If PA is the orthogonal projection onto Col(A),
+then the component of d outside this column space creates
+an unavoidable residual:
+inf
+∆θ∈Cϵ Ltgt(∆θ) ≥1
+N ∥(I −PA)d∥2
+2.
+(7)
+Therefore, these objectives fail for a structural reason: they
+depend on an external residual d that may be incompatible
+with the response space reachable by one visually constrained
+shared update. We refer to this failure as target dependence.
+Diffusion-learning perturbations avoid explicit external
+targets, but introduce a different failure mode. For a single
+image, the perturbation can be repeatedly adapted to sampled
+timesteps and noise values until it increases the surrogate
+denoising error. In shared decoder optimization, however, the
+same ∆θ must work across all samples and across the stochas-
+tic diffusion process. Let ϵψ denote the surrogate denoiser, t a
+sampled diffusion timestep, η ∼N(0, I) the forward noising
+seed, and ¯αt the cumulative noise-schedule coefficient. Using
+hi
+p ≈hi
+r + Ai∆θ, the signed minimization loss expands as
+˜hi,t,η(∆θ) = √¯αt(hi
+r + Ai∆θ) +
+√
+1 −¯αtη.
+(8)
+Ldiff(∆θ) = −1
+N
+N
+X
+i=1
+Et,η
+h ϵψ(˜hi,t,η(∆θ), t) −η
+
+2
+2
+−
+ϵψ(˜hi,t,η(0), t) −η
+
+2
+2
+i
+.
+(9)
+Ωdiff(τ) = {∆θ ∈Cϵ : Ldiff(∆θ) ≤τ} .
+(10)
+Here, ˜hi,t,η(∆θ) is the noisy latent obtained by applying
+the diffusion forward process to the locally approximated
+protected latent, not a generated image. The expectation
+over the sampled timestep t and noise seed η is critical.
+A standard diffusion training schedule, such as DDPM,
+typically involves about 1000 timesteps [6]. Moreover, each
+optimization step samples both the timestep and the initial
+noise independently, so the objective is optimized only
+through stochastic timestep-noise pairs rather than a fixed
+deterministic target. However, different timestep-noise pairs
+induce substantially different optimization loss curves. As
+illustrated in Figure 3, for clarity, we only plot the loss curves
+induced by three timestep-noise pairs. Since the objective
+requires each loss term to be minimized, namely moving
+away from each corresponding stationary point, the reachable
+set becomes the intersection of the reachable sets associated
+with multiple loss curves. This intersection further narrows
+the overall reachable region. Due to the large variation among
+loss curves, this averaging can induce a concentration effect:
+a shared update may satisfy the reachable set by concentrating
+errors on a few samples or timestep-noise pairs, leaving most
+training outputs insufficient to disrupt distillation. In practice,
+many more timestep-noise pairs are involved, making the
+intersection increasingly restrictive. As a result, the reachable
+region further shrinks, which leads to poor reachability. We
+refer to this failure as stochasticity dependence.
+Self-Referenced Maximization Avoids Two Failure Modes.
+The two restrictive cases reveal two different failure sources:
+latent targeted perturbations depend on a target residual that
+may be unreachable, while diffusion-learning perturbations
+depend on a stochastic denoising proxy whose gradients may
+not align under one shared update. We therefore optimize
+directly in the VAE latent space with a self-referenced
+objective. Each clean output acts as its own reference, so the
+objective rewards the magnitude of the response produced
+by the shared decoder itself:
+Lself(∆θ) = −1
+N
+N
+X
+i=1
+∥Ai∆θ∥2
+2 = −1
+N ∥A∆θ∥2
+2.
+(11)
+Ωself(τ) =
+
+∆θ ∈Cϵ : ∥A∆θ∥2
+2 ≥−Nτ
+	
+.
+(12)
+This set is less restrictive because it imposes only an energy
+condition on the same feasible set Cϵ. As shown in Figure 3,
+the optimization is directly anchored at the clean decoder
+parameters θ0. By contrast, RAPID adopts a self-referenced
+objective centered at the clean decoder θ0. Instead of pursuing
+an external target or optimizing against stochastic diffusion-
+proxy losses, both of which introduce additional optimization
+dependency, it directly encourages the decoder-induced latent
+perturbation to deviate from its original latent representation.
+This formulation removes unnecessary external constraints,
+reduces conflicts among sampled objectives, and better
+exploits the shared nature of decoder parameters. As a result,
+RAPID induces a larger reachable effective region under
+the same visual feasibility constraint. Note that independent
+reparameterized sampling in the surrogate VAE encoder
+introduces slight latent differences even when xp = xr,
+thereby providing a nonzero training signal at initialization.
+Avoiding the Latent Shortcut with Color Regularization.
+The preceding analysis motivates a self-referenced objective,
+
+
+with latent-discrepancy maximization as a natural choice.
+However, as shown in Section 4.3, latent-only maximization
+constrains only the output of the surrogate encoder, and its
+effect may not persist through the complete VAE bottleneck,
+thereby inducing latent shortcuts. This behavior is consistent
+with the denoising and manifold-projection view of autoen-
+coders [56], [57], [1], where the decoder reconstruction tends
+to map corrupted or perturbed inputs back toward the learned
+data manifold, thereby attenuating perturbations that are not
+effectively supported by the decoder. Consequently, large
+latent discrepancies can be suppressed or smoothed by the
+surrogate decoder, leading to visually similar reconstructions.
+To block this shortcut, RAPID adds a reconstruction-
+guided color regularization term while preserving the same
+self-referenced optimization structure. The term still com-
+pares each protected sample with its own clean reference,
+rather than introducing an external target direction. After the
+protected latent passes through the surrogate decoder, the reg-
+ularization encourages the discrepancy induced by the same
+shared update ∆θ in reconstructed image space. Because the
+perturbation budget within Cϵ is limited, the reconstruction
+signal should allocate this constrained perturbation capacity
+to perceptually meaningful directions, rather than merely
+arbitrary pixel-level perturbations. Color appearance is a
+salient component of human vision, and standardized color-
+difference metrics are specifically designed to approximate
+perceived color changes [58], [59], [60]. We therefore
+instantiate this reconstruction term using CIEDE2000 [59]:
+Lcolor = ∆E00(ˆxp, xr) = ∆E00(Ds(hp), xr),
+(13)
+where ˆxp = Ds(hp) is the image reconstructed by the
+surrogate decoder. Maximizing ∆E00(ˆxp, xr) encourages
+the latent shift to appear in reconstructed image space
+to enhance disruption effectiveness: the delivered image
+xp remains visually close to xr, while the downstream
+reconstruction ˆxp becomes inconsistent with the clean
+reference. Note that the optimization remains self-referenced
+to achieve reachability, as the rewarded discrepancy is still
+measured between the protected output induced by the
+shared decoder and its corresponding clean reference.
+Final disruption objective. The objective combines self-
+referenced latent maximization with reconstruction-guided
+color regularization:
+Lobj = −λzLlatent −λcLcolor.
+(14)
+Here, Llatent = MSE(hp, hr) and Lcolor are weighted
+by λz and λc. The negative signs maximize downstream
+divergence under the global minimization objective.
+5.3. Composite Visual Fidelity Constraints
+As observed in Section 4.3, the substantial optimization
+difficulty can cause the model to overfit to a single visual
+metric, leaving visible color shifts, local artifacts, and high-
+frequency noise despite satisfying that metric. To address this
+issue, RAPID introduces composite visual constraints that
+jointly regulate color consistency, perceptual similarity, pixel-
+level distortion, and structural fidelity. These constraints
+Algorithm 1 RAPID defensive training
+Require: Generated training images X; modules and weights
+defined above.
+Ensure: Trained protected decoder Dθ⋆.
+1: Initialize trainable Dθ from D0 and freeze E, D0, Es, Ds.
+2: Build training latents Z ←{E(x) : x ∈X}.
+3: for each training step with latent minibatch Bz ⊂Z do
+4:
+xr ←D0(Bz),
+xp ←Dθ(Bz).
+5:
+Compute thresholded Llpips, Lcie, Ltv, and Lpatch.
+6:
+Lvis ←Llpips + wcieLcie + wtvLtv + wpatchLpatch.
+7:
+Sample hp ∼Es(xp) and hr ∼Es(xr).
+8:
+ˆxp ←Ds(hp).
+9:
+Llatent ←MSE(hp, hr),
+Lcolor ←∆E00(ˆxp, xr).
+10:
+Ltotal ←λvLvis −λzLlatent −λcLcolor.
+11:
+Update Dθ by descending ∇θLtotal.
+12: end for
+13: return Dθ⋆←Dθ.
+regularize different aspects of visual quality, including
+overall color consistency with CIEDE2000 [59], perceptual
+structure with LPIPS [61], high-frequency smoothness with
+total variation [62], and local color consistency with a patch-
+local CIEDE2000 term, inspired by local quality maps [63]:
+Lcie = max(∆E00(xp, xr) −τcie, 0),
+Llpips = max(LPIPS(xp, xr) −τlpips, 0),
+Ltv = max(TV (xp) −TV (xr) −τtv, 0),
+Lpatch = Ej[max(∆E00(xp,j, xr,j) −τpatch, 0)].
+(15)
+Here, xp and xr denote the protected and reference
+images, τ· denotes the corresponding threshold, and xp,j
+and xr,j are the protected and reference patches indexed by
+j, with Ej averaging over patch indices. The visual loss is
+defined as:
+Lvis = Llpips + wcieLcie + wtvLtv + wpatchLpatch. (16)
+Here, wcie, wtv, and wpatch denote the weights of the
+corresponding term in this formulation. Together, these
+complementary hinge penalties reduce reliance on any single
+visual metric and keep the delivered output close to the ref-
+erence in color, structure, smoothness, and local consistency.
+5.4. Full Objective and Training Procedure
+The final training loss combines the composite visual loss
+with the two downstream-divergence terms introduced above:
+Ltotal = λvLvis −λzLlatent −λcLcolor.
+(17)
+We set λv ≫λz, λc to ensure that visual fidelity remains the
+dominant constraint under the prescribed threshold. Training
+updates only Dθ while freezing E, D0, Es, Ds. The training
+images are generated by the same source T2I model used by
+the service before being encoded by E. As a result, the train-
+ing latents are aligned with the service generation distribution,
+rather than being drawn from an unrelated image-encoding
+distribution. Algorithm 1 summarizes the procedure.
+6. Evaluation
+Due to space limitations, we provide the detailed exper-
+imental setup and results in Appendix A and Appendix B.
+
+
+TABLE 3. MAIN RESULTS OF RAPID COMPARED WITH FIVE BASELINES. ADV, ANTI, NIGHT, AND PG DENOTE ADVDM, ANTI-DREAMBOOTH,
+NIGHTSHADE, AND PHOTOGUARD [37], RESPECTIVELY.
+SSD
+Dataset
+Metric Ref.
+Clean Ours
+Adv
+Anti Glaze Night
+PG
+AFHQ
+FID↑
+–
+40.14 48.67 86.72 40.50 49.34 48.12 46.64
+QA↓
+4.63
+3.02
+1.84
+2.71
+2.96
+2.47
+2.74
+2.66
+PK↓
+22.50 21.38 20.60 21.41 21.42 20.93 20.95 20.88
+AES↓
+5.85
+5.88
+5.27
+5.91
+5.95
+5.68
+5.73
+5.60
+Pokemon
+FID↑
+–
+64.02 80.81 66.27 64.68 66.21 72.13 71.90
+QA↓
+4.62
+2.95
+1.93
+2.97
+3.04
+3.22
+2.56
+2.36
+PK↓
+23.31 22.60 21.88 22.62 22.67 22.46 22.17 22.24
+AES↓
+5.78
+5.62
+5.01
+5.64
+5.67
+5.53
+5.36
+5.25
+CelebA
+FID↑
+–
+45.98 59.91 46.17 45.64 51.74 59.40 53.90
+QA↓
+4.91
+3.97
+1.95
+4.21
+4.05
+3.15
+2.91
+2.67
+PK↓
+22.62 21.23 19.76 21.26 21.19 20.70 20.23 20.41
+AES↓
+6.04
+5.94
+5.43
+6.07
+6.02
+5.87
+5.63
+5.50
+Landscape
+FID↑
+–
+93.07 113.66 91.60 89.46 103.70 112.39 97.15
+QA↓
+4.51
+4.17
+1.76
+4.17
+4.20
+3.30
+3.32
+3.28
+PK↓
+22.70 22.12 20.84 22.23 22.29 21.61 21.37 21.82
+AES↓
+5.94
+5.94
+5.12
+5.99
+5.97
+5.63
+5.55
+5.68
+PixArt
+Dataset
+Metric Ref.
+Clean Ours
+Adv
+Anti Glaze Night
+PG
+AFHQ
+FID↑
+–
+60.13 132.62 76.65 86.00 103.33 87.20 112.95
+QA↓
+4.63
+3.10
+1.59
+2.98
+3.16
+2.83
+3.11
+2.30
+PK↓
+22.50 20.81 19.75 20.99 20.93 20.56 20.81 20.32
+AES↓
+5.85
+5.97
+5.25
+6.06
+5.98
+5.88
+5.95
+5.62
+Pokemon
+FID↑
+–
+76.94 101.27 80.47 78.82 80.36 89.23 91.50
+QA↓
+4.62
+3.68
+1.45
+3.39
+3.48
+3.37
+2.43
+2.22
+PK↓
+23.31 22.29 21.38 22.17 22.23 22.17 21.69 21.70
+AES↓
+5.78
+5.73
+4.82
+5.73
+5.72
+5.60
+5.22
+5.30
+CelebA
+FID↑
+–
+67.61 102.42 60.75 70.69 77.82 76.34 76.91
+QA↓
+4.91
+4.18
+1.91
+4.36
+4.31
+3.13
+3.22
+3.80
+PK↓
+22.62 20.90 19.31 21.03 20.87 20.32 20.06 20.46
+AES↓
+6.04
+6.16
+5.19
+6.12
+6.23
+5.74
+5.71
+5.99
+Landscape
+FID↑
+–
+106.37 146.86 110.50 109.80 117.26 128.78 112.14
+QA↓
+4.51
+4.32
+1.74
+4.23
+4.39
+4.09
+3.27
+3.13
+PK↓
+22.70 21.78 20.31 21.67 21.83 21.54 21.08 21.34
+AES↓
+5.94
+5.92
+5.06
+5.94
+5.98
+5.79
+5.57
+5.66
+SDXL
+Dataset
+Metric Ref.
+Clean Ours
+Adv
+Anti Glaze Night
+PG
+AFHQ
+FID↑
+–
+50.45 75.09 38.84 43.56 47.12 51.65 39.11
+QA↓
+4.63
+3.61
+1.64
+3.88
+3.91
+3.45
+3.14
+3.49
+PK↓
+22.50 21.66 19.72 21.90 21.73 21.47 21.12 21.69
+AES↓
+5.85
+5.96
+5.16
+5.93
+6.04
+6.08
+5.89
+5.84
+Pokemon
+FID↑
+–
+69.81 76.50 64.76 71.31 77.67 72.91 72.91
+QA↓
+4.62
+4.22
+2.78
+4.30
+4.18
+3.95
+3.68
+3.35
+PK↓
+23.31 22.64 21.81 22.72 22.59 22.35 22.21 22.25
+AES↓
+5.78
+5.71
+5.25
+5.71
+5.68
+5.62
+5.61
+5.45
+CelebA
+FID↑
+–
+49.60 72.49 49.17 50.07 69.83 68.13 62.02
+QA↓
+4.91
+4.26
+2.03
+4.25
+4.18
+2.98
+2.91
+2.88
+PK↓
+22.62 21.68 19.30 21.62 21.54 20.73 20.52 20.27
+AES↓
+6.04
+6.03
+5.26
+6.08
+6.02
+5.80
+5.62
+5.46
+Landscape
+FID↑
+–
+98.30 120.48 99.30 99.96 110.71 109.17 100.82
+QA↓
+4.51
+4.21
+2.59
+4.27
+4.23
+3.05
+3.52
+3.34
+PK↓
+22.70 22.10 20.87 22.02 21.95 21.41 21.46 21.67
+AES↓
+5.94
+5.82
+5.22
+5.84
+5.79
+5.57
+5.60
+5.57
+Shuttle3
+Dataset
+Metric Ref.
+Clean Ours
+Adv
+Anti Glaze Night
+PG
+AFHQ
+FID↑
+–
+62.59 120.37 69.40 67.23 79.11 80.77 79.03
+QA↓
+4.63
+3.56
+1.50
+2.98
+3.40
+2.61
+2.42
+3.05
+PK↓
+22.50 21.38 19.79 21.24 21.37 20.74 20.56 20.97
+AES↓
+5.85
+6.25
+5.36
+6.20
+6.23
+6.04
+5.68
+5.98
+Pokemon
+FID↑
+–
+73.88 102.17 76.97 79.94 78.09 86.90 87.74
+QA↓
+4.62
+4.33
+1.77
+4.01
+4.07
+3.56
+2.54
+2.72
+PK↓
+23.31 22.62 21.27 22.47 22.50 22.32 21.97 22.07
+AES↓
+5.78
+5.93
+5.00
+5.89
+5.90
+5.66
+5.31
+5.43
+CelebA
+FID↑
+–
+76.75 105.59 73.41 68.60 69.78 93.34 85.49
+QA↓
+4.91
+4.57
+1.81
+4.67
+4.73
+4.50
+2.99
+2.77
+PK↓
+22.62 20.94 19.10 21.13 21.16 21.00 20.11 20.19
+AES↓
+6.04
+6.36
+5.28
+6.46
+6.39
+6.28
+5.67
+5.74
+Landscape
+FID↑
+–
+102.43 115.87 101.47 106.01 109.77 114.51 113.33
+QA↓
+4.51
+4.61
+2.18
+4.59
+4.61
+3.85
+3.27
+3.00
+PK↓
+22.70 22.15 21.13 22.08 22.10 21.69 21.31 21.44
+AES↓
+5.94
+6.09
+5.39
+6.09
+6.13
+5.82
+5.60
+5.68
+6.1. Experimental Setup
+Model. We report results across four representative models:
+SSD, PixArt, SDXL, and Shuttle3 [53], [52], [42], [64].
+These models cover Stable-Diffusion-style latent diffusion
+backbones and newer high-resolution T2I generators.
+Dataset. The evaluation uses four image datasets covering
+animal faces, human faces, natural landscapes, and Pokemon-
+style images: AFHQ, CelebA, Landscape, and Pokemon [65],
+[51], [66], [67]. For each dataset, we randomly sample
+5,000 images to obtain decoder-training prompts, 500 disjoint
+images to obtain prompts for constructing the generated pro-
+tected dataset for model distillation, and 500 disjoint images
+to obtain prompts for evaluating the distilled substitute model.
+We caption each sampled image with BLIP-Large [68] and
+use the resulting caption as its associated prompt.
+Metrics. We organize evaluation metrics into two groups:
+substitute model distillation metrics and visual fidelity
+metrics to evaluate the disruption effectiveness and visual-
+quality preservation. For the compact table, we introduce a
+short name for each metric.
+Substitute distillation metrics. These metrics evaluate the
+quality of the substitute model trained on collected service
+outputs, where stronger defense corresponds to more severe
+degradation of the distilled model. We report Fr´echet Incep-
+tion Distance (FID) [69], QAlign score (QA) [70], PickScore
+(PK) [71], and Aesthetic score (AES) [72]. Higher FID
+indicates a larger distributional mismatch from the target ref-
+erence, while lower QA, PK, and AES indicate lower human-
+aligned quality, preference, and visual appeal, respectively.
+Visual fidelity metrics. These metrics evaluate whether the
+delivered protected image xp remains visually close to the
+clean service reference xr produced by the original decoder.
+We report LPIPS (LP) [61], SSIM (SS) [63], CIEDE2000
+(DE) [59], and PSNR (PN) [73]. Better visual fidelity
+corresponds to lower LPIPS and CIEDE2000, and higher
+
+
+Disruption Effectiveness Comparison with Five Baselines
+Dataset
+Clean
+RAPID (Ours)
+AdvDM
+Anti-DB
+Glaze
+Nightshade
+PhotoGuard
+AFHQ
+CelebA
+Landscape
+Pokemon
+Figure 4. Disruption effectiveness against model distillation using PixArt as the source model and SSD as the substitute model across four datasets.
+SSIM and PSNR. The same visual metrics are also used in
+the motivating study in Table 2.
+Baselines. We compare RAPID with five representative
+preventive image-protection baselines: AdvDM [33], Anti-
+DreamBooth [36], Glaze [34], Nightshade [35], and
+PhotoGuard [37]. In their original form, these methods
+optimize sample-specific perturbations; in our comparison,
+we adapt each objective to the same decoder-training and
+deployment protocol as RAPID. All baseline decoders use
+the same dataset splits, prompts, source model, substitute
+model, image resolution, and visual fidelity constraints to
+ensure a matched decoder-level comparison; this comparison
+evaluates whether their objectives remain effective in our
+service-internal setting, not whether the original methods
+fail in their intended deployment settings. Detailed baseline
+adaptations are provided in Appendix A.
+Implementation Details. In the main experiments, Ref.
+denotes samples from the initial SSD substitute model
+before distillation, Clean denotes samples after distillation on
+clean service outputs, and defense columns denote samples
+after distillation on protected outputs. We train the decoder
+protection stage for 5 epochs with full parameters and
+then perform downstream distillation training for 2 epochs
+using LORA [74]. All generated images are produced at a
+resolution of 1024 × 1024. For distillation evaluation, the
+attacker collects prompt-image pairs from the protected
+service and trains the SSD substitute model on this data.
+6.2. Main Results
+We evaluate black-box T2I distillation across four source
+models and four datasets; Table 3 reports the quantitative
+results. Figure 4 further shows representative substitute
+model generations after distillation and supports three key
+findings. First, the degradation is dataset-wide: across AFHQ,
+Pokemon, CelebA, and Landscape, RAPID consistently
+yields much worse distilled substitutes than Clean and is
+usually stronger than the adapted protection baselines. On
+PixArt, for instance, QAlign drops from 3.10 under Clean to
+1.59 under RAPID, 3.68 to 1.45, 4.18 to 1.91, and 4.32 to 1.74
+on the four datasets, respectively. Second, the effect is not
+tied to a single source model. RAPID is the strongest defense
+in most evaluated source-model and metric settings, including
+nearly all SSD settings and across all listed dataset-metric
+settings on PixArt. On Landscape, for example, it reduces
+QAlign from 4.17 under Clean to 1.76 under RAPID on SSD,
+4.32 to 1.74 on PixArt, 4.21 to 2.59 on SDXL, and 4.61 to
+2.18 on Shuttle3. Third, RAPID substantially outperforms
+the five adapted baselines. On PixArt with AFHQ, RAPID
+achieves a QAlign score of 1.59, far below AdvDM 2.98,
+Anti-DreamBooth 3.16, Glaze 2.83, Nightshade 3.11, and
+PhotoGuard 2.30. Moreover, as shown in the generated
+images, RAPID introduces not only pronounced structural
+perturbations, such as noticeable background stripes, which
+we attribute to the induced latent shift produced by
+self-referenced latent maximization, but also clear color
+fluctuations, which are caused by the color regularization. In
+contrast, other defenses may distort individual examples but
+often remain visually closer to the Clean column. Together,
+the results show that RAPID delivers the most consistent
+degradation among the evaluated defenses of the attacker’s
+distilled substitute models among the evaluated defenses.
+
+
+Qualitative Results of Benign Visual Fidelity
+Output
+AFHQ
+CelebA
+Landscape
+Pokemon
+Clean
+RAPID
+Figure 5. Benign visual fidelity examples across four datasets.
+Cross-Dataset Generalization
+Generation Set
+Pokemon
+Landscape
+CelebA
+Example
+FID↑
+91.54
+132.61
+103.68
+QA↓
+2.02
+1.78
+1.75
+PK↓
+21.57
+20.43
+19.17
+AES↓
+5.14
+4.98
+5.29
+Figure 6. Cross-dataset generalization when the decoder is trained on AFHQ
+and evaluated on Pokemon, Landscape, and CelebA generation sets.
+6.3. Benign Visual Fidelity
+Due to space limitations, the quantitative visual-quality
+metrics are provided in Appendix B. We evaluate RAPID
+across four models and four datasets. We first use the
+corresponding source model to generate 500 samples. The
+same latent representations are then reconstructed by both the
+clean decoder and the protected decoder, and the resulting
+outputs are used to compute the evaluation metrics. Here,
+we present a visual comparison between protected and clean
+examples in this section. As shown in Figure 5, the composite
+visual constraints adopted by RAPID preserve visual quality
+effectively, introducing limited perceptible degradation across
+all four datasets. This demonstrates the effectiveness of the
+composite visual constraints in preserving visual quality.
+6.4. Cross-Dataset Generalization
+We evaluate cross-dataset generalization by fixing the
+protected decoder trained on AFHQ and collecting protected
+outputs from the Pokemon, Landscape, and CelebA genera-
+tion sets. This setting reflects a realistic distillation scenario,
+where the attacker’s query dataset is unlikely to be limited
+to the in-domain training set and may instead come from
+out-of-domain data sources. Therefore, a practical defense
+should retain effectiveness beyond the decoder-training dis-
+tribution. The results in Figure 6 show that the protected
+decoder remains disruptive when outputs are collected from
+generation sets beyond the decoder-training distribution.
+Different Training Methods
+Metric
+Full Parameters
+Custom Diffusion
+SVDiff
+Clean
+RAPID
+Clean
+RAPID
+Clean
+RAPID
+Example
+FID↑
+56.00
+82.03
+178.86
+252.51
+57.10
+53.12
+QA↓
+3.30
+2.58
+1.76
+1.14
+3.32
+2.59
+PK↓
+21.05
+20.67
+19.44
+18.92
+20.94
+20.79
+AES↓
+6.03
+5.80
+5.45
+4.90
+5.98
+5.66
+Figure 7. Effectiveness across three training methods.
+Specifically, QAlign remains low across Pokemon, Land-
+scape, and CelebA, at 2.02, 1.78, and 1.75, respectively. The
+images generated by the substitute also exhibit a substantial
+degradation in quality. We observe evident color shifts
+across all three datasets, together with pronounced artifacts
+around the foreground entities. We speculate that this cross-
+dataset generalization arises because RAPID avoids external
+dependencies and instead encourages the shared decoder
+update to capture the general patterns of perturbations that
+are more generalizable across data distributions. Such a
+commonality-oriented optimization objective encourages the
+model to identify a generalizable perturbation, rather than
+over-relying on external dependency. Overall, RAPID realizes
+a generalizable perturbation that can remain effective against
+out-of-distribution downstream distillation data.
+6.5. Different Training Methods
+We evaluate three training methods used in model
+distillation: full parameter finetuning, Custom Diffusion [75],
+and SVDiff [76]. The results are shown in Figure 7.
+Specifically, the selected Custom setting reduces QAlign from
+its clean reference value of 1.76 to 1.14, while also decreasing
+PickScore and Aesthetic from 19.44 and 5.45 to 18.92 and
+4.90, respectively. Full finetuning remains vulnerable to
+distillation disruption: QAlign, PickScore, and Aesthetic
+decrease from 3.30, 21.05, and 6.03 to 2.58, 20.67, and 5.80,
+respectively, while FID increases from 56.00 to 82.03. SVDiff
+likewise reduces QAlign from 3.32 to 2.59. The generated
+samples also show a clear decrease in image quality: the
+generated data exhibit noticeable artifacts and evident color
+discrepancies. We attribute this to the fact that these training
+methods all rely on latent-space representations; therefore,
+perturbations introduced in the latent space can effectively
+generalize across different training methods. Overall, RAPID
+remains effective under all three common training methods,
+demonstrating its generalized disruptive capability.
+6.6. Robustness
+We evaluate robustness against two black-box attacker
+variants: changing the collected data mixture and preprocess-
+ing protected images before substitute training.
+Different Protected-Output Ratios. We consider a realistic
+mixed-data scenario in which the attacker’s distillation dataset
+
+
+Robustness to Protected Data Ratio
+Ratio
+100%
+80%
+60%
+40%
+20%
+Example
+FID↑
+132.62
+93.03
+105.24
+94.75
+87.31
+QA↓
+1.59
+2.23
+2.16
+2.47
+2.54
+PK↓
+19.75
+20.41
+20.24
+20.47
+20.57
+AES↓
+5.25
+5.48
+5.57
+5.81
+5.83
+Figure 8. Robustness to the protected-data ratio.
+Robustness to Image Transformation
+Transform
+Clean
+Center Crop
+Gaussian
+JPEG
+Example
+FID↑
+60.13
+115.10
+108.14
+84.88
+QA↓
+3.10
+1.87
+2.74
+2.59
+PK↓
+20.80
+19.74
+20.78
+20.68
+AES↓
+5.97
+5.34
+5.92
+5.76
+Figure 9. Robustness against three common image transformations.
+may not be obtained solely from the protected model, but may
+also contain clean training data from other sources. We there-
+fore evaluate the robustness of RAPID against mixed-data
+attackers by varying the protected-output ratio in the collected
+distillation dataset from 20% to 100%. The results are shown
+in Figure 8. Overall, as the proportion of protected data in-
+creases, the generation quality of the substitute model exhibits
+a decreasing trend. Specifically, the 100% protected-output
+setting gives the lowest QAlign, 1.59, whereas the weakest
+20% setting still keeps QAlign at 2.54, which is also a severe
+decrease compared with the Clean setting. The results show
+that RAPID can effectively degrade generation quality even
+at a low protected-output ratio, demonstrating its robustness.
+Different Preprocessing Schemes. We consider a realistic
+scenario in which, after obtaining the distillation data, the
+attacker may apply certain preprocessing transformations
+to the data. We evaluate three attacker-side preprocessing
+schemes: Center crop (scaling factor = 0.9), Gaussian noise
+(σ = 0.1), and JPEG compression (factor = 75) [49], [77],
+[78]; Figure 9 shows the results. Specifically, every prepro-
+cessing scheme keeps QAlign below the Clean value of 3.10:
+center crop reaches 1.87, Gaussian noise 2.74, and JPEG
+compression 2.59. Thus, although common preprocessing
+can partially reduce the disruptive effect of RAPID on
+distillation training, RAPID still effectively degrades the
+generation quality of the distilled model. This demonstrates
+the robustness of RAPID against data transformations.
+Ablation Study of Surrogate Model
+Model
+PixArt
+SDXL
+Clean
+RAPID
+Clean
+RAPID
+Example
+FID↑
+51.15
+51.44
+43.99
+73.43
+QA↓
+3.27
+2.74
+4.31
+3.45
+PK↓
+21.24
+20.82
+21.44
+20.64
+AES↓
+6.15
+5.94
+6.13
+5.89
+Figure 10. Surrogate model ablation on AFHQ with PixArt as source model.
+Ablation Study of Disruption Loss Design
+Loss
+Clean
+DE+Latent
+(Ours)
+Latent
+DE
+LP+Latent L2+Latent
+Example
+FID↑
+60.13
+132.62
+101.69
+91.47
+102.12
+90.56
+QA↓
+3.10
+1.59
+2.00
+2.03
+2.55
+2.31
+PK↓
+20.80
+19.75
+20.26
+20.43
+20.63
+20.46
+AES↓
+5.97
+5.25
+5.39
+5.58
+5.71
+5.52
+Figure 11. Ablation study on disruption loss design. DE denotes CIEDE2000
+color regularization, Latent denotes the self-referenced latent maximization,
+and LPIPS/L2 denote regularizations used to test latent-shortcut avoidance.
+6.7. Ablation Study
+Finally, we investigate how surrogate models and ob-
+jective variants influence the performance of RAPID. More
+ablation studies are presented in Appendix B.
+Different Surrogate Models. We evaluate the effect of
+surrogate model choice on AFHQ by fixing PixArt as the
+source model and varying the attacker-side surrogate model
+between PixArt and SDXL. Figure 10 shows the experimental
+results. QAlign consistently decreases under both surrogate
+choices, from 3.27 to 2.74 with PixArt and from 4.31 to 3.45
+with SDXL. We further observe that the generated images
+exhibit noticeable color shifts, resulting in degraded visual
+quality. These results indicate that RAPID remains effective
+across different surrogate models.
+Disruption Objective Design. We conduct an ablation study
+on the disruption loss design on AFHQ, using PixArt as the
+source model and SSD as the surrogate model. This ablation
+evaluates whether reconstruction-guided color regularization
+avoids latent shortcuts and why other visual metrics are
+less suitable for this role than color regularization. The
+experimental results are shown in Figure 11. We observe
+that using only the latent representation as the optimization
+objective performs worse than RAPID. In addition, the
+other reconstruction regularizers produce weaker quality
+degradation than CIEDE2000 color regularization. Using L2
+or LP as the visual regularization term even performs worse
+than the latent-only objective and is substantially inferior
+to RAPID. We also test a variant that removes the self-
+referenced latent loss and retains only the color regularization
+
+
+term; this variant also performs worse than both RAPID and
+the latent-only variant. Overall, these results demonstrate the
+effectiveness of RAPID’s self-referenced latent maximization
+loss, as well as the advantage of color regularization over
+other visual metrics as the regularization term.
+7. Discussion
+The details of the adaptive attack and more discussion
+are shown in Appendix A and Appendix C.
+Adaptive Attack. We discuss whether an adaptive attacker
+can mitigate RAPID under three adaptive attacker strategies:
+input detection, purification, and robust learning.
+Outlier Detection. We evaluate input-side detection by en-
+coding samples with the CLIP image encoder and applying
+robust z-score outlier scoring based on median-centered
+absolute-deviation statistics [79], [80], [81]. The results show
+that conventional CLIP feature-space outlier detection does
+not reliably separate protected samples from clean outputs.
+Specifically, the robust z-score detector obtains an AUC of
+0.5085, with a TPR of 0.5060 and an FPR of 0.4994, which
+is close to random discrimination. This finding is consistent
+with the design goal of RAPID: protected samples become
+disruptive in the surrogate space used for distillation, while
+their generic CLIP feature distribution remains close to clean
+outputs because benign visual fidelity is preserved. Thus,
+simple feature-space filtering is not sufficient to remove the
+protected training signal before substitute model training.
+VAE Purification. We consider a scenario in which the
+attacker applies VAE-based reconstruction to remove subtle
+perturbations from the protected images, thereby attempting
+to circumvent the defense provided by RAPID. We evaluate
+this VAE-based purification attack on AFHQ, using PixArt
+as the source model, SSD as the substitute model, and
+SD-v2.1 VAE [82] as the purification module. The results
+in Figure 12 show that VAE purification fails to recover
+clean-level substitute quality. Specifically, after purification,
+QAlign remains below the Clean setting, decreasing from
+3.10 to 2.39. Compared with the unpurified RAPID setting,
+purification increases QAlign from 1.59 to 2.39 and partially
+reduces the FID disruption from 132.62 to 95.50. These
+results suggest that VAE-based purification cannot completely
+remove the defensive perturbations, and therefore does not
+recover clean-level quality RAPID.
+Robust Learning. We further evaluate a robust-learning
+attacker inspired by prior work by Radiya-Dixit et al. [83],
+which shows that an adaptive trainer can use adversarial
+robust training to reduce the effect of collected poisoned im-
+ages. In our setting, the attacker trains the SSD substitute on
+the collected protected outputs with adversarially augmented
+robust learning, using the same AFHQ and PixArt source
+model setting. Figure 12 reports the results. Robust learning
+partially restores the quality of the substitute model compared
+with training without robust learning under the RAPID
+setting, increasing QAlign from 1.59 to 2.31. However, it
+does not fully restore clean-level substitute quality: QAlign
+remains below the clean value, reaching 2.31 compared with
+3.10 under the Clean setting, and the qualitative example still
+Adaptive Attacks
+Setting
+Clean
+RAPID
+(w/o Adapt.)
+Purification
+Robust
+Learning
+Example
+FID↑
+60.13
+132.62
+95.50
+66.47
+QA↓
+3.10
+1.59
+2.39
+2.31
+PK↓
+20.81
+19.75
+20.31
+20.53
+AES↓
+5.97
+5.25
+5.82
+5.71
+Figure 12. Adaptive attack results under VAE-based data purification and
+robust learning. The Clean and RAPID columns are shared by both attacks;
+RAPID (w/o Adapt.) denotes training without attacker-side adaptation.
+exhibits visible degradation relative to the clean substitute.
+These results indicate that robust learning is a strong adaptive
+strategy, but it still leaves measurable quality degradation.
+Limitations and Future Work. T2I Model-family Scope.
+RAPID is designed for LDM-based T2I services, in which
+the service-side VAE decoder introduces perturbations to
+induce disruption in the substitute model’s latent space. As
+a result, it is not directly applicable to the small class of
+pixel-space diffusion models that do not rely on a VAE latent
+space. Defending against distillation against such models
+may require poisoning or unlearnable examples [84]. If the
+deployed service itself performs pixel-space denoising, a
+similar service-internal protection principle may be explored
+by injecting protection into the denoising component rather
+than the VAE decoder, potentially requiring full denoising
+runs for training. We leave this setting as future work.
+Broader Latent Space Architectures. RAPID may also extend
+to other generative services whose public outputs are decoded
+from private latent representations, such as latent audio/music
+generation, image-to-video, and text-to-video systems. In
+principle, a modality-specific version of RAPID could reduce
+the distillation value of released outputs while preserving
+perceptual quality. Nevertheless, extending our approach to
+these domains may require task-specific designs, such as
+mechanisms for handling spatiotemporal video latents and
+optimization reachability. We leave distillation defenses for
+latent audio, music, and video generation as future work.
+8. Conclusion
+Unauthorized distillation exposes a central weakness of
+public T2I services: the images that make these systems use-
+ful can also serve as supervision for transferring proprietary
+generation capability into unlicensed substitute models. This
+paper shows that this risk cannot be effectively addressed by
+conventional sample-wise optimization under online service
+constraints. A practical alternative is to internalize the defense
+within the model itself, enabling protection to be produced
+as an inherent part of generation while preserving the latency,
+throughput, and visual quality required for online deployment.
+RAPID follows this direction by moving anti-distillation
+
+
+protection from sample-wise optimization into the service-
+side decoder. Its key lesson is that service-level protection
+requires objectives achievable through a shared model update,
+rather than externally prescribed perturbations optimized
+independently for each image. By using self-referenced latent
+maximization with reconstruction-guided color regularization,
+RAPID achieves disruption effectiveness against distillation
+while preserving close fidelity to clean service images.
+RAPID establishes a new paradigm for real-time protection
+against unauthorized distillation in deployed T2I systems.
+References
+[1]
+R. Rombach, A. Blattmann, D. Lorenz, P. Esser, and B. Ommer,
+“High-resolution image synthesis with latent diffusion models,” in
+Proc. CVPR, 2022.
+[2]
+A. Ramesh, P. Dhariwal, A. Nichol, C. Chu, and M. Chen, “Hierar-
+chical text-conditional image generation with CLIP latents,” arXiv
+preprint arXiv:2204.06125, 2022.
+[3]
+C. Saharia, W. Chan, S. Saxena, L. Li, J. Whang, E. L. Denton,
+K. Ghasemipour, R. Gontijo Lopes, B. Karagol Ayan, T. Salimans et al.,
+“Photorealistic text-to-image diffusion models with deep language
+understanding,” in Proc. NeurIPS, 2022.
+[4]
+Midjourney, “Terms of service,” Midjourney Documentation, 2026,
+accessed: 2026-06-02. [Online]. Available: https://docs.midjourney.
+com/hc/en-us/articles/32083055291277-Terms-of-Service
+[5]
+Adobe, “Generative AI user guidelines,” Adobe Legal, 2026,
+accessed: 2026-06-02. [Online]. Available: https://www.adobe.com/
+legal/licenses-terms/adobe-gen-ai-user-guidelines.html
+[6]
+J. Ho, A. Jain, and P. Abbeel, “Denoising diffusion probabilistic
+models,” in Proc. NeurIPS, 2020.
+[7]
+H.-K. Ko, G. Park, H. Jeon, J. Jo, J. Kim, and J. Seo, “Large-scale
+text-to-image generation models for visual artists’ creative works,” in
+Proc. International Conference on Intelligent User Interfaces, 2023.
+[8]
+Z. Epstein, A. Hertzmann, I. of Human Creativity, M. Akten, H. Farid,
+J. Fjeld, M. R. Frank, M. Groh, L. Herman, N. Leach et al., “Art and
+the science of generative AI,” Science, 2023.
+[9]
+C. Schuhmann, R. Beaumont, R. Vencu, C. Gordon, R. Wightman,
+M. Cherti, T. Coombes, A. Katta, C. Mullis, M. Wortsman et al.,
+“LAION-5B: An open large-scale dataset for training next generation
+image-text models,” in Proc. NeurIPS, 2022.
+[10] F. Tram`er, F. Zhang, A. Juels, M. K. Reiter, and T. Ristenpart, “Stealing
+machine learning models via prediction APIs,” in Proc. USENIX
+Security, 2016.
+[11] M. Jagielski, N. Carlini, D. Berthelot, A. Kurakin, and N. Papernot,
+“High accuracy and high fidelity extraction of neural networks,” in
+Proc. USENIX Security, 2020.
+[12] T. Orekondy, B. Schiele, and M. Fritz, “Knockoff nets: Stealing
+functionality of black-box models,” in Proc. CVPR, 2019.
+[13] D. Oliynyk, R. Mayer, and A. Rauber, “I know what you trained last
+summer: A survey on stealing machine learning models and defences,”
+ACM Computing Surveys, 2023.
+[14] T. Salimans and J. Ho, “Progressive distillation for fast sampling of
+diffusion models,” in Proc. ICLR, 2022.
+[15] C. Meng, R. Rombach, R. Gao, D. Kingma, S. Ermon, J. Ho, and
+T. Salimans, “On distillation of guided diffusion models,” in Proc.
+CVPR, 2023.
+[16] B.-K. Kim, H.-K. Song, T. Castells, and S. Choi, “BK-SDM: A
+lightweight, fast, and cheap version of stable diffusion,” in Proc.
+ECCV, 2024.
+[17] Anthropic,
+“Detecting
+and
+preventing
+distillation
+attacks,”
+Anthropic News, 2026, published: 2026-02-23; accessed: 2026-
+06-02.
+[Online].
+Available:
+https://www.anthropic.com/news/
+detecting-and-preventing-distillation-attacks
+[18] R.
+Dillet,
+“Microsoft
+probing
+whether
+DeepSeek
+improperly
+used
+OpenAI
+apis,”
+TechCrunch,
+2025,
+accessed:
+2026-06-
+02.
+[Online].
+Available:
+https://techcrunch.com/2025/01/29/
+microsoft-probing-whether-deepseek-improperly-used-openais-api/
+[19] OpenAI, “Terms of use,” OpenAI, 2026, published and effective:
+2026-01-01;
+accessed:
+2026-06-02.
+[Online].
+Available:
+https:
+//openai.com/policies/terms-of-use/
+[20] Google, “Gemini API additional terms of service,” Google AI
+for Developers, 2026, accessed: 2026-06-02. [Online]. Available:
+https://ai.google.dev/gemini-api/terms
+[21] Stability AI, “Terms of service,” Stability AI, 2025, accessed:
+2026-06-02. [Online]. Available: https://stability.ai/terms-of-service
+[22] Y. Uchida, Y. Nagai, S. Sakazawa, and S. Satoh, “Embedding
+watermarks into deep neural networks,” in Proc. ICMR, 2017.
+[23] Y. Adi, C. Baum, M. Cisse, B. Pinkas, and J. Keshet, “Turning your
+weakness into a strength: Watermarking deep neural networks by
+backdooring,” in Proc. USENIX Security, 2018.
+[24] J. Zhang, D. Chen, J. Liao, W. Zhang, G. Hua, and N. Yu, “Passport-
+aware normalization for deep model protection,” in Proc. NeurIPS,
+2020.
+[25] P. Fernandez, G. Couairon, H. J´egou, M. Douze, and T. Furon, “The
+stable signature: Rooting watermarks in latent diffusion models,” in
+Proc. ICCV, 2023.
+[26] Y. Wen, J. Kirchenbauer, J. Geiping, and T. Goldstein, “Tree-rings
+watermarks: Invisible fingerprints for diffusion images,” in Proc.
+NeurIPS, 2023.
+[27] Y. Cui, J. Ren, H. Xu, P. He, H. Liu, L. Sun, Y. Xing, and J. Tang,
+“Diffusionshield: A watermark for data copyright protection against
+generative diffusion models,” SIGKDD Explor. Newsl., 2025.
+[28] K. Li, G. Ding, I. Grishchenko, and D. Lie, “HMARK: Radioactive
+multi-bit semantic-latent watermarking for diffusion models,” arXiv
+preprint arXiv:2512.00094, 2025.
+[29] B. Li, Y. Wei, Y. Fu, Z. Wang, Y. Li, J. Zhang, R. Wang, and
+T. Zhang, “Towards reliable verification of unauthorized data usage
+in personalized text-to-image diffusion models,” in Proc. IEEE S&P,
+2025.
+[30] Anthropic, “Claude Fable 5 and Claude Mythos 5,” https://www.
+anthropic.com/news/claude-fable-5-mythos-5, 2026, accessed: 2026-
+06-10.
+[31] J.
+Ready,
+“If
+claude
+fable
+stops
+helping
+you,
+you’ll
+never
+know,”
+https : / / jonready . com / blog / posts /
+claude-fable5-is-allowed-to-sabotage-your-app-if-youre-a-competitor.
+html, 2026, accessed: 2026-06-11.
+[32] Exploring
+ChatGPT,
+“Anthropic
+released
+fable
+5,”
+https : / /
+exploringchatgpt.substack.com/p/anthropic-released-fable-5, 2026,
+accessed: 2026-06-11.
+[33] C. Liang, X. Wu, Y. Hua, J. Zhang, Y. Xue, T. Song, Z. Xue, R. Ma,
+and H. Guan, “Adversarial example does good: Preventing painting
+imitation from diffusion models via adversarial examples,” in Proc.
+ICML, 2023.
+[34] S. Shan, J. Cryan, E. Wenger, H. Zheng, R. Hanocka, and B. Y. Zhao,
+“Glaze: Protecting artists from style mimicry by text-to-image models,”
+in Proc. USENIX Security, 2023.
+[35] S. Shan, W. Ding, J. Passananti, S. Wu, H. Zheng, and B. Y.
+Zhao, “Nightshade: Prompt-specific poisoning attacks on text-to-image
+generative models,” in Proc. IEEE S&P, 2024.
+[36] T. Van Le, H. Phung, T. H. Nguyen, Q. Dao, N. N. Tran, and A. Tran,
+“Anti-dreambooth: Protecting users from personalized text-to-image
+synthesis,” in Proc. ICCV, 2023.
+
+
+[37] H. Salman, A. Khaddaj, G. Leclerc, A. Ilyas, and A. Madry, “Raising
+the cost of malicious ai-powered image editing,” in Proc. ICML, 2023.
+[38] J. Dean and L. A. Barroso, “The tail at scale,” Communications of
+the ACM, 2013.
+[39] L. Yang, Z. Zhang, Y. Song, S. Hong, R. Xu, Y. Zhao, W. Zhang,
+B. Cui, and M.-H. Yang, “Diffusion models: A comprehensive survey
+of methods and applications,” ACM Computing Surveys, 2023.
+[40] F.-A. Croitoru, V. Hondru, R. T. Ionescu, and M. Shah, “Diffusion
+models in vision: A survey,” IEEE TPAMI, 2023.
+[41] D. P. Kingma and M. Welling, “Auto-encoding variational bayes,”
+arXiv preprint arXiv:1312.6114, 2013.
+[42] D. Podell, Z. English, K. Lacey, A. Blattmann, T. Dockhorn, J. M¨uller,
+J. Penna, and R. Rombach, “Sdxl: Improving latent diffusion models
+for high-resolution image synthesis,” in Proc. ICLR, 2024.
+[43] J. Song, C. Meng, and S. Ermon, “Denoising diffusion implicit models,”
+arXiv preprint arXiv:2010.02502, 2020.
+[44] Z. J. Wang, E. Montoya, D. Munechika, H. Yang, B. Hoover, and
+D. H. Chau, “DiffusionDB: A large-scale prompt gallery dataset for
+text-to-image generative models,” in Proc. ACL, 2023.
+[45] G. Hinton, O. Vinyals, and J. Dean, “Distilling the knowledge in a
+neural network,” arXiv preprint arXiv:1503.02531, 2015.
+[46] M. Juuti, S. Szyller, S. Marchal, and N. Asokan, “PRADA: Protecting
+against DNN model stealing attacks,” in Proc. IEEE Euro S&P, 2019.
+[47] M. Meintz, J. Dubi´nski, F. Boenisch, and A. Dziedzic, “Radioactive
+watermarks in diffusion and autoregressive image generative models,”
+arXiv preprint arXiv:2506.23731, 2025.
+[48] S. Pal, Y. Gupta, A. Shukla, A. Kanade, S. Shevade, and V. Ganapathy,
+“ActiveThief: Model extraction using active learning and unannotated
+public data,” in Proc. AAAI, 2020.
+[49] Y. Liu, C. Fan, Y. Dai, X. Chen, P. Zhou, and L. Sun, “Metacloak:
+Preventing unauthorized subject-driven text-to-image diffusion-based
+synthesis via meta-learning,” in Proc. CVPR, 2024.
+[50] I. J. Goodfellow, J. Shlens, and C. Szegedy, “Explaining and harnessing
+adversarial examples,” arXiv preprint arXiv:1412.6572, 2014.
+[51] Z. Liu, P. Luo, X. Wang, and X. Tang, “Deep learning face attributes
+in the wild,” in Proc. ICCV, 2015.
+[52] J. Chen, C. Ge, E. Xie, Y. Wu, L. Yao, X. Ren, Z. Wang, P. Luo,
+H. Lu, and Z. Li, “PixArt-Σ: Weak-to-strong training of diffusion
+transformer for 4k text-to-image generation,” in Proc. ECCV, 2024.
+[53] Segmind, “SSD-1B: Segmind stable diffusion 1b model card,”
+Hugging Face, 2024. [Online]. Available: https://huggingface.co/
+segmind/SSD-1B
+[54] A. Madry, A. Makelov, L. Schmidt, D. Tsipras, and A. Vladu, “Towards
+deep learning models resistant to adversarial attacks,” arXiv preprint
+arXiv:1706.06083, 2017.
+[55] S. Shan, E. Wenger, J. Zhang, H. Li, H. Zheng, and B. Y. Zhao,
+“Fawkes: Protecting privacy against unauthorized deep learning models,”
+in Proc. USENIX Security, 2020.
+[56] P. Vincent, H. Larochelle, Y. Bengio, and P.-A. Manzagol, “Extracting
+and composing robust features with denoising autoencoders,” in Proc.
+ICML, 2008.
+[57] G. Alain and Y. Bengio, “What regularized auto-encoders learn from
+the data-generating distribution,” The Journal of Machine Learning
+Research, 2014.
+[58] G. Wyszecki and W. S. Stiles, Color Science: Concepts and Methods,
+Quantitative Data and Formulae.
+John Wiley & Sons, 1982.
+[59] M. R. Luo, G. Cui, and B. Rigg, “The development of the cie 2000
+colour-difference formula: Ciede2000,” Color Research & Application,
+2001.
+[60] G. Sharma, W. Wu, and E. N. Dalal, “The CIEDE2000 color-
+difference formula: Implementation notes, supplementary test data,
+and mathematical observations,” Color Research & Application, 2005.
+[61] R. Zhang, P. Isola, A. A. Efros, E. Shechtman, and O. Wang, “The
+unreasonable effectiveness of deep features as a perceptual metric,”
+in Proc. CVPR, 2018.
+[62] L. I. Rudin, S. Osher, and E. Fatemi, “Nonlinear total variation based
+noise removal algorithms,” Physica D: Nonlinear Phenomena, 1992.
+[63] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli, “Image
+quality assessment: From error visibility to structural similarity,” IEEE
+TIP, 2004.
+[64] ShuttleAI, “Shuttle 3 diffusion model card,” Hugging Face, 2025.
+[Online]. Available: https://huggingface.co/shuttleai/shuttle-3-diffusion
+[65] Y. Choi, Y. Uh, J. Yoo, and J.-W. Ha, “StarGAN v2: Diverse image
+synthesis for multiple domains,” in Proc. CVPR, 2020.
+[66] TabularisAI, “Artistic landscape dataset,” Hugging Face Datasets,
+2025, accessed: 2026-06-02. [Online]. Available: https://huggingface.
+co/datasets/tabularisai/Artistic Landscape
+[67] huggan, “Pokemon dataset,” Hugging Face Datasets, accessed:
+2026-06-02. [Online]. Available: https://huggingface.co/datasets/
+huggan/pokemon
+[68] J. Li, D. Li, C. Xiong, and S. Hoi, “BLIP: Bootstrapping language-
+image pre-training for unified vision-language understanding and
+generation,” in Proc. ICML, 2022.
+[69] M. Heusel, H. Ramsauer, T. Unterthiner, B. Nessler, and S. Hochreiter,
+“Gans trained by a two time-scale update rule converge to a local nash
+equilibrium,” in Proc. NeurIPS, 2017.
+[70] H. Wu, Z. Zhang, W. Zhang, C. Chen, L. Liao, C. Li, Y. Gao, A. Wang,
+E. Zhang, W. Sun et al., “Q-align: Teaching lmms for visual scoring
+via discrete text-defined levels,” arXiv preprint arXiv:2312.17090,
+2023.
+[71] Y. Kirstain, A. Polyak, U. Singer, S. Matiana, J. Penna, and O. Levy,
+“Pick-a-pic: An open dataset of user preferences for text-to-image
+generation,” in Proc. NeurIPS, 2023.
+[72] C. Schuhmann, “LAION-Aesthetics,” LAION Blog, 2022. [Online].
+Available: https://laion.ai/blog/laion-aesthetics/
+[73] A. Hore and D. Ziou, “Image quality metrics: Psnr vs. ssim,” in Proc.
+ICPR, 2010.
+[74] E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang,
+and W. Chen, “Lora: Low-rank adaptation of large language models,”
+arXiv preprint arXiv:2106.09685, 2021.
+[75] N. Kumari, B. Zhang, R. Zhang, E. Shechtman, and J.-Y. Zhu, “Multi-
+concept customization of text-to-image diffusion,” in Proc. CVPR,
+2023.
+[76] L. Han, Y. Li, H. Zhang, P. Milanfar, D. Metaxas, and F. Yang,
+“SVDiff: Compact parameter space for diffusion fine-tuning,” in Proc.
+ICCV, 2023.
+[77] C. Guo, M. Rana, M. Cisse, and L. Van Der Maaten, “Counter-
+ing adversarial images using input transformations,” arXiv preprint
+arXiv:1711.00117, 2017.
+[78] C. Xie, J. Wang, Z. Zhang, Z. Ren, and A. Yuille, “Mitigating adversar-
+ial effects through randomization,” arXiv preprint arXiv:1711.01991,
+2017.
+[79] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal,
+G. Sastry, A. Askell, P. Mishkin, J. Clark et al., “Learning transferable
+visual models from natural language supervision,” in Proc. ICML,
+2021.
+[80] P. J. Rousseeuw and C. Croux, “Alternatives to the median absolute
+deviation,” Journal of the American Statistical association, 1993.
+[81] C. Leys, C. Ley, O. Klein, P. Bernard, and L. Licata, “Detecting
+outliers: Do not use standard deviation around the mean, use abso-
+lute deviation around the median,” Journal of experimental social
+psychology, 2013.
+[82] Stability AI, “Stable diffusion v2-1 model card,” https://huggingface.
+co/stabilityai/stable-diffusion-2-1, 2022, hugging Face model card.
+
+
+[83] E. Radiya-Dixit, S. Hong, N. Carlini, and F. Tramer, “Data poi-
+soning won’t save you from facial recognition,” arXiv preprint
+arXiv:2106.14851, 2021.
+[84] H. Huang, X. Ma, S. M. Erfani, J. Bailey, and Y. Wang, “Unlearn-
+able examples: Making personal data unexploitable,” arXiv preprint
+arXiv:2101.04898, 2021.
+[85] T.-Y. Lin, M. Maire, S. Belongie, L. Bourdev, R. Girshick, J. Hays,
+P. Perona, D. Ramanan, P. Doll´ar, and C. L. Zitnick, “Microsoft coco:
+Common objects in context,” in Proc. ECCV, 2014.
+[86] W. Yu, J. Gu, Z. Li, and P. Torr, “Reliable evaluation of adversarial
+transferability,” in Proc. IEEE SaTML, 2025.
+[87] Y. Liu, X. Chen, C. Liu, and D. Song, “Delving into transfer-
+able adversarial examples and black-box attacks,” arXiv preprint
+arXiv:1611.02770, 2016.
+[88] M. Naseer, K. Ranasinghe, S. Khan, F. S. Khan, and F. Porikli, “On
+improving adversarial transferability of vision transformers,” arXiv
+preprint arXiv:2106.04169, 2021.
+[89] Black Forest Labs, “FLUX.2: Analyzing and enhancing the latent
+space of FLUX,” https://bfl.ai/research/representation-comparison,
+2025, technical report / blog post. Accessed: 2026-06-10.
+Appendix A.
+Additional Experimental Setup
+A.1. Implementation Details
+In the main experiment, we set the protection loss weights
+to λv = 1000, λz = 10/11, and λc = 1/11. For the visual
+constraints, we use τcie = 2.0, τlpips = 0.05, τtv = 0.01,
+and τpatch = 3.0. Unless otherwise specified, the relative
+weights among the visual metrics are all set to 1, we train the
+decoder with full parameters with a batch size of 1 and an
+AdamW learning rate of 10−5. During decoder training, we
+query the corresponding protected model with these prompts
+and use the resulting generated images as training data, so
+that the decoder-training data follows the same distribution
+as images produced during generation. In the distillation
+training, standard LoRA finetuning is performed to reduce
+computational cost; only LoRA adapters on the denoiser are
+trained. The default learning rate is 10−4, the LoRA rank is 4,
+the batch size is 1, Optimization uses AdamW with a cosine
+learning-rate schedule and warmup. For the CIEDE2000
+patch-level visual constraint, we set the patch size to 64×64,
+and the perceptual color-difference threshold to τpatch = 3.0.
+For each image pair, we divide the reconstructed image
+and the reference reconstruction into non-overlapping square
+patches, compute the average CIEDE2000 color difference
+within each patch, and penalize only patches whose color
+difference exceeds the threshold. Here, N denotes the number
+of patches and ∆E(i)
+00 is the mean CIEDE2000 distance of
+the i-th patch. The global visual loss coefficient is set to 1.0.
+A.2. Details for Adaptive Attack
+All adaptive-attack experiments use AFHQ with PixArt as
+the source model and SSD as the substitute model, following
+the same prompts, resolution, LoRA setting, optimizer,
+schedule, and evaluation metrics as the main experiments.
+TABLE 4. METRIC-BASED BENIGN VISUAL FIDELITY. LP, SS, DE, AND
+PN DENOTE LPIPS, SSIM, CIEDE2000, AND PSNR, RESPECTIVELY.
+Results of Benign Visual Fidelity
+Model
+Metric AFHQ CelebA
+Landscape Pokemon
+SSD
+LP↓
+0.047
+0.047
+0.044
+0.044
+SS↑
+0.857
+0.848
+0.867
+0.899
+DE↓
+1.931
+1.917
+1.839
+1.903
+PN↑
+33.74
+34.54
+34.25
+33.86
+PixArt
+LP↓
+0.044
+0.043
+0.041
+0.042
+SS↑
+0.879
+0.900
+0.893
+0.908
+DE↓
+1.770
+1.551
+1.646
+1.714
+PN↑
+33.84
+36.34
+34.66
+33.43
+SDXL
+LP↓
+0.045
+0.046
+0.040
+0.045
+SS↑
+0.900
+0.884
+0.902
+0.907
+DE↓
+1.918
+1.887
+1.838
+1.884
+PN↑
+36.35
+36.37
+35.96
+36.29
+Shuttle3
+LP↓
+0.044
+0.044
+0.041
+0.041
+SS↑
+0.910
+0.909
+0.915
+0.929
+DE↓
+1.915
+1.880
+1.794
+1.862
+PN↑
+34.74
+34.97
+33.81
+34.29
+We consider a defense-aware attacker who knows that service
+outputs may contain a training-disruptive signal, but has no
+access to the clean decoder, protected decoder, or paired
+clean/protected outputs. For attacker-side outlier detection,
+we embed 500 clean and 500 protected samples with a frozen
+CLIP ViT-B/32 encoder, score them using robust z-scores
+with contamination ratio γ = 0.5, flag the 500 highest-
+scoring samples as protected, and report TPR, FPR, and
+ROC-AUC. For VAE purification, each protected image is
+encoded and decoded by the SD-v2.1 VAE before substitute
+training, and the reconstructed image replaces the original
+protected output. For robust learning, the attacker uses PGD-
+augmented denoising training with random initialization, ℓ∞
+budget ϵ = 16/255, step size α = 4/255, and K = 5 inner
+steps, projecting perturbations to satisfy ∥δ∥∞≤ϵ.
+A.3. Baselines
+We compare RAPID with five representative protection
+methods. Because the original methods are designed as
+sample-wise perturbation optimizers, we implement each
+baseline by training a separate protected VAE decoder with
+the corresponding objective. For fairness, all decoder-adapted
+baselines use the same protected-decoder architecture, data,
+optimizer, training, and evaluation pipeline as RAPID.
+AdvDM [33]. AdvDM is adapted by setting the baseline
+objective mode to diffusion, turning it into a decoder-level
+diffusion-loss maximization objective. Following AdvDM,
+for each protected output, the image is encoded by the
+surrogate VAE, noised at a randomly sampled diffusion
+timestep, and passed through a surrogate diffusion model.
+The objective value is the MSE between the surrogate
+model’s predicted noise and the sampled true noise. We
+sample diffusion timesteps from the full range [0, 999]; this
+adversarial term is combined with the same visual fidelity
+penalties used by the other decoder-adapted baselines.
+Anti-DreamBooth [36]. Anti-DreamBooth is adapted by pre-
+serving its bilevel optimization between a surrogate diffusion
+learner and the protected decoder. During the surrogate
+
+
+step, current decoder outputs are used to train the surrogate
+diffusion model with its denoising loss; during the decoder
+step, the decoder is updated to maximize the surrogate
+denoising loss evaluated on the current protected outputs.
+The surrogate UNet is updated with a learning rate 10−5.
+Glaze [34]. Glaze is adapted with precomputed style-
+transferred targets rather than running T2I style transfer
+during decoder training. In our experiments, these targets
+are generated with SD-v2.1 [82] in the Van Gogh style
+using the prompt “An oil painting in the style of Van Gogh”.
+We use style strength 0.5 and style guidance scale 5.0. For
+each pair, the current decoder output and the styled target
+are both encoded by the surrogate VAE, and the objective
+minimizes the MSE between their surrogate latents.
+Nightshade [35]. Nightshade is adapted as a class-wise
+targeted objective. The target images are sampled from the
+“person” category of the MS-COCO dataset [85]. Following
+the main experimental protocol, we use BLIP-Large [68] to
+generate captions/prompts for the target images. For each
+training batch, both the protected output and the selected
+target image are encoded by the surrogate VAE, and the
+protected decoder is optimized to minimize the MSE between
+their latent representations.
+PhotoGuard [37]. We adapt PhotoGuard using its black-
+target objective variant. Specifically, we construct a full-black
+image, encode it once with the surrogate VAE, and cache the
+resulting black latent. During decoder training, the protected
+decoder is optimized to minimize the MSE between the
+latent representation of the current protected output and the
+cached black latent.
+Appendix B.
+Additional Experimental Results
+B.1. Benign Visual Fidelity
+We evaluate benign visual fidelity by comparing each
+protected output with its clean service output, as reported in
+Table 4 and Figure 5. The results show that the protection
+preserves benign output quality across the evaluated service
+models and image domains. For example, using PixArt as the
+source model and CelebA as the dataset, RAPID achieves
+LPIPS 0.043, SSIM 0.900, CIEDE2000 1.551, and PSNR
+36.34, indicating close agreement with the clean service
+output. The protected outputs preserve the main subject,
+layout, color composition, and local structure of the clean
+references. Thus, RAPID reduces the training value of public
+outputs for attackers while keeping protected outputs close
+to clean service outputs under the reported fidelity metrics.
+B.2. Additional Metrics
+Table 5 reports the two additional metrics for the
+PixArt main-experiment setting. KID measures distributional
+mismatch from the reference set, while QAlign-Aesthetic
+(QAAES) measures the aesthetic subscore of QAlign. Thus,
+higher KID and lower QAAES indicate stronger degradation
+TABLE 5. ADDITIONAL RESULTS ON KID AND QAAES.
+Supplementary PixArt Main Results
+Dataset
+Metric
+Ref. Clean Ours
+Adv
+Anti
+Glaze Night
+PG
+AFHQ
+KID↑
+–
+0.0099 0.0671 0.0257 0.0296 0.0422 0.0302 0.0522
+QAAES↓4.08
+3.45
+2.16
+3.37
+3.49
+3.10
+3.37
+2.92
+CelebA
+KID↑
+–
+0.0222 0.0480 0.0163 0.0236 0.0300 0.0271 0.0269
+QAAES↓4.28
+4.11
+2.54
+4.21
+4.19
+3.43
+3.42
+3.84
+Landscape KID↑
+–
+0.0064 0.0289 0.0079 0.0082 0.0101 0.0178 0.0095
+QAAES↓3.96
+4.11
+2.57
+4.07
+4.15
+3.96
+3.62
+3.53
+Pokemon
+KID↑
+–
+0.0104 0.0296 0.0118 0.0121 0.0122 0.0200 0.0194
+QAAES↓3.95
+3.52
+2.03
+3.33
+3.40
+3.24
+2.72
+2.63
+Transferability with Ensemble Surrogates
+FLUX2klein
+SSD
+Clean
+RAPID
+Clean
+RAPID
+Figure 13. Experimental transferability case study on AFHQ with PixArt as
+the source model. FLUX2klein and SSD are downstream substitute models
+trained on the same protected distillation dataset.
+of the attacker-trained substitute. Across all four datasets,
+RAPID achieves the largest KID and the lowest QAAES,
+which is consistent with the main-table trends in FID, QAlign,
+PickScore, and Aesthetic score.
+B.3. Ensemble Surrogates Enhance Transferability
+A natural question is whether protection learned against
+one surrogate model can transfer to substitute models from
+different model families. Consistent with prior observations
+on adversarial transferability, we find that single-surrogate
+transfer is limited when the substitute model belongs to
+a distant VAE family [86], [87], [88]. This limitation is
+expected: different VAEs may encode, smooth, and recon-
+struct the same protected image in different ways, so a
+protected output optimized for one VAE bottleneck may no
+longer induce the intended latent or reconstruction mismatch
+under another. However, we find that using an ensemble of
+surrogate VAEs during decoder protection training is effective
+for enhancing the transferability. Specifically, we train our
+protected decoder using RAPID across multiple frozen
+surrogate VAEs, and the other settings are aligned with those
+of the main experiment. This design encourages the same
+protected output to remain disruptive under several plausible
+VAE bottlenecks, reducing overfitting to one surrogate family
+without assuming knowledge of the exact attacker model.
+We evaluate the ensemble setting on AFHQ [65] with
+PixArt [52] as the source model using FLUX2klein [89] and
+SSD [53] downstream as the substitute models; the other
+settings follow the main experiments. As shown in Figure 13,
+substitutes trained on ensemble-protected outputs exhibit
+clear visual degradation compared with their clean substitutes.
+
+
+TABLE 6. VISUAL-METRIC ABLATION. LP, SS, DE, AND PN DENOTE
+LPIPS, SSIM, CIEDE2000, AND PSNR, RESPECTIVELY.
+Ablation Study of Composite Visual Constraint
+Visual loss
+LP↓
+SS↑
+DE↓
+PN↑
+Lcie
+0.376 0.647 1.940 28.73
+Lcie + Llpips
+0.046 0.768 1.903 33.14
+Lcie + Llpips + Ltv
+0.046 0.857 1.850 34.76
+Lcie + Llpips + Ltv + Lpatch
+0.043 0.900 1.551 36.34
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+135
+140
+145
+150
+Value
+FID ↑
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+1.4
+1.5
+1.6
+1.7
+QAlign ↓
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+Epoch
+19.6
+19.7
+19.8
+19.9
+Value
+PickScore ↓
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+Epoch
+5.20
+5.25
+5.30
+5.35
+Aesthetic ↓
+Figure 14. Ablation study of distillation training epochs.
+The FLUX2klein result shows structural distortion and color
+artifacts in the background, while the SSD result shows
+severe structural distortion and color shift. These results
+suggest that ensemble surrogate training can substantially
+broaden the transferability of RAPID beyond a single
+surrogate family. Importantly, this strategy is practical in the
+current T2I ecosystem: while the number of models is large,
+they often rely on a relatively small set of VAE backbones or
+closely related VAE families. As a result, training against an
+ensemble of representative surrogate VAEs allows RAPID to
+cover a much broader range of plausible substitute models,
+thereby expanding the effective defense surface without
+assuming knowledge of the attacker’s exact model.
+B.4. Ablation Study
+Different Decoder Training Epochs. We evaluate training
+duration on AFHQ with SSD downstream evaluation. Fig-
+ure 15 shows that training duration controls the strength
+and type of downstream degradation. Specifically, QAlign
+reaches its lowest value at epoch 7, with a score of 1.45. The
+best epoch depends on the metric: epoch 7 gives the lowest
+QAlign, epoch 8 gives the highest FID at 151.10, epoch 9
+gives the lowest PickScore at 19.62, and epoch 0 gives the
+lowest Aesthetic score at 5.19. From a visual perspective, we
+further inspect the generated samples at different epochs. We
+observe that the samples at epoch 0 exhibit relatively better
+visual quality, but their quality is still clearly inferior to that
+under the Clean setting. After epoch 0, the generated images
+Ablation Study of Decoder-Training Epochs
+Epoch
+0
+1
+2
+3
+4
+Example
+FID↑
+138.29
+146.13
+136.19
+150.09
+142.53
+QA↓
+1.62
+1.54
+1.70
+1.70
+1.52
+PK↓
+19.88
+19.82
+19.80
+19.71
+19.68
+AES↓
+5.19
+5.33
+5.29
+5.28
+5.23
+Epoch
+5
+6
+7
+8
+9
+Example
+FID↑
+142.55
+139.38
+150.10
+151.10
+150.24
+QA↓
+1.48
+1.51
+1.45
+1.50
+1.48
+PK↓
+19.63
+19.73
+19.63
+19.65
+19.62
+AES↓
+5.22
+5.25
+5.22
+5.22
+5.22
+Figure 15. Ablation study of decoder-training epochs.
+remain consistently poor in visual quality, with only minor
+differences across subsequent epochs. Starting from epoch 1,
+the generated samples show pronounced color shifts, along
+with noticeable noise and grid-like artifacts in the background.
+This suggests that the model may have largely converged after
+epoch 1. Figure 14 illustrates the epoch-wise performance
+trends. While the metrics are not strictly monotonic, the
+overall results show that increasing the number of training
+epochs generally degrades the generation quality of the
+substitute model, with the degradation tending to stabilize
+after the seventh epoch. This finding demonstrates that the
+disruptive capability of RAPID increases with training depth,
+suggesting that its defensive effectiveness becomes more
+pronounced in large-scale industrial model distillation.
+Composite Visual Constraint Design. We conduct an
+ablation study on the composite visual constraint design to
+evaluate its effectiveness on the CelebA dataset using PixArt
+as the source model and SSD as the surrogate model. We
+find that visual quality can be maintained within a desired
+range only when all four loss terms are used jointly. In
+addition, when using only the CIEDE2000 loss Lcie, it
+achieves a low color difference, which is 1.94, but LPIPS
+still remains very poor at 0.376. This indicates that relying
+on a single visual constraint is insufficient and supports the
+need for composite visual constraints.
+Appendix C.
+Additional Discussion
+Defense Surface for Open-Source Distillation. RAPID
+can also support defenses for open-source T2I models when
+misuse still relies on image-level supervision. We consider an
+open-source T2I model provider that releases an open-source
+model while seeking to discourage unauthorized distillation
+or downstream finetuning using generated images. Because
+RAPID is integrated into the generation path, the protective
+signal is intrinsic to each released image before attacker-side
+
+
+collection begins. This gives it a broader defense surface than
+post-processing defenses, which can be skipped, replaced,
+or inconsistently applied after generation. However, we do
+not claim that our defense can withstand soft distillation
+attacks. If an attacker bypasses pixel-level training and
+directly accesses teacher-side logits, denoising predictions,
+latent trajectories, or intermediate features, the defense may
+become ineffective. Nevertheless, as an intrinsic defense,
+RAPID substantially expands the protected surface across
+output-collection pipelines, while not claiming to protect
+interfaces that expose internal teacher signals.
