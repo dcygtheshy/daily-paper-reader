@@ -1,0 +1,54 @@
+{
+  "label": "2026-09-17",
+  "date": "2026-09-17",
+  "generated_at": "2026-09-17T22:18:01",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202609/17/2609.16832v1-what-breaks-local-watermarks-a-robustness-benchmark-for-local-invisible-image-watermarking",
+      "section": "deep",
+      "title_en": "What Breaks Local Watermarks? A Robustness Benchmark for Local Invisible Image Watermarking",
+      "authors": "Kai Yao, Bence Szilágyi, Sebestyén Kamp, Máté Poór, Máté Szilveszter, Matyas K. Zsoldos, Marc Juarez",
+      "date": "2026-09-15",
+      "pdf": "https://arxiv.org/pdf/2609.16832v1",
+      "score": "9.0",
+      "evidence": "局部不可见图像水印的鲁棒性系统基准",
+      "tldr": "局部图像水印只在选定区域嵌入不可见信号，但既有研究各自评测鲁棒性，变换、数据集与指标不统一，难以横向比较。本文提出首个系统性鲁棒性基准，覆盖55种图像变换，分为信号失真、坐标对齐变化、间接局部编辑和直接水印编辑，并评测MaskWM、WAM、OmniGuard、TrustMark与PixelSeal。结果显示所有方法均有脆弱变换，MaskWM的载荷恢复与定位最强但干净图像质量最低；同步机制能提升其几何变换下的恢复，却进一步损害质量。关键发现是鲁棒性高度依赖变换类型：几何错位与生成式局部编辑可彻底破坏载荷恢复，载荷恢复与定位相关但不可互换。",
+      "tags": "query:watermarking",
+      "abstract_en": "Local image watermarking embeds an invisible signal into selected image regions rather than spreading it across the entire image, enabling payload recovery from specific objects or regions without perceptibly altering the image. Existing studies evaluate the robustness of payload recovery and localization under image transformations, but they often focus on their own proposed method, resulting in narrow evaluations with inconsistent choices of transformations, datasets, and metrics. These inconsistencies across studies limit direct comparisons across methods and muddle the overall picture of local watermark robustness. To address this gap, we present the first systematic robustness benchmark for local watermarks across 55 image transformations, including (i) signal distortions, (ii) changes in image coordinate alignment, (iii) indirect local edits, and (iv) direct watermark edits. The benchmark evaluates MaskWM, WAM, OmniGuard, TrustMark, and PixelSeal, all methods that either provide native localization or require minimal adaptation to support it. Our results show that all evaluated methods are vulnerable to some transformation, with MaskWM standing out as offering the strongest payload recovery and localization, although it has the lowest image quality in the clean setting. Synchronization further improves MaskWM's payload recovery under several geometric transformations, albeit at an additional cost to image quality. A key finding is that local watermark robustness depends strongly on the nature of the transformation: signal distortions are often tolerated by the strongest methods, while geometric misalignment and generative local edits, such as inpainting and outpainting, can completely impair payload recovery. We observe that payload recovery and localization are related but not interchangeable, and both strongly depend on the transformation's impact on the watermark region.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/17/2609.16681v1-marksec-capability-aware-evaluation-of-adversarial-attacks-against-llm-watermarks",
+      "section": "deep",
+      "title_en": "MarkSec: Capability-Aware Evaluation of Adversarial Attacks Against LLM Watermarks",
+      "authors": "Kairong Li, Zhikun Zhang, Xiao Ren, Yunjun Gao",
+      "date": "2026-09-15",
+      "pdf": "https://arxiv.org/pdf/2609.16681v1",
+      "score": "8.0",
+      "evidence": "统一评估大模型水印的窃取、擦除与伪造攻击",
+      "tldr": "LLM水印可追溯生成文本来源，却面临窃取、擦除和伪造攻击，且这些攻击常被孤立研究、评估协议不统一。MarkSec提出统一框架，在共同报告协议下分析三类攻击，并引入质量约束攻击成功率联合衡量有效性与文本质量。实验覆盖多种水印族、攻击、LLM和数据集，发现仅看水印去除的强者在质量约束下可能落后于通用改写，通用改写仍是强基线。该工作揭示攻击优劣依赖文本质量约束、攻击通用性和能力假设，为水印安全评估提供统一视角。",
+      "tags": "query:watermarking",
+      "abstract_en": "LLM watermarking helps trace the origin of generated text, but faces stealing attacks that recover watermark information, scrubbing attacks that remove watermark signals, and spoofing attacks that forge text accepted as watermarked. These attacks are often studied in isolation, leaving their connections unclear. Evaluations also often lack shared detector calibration, metric definitions, and reporting protocols. Moreover, measuring attack success and text quality separately makes it difficult to identify attacks that are both effective and quality-preserving.   We propose MarkSec, a general framework that unifies analyses of stealing, scrubbing, and spoofing. We evaluate attacks under a common reporting protocol and introduce a quality-constrained attack success metric to assess effectiveness and text quality jointly. Experiments across representative watermark families, attacks, LLMs, and datasets reveal three findings. First, attacks that appear strongest by watermark removal alone can fall behind general rewriting when success also requires acceptable text quality. Second, general rewriting remains a strong baseline across watermark families, while its advantage over other scrubbers varies by family. Third, in a case study of one watermark family, stealing-based scrubbers often underperform the best general-scrubbing baselines when text quality is required. These results show that apparent attack winners depend on text-quality constraints, attack generality, and capability assumptions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/17/2609.12472v1-trippattern-a-pattern-based-text-watermarking-method-for-large-language-models",
+      "section": "quick",
+      "title_en": "TripPattern: A Pattern-based Text Watermarking Method for Large Language Models",
+      "authors": "Sangjun Moon, Dasom Choi, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura",
+      "date": "2026-09-11",
+      "pdf": "https://arxiv.org/pdf/2609.12472v1",
+      "score": "6.0",
+      "evidence": "面向LLM的基于模式的文本水印",
+      "tldr": "现有文本水印常把词表分为绿/红两组，并偏向绿色词，容易损害生成质量与自然度。TripPattern 将水印重新定义为基于模式匹配的任务，把词表划为一个中性组和两个模式组，生成时在两个模式组间交替选词，中性词独立选择以增强灵活性。检测端通过统计相邻词是否在模式组间交替，给出可解释的 p 值。在四个多语言数据集上，该方法兼顾生成质量与鲁棒的水印可检测性。",
+      "tags": "query:watermarking",
+      "abstract_en": "Text watermarking techniques have gained significant attention for identifying machine-generated text and mitigating risks from large language models (LLMs). Existing methods typically divide an LLM's vocabulary into green and red tokens, but encouraging generation toward green tokens can reduce text quality and naturalness. To address this, we propose TripPattern, a watermarking framework that formulates text watermarking as a pattern-based matching task using three vocabulary partitions. TripPattern divides the vocabulary into one neutral group and two pattern groups. During generation, the model alternates token selection between the two pattern groups to embed detectable patterns, while neutral tokens are selected independently to improve flexibility and preserve naturalness. For detection, TripPattern uses pattern-based statistical tests that provide interpretable p-values by measuring how often adjacent tokens alternate between the pattern groups. Theoretical analysis and empirical evaluations on four multilingual datasets show that TripPattern maintains LLM generation quality while achieving robust watermark detectability.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
