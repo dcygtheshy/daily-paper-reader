@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-18 <!--dpr-date:20260918-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/18/2609.20457v1-fingerprinting-multimodal-large-language-models" data-sidebar-item="{&quot;title&quot;: &quot;Fingerprinting Multimodal Large Language Models&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.20457v1-fingerprinting-multimodal-large-language-models&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;首个多模态模型指纹溯源研究&quot;}">Fingerprinting Multimodal Large Language Models</a>
   * 2026-09-17 <!--dpr-date:20260917-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/17/2609.16832v1-what-breaks-local-watermarks-a-robustness-benchmark-for-local-invisible-image-watermarking" data-sidebar-item="{&quot;title&quot;: &quot;What Breaks Local Watermarks? A Robustness Benchmark for Local Invisible Image Watermarking&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.16832v1-what-breaks-local-watermarks-a-robustness-benchmark-for-local-invisible-image-watermarking&quot;, &quot;score&quot;: &quot;9.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;局部不可见图像水印的鲁棒性系统基准&quot;}">What Breaks Local Watermarks? A Robustness Benchmark for Local Invisible Image Watermarking</a>

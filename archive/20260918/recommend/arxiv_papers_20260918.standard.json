@@ -1,0 +1,54 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-18T21:59:32.762201+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.20457v1",
+      "source": "arxiv",
+      "title": "Fingerprinting Multimodal Large Language Models",
+      "abstract": "While multimodal large language models (MLLMs) enable a wide range of image-text reasoning tasks, recent incidents indicate that they are vulnerable to illicit deployment and unauthorized distillation. Existing solutions for model provenance are typically confounded by shared language backbones in MLLMs and struggle to detect violations of distillation. To bridge this gap and safeguard model ownership, we present the first study on multimodal model fingerprinting. Inspired by recent findings that self-attention acts as a low-pass filter and that its low-frequency components are informative, we develop AttnPrint for white-box provenance. Specifically, we extract cross-modal attention distributions and isolate their low-frequency components to serve as model fingerprints. To facilitate black-box auditing, we further introduce DistillTrace, which employs hypothesis testing of MLLM outputs to identify potential model infringement. We conduct extensive experiments on 154 model instances across 19 multimodal architectures. Notably, AttnPrint achieves strong derivative-model detection performance while remaining robust to five downstream modification techniques. DistillTrace also provides evidence of distillation relationships under three parameter-independent techniques.",
+      "authors": [
+        "Chao Huang",
+        "Meng Tong",
+        "Kejiang Chen"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-09-17T14:21:39+00:00",
+      "link": "https://arxiv.org/pdf/2609.20457v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "first study on multimodal model fingerprinting for provenance",
+      "llm_evidence_cn": "首个多模态模型指纹溯源研究",
+      "llm_evidence": "首个多模态模型指纹溯源研究",
+      "canonical_evidence": "首个多模态模型指纹溯源研究",
+      "llm_tldr_en": "MLLMs are vulnerable to illicit deployment and distillation, but provenance methods are confounded by shared language backbones. The paper presents AttnPrint, extracting low-frequency cross-modal attention distributions as model fingerprints for white-box provenance. Experiments validate fingerprint effectiveness for ownership protection.",
+      "llm_tldr_cn": "多模态大模型面临非法部署与未经授权蒸馏的风险，而现有溯源方案常因共享语言骨干而失效。本文提出首个多模态模型指纹方法AttnPrint，利用自注意力作为低通滤波器的特性，提取跨模态注意力分布的低频分量作为模型指纹，用于白盒溯源。实验表明该指纹能有效识别模型来源并检测蒸馏违规，为生成模型的知识产权保护提供了新途径。",
+      "llm_tldr": "多模态大模型面临非法部署与未经授权蒸馏的风险，而现有溯源方案常因共享语言骨干而失效。本文提出首个多模态模型指纹方法AttnPrint，利用自注意力作为低通滤波器的特性，提取跨模态注意力分布的低频分量作为模型指纹，用于白盒溯源。实验表明该指纹能有效识别模型来源并检测蒸馏违规，为生成模型的知识产权保护提供了新途径。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

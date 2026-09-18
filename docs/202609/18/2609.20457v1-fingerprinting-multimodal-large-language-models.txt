@@ -1,0 +1,508 @@
+Title: Fingerprinting Multimodal Large Language Models
+
+URL Source: https://arxiv.org/pdf/2609.20457v1
+
+Published Time: Fri, 18 Sep 2026 01:23:58 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Fingerprinting Multimodal Large Language Models 
+
+# Chao Huang 
+
+University of Science and Technology of China Anhui Province Key Laboratory of Digital Security Hefei, Anhui, China chao.huang@mail.ustc.edu.cn 
+
+# Meng Tong 
+
+University of Science and Technology of China Anhui Province Key Laboratory of Digital Security Hefei, Anhui, China mtong@mail.ustc.edu.cn 
+
+# Kejiang Chen ✉
+
+University of Science and Technology of China Anhui Province Key Laboratory of Digital Security Hefei, Anhui, China chenkj@ustc.edu.cn 
+
+## Abstract 
+
+While multimodal large language models (MLLMs) enable a wide range of image-text reasoning tasks, recent incidents indicate that they are vulnerable to illicit deployment and unauthorized distil-lation. Existing solutions for model provenance are typically con-founded by shared language backbones in MLLMs and struggle to detect violations of distillation. To bridge this gap and safeguard model ownership, we present the first study on multimodal model fingerprinting. Inspired by recent findings that self-attention acts as a low-pass filter and that its low-frequency components are in-formative, we develop AttnPrint for white-box provenance. Specif-ically, we extract cross-modal attention distributions and isolate their low-frequency components to serve as model fingerprints. To facilitate black-box auditing, we further introduce DistillTrace, which employs hypothesis testing of MLLM outputs to identify potential model infringement. We conduct extensive experiments on 154 model instances across 19 multimodal architectures. Notably, AttnPrint achieves strong derivative-model detection performance while remaining robust to five downstream modification techniques. DistillTrace also provides evidence of distillation relationships un-der three parameter-independent techniques. 
+
+## CCS Concepts 
+
+• Security and privacy → Digital rights management .
+
+## Keywords 
+
+multimodal model fingerprinting, copyright auditing, distillation detection 
+
+ACM Reference Format: 
+
+Chao Huang, Meng Tong, and Kejiang Chen. 2026. Fingerprinting Multi-modal Large Language Models. In Proceedings of the 34th ACM International Conference on Multimedia (MM ’26), November 10–14, 2026, Rio de Janeiro, Brazil. ACM, New York, NY, USA, 10 pages. https://doi.org/10.1145/3767308. 3834994 
+
+## 1 Introduction 
+
+Despite the impressive performance of multimodal large language models (MLLMs) across diverse tasks [6, 26, 48], these models in-creasingly face intellectual property risks, such as illicit deployment 
+
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> MM ’26, Rio de Janeiro, Brazil
+> © 2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2213-4/2026/11 https://doi.org/10.1145/3767308.3834994
+
+and unauthorized distillation. For instance, Anthropic publicly al-leged that certain third-party models had been distilled from Claude through commercial API access. 1 More recently, public reports have disclosed related disputes concerning the unauthorized derivation of open-source MLLMs, including the case involving Llama-3-V and MiniCPM-V. 2 In such cases, attackers may apply relatively low-cost operations, such as fine-tuning, pruning, or quantization, to con-struct superficially modified derivative models and present them as independently developed systems. These incidents highlight the need for reliable methods to identify both modified derivatives of open-source models and students distilled from proprietary models. A commonly used technique to safeguard model ownership is fingerprinting, wherein an auditor determines whether a suspect model was derived from a protected model through unauthorized modification or distillation. While fingerprinting has proven effec-tive for provenance verification in LLMs [9, 33, 40, 47, 49, 50, 52], its direct application to multimodal large language models (MLLMs) presents substantial challenges in reliable provenance verification. Our empirical results show that text-centric fingerprints do not transfer reliably to MLLMs because they overlook cross-modal alignment. Consequently, they may conflate models with similar language backbones (see Section 5.2). Moreover, existing finger-printing methods are largely ineffective for distillation detection, as they are primarily designed to identify direct derivation from a known base model and fail to reliably capture the behavioral relationships inherited from a specific teacher. To bridge this gap, we present the first model fingerprinting study for reliable provenance verification of MLLMs. To address the confusion between models that share the same language back-bone, we propose an attention-based fingerprinting method with white-box access to the target model. Our intuition is that differ-ences in multimodal alignment data and training strategies lead different MLLMs to develop distinct attention patterns. In particu-lar, cross-modal attention interactions between visual and textual tokens better capture model-specific identity information. Based on this observation, we extract cross-modal attention distributions and transform them into the frequency domain via the Fourier transform. We then retain stable low-frequency components while suppressing high-frequency noise introduced by model modifica-tions such as fine-tuning and model merging, thereby producing a more robust fingerprint. In the black-box setting, we propose a hypothesis-testing-based method for distillation detection. Our method builds on the observation that during distillation a student model inherits behavioral characteristics of the teacher model over  
+
+> 1https://x.com/AnthropicAI/status/2025997928242811253?s=20
+> 2https://x.com/chrmanning/status/1797664513367630101 arXiv:2609.20457v1 [cs.CR] 17 Sep 2026 MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Huang et al.
+
+the distillation data and its neighboring distribution, and therefore the teacher model typically assigns higher confidence to the student model’s outputs. To reduce false positives caused by overlapping training data and inherently simple tasks, we further introduce reference models and determine whether a distillation relationship exists based on logits statistics and hypothesis testing. Our contributions are summarized as follows: 
+
+• We present the first model fingerprinting study for multi-modal large language models (MLLMs). 
+
+• We propose two methods for model copyright protection: AttnPrint uses intrinsic cross-modal attention patterns for white-box derivative-model detection, whereas DistillTrace uses reference-calibrated behavioral evidence for black-box distillation attribution. 
+
+• We conduct large-scale evaluations on 154 model instances spanning 19 mainstream multimodal architectures. Exper-imental results show that AttnPrint reliably detects model derivation under five downstream modification techniques, whereas DistillTrace provides evidence of distillation rela-tionships under three parameter-independent techniques. 
+
+## 2 Preliminaries 2.1 Multimodal large language models 
+
+Multimodal large language models (MLLMs) typically consist of a pretrained vision encoder, a pretrained large language model, and a connector module that bridges the two representation spaces [24, 51]. Their training generally proceeds in two stages: multimodal pretraining on large-scale image-text pairs to achieve cross-modal alignment, followed by multimodal instruction tuning to further de-velop capabilities in tasks such as visual question answering, vision-language reasoning, and instruction-following dialogue [13, 51]. Because training vision encoders and large language models from scratch is prohibitively expensive, existing MLLMs often reuse the same or similar core components. For example, Qwen2-VL-7B and LLaVA-OneVision-Qwen2-7B share the Qwen2 language back-bone [23, 44], while many recent models also adopt ViT-style vision encoders; more examples are provided in the supplementary mate-rial. At the same time, substantial differences remain in multimodal alignment data, training strategies, and downstream fine-tuning, so even models built on similar underlying components may exhibit markedly different cross-modal interaction behaviors. 
+
+## 2.2 Fingerprinting 
+
+This paper focuses on model fingerprinting for copyright protection. Specifically, model fingerprinting aims to enable a copyright auditor to extract intrinsic characteristics from a suspicious model and compare them with the fingerprint of a victim model, in order to determine whether the suspicious model was obtained from the victim through unauthorized model modification or distillation. Model fingerprinting methods can be broadly divided into two categories: white-box fingerprinting and black-box fingerprinting. 
+
+White-box fingerprinting. In the white-box auditing setting, the auditor has access not only to the input-output behavior of a model, but also to its full parameters, network architecture, in-termediate representations, and gradients. Existing methods can be grouped into three categories according to the type of internal signal they use: weight-based, activation-based, and gradient-based methods. Weight-based methods identify models by analyzing their weight parameters. For example, HuRef treats model invariants as fingerprints and determines model attribution by comparing the similarity between invariant representations [50]. Similarly, a parameter-distribution-based method identifies models through statistical signatures of their weight matrices, in particular the layer-wise standard deviation patterns of attention parameters [49]. Activation-based methods instead exploit intermediate represen-tations produced during forward propagation. As a representative example, REEF constructs fingerprints by measuring the similar-ity of representation spaces across models with centered kernel alignment [52]. Gradient-based methods further leverage back-ward information. TensorGuard extracts gradient-based features and identifies model provenance through comparisons of gradient representations across models [47]. 
+
+Black-box fingerprinting. In the black-box auditing setting, the auditor cannot access model parameters or internal states and can only interact with the target model through an API by observing external behaviors such as generated texts and output probabilities. The goal is therefore to compare response characteristics across models and infer whether a derivative relationship exists between them. Gubri et al. [12] induce the target model to produce prede-fined responses under carefully optimized prompts and use the elicited outputs as model fingerprints. Pasquini et al. [33] design discriminative query prompts and identify model identity from differences in response style and behavioral patterns. Gao et al. [9] further study black-box fingerprinting from the perspective of output distributions and compare different models using maximum mean discrepancy (MMD). Sun et al. [40] treat model outputs as learnable features and train classifiers on generated texts to identify their source models. More recently, Shao et al. [38] approximate gradient-like responses under black-box access via zeroth-order optimization and perform source identification by comparing the resulting gradient surrogates across models. However, existing fingerprinting methods for LLMs are primarily designed for text-only input settings and therefore do not readily extend to the multimodal alignment mechanism in MLLMs, which is jointly shaped by the vision encoder, the projector, and the language model. Our experiments show that these white-box fingerprint-ing methods, originally developed for LLMs, exhibit substantially limited identification capability in the MLLM setting. The funda-mental reason is that many MLLMs share the same LLM backbone, while existing methods mainly characterize internal features on the language side and overlook how visual information is encoded, aligned, and further injected into the language generation process. As a result, when two MLLMs use the same language backbone but differ in their vision encoders or the datasets used for multi-modal alignment, existing methods may still misidentify them as the same model solely because of the similarity of their language components, thereby failing to effectively capture the cross-modal capability differences that are unique to MLLMs. 
+
+## 2.3 Distillation Detection 
+
+For distillation detection, existing methods often rely on injecting watermarks into the teacher model in advance and exploiting their Fingerprinting Multimodal Large Language Models MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil 
+
+inheritability during distillation. In particular, Gu et al. [11] study watermark distillation and show that a student model can learn the watermark pattern carried by a watermarked teacher’s outputs. Pan et al. [32] further investigate watermark radioactivity for unau-thorized knowledge distillation and detect distillation by testing whether the student inherits the corresponding watermark signal. However, these methods require watermark injection before deploy-ment and therefore rely on a strong pre-deployment assumption. Moreover, watermark injection itself may introduce undesirable side effects on the model’s original utility and performance. 
+
+## 3 Threat Model 
+
+In this section, we first define copyright infringement behaviors in the MLLM setting. Specifically, we consider a model owner who invests substantial resources to train an MLLM and then either re-leases it on an open-source platform (e.g., Hugging Face) or provides access to it as a cloud API service. We consider two representative types of infringement by an attacker. The first is unauthorized mod-ification of open-source models. In this scenario, the attacker starts from a license-protected open-source model and applies down-stream operations such as fine-tuning, pruning, quantization, or model merging to construct a derivative model that remains func-tionally similar to the original model while appearing superficially modified, and then claims it as an independently developed model. The second is unauthorized model distillation. This scenario may target either open-source models or closed-source models served through APIs. The attacker queries a teacher model and uses its outputs to train a student model, thereby inheriting the teacher model’s capabilities. The task of model fingerprinting is to determine whether a suspi-cious model is derived from another model, which we refer to as the victim model. In particular, this includes determining whether the suspicious model is obtained by modifying an open-source model or by distilling another model. We formalize this task as follows. Given a victim model 𝑀 𝑣 and a suspicious model 𝑀 𝑠 , the goal is to design a decision function 
+
+𝑓 (𝑀 𝑣 , 𝑀 𝑠 ) → { 0, 1}, (1) where 𝑓 (𝑀 𝑣 , 𝑀 𝑠 ) = 1 indicates that a derivative relationship exists between 𝑀 𝑠 and 𝑀 𝑣 , namely that 𝑀 𝑠 is obtained from 𝑀 𝑣 through unauthorized modification or distillation, while 𝑓 (𝑀 𝑣 , 𝑀 𝑠 ) = 0indicates that no such relationship exists. 
+
+Model owner assumptions. The model owner’s goal is to deter-mine whether a suspicious model is derived from a victim model. To this end, we consider two complementary auditing settings. In the white-box setting, the auditor has access to the full parameters, network architecture, and intermediate representations of the sus-picious model. In the black-box setting, the auditor cannot access model parameters or internal states, and can only interact with the target model through an API under a limited query budget, while observing external behaviors such as generated texts, output probabilities, or logits; when necessary, the auditor may also obtain the same level of access to reference models. For distillation detec-tion, we further assume that the model owner can construct query samples relevant to the target task. This assumption is reasonable because distillation primarily transfers teacher-specific behavioral traits on the target task distribution, while their manifestation on unrelated tasks is typically weaker and less stable. 
+
+## 4 Methods 
+
+This section provides a detailed exposition of the two proposed methods, as illustrated in Figure 1. For the white-box auditing scenario, we introduce AttnPrint , an attention-based model fin-gerprinting method. To address the black-box auditing scenario, we propose DistillTrace , which is specifically designed for the detection of knowledge distillation. 
+
+## 4.1 AttnPrint 12 10 8 6 4 2 0 220 
+
+> 10
+> 010 20
+> Family
+> GLM-4.6V Gemma-3-12B Idefics2-8B Idefics3-8B InternVL3.5-1B InternVL3.5-2B InternVL3.5-8B Llama-3.2-11B-V Qwen3-VL-2B Qwen3-VL-8B Qwen3.5-4B
+
+Figure 2: t-SNE visualization of attention-distribution fea-tures extracted from different MLLMs. 
+
+Our key insight is that differences in model architectures, train-ing datasets, and optimization strategies shape how MLLMs allocate attention when processing the same multimodal inputs. Motivated by this insight, we examine whether attention distributions exhibit model-specific structure across MLLMs. Figure 2 visualizes these features using t-SNE. Models with derivative relationships form compact local clusters, whereas independently trained models ap-pear in separate regions. This exploratory visualization motivates the use of attention distributions as model fingerprints, which we evaluate quantitatively in Section 5.2. For multimodal models, the input image and text are first en-coded into visual tokens and text tokens, respectively, and then jointly participate in the subsequent cross-modal interaction and generation process within the model. Accordingly, the attention relationships in an MLLM can be further divided into four parts, namely the attention from visual tokens to text tokens (visual-to-text), from text tokens to visual tokens (text-to-visual), from text tokens to text tokens (text-to-text), and from visual tokens to vi-sual tokens (visual-to-visual). Among them, text-to-text attention is largely inherited from the language modeling capability of the back-bone LLM, and therefore mainly reflects the intrinsic characteristics of the backbone language model itself. In contrast, text-to-visual and visual-to-text attention more directly capture the interaction mechanisms learned during multimodal alignment, and therefore carry richer cross-modal modeling characteristics and identity in-formation that are unique to different MLLMs. This observation is further supported by the results in the supplementary material, where text-to-visual and visual-to-text attention exhibit stronger discriminative power for model identification and fingerprinting. Consider a model consisting of 𝐿 layers, where the 𝑙 -th layer contains 𝐻 𝑙 attention heads, with 𝑇 𝑙 text tokens and 𝑉 𝑙 visual tokens. This study focuses on the text-to-visual attention sub-matrix of the MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Huang et al. AttnPrint DistillTrace 
+
+> distill
+> teacher
+
+# ...   
+
+> student task
+> Is distilled? black box only API
+> deploy
+> pairing
+> teacher
+
+# ... 
+
+# ... 
+
+# ...   
+
+> Reference model Who scores better? logits Hypothesis Testing
+> You have distilled.
+> open-source platform
+> modify It’s original.
+> reuse
+> I suspect ...
+
+v1 v2 ... 
+
+𝑡 1
+
+𝑡 2v1v2 𝑡 1𝑡 2... Fourier Transform 
+
+𝑓 !
+
+𝑓 "
+
+𝑓 #
+
+> extract attention
+> Low frequency
+> low-frequency distribution
+
+t2v 
+
+Figure 1: Overview of the proposed framework. 
+
+ℎ-th head in the 𝑙 -th layer, denoted as A𝑡 2𝑣 𝑙,ℎ ∈ R𝑇 𝑙 ×𝑉 𝑙 (visual-to-text attention is less informative due to autoregressive masking; see the supplementary material). The attention vector of the 𝑖 -th text token across all visual tokens is represented as A𝑡 2𝑣 𝑙,ℎ [𝑖, :] ∈ R𝑉 𝑙 . However, post-training operations such as fine-tuning, quantization, and model merging often perturb the attention distribution of an MLLM and introduce additional noise, thereby interfering with the stable extraction of fingerprint features. Since such noise is highly coupled with the original attention patterns, it is difficult to separate directly in the attention space. Nevertheless, existing large language models generally follow an autoregressive generation mechanism, in which the generation of each token depends on its preceding context. The resulting joint generation probability can be written as: 
+
+𝑝 (𝑥 1: 𝑇 ) =
+
+> 𝑇
+
+Ö
+
+> 𝑡 =1
+
+𝑝 (𝑥 𝑡 | 𝑥 <𝑡 ), (2) where the generation of each token 𝑥 𝑡 depends on its preceding context 𝑥 <𝑡 . For any given position, the attention mechanism pro-duces a set of attention weights that quantify how strongly the token at that position attends to other tokens in the context, de-noted here by A𝑡 2𝑣 𝑙,ℎ [𝑖, :]. Following prior work that treats attention distributions over ordered token sequences as signals amenable to frequency-domain analysis [35], we apply the Discrete Fourier Transform (DFT) [31] to analyze their spectral characteristics: 
+
+𝑋 𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑘 ] = 
+
+> 𝑉 𝑙 −1
+
+∑︁ 
+
+> 𝑛 =0
+
+A𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑛 ] · 𝑒 − 𝑗 2𝜋𝑘𝑛 𝑉 𝑙 , 𝑘 = 0, 1, . . . , 𝑉 𝑙 − 1, (3) where 𝑗 = √−1 denotes the imaginary unit. We exclusively retain the low-frequency components of the sig-nal. Intuitively, low-frequency signals reflect the global alignment logic and macroscopic processing patterns of the model, which are acquired during extensive pre-training on large-scale data distri-butions and thus effectively characterize the intrinsic identity of the model. In contrast, high-frequency signals are more suscep-tible to perturbations from downstream operations, manifesting as noise that interferes with stable fingerprint identification. This interpretation is further supported by supplementary analyses. Let 
+
+𝜌 ∈ ( 0, 1] denote the retention ratio for low-frequency components. In practice, we set 𝜌 = 0.2. The ideal low-pass filter 𝐺 (𝑘 ) is defined as: 
+
+𝐺 (𝑘 ) = 1
+
+
+
+min (𝑘, 𝑉 𝑙 − 𝑘 ) < 𝜌𝑉 𝑙 
+
+2
+
+
+
+. (4) The denoised low-frequency signal ˆ 𝑋 𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑘 ] is defined as ˆ𝑋 𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑘 ] = 𝑋 𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑘 ] · 𝐺 (𝑘 ). (5) Finally, the signal is mapped back to the time domain through the Inverse Discrete Fourier Transform (IDFT) to yield the denoised attention vector: ˆ𝐴 𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑛 ] = 1
+
+𝑉 𝑙 𝑉 𝑙 −1∑︁ 
+
+> 𝑘 =0
+
+ˆ𝑋 𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑘 ] · 𝑒 𝑗 2𝜋𝑘𝑛 𝑉 𝑙 , 𝑛 = 0, 1, . . . , 𝑉 𝑙 − 1. (6) According to Parseval’s theorem [31], the total energy of the signal remains invariant between the time and frequency domains:  
+
+> 𝑉 𝑙 −1
+
+∑︁ 
+
+> 𝑛 =0
+
+| ˆA[𝑖, 𝑛 ]| 2 = 1
+
+𝑉 𝑙 𝑉 𝑙 −1∑︁ 
+
+> 𝑘 =0
+
+| ˆ𝑋 [𝑖, 𝑘 ]| 2. (7) This property allows us to examine the energy distribution of cross-modal attention in the frequency domain. Empirically, most energy is concentrated in the low-frequency band, so retaining low-frequency components preserves the dominant signal structure with limited information loss. Supporting results are provided in the supplementary material. The energy of the low-frequency attention vector for the 𝑖 -th text token in the ℎ-th head of the 𝑙 -th layer is denoted as 𝐸 𝑙,ℎ [𝑖 ]. To preserve token-specific attention intensity patterns, we do not average over text-token positions. Instead, we average only across the head dimension and define the layer-level fingerprint as a vector S𝑙 ∈ R𝑇 𝑙 , whose 𝑖 -th element is 
+
+𝑆 𝑙 [𝑖 ] = 1
+
+𝐻 𝑙 𝐻 𝑙 ∑︁ 
+
+> ℎ=1
+
+𝐸 𝑙,ℎ [𝑖 ] = 1
+
+𝐻 𝑙 𝐻 𝑙 ∑︁  
+
+> ℎ=1
+> 𝑉 𝑙 −1
+
+∑︁ 
+
+> 𝑛 =0
+
+ˆ𝐴 𝑡 2𝑣 𝑙,ℎ [𝑖, 𝑛 ] 2
+
+. (8) For a model 𝑀 with 𝐿 layers, the layer-level fingerprint S𝑙 (𝑀 ) ∈ 
+
+R𝑇 𝑙 may have a model-dependent length because different models Fingerprinting Multimodal Large Language Models MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil 
+
+can produce different numbers of text tokens. To obtain a fixed-dimensional representation at the layer level, we apply mean pool-ing over the token dimension: 
+
+𝑒 𝑙 (𝑀 ) = 1
+
+𝑇 𝑙 𝑇 𝑙 ∑︁ 
+
+> 𝑞 =1
+
+𝑆 𝑙 (𝑀 ) [ 𝑞 ], 𝑙 = 1, . . . , 𝐿, (9) where 𝑒 𝑙 (𝑀 ) ∈ R represents the average low-frequency cross-modal attention energy of the 𝑙 -th layer. The model fingerprint is then represented as the sequence of layer-wise energy statistics: 
+
+F(𝑀 ) = [𝑒 1 (𝑀 ), 𝑒 2 (𝑀 ), . . . , 𝑒 𝐿 (𝑀 )] ⊤ ∈ R𝐿 . (10) Architectural heterogeneity complicates direct layer-wise finger-print comparison, as models may differ in depth because of their original architectures or subsequent layer pruning [4, 29, 53]. We therefore use the Hungarian algorithm [18] to align layers accord-ing to their pooled energy statistics. Without loss of generality, let 𝐿 ≤ 𝐿 ′ denote the numbers of layers in models 𝑀 and 𝑀 ′, respectively. We define the matching cost between their 𝑖 -th and 𝑗 -th layers as 
+
+𝐶 𝑖,𝑗 (𝑀, 𝑀 ′) = 𝑒 𝑖 (𝑀 ) − 𝑒 𝑗 (𝑀 ′) . (11) We use the Hungarian algorithm to obtain a one-to-one partial matching between the layers of the two models: 
+
+X∗ = arg min 
+
+> X
+> 𝐿
+
+∑︁ 
+
+> 𝑖 =1
+> 𝐿 ′
+
+∑︁ 
+
+> 𝑗 =1
+
+𝐶 𝑖,𝑗 (𝑀, 𝑀 ′)𝑥 𝑖,𝑗 
+
+s.t. 
+
+> 𝐿 ′
+
+∑︁ 
+
+> 𝑗 =1
+
+𝑥 𝑖,𝑗 = 1, 𝑖 = 1, . . . , 𝐿, 
+
+> 𝐿
+
+∑︁ 
+
+> 𝑖 =1
+
+𝑥 𝑖,𝑗 ≤ 1, 𝑗 = 1, . . . , 𝐿 ′,𝑥 𝑖,𝑗 ∈ { 0, 1}.
+
+(12) Here, 𝑥 𝑖,𝑗 = 1 indicates that the 𝑖 -th layer of 𝑀 is matched to the 𝑗 -th layer of 𝑀 ′. Let A∗ = {( 𝑖 𝑘 , 𝑗 𝑘 )} 𝐾 𝑘 =1 denote the resulting matched pairs, where 𝐾 = min (𝐿, 𝐿 ′). Based on this assignment, the aligned fingerprints of the two models are defined as 
+
+F∗ (𝑀 ) = 𝑒 𝑖 1 (𝑀 ), 𝑒 𝑖 2 (𝑀 ), . . . , 𝑒 𝑖 𝐾 (𝑀 )⊤ ∈ R𝐾 ,
+
+F∗ (𝑀 ′) = 𝑒 𝑗 1 (𝑀 ′), 𝑒 𝑗 2 (𝑀 ′), . . . , 𝑒 𝑗 𝐾 (𝑀 ′)⊤ ∈ R𝐾 . (13) We then measure the agreement between the two aligned finger-prints using the Pearson correlation coefficient: 
+
+𝑟 (𝑀, 𝑀 ′) = Corr (F∗ (𝑀 ), F∗ (𝑀 ′)) , (14) where Corr (· , ·) denotes the Pearson correlation coefficient. A higher 
+
+𝑟 (𝑀, 𝑀 ′) indicates stronger agreement between the matched layer-wise attention-energy patterns and thus stronger evidence of a potential derivative relationship. 
+
+## 4.2 DistillTrace 
+
+Knowledge distillation typically utilizes the Kullback-Leibler (KL) divergence to measure the discrepancy between the soft distribution produced by a student model 𝑃 𝑇 𝑆 and that of a teacher model 𝑃 𝑇 𝑇 [14]: 
+
+LKD = 𝑇 2∑︁ 
+
+> 𝑖
+
+𝑝 (𝑇 ) 
+
+> 𝑖
+
+log 𝑝 (𝑇 )
+
+> 𝑖
+
+𝑞 (𝑇 )
+
+> 𝑖
+
+!
+
+. (15) This implies that, if a student model is distilled from a teacher model, its generation behavior on the distillation task distribution should better fit the teacher model’s output preference. As a result, outputs generated by the student model are expected to receive higher confidence under the teacher model. Our goal is therefore to determine whether the teacher model assigns higher logits to a given output sequence y = {𝑦 1, 𝑦 2, . . . , 𝑦 𝑁 } generated by a student model. Since commercial model APIs typically do not expose raw logits, we instead use a monotonic log-odds score derived from the returned log-probabilities. For a token 𝑦 𝑡 with probability 𝑝 𝑡 =
+
+exp (logprob 𝑡 ), the log-odds confidence score is calculated as: Logit (𝑝 𝑡 ) = log 
+
+ 𝑝 𝑡 
+
+1 − 𝑝 𝑡 
+
+
+
+. (16) We then use the average logit over the entire sequence to measure its overall confidence, thereby avoiding unfairly lower scores for longer sequences caused by probability accumulation. ¯𝐿 (𝑀, y(𝑖 ) ) = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁  
+
+> 𝑡 =1
+
+Logit (𝑝 𝑡 | 𝑦 <𝑡 , 𝑀 ). (17) To rigorously determine whether a distillation relationship exists between a suspect model and a candidate teacher model, we formu-late the problem as a hypothesis testing task based on paired score differences. Given a suspect model 𝑀 𝑆 , a candidate teacher model 
+
+𝑀 𝑇 , and 𝑏 independent reference models {𝑀 𝑅, 1, 𝑀 𝑅, 2, . . . , 𝑀 𝑅,𝑏 }, for the 𝑖 -th query, we first compute the average logit assigned by the teacher model to the output generated by the suspect model: ¯𝐿 (𝑀 𝑇 , y(𝑖 ) 
+
+> 𝑆
+
+), (18) where y(𝑖 ) 
+
+> 𝑆
+
+denotes the output sequence produced by the suspect model 𝑀 𝑆 under the 𝑖 -th query. We then let each reference model generate an output y(𝑖 ) 
+
+> 𝑅,𝑗
+
+under the same query, and compute the average logit assigned by the teacher model to these reference outputs. Based on these scores, we construct the reference baseline as ¯𝐿 (𝑖 ) 
+
+> refs
+
+= 1
+
+𝑏 
+
+> 𝑏
+
+∑︁ 
+
+> 𝑗 =1
+
+¯𝐿 (𝑀 𝑇 , y(𝑖 ) 
+
+> 𝑅,𝑗
+
+). (19) The introduction of reference models serves two purposes: first, to approximate the output distribution of independent models; and second, to calibrate for sample difficulty. Without such calibration, high teacher confidence on a given sample may simply reflect that the sample is intrinsically easy for most models, rather than that the suspect model preserves teacher-specific decision characteristics. On this basis, we define the paired difference for the 𝑖 -th query as 
+
+Δ𝑖 = ¯𝐿 (𝑀 𝑇 , y(𝑖 ) 
+
+> 𝑆
+
+) − ¯𝐿 (𝑖 )
+
+> refs
+
+. (20) If the suspect model is indeed distilled from the teacher model, its generation behavior should better align with the teacher model’s output preference, and the distribution of the paired differences is therefore expected to exhibit a positive location shift. To test whether this effect is statistically significant, we apply a one-sided Wilcoxon signed-rank test to the paired differences {Δ𝑖 }𝑛 𝑖 =1, assum-ing that they are independent and drawn from an approximately symmetric distribution. Specifically, we define the null hypothesis MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Huang et al. 
+
+𝐻 0 and the alternative hypothesis 𝐻 1 as follows: 
+
+𝐻 0 : 𝜃 Δ ≤ 0,𝐻 1 : 𝜃 Δ > 0, (21) where 𝜃 Δ denotes the location-shift parameter of the paired-difference distribution. Based on the paired differences, we apply the Wilcoxon signed-rank test. After removing zero differences, we rank the absolute values of the remaining differences: 
+
+𝑅 𝑗 = rank (| Δ𝑗 |) . (22) Based on these ranks, the Wilcoxon signed-rank statistic is de-fined as 
+
+𝑊 + =∑︁  
+
+> Δ𝑗 >0
+
+𝑅 𝑗 , (23) which is the sum of the ranks corresponding to all positive differ-ences. Intuitively, if the suspect model better matches the teacher model’s preference than the reference models, positive differences should not only occur more frequently, but also tend to have larger magnitudes, leading to a larger 𝑊 +.The 𝑝 -value is then defined as the probability, under the null hypothesis, of observing a positive rank sum at least as large as the one obtained: 
+
+𝑝 = 𝑃  𝑊 + 
+
+> null
+
+≥ 𝑊 +
+
+> obs
+
+ . (24) A smaller 𝑝 -value indicates that the observed positive shift is less likely to arise from random variation, and therefore provides stronger evidence for the existence of a distillation relationship between the suspect model and the candidate teacher model. 
+
+## 5 Experiments 5.1 Experimental Setup 
+
+Our experimental setup largely follows LEAFBENCH [37], a bench-mark designed for model fingerprinting evaluation. Since LEAF-BENCH is originally designed for text-only LLMs, we replace the LLMs in its benchmark with MLLMs to accommodate the multi-modal setting, while retaining its original configurations for model modification operations and evaluation protocols. 
+
+Models. We evaluate representative MLLMs from the Qwen, In-ternVL, Llama, Gemma, LLaVA, GLM, Kimi-VL, Pixtral and Idefics families. The Qwen models are Qwen3.5-4B [36], Qwen3-VL-8B, Qwen3-VL-2B [2], Qwen2-VL-7B, Qwen2-VL-2B [44], and Qwen2.5-VL-7B [3]. The InternVL models are InternVL3.5-8B, InternVL3.5-2B, and InternVL3.5-1B [45]. The Idefics models are Idefics2-8B [21] and Idefics3-8B-Llama3 [20]. The remaining models are Llama-3.2-11B-Vision [30], Gemma-3-12B [10] and Gemma-3-4B [10], LLaVA-v1.6-Mistral-7B [25], and LLaVA-OneVision-Qwen2-7B [23]. We further include GLM-4.6V-Flash [42], Kimi-VL-A3B-Instruct [41], and Pix-tral-12B [1]. Overall, these models range from 1B to 16B parameters, and we apply the parameter-altering techniques described below to construct 154 model instances. 
+
+Baselines. We compare our methods with seven fingerprinting baselines originally developed for LLMs. The four white-box base-lines are HuRef [50], PDF [49], REEF [52], and TensorGuard [47], while the three black-box baselines are LLMmap [33], MET [9], and SEF [37]. 
+
+Metrics. We use four metrics to evaluate the identification perfor-mance of model fingerprinting methods: Area Under the ROC Curve (AUC), accuracy (ACC), TPR@1%FPR, and Mahalanobis Distance (MD) [28]. AUC is a threshold-independent metric that measures the overall ability of a method to distinguish derived models from independent models. ACC measures the overall classification accu-racy under the selected decision threshold. TPR@1%FPR reflects the detection capability of a method under a low-false-positive regime. Throughout the paper, TPR@1%FPR is reported in decimal form. MD measures the separability between derived and indepen-dent models in fingerprint scores. A higher MD indicates a clearer decision boundary and more stable fingerprints under subtle per-turbations. 
+
+Techniques affecting model fingerprinting. After pre-training, models often undergo a series of downstream modifications before deployment. We categorize these modifications into two groups ac-cording to whether they directly alter model parameters: parameter-altering techniques and parameter-independent techniques. Parameter-altering techniques refer to modifications that directly change model parameters, including full fine-tuning (FT) [5], param-eter-efficient fine-tuning (PEFT) [16], quantization (QZ) [8], model merging (MM) [46], pruning (PR) [29, 39], and distillation [14]. For the base models and their FT, PEFT, QZ, and MM variants, we use 75 publicly available checkpoints from Hugging Face; the corresponding model IDs are provided in the supplementary ma-terial. For pruning, we construct 15 pruned models using both un-structured pruning with Wanda [39] and structured pruning with ShortGPT [29]. For distillation, we use GLM-4.6V-Flash, Qwen3-VL-8B-Instruct, Gemma-3-12B-It, and Pixtral-12B as teacher mod-els; GeomVerse [17], Localized Narratives [34], TabMWP [27], and WebSight [19] as distillation datasets; and Gemma-3-4B-Instruct, InternVL3.5-1B-hf, InternVL3.5-2B-hf, and Qwen2-VL-2B-Instruct as student models, resulting in 64 distilled models. Detailed pruning and distillation settings are provided in the supplementary material. Parameter-independent techniques do not change model param-eters, but instead affect model behavior at inference time. In this category, we consider system prompts (SP) [43], sampling strate-gies (SS) [7, 15], and retrieval-augmented generation (RAG) [22]. Detailed configurations of these settings are provided in the sup-plementary material. 
+
+## 5.2 Main Results 
+
+Overall performance. Table 1 compares AttnPrint with the fin-gerprinting baselines. AttnPrint achieves state-of-the-art results across all metrics, demonstrating the strongest overall identifica-tion performance. Among the white-box baselines, HuRef is the most competitive, but still falls short of AttnPrint, especially at low false positive rates. In contrast, black-box methods perform substantially worse across all metrics, due to their lack of access to internal model information. These results show that exploiting cross-modal attention signals provides a more effective fingerprint than existing white-box baselines, while access to internal model information remains crucial for reliable MLLM fingerprinting. 
+
+Parameter-altering modifications. Table 2 shows that AttnPrint achieves the best or tied-best AUC and TPR@1%FPR across all five modifications and the highest MD in most settings. The advan-tage is particularly clear under quantization and model merging, Fingerprinting Multimodal Large Language Models MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil 
+
+Table 1: Overall performance comparison of AttnPrint and baselines under model modification scenarios. White-box Black-box Metric HuRef PDF REEF TensorGuard AttnPrint LLMmap MET SEF                                     
+
+> AUC ↑0.9777( ±0.012) 0.9309( ±0.015) 0.8914( ±0.011) 0.8464( ±0.018) 0.9937 (±0.006) 0.7731( ±0.017) 0.5638( ±0.014) 0.7719( ±0.016)
+> ACC ↑0.9861( ±0.009) 0.9800( ±0.011) 0.8840( ±0.014) 0.8889( ±0.013) 0.9879 (±0.008) 0.8849( ±0.015) 0.5515( ±0.019) 0.8863( ±0.012)
+> TPR@1%FPR ↑0.8632( ±0.021) 0.7863( ±0.024) 0.6838( ±0.018) 0.4884( ±0.022) 0.9636 (±0.017) 0.3189( ±0.020) 0.0000( ±0.000) 0.3428( ±0.019)
+> MD ↑2.5656( ±0.063) 2.6364( ±0.057) 2.9369( ±0.049) 0.8787( ±0.036) 3.4428 (±0.068) 0.7241( ±0.031) 0.2560( ±0.018) 1.1406( ±0.042)
+
+Table 2: Performance comparison of model fingerprinting methods across different parameter-altering techniques. Type Method Metric FT PEFT QZ MM PR White-box                                                                                                                                                 
+
+> HuRef AUC ↑0.998 1.000 1.000 1.000 0.996 TPR@1%FPR ↑0.868 1.000 1.000 1.000 0.851 MD ↑2.928 3.241 3.404 3.180 3.067 PDF AUC ↑0.943 1.000 0.887 0.842 0.908 TPR@1%FPR ↑0.763 1.000 0.833 0.750 0.714 MD ↑2.597 2.741 2.724 2.694 2.668 REEF AUC ↑0.823 0.941 0.769 0.958 0.891 TPR@1%FPR ↑0.579 0.833 0.417 0.750 0.625 MD ↑2.727 3.422 1.858 2.868 2.954 TensorGuard AUC ↑0.835 0.989 0.767 0.686 0.843 TPR@1%FPR ↑0.414 0.750 0.182 0.333 0.400 MD ↑0.836 1.217 0.604 0.459 0.894 AttnPrint AUC ↑0.999 1.000 1.000 1.000 0.997 TPR@1%FPR ↑0.952 1.000 1.000 1.000 0.941 MD ↑3.363 3.266 3.763 3.671 3.588
+> Black-box
+> LLMmap AUC ↑0.706 0.770 0.739 0.651 0.724 TPR@1%FPR ↑0.342 0.333 0.333 0.250 0.319 MD ↑0.304 0.700 0.803 0.531 0.614 MET AUC ↑0.559 0.509 0.495 0.454 0.528 TPR@1%FPR ↑0.000 0.000 0.000 0.000 0.000 MD ↑0.239 0.037 0.024 0.226 0.121 SEF AUC ↑0.827 0.937 0.750 0.833 0.872 TPR@1%FPR ↑0.556 0.800 0.500 0.500 0.589 MD ↑1.277 1.720 0.905 1.172 1.341
+
+where several representation- and gradient-based baselines degrade substantially. 
+
+Cross-Family Pairs with Similar Language Backbones. Table 3 compares five selected cross-family model pairs whose language backbones are the same or highly similar. Specifically, Qwen3-VL-8B and InternVL3.5-8B are both built on the Qwen3-8B language backbone; InternVL3.5-2B and Qwen3-VL-2B both use Qwen3-2B; Idefics2-8B and LLaVA-v1.6-Mistral-7B are based on Mistral-7B; and Pixtral-12B uses a 12B variant from the Mistral series. Since lower similarity indicates better separation, this experiment tests whether a fingerprinting method can avoid confusing independently trained MLLMs despite shared language backbones. Most baselines still assign uniformly high similarity to these pairs. In particular, PDF, TensorGuard, HuRef and the black-box methods remain highly similar on almost all pairs, indicating limited ability to separate MLLMs that share the same language backbone. REEF and AttnPrint are the only methods that substantially reduce similarity on these hard pairs. Among them, AttnPrint achieves the lowest similarity on four of the five pairs and the second-lowest on the remaining pair (Qwen3-VL-8B / InternVL3.5-8B), where REEF attains 0.5593 and AttnPrint attains 0.6530. This strong performance of AttnPrint suggests that cross-modal attention better captures the multimodal differences among MLLMs with shared language backbones. REEF also performs well on these pairs, suggesting that representation-space features capture multimodal alignment shifts. However, its lower overall AUC indicates that it may over-separate same-family models, reducing overall reliability. 
+
+Distillation Detection. By default, DistillTrace is evaluated with 200 queries and four reference models. Table 4 shows that existing white-box and black-box fingerprinting baselines achieve near-random performance, whereas DistillTrace achieves an AUC of 0.8507 and a TPR@1%FPR of 0.3281. This advantage can be attrib-uted to the fact that distillation causes only limited changes to the student’s fingerprint and primarily preserves relative alignment with the teacher, rather than absolute fingerprint similarity. Con-ventional fingerprinting methods mainly capture such absolute alignment and therefore struggle to identify distillation relation-ships. By introducing reference models, DistillTrace measures the suspect model’s relative alignment with the candidate teacher and isolates teacher-specific characteristics. 
+
+Distillation Detection under Parameter-Independent Tech-niques. Table 5 shows that DistillTrace degrades under parameter-independent techniques relative to Table 4, but still outperforms the baselines reported in Table 4. This suggests that teacher-side behavioral evidence is weakened but not removed by deployment-time changes. RAG is the most favorable setting, possibly because the retrieved context constrains the response space and makes teacher-student preference alignment easier to observe. By contrast, sampling strategies cause the largest degradation in TPR@1%FPR, indicating that DistillTrace is particularly sensitive to sampling fac-tors such as temperature under strict low-false-positive constraints. 
+
+## 5.3 Ablation Study 
+
+In this section, we investigate the hyperparameters that affect Dis-tillTrace. Experiments on the hyperparameters of AttnPrint are provided in the supplementary material. 
+
+Effects of Different Numbers of Queries. As shown in Fig-ure 3a and Figure 3b, increasing the query budget improves detec-tion performance. AUC rises from 0.677 to 0.842 as the number of queries increases from 1 to 25, then gradually saturates around 0.85. TPR@1%FPR is more sensitive and remains near zero with fewer than 50 queries, but improves substantially at 75 queries before stabilizing. Notably, such a query cost is acceptable in practice. For MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Huang et al. 
+
+Table 3: Cross-family similarity comparison on selected model pairs from the benchmark configuration. Lower similarity indicates better model separation. White-box Black-box Similarity ↓ HuRef PDF REEF TensorGuard AttnPrint LLMmap MET SEF 
+
+Qwen3-VL-8B / InternVL3.5-8B 0.9688 0.9969 0.5593 0.9970 0.6530 0.9990 0.9950 0.9570 
+
+InternVL3.5-2B / Qwen3-VL-2B 0.9844 0.9985 0.5059 0.9964 0.4309 0.9981 0.9921 0.9510 
+
+Idefics2-8B / Pixtral-12B 0.9720 0.9948 0.3180 0.9962 0.2410 0.9987 0.9942 0.9560 
+
+Pixtral-12B / LLaVA-v1.6-Mistral-7B 0.7109 0.9634 0.5401 0.9886 0.5219 0.9992 0.9935 0.9520 
+
+LLaVA-v1.6-Mistral-7B / Idefics2-8B 0.9815 0.9976 0.2860 0.9995 0.2190 0.9989 0.9946 0.9490 1 25 50 75 100 125 150 175 200 
+
+> Number of Queries
+> 0.675 0.700 0.725 0.750 0.775 0.800 0.825 0.850
+> AUC
+
+(a) Effect of query budget on AUC. 1 25 50 75 100 125 150 175 200  
+
+> Number of Queries
+> 0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35
+> TPR@1% FPR
+
+(b) Effect of query budget on TPR@1%FPR. 1 2 3 4
+
+> Number of Reference Models
+> 0.8480 0.8490 0.8500 0.8510 0.8520 0.8530
+> AUC
+
+(c) Effect of reference model count on AUC. 1 2 3 4Number of Reference Models 0.26 0.28 0.30 0.32 0.34 
+
+> TPR@1% FPR
+
+(d) Effect of reference model count on TPR@1%FPR. 
+
+Figure 3: Detection performance of DistillTrace under different query budgets and reference model counts. Subfigures (a) and (b) illustrate the effect of the query budget, while (c) and (d) show the effect of the number of reference models. Table 4: Performance comparison of different model finger-printing methods on distilled models. White-box Black-box Metric HuRef PDF REEF TensorGuard LLMmap MET SEF DistillTrace             
+
+> AUC ↑0.4942 0.5000 0.5135 0.4941 0.5000 0.5000 0.5010 0.8507 TPR@1%FPR ↑0.0000 0.0000 0.0000 0.0000 0.0179 0.0000 0.0000 0.3281
+
+Table 5: DistillTrace performance for distillation detection under different parameter-independent techniques. Metric SP RAG SS 
+
+AUC ↑ 0.7035 0.7936 0.7136 TPR@1%FPR ↑ 0.1233 0.1850 0.1033 example, with 75 queries, where each query contains approximately 1600 image tokens, 33 input text tokens, and 128 output tokens, querying the suspect model costs approximately $0.2121 under cur-rent mainstream commercial API pricing. Even with 200 queries, the total cost is only $0.5655. These results suggest that our method is economically feasible in practical black-box auditing scenarios. 
+
+Effect of the Number of Reference Models. As shown in Fig-ure 3c and Figure 3d, the number of reference models has a relatively limited impact on the overall AUC. Even with only one reference model, DistillTrace already achieves a high AUC, indicating that it retains strong global discriminative ability even under extremely limited reference information. However, as the number of refer-ence models increases, TPR@1%FPR improves more substantially, rising from 0.2656 to 0.3281. This suggests that a larger reference pool provides a more stable estimate of the output distribution of independent models, allowing the student’s relative advantage over non-distilled models to be reflected more consistently in the detection statistic. Notably, even with only a single reference model, our method still outperforms existing model fingerprinting meth-ods, further demonstrating the effectiveness and practicality of this black-box distillation detection framework in scenarios with limited reference resources. 
+
+## 6 Conclusion 
+
+This paper presents the first systematic study of model fingerprint-ing in the MLLM setting. Specifically, for model modification, we propose AttnPrint, a white-box method that identifies derivative relationships through stable low-frequency cross-modal attention features in the frequency domain. For unauthorized distillation, we propose DistillTrace, a black-box method that attributes distilla-tion by comparing the confidence assigned by candidate teacher models to suspect outputs against reference models and applying hypothesis testing. Large-scale experiments show that both meth-ods consistently outperform existing approaches in identification accuracy and robustness across mainstream MLLM architectures and complex modification settings. Despite these promising results, our framework still has limitations. AttnPrint relies on white-box access to internal attention information, which may not always be available in real-world auditing. DistillTrace requires a task-relevant query set that can approximate the distillation task distri-bution, which also limits its applicability in real-world scenarios. Future work will explore MLLM fingerprinting under weaker access assumptions, especially black-box methods for model modification detection, and extend copyright auditing to broader model variants and deployment settings. Fingerprinting Multimodal Large Language Models MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil 
+
+## Acknowledgments 
+
+This work was supported in part by the New Generation Artificial Intelligence-National Science and Technology Major Project (No. 2025ZD0123202) and by National Natural Science Foundation of China (Grants U2336206 and 62472398). 
+
+## References 
+
+[1] Pravesh Agrawal, Szymon Antoniak, Emma Bou Hanna, Devendra Chaplot, Jessica Chudnovsky, Saurabh Garg, Theophile Gervet, Soham Ghosh, Amelie Heliou, Paul Jacob, et al. 2024. Pixtral 12B. arXiv preprint arXiv:2410.07073 (2024). doi:10.48550/arXiv.2410.07073 [2] Shuai Bai, Yuxuan Cai, Ruizhe Chen, Keqin Chen, Xionghui Chen, Zesen Cheng, Lianghao Deng, Wei Ding, Chang Gao, Chunjiang Ge, et al. 2025. Qwen3-VL Technical Report. arXiv preprint arXiv:2511.21631 (2025). doi:10.48550/arXiv.2511. 21631 [3] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, et al. 2025. Qwen2.5-VL Technical Report. arXiv preprint arXiv:2502.13923 (2025). doi:10.48550/arXiv.2502.13923 [4] Xiaodong Chen, Yuxuan Hu, Jing Zhang, Yanling Wang, Cuiping Li, and Hong Chen. 2024. Streamlining Redundant Layers to Compress Large Language Models. 
+
+arXiv preprint arXiv:2403.19135 (2024). doi:10.48550/arXiv.2403.19135 [5] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. In 
+
+Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) . Association for Computational Linguistics, Minneapolis, Minnesota, 4171–4186. doi:10.18653/v1/N19-1423 [6] Qingxiu Dong, Lei Li, Damai Dai, Ce Zheng, Xu Ma, Jue Hu, Qiang Yu, Zhenzhong Zhang, and Yao Fu. 2024. Modality-Aware Integration with Large Language Models for Knowledge-Based Visual Question Answering. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) . Association for Computational Linguistics, Bangkok, Thailand, 2404–2416. doi:10.18653/v1/2024.acl-long.132 [7] Angela Fan, Mike Lewis, and Yann Dauphin. 2018. Hierarchical Neural Story Generation. In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) . Association for Computational Linguistics, Melbourne, Australia, 889–898. doi:10.18653/v1/P18-1082 [8] Elias Frantar, Saleh Ashkboos, Torsten Hoefler, and Dan Alistarh. 2022. GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers. 
+
+arXiv preprint arXiv:2210.17323 (2022). doi:10.48550/arXiv.2210.17323 [9] Irena Gao, Percy Liang, and Carlos Guestrin. 2025. Model Equality Testing: Which Model Is This API Serving?. In The Thirteenth International Conference on Learning Representations . https://openreview.net/forum?id=QCDdI7X3f9 [10] Gemma Team, Aishwarya Kamath, Johan Ferret, Shreya Pathak, Nino Vieillard, Ramona Merhej, Sarah Perrin, et al. 2025. Gemma 3 Technical Report. arXiv preprint arXiv:2503.19786 (2025). doi:10.48550/arXiv.2503.19786 [11] Chenchen Gu, Xiang Lisa Li, Percy Liang, and Tatsunori Hashimoto. 2024. On the Learnability of Watermarks for Language Models. In The Twelfth Interna-tional Conference on Learning Representations . https://openreview.net/forum?id= 9k0krNzvlV [12] Martin Gubri, Dennis Ulmer, Hwaran Lee, Sangdoo Yun, and Seong Joon Oh. 2024. TRAP: Targeted Random Adversarial Prompt Honeypot for Black-Box Identification. In Findings of the Association for Computational Linguistics: ACL 2024 . Association for Computational Linguistics, Bangkok, Thailand, 11496–11517. doi:10.18653/v1/2024.findings-acl.683 [13] Jin He, Yifeng Wang, Jiacheng Shi, Siyuan Hu, Fei Huang, Jinyang Li, Hongyuan Zhang, Min Zhang, and Xuanjing Li. 2025. Multimodal Large Language Models for Text-rich Image Understanding: A Comprehensive Review. In Findings of the As-sociation for Computational Linguistics: ACL 2025 . Association for Computational Linguistics, Vienna, Austria, 19857–19888. doi:10.18653/v1/2025.findings-acl.1023 [14] Geoffrey Hinton, Oriol Vinyals, and Jeff Dean. 2015. Distilling the Knowledge in a Neural Network. arXiv preprint arXiv:1503.02531 (2015). doi:10.48550/arXiv. 1503.02531 [15] Ari Holtzman, Jan Buys, Li Du, Maxwell Forbes, and Yejin Choi. 2020. The Curious Case of Neural Text Degeneration. In International Conference on Learning Representations . https://openreview.net/forum?id=rygGQyrFvH [16] Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. 2021. LoRA: Low-Rank Adaptation of Large Language Models. arXiv preprint arXiv:2106.09685 (2021). doi:10.48550/arXiv. 2106.09685 [17] Mehran Kazemi, Hamidreza Alvari, Ankit Anand, Jialin Wu, Xi Chen, and Radu Soricut. 2023. GeomVerse: A Systematic Evaluation of Large Models for Geometric Reasoning. arXiv preprint arXiv:2312.12241 (2023). doi:10.48550/arXiv.2312.12241 [18] Harold W. Kuhn. 1955. The Hungarian Method for the Assignment Prob-lem. Naval Research Logistics Quarterly 2, 1-2 (1955), 83–97. doi:10.1002/nav. 3800020109 [19] Hugo Laurençon, Léo Tronchon, and Victor Sanh. 2024. Unlocking the Conversion of Web Screenshots into HTML Code with the WebSight Dataset. arXiv preprint arXiv:2403.09029 (2024). doi:10.48550/arXiv.2403.09029 [20] Hugo Laurençon, Andrés Marafioti, Victor Sanh, and Léo Tronchon. 2024. Build-ing and better understanding vision-language models: insights and future direc-tions. arXiv:2408.12637 [cs.CV] https://arxiv.org/abs/2408.12637 [21] Hugo Laurençon, Léo Tronchon, Matthieu Cord, and Victor Sanh. 2024. What matters when building vision-language models? arXiv:2405.02246 [cs.CV] https: //arxiv.org/abs/2405.02246 [22] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, Sebastian Riedel, and Douwe Kiela. 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. In Advances in Neural Information Processing Systems , Vol. 33. 9459–9474. https://proceedings.neurips.cc/paper/2020/hash/ 6b493230205f780e1bc26945df7481e5-Abstract.html [23] Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Peiyuan Zhang, Yanwei Li, Ziwei Liu, et al. 2024. Llava-onevision: Easy visual task transfer. arXiv preprint arXiv:2408.03326 (2024). [24] Binzhu Lin, Bin Zhu, Yang Ye, Munan Ning, Peng Jin, Li Yuan, and Zhouhan Lin. 2024. The Revolution of Multimodal Large Language Models: A Survey. In 
+
+Findings of the Association for Computational Linguistics: ACL 2024 . Association for Computational Linguistics, Bangkok, Thailand, 13609–13630. doi:10.18653/ v1/2024.findings-acl.807 [25] Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. 2024. Improved baselines with visual instruction tuning. In 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) . IEEE, 26286–26296. [26] Yuliang Liu, Teng Ma, ShiHan Zhang, Weihao Yang, Jie Li, Yuying Ge, Ying Shan, and Xiaoguang Qie. 2024. MMC: Advancing Multimodal Chart Understanding with Large-scale Instruction Tuning. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) . Association for Computational Linguistics, Mexico City, Mexico, 1264–1277. doi:10.18653/v1/2024.naacl-long.70 [27] Pan Lu, Liang Qiu, Kai-Wei Chang, Ying Nian Wu, Song-Chun Zhu, Tanmay Rajpurohit, Peter Clark, and Ashwin Kalyan. 2022. Dynamic Prompt Learning via Policy Gradient for Semi-structured Mathematical Reasoning. arXiv preprint arXiv:2209.14610 (2022). doi:10.48550/arXiv.2209.14610 [28] P. C. Mahalanobis. 1936. On the Generalized Distance in Statistics. Proceedings of the National Institute of Sciences of India 2 (1936), 49–55. [29] Xin Men, Mingyu Xu, Qingyu Zhang, Bingning Wang, Hongyu Lin, Yaojie Lu, Xianpei Han, and Weipeng Chen. 2024. ShortGPT: Layers in Large Language Models are More Redundant Than You Expect. arXiv preprint arXiv:2403.03853 
+
+(2024). doi:10.48550/arXiv.2403.03853 [30] Meta Llama Team. 2024. Llama-3.2-11B-Vision. https://huggingface.co/meta-llama/Llama-3.2-11B-Vision. Hugging Face model card, accessed 2026-03-26. [31] Alan V. Oppenheim and Ronald W. Schafer. 2009. Discrete-Time Signal Processing 
+
+(3 ed.). Prentice Hall, Upper Saddle River, NJ. [32] Yijun Pan, Rui Zhang, Weijia Lin, Haonan Chen, Yuke Su, Zhaolun Wu, Yun Lei, Lingjuan Lyu, and Xiaojun Jia. 2025. Can LLM Watermarks Robustly Pre-vent Unauthorized Knowledge Distillation?. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Pa-pers) . Association for Computational Linguistics, Vienna, Austria, 13333–13359. doi:10.18653/v1/2025.acl-long.648 [33] Dario Pasquini, Evgenios M. Kornaropoulos, and Giuseppe Ateniese. 2025. LLMmap: Fingerprinting for Large Language Models. In Proceedings of the 34th USENIX Security Symposium (USENIX Security 25) . USENIX Association, 299–318. https://www.usenix.org/conference/usenixsecurity25/presentation/pasquini [34] Jordi Pont-Tuset, Jasper Uijlings, Soravit Changpinyo, Radu Soricut, and Vittorio Ferrari. 2020. Connecting Vision and Language with Localized Narratives. arXiv preprint arXiv:1912.03098 (2020). doi:10.48550/arXiv.1912.03098 [35] Siya Qi, Yudong Chen, Runcong Zhao, Qinglin Zhu, Zhanghao Hu, Wei Liu, Yulan He, Zheng Yuan, and Lin Gui. 2026. Detecting Contextual Hallucinations in LLMs with Frequency-Aware Attention. arXiv:2602.18145 [cs.CL] https: //arxiv.org/abs/2602.18145 [36] Qwen Team. 2026. Qwen3.5: Towards Native Multimodal Agents. https://qwen. ai/blog?id=qwen3.5 [37] Shuo Shao, Yiming Li, Yu He, Hongwei Yao, Wenyuan Yang, Dacheng Tao, and Zhan Qin. 2025. SoK: Large Language Model Copyright Auditing via Fingerprint-ing. arXiv preprint arXiv:2508.19843 (2025). doi:10.48550/arXiv.2508.19843 [38] Shuo Shao, Yiming Li, Hongwei Yao, Yifei Chen, Yuchen Yang, and Zhan Qin. 2025. Reading Between the Lines: Towards Reliable Black-box LLM Fingerprinting via Zeroth-order Gradient Estimation. arXiv preprint arXiv:2510.06605 (2025). doi:10.48550/arXiv.2510.06605 [39] Mingjie Sun, Zhuang Liu, Anna Bair, and J. Zico Kolter. 2024. A Simple and Effective Pruning Approach for Large Language Models. arXiv preprint arXiv:2306.11695 (2024). doi:10.48550/arXiv.2306.11695 MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Huang et al. 
+
+[40] Mingjie Sun, Yida Yin, Zhiqiu Xu, J. Zico Kolter, and Zhuang Liu. 2025. Idiosyn-crasies in Large Language Models. In Proceedings of the 42nd International Con-ference on Machine Learning (Proceedings of Machine Learning Research, Vol. 267) .PMLR, 57854–57885. https://proceedings.mlr.press/v267/sun25z.html [41] Kimi Team, Angang Du, Bohong Yin, Bowei Xing, Bowen Qu, Bowen Wang, Cheng Chen, Chenlin Zhang, Chenzhuang Du, Chu Wei, et al. 2025. Kimi-vl technical report. arXiv preprint arXiv:2504.07491 (2025). [42] V Team, Wenyi Hong, Wenmeng Yu, Xiaotao Gu, Guo Wang, Guobing Gan, Haomiao Tang, Jiale Cheng, Ji Qi, Junhui Ji, et al. 2025. GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile Multimodal Reasoning with Scalable Reinforcement Learning. arXiv preprint arXiv:2507.01006 (2025). doi:10.48550/arXiv.2507.01006 [43] Eric Wallace, Kai Xiao, Ehsan Adeli, Kailash Kumaresan, Ujval Bhatt, and Karthik Narayanan. 2024. The Instruction Hierarchy: Training LLMs to Prioritize Priv-ileged Instructions. arXiv preprint arXiv:2404.13208 (2024). doi:10.48550/arXiv. 2404.13208 [44] Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, et al. 2024. Qwen2-VL: Enhancing Vision-Language Model’s Perception of the World at Any Resolution. arXiv preprint arXiv:2409.12191 (2024). doi:10.48550/arXiv.2409.12191 [45] Weiyun Wang, Zhangwei Gao, Lixin Gu, Hengjun Pu, Long Cui, Xingguang Wei, Zhaoyang Liu, Linglin Jing, Shenglong Ye, Jie Shao, et al. 2025. InternVL3.5: Ad-vancing Open-Source Multimodal Models in Versatility, Reasoning, and Efficiency. 
+
+arXiv preprint arXiv:2508.18265 (2025). doi:10.48550/arXiv.2508.18265 [46] Mitchell Wortsman, Gabriel Ilharco, Samir Yitzhak Gadre, Rebecca Roelofs, Raphael Gontijo-Lopes, Ari Morcos, Hongseok Namkoong, Ali Farhadi, Yair Carmon, Simon Kornblith, and Ludwig Schmidt. 2022. Model Soups: Averaging Weights of Multiple Fine-Tuned Models Improves Accuracy Without Increasing Inference Time. In Proceedings of the 39th International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 162) . PMLR, 23965–23998. https://proceedings.mlr.press/v162/wortsman22a.html [47] Zehao Wu, Yanjie Zhao, and Haoyu Wang. 2025. Gradient-based model finger-printing for LLM similarity detection and family classification. arXiv preprint arXiv:2506.01631 (2025). [48] Ge Yang, Zhenzhen Weng, Jin Li, Jianhao Zhang, Tong Zheng, Yicong Hong, Yilun Zhang, Jian Wang, Yue Liu, Yuxin Tang, Han Zhao, Weiran Yang, and Mengmi Zhao. 2025. EmbodiedBench: Comprehensive Benchmarking Multi-modal Large Language Models for Vision-Driven Embodied Agents. In Proceedings of the 42nd International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 267) . PMLR, 76914–76947. https://proceedings.mlr.press/v267/ yang25f.html [49] Do-hyeon Yoon, Minsoo Chun, Thomas Allen, Hans Müller, Min Wang, and Rajesh Sharma. 2025. Intrinsic Fingerprint of LLMs: Continue Training is NOT All You Need to Steal A Model! arXiv preprint arXiv:2507.03014 (2025). [50] Boyi Zeng, Lizheng Wang, Yuncong Hu, Yi Xu, Chenghu Zhou, Xinbing Wang, Yu Yu, and Zhouhan Lin. 2024. Huref: Human-readable fingerprint for large language models. Advances in Neural Information Processing Systems 37 (2024), 126332–126362. [51] Duzhen Zhang, Kejian Yang, Dun Li, Yongcheng Li, Yingwei Qiao, Hongan Wang, Ming Liu, Lili Wang, Hang Zhang, Xiao Sun, and Wenqing Wang. 2024. MM-LLMs: Recent Advances in MultiModal Large Language Models. In Findings of the Associ-ation for Computational Linguistics: ACL 2024 . Association for Computational Lin-guistics, Bangkok, Thailand, 12498–12526. doi:10.18653/v1/2024.findings-acl.738 [52] Jie Zhang, Dongrui Liu, Chen Qian, Linfeng Zhang, Yong Liu, Yu Qiao, and Jing Shao. 2024. Reef: Representation encoding fingerprints for large language models. 
+
+arXiv preprint arXiv:2410.14273 (2024). [53] Yang Zhang, Yawei Li, Xinpeng Wang, Qianli Shen, Barbara Plank, Bernd Bischl, Mina Rezaei, and Kenji Kawaguchi. 2024. FinerCut: Finer-grained Interpretable Layer Pruning for Large Language Models. arXiv preprint arXiv:2405.18218 (2024). doi:10.48550/arXiv.2405.18218
