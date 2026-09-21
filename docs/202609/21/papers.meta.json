@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-21",
+  "date": "2026-09-21",
+  "generated_at": "2026-09-21T23:14:50",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/21/2609.21738v1-gentracebench-a-benchmark-for-tracing-audio-deepfakes-across-pre--and-post-training-stages",
+      "section": "deep",
+      "title_en": "GenTraceBench: A Benchmark for Tracing Audio Deepfakes Across Pre- and Post-training Stages",
+      "authors": "Li Wang, Kunyu Feng, Wan Lin, Dekun Chen, Qinke Ni, Xueyao Zhang, Lei Wang, Jie Shi, Haizhou Li, Zhizheng Wu",
+      "date": "2026-09-18",
+      "pdf": "https://arxiv.org/pdf/2609.21738v1",
+      "score": "8.0",
+      "evidence": "跨训练阶段追踪音频深度伪造的生成器指纹基准",
+      "tldr": "现代TTS常经SFT、DPO、GRPO等适配，基础生成器的声纹指纹在适配后是否仍有效，是音频深伪取证的关键问题。GenTraceBench构建覆盖5种TTS架构、16种训练前后变体、49,728条固定文本与说话人提示的受控基准。采用基础模型训练、适配模型测试协议，评估二分类检测、闭集归因和开集验证。结果显示DPO/GRPO通常保留指纹，部分SFT与预训练数据变化引发漂移，且多样本注册可将W2V-BERT下SFT的EER从44.4%降至11.0%。",
+      "tags": "query:watermarking",
+      "abstract_en": "Modern text-to-speech (TTS) systems are rarely deployed as unchanged pre-trained models. They are often adapted through supervised fine-tuning (SFT) or preference optimization such as DPO and GRPO. This raises a practical question for audio deepfake forensics: do fingerprints learned from a foundation generator remain valid after adaptation? We present GenTraceBench, a controlled benchmark spanning five TTS architectures, 16 pre-/post-training variants, and 49,728 utterances generated with fixed texts and speaker prompts. Under a train-on-foundation, test-on-adapted protocol, we evaluate binary detection, closed-set attribution, and open-set verification. DPO and GRPO generally preserve fingerprints, whereas some SFT and pre-training-data changes cause substantial drift; effect sizes vary across three forensic backbones. Repeated training runs confirm the largest W2V-BERT attribution drop, while a data-mixture control with comparable speech quality shows that composition change need not cause drift. In W2V-BERT verification, multi-shot enrollment reduces EER for the SFT condition from 44.4% to 11.0%, whereas the SingNet-only condition remains at or above 45% EER.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/21/2609.21858v1-watermarkable-multi-draft-speculative-sampling-via-poisson-processes",
+      "section": "deep",
+      "title_en": "Watermarkable Multi-Draft Speculative Sampling via Poisson Processes",
+      "authors": "Yanxiao Liu, Sicheng Wan, Zhan Gao, Deniz Gündüz",
+      "date": "2026-09-18",
+      "pdf": "https://arxiv.org/pdf/2609.21858v1",
+      "score": "8.0",
+      "evidence": "在大模型推测采样中嵌入无偏水印",
+      "tldr": "大语言模型部署同时需要推理效率与输出溯源，但推测采样与水印结合此前被认为非常困难甚至不可行。本文提出基于泊松过程的多草稿推测采样算法，在不降低推测接受率的情况下嵌入无偏水印。该方法基于精确的无通信列表耦合方案，具备草稿器不变性，可同时受益采样与水印。实验验证其在水印强度和采样效率两方面均表现强劲，首次实现多草稿、草稿器不变且兼顾二者的推测采样方案。",
+      "tags": "query:watermarking",
+      "abstract_en": "Large language models (LLMs) have achieved state-of-the-art performance across a wide range of tasks, motivating two important aspects of deployment: inference efficiency and output provenance, which can be tackled by speculative sampling and watermarking, respectively. However, recent works have shown that combining these two goals is highly nontrivial and can be potentially impossible. In this work, we develop a novel multi-draft speculative sampling algorithm based on Poisson processes that improves the frontier of this fundamental trade-off. The proposed algorithm has strong sampling efficiency on its own and, more interestingly, is naturally watermarkable: we can embed an unbiased watermark without degrading speculative acceptance. Moreover, our algorithm is based on an exact list-coupling-without-communication scheme, which yields a drafter invariance property that benefits both sampling and watermarking. It is the first multi-draft, drafter-invariant speculative sampling scheme that maintains both watermark strength and sampling efficiency, and we experimentally verify its strong performance in both aspects.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

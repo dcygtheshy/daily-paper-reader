@@ -1,0 +1,98 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-21T23:12:29.525104+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.21738v1",
+      "source": "arxiv",
+      "title": "GenTraceBench: A Benchmark for Tracing Audio Deepfakes Across Pre- and Post-training Stages",
+      "abstract": "Modern text-to-speech (TTS) systems are rarely deployed as unchanged pre-trained models. They are often adapted through supervised fine-tuning (SFT) or preference optimization such as DPO and GRPO. This raises a practical question for audio deepfake forensics: do fingerprints learned from a foundation generator remain valid after adaptation? We present GenTraceBench, a controlled benchmark spanning five TTS architectures, 16 pre-/post-training variants, and 49,728 utterances generated with fixed texts and speaker prompts. Under a train-on-foundation, test-on-adapted protocol, we evaluate binary detection, closed-set attribution, and open-set verification. DPO and GRPO generally preserve fingerprints, whereas some SFT and pre-training-data changes cause substantial drift; effect sizes vary across three forensic backbones. Repeated training runs confirm the largest W2V-BERT attribution drop, while a data-mixture control with comparable speech quality shows that composition change need not cause drift. In W2V-BERT verification, multi-shot enrollment reduces EER for the SFT condition from 44.4% to 11.0%, whereas the SingNet-only condition remains at or above 45% EER.",
+      "authors": [
+        "Li Wang",
+        "Kunyu Feng",
+        "Wan Lin",
+        "Dekun Chen",
+        "Qinke Ni",
+        "Xueyao Zhang",
+        "Lei Wang",
+        "Jie Shi",
+        "Haizhou Li",
+        "Zhizheng Wu"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD"
+      ],
+      "published": "2026-09-18T13:15:52+00:00",
+      "link": "https://arxiv.org/pdf/2609.21738v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "benchmark for tracing audio deepfakes via generator fingerprints across training stages",
+      "llm_evidence_cn": "跨训练阶段追踪音频深度伪造的生成器指纹基准",
+      "llm_evidence": "跨训练阶段追踪音频深度伪造的生成器指纹基准",
+      "canonical_evidence": "跨训练阶段追踪音频深度伪造的生成器指纹基准",
+      "llm_tldr_en": "GenTraceBench studies whether generator fingerprints survive fine-tuning and preference optimization in TTS models, benchmarking detection, attribution and verification across 16 pre-/post-training variants.",
+      "llm_tldr_cn": "现代文本转语音系统常经监督微调或DPO、GRPO等偏好优化后部署，其生成器指纹是否仍然有效尚不明确。本文提出GenTraceBench，覆盖五种TTS架构、16种训练前后变体与49728条固定文本语音，采用在基础模型训练、在适配模型测试的协议，评估二分类检测、闭集归因与开集验证。结果显示DPO与GRPO基本保留指纹，而部分SFT与预训练变体会削弱指纹。该基准为生成模型指纹溯源在模型适配场景下的鲁棒性提供了系统评估依据。",
+      "llm_tldr": "现代文本转语音系统常经监督微调或DPO、GRPO等偏好优化后部署，其生成器指纹是否仍然有效尚不明确。本文提出GenTraceBench，覆盖五种TTS架构、16种训练前后变体与49728条固定文本语音，采用在基础模型训练、在适配模型测试的协议，评估二分类检测、闭集归因与开集验证。结果显示DPO与GRPO基本保留指纹，而部分SFT与预训练变体会削弱指纹。该基准为生成模型指纹溯源在模型适配场景下的鲁棒性提供了系统评估依据。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.21858v1",
+      "source": "arxiv",
+      "title": "Watermarkable Multi-Draft Speculative Sampling via Poisson Processes",
+      "abstract": "Large language models (LLMs) have achieved state-of-the-art performance across a wide range of tasks, motivating two important aspects of deployment: inference efficiency and output provenance, which can be tackled by speculative sampling and watermarking, respectively. However, recent works have shown that combining these two goals is highly nontrivial and can be potentially impossible. In this work, we develop a novel multi-draft speculative sampling algorithm based on Poisson processes that improves the frontier of this fundamental trade-off. The proposed algorithm has strong sampling efficiency on its own and, more interestingly, is naturally watermarkable: we can embed an unbiased watermark without degrading speculative acceptance. Moreover, our algorithm is based on an exact list-coupling-without-communication scheme, which yields a drafter invariance property that benefits both sampling and watermarking. It is the first multi-draft, drafter-invariant speculative sampling scheme that maintains both watermark strength and sampling efficiency, and we experimentally verify its strong performance in both aspects.",
+      "authors": [
+        "Yanxiao Liu",
+        "Sicheng Wan",
+        "Zhan Gao",
+        "Deniz Gündüz"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-09-18T14:52:39+00:00",
+      "link": "https://arxiv.org/pdf/2609.21858v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "embeds unbiased watermark in LLM speculative sampling",
+      "llm_evidence_cn": "在大模型推测采样中嵌入无偏水印",
+      "llm_evidence": "在大模型推测采样中嵌入无偏水印",
+      "canonical_evidence": "在大模型推测采样中嵌入无偏水印",
+      "llm_tldr_en": "This work addresses the tension between inference efficiency and output provenance in LLMs. It proposes a multi-draft speculative sampling algorithm based on Poisson processes that is naturally watermarkable, embedding an unbiased watermark without degrading speculative acceptance.",
+      "llm_tldr_cn": "针对大模型部署中推理效率与输出溯源难以兼得的矛盾，本文提出一种基于泊松过程的多草稿推测采样算法。该方法在保持较强采样效率的同时天然支持水印嵌入，可在不降低推测接受率的前提下加入无偏水印。理论分析与实验表明该算法改善了效率与可水印性之间的权衡边界，为生成文本的出处认证提供了新思路。",
+      "llm_tldr": "针对大模型部署中推理效率与输出溯源难以兼得的矛盾，本文提出一种基于泊松过程的多草稿推测采样算法。该方法在保持较强采样效率的同时天然支持水印嵌入，可在不降低推测接受率的前提下加入无偏水印。理论分析与实验表明该算法改善了效率与可水印性之间的权衡边界，为生成文本的出处认证提供了新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
