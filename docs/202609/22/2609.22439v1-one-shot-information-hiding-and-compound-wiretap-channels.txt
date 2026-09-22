@@ -1,0 +1,1282 @@
+Title: One-Shot Information Hiding and Compound Wiretap Channels
+
+URL Source: https://arxiv.org/pdf/2609.22439v1
+
+Published Time: Tue, 22 Sep 2026 00:13:43 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+> 1
+
+# One-Shot Information Hiding and Compound Wiretap Channels 
+
+Yanxiao Liu, Member, IEEE and Cheuk Ting Li, Member, IEEE 
+
+Abstract 
+
+In recent years, due to the growing reliance on large amounts of data that are communicated, analyzed, and utilized, which inherently contain sensitive and personal information, secrecy and privacy in communication have become increasingly important. We present nonasymptotic information-theoretic analyses of two fundamental secrecy problems under channel uncertainties: the information hiding problem and the compound wiretap channel. The former admits a game-theoretic formulation, where one party (an information hider and a decoder) seeks to embed secret messages into a host signal for later reconstruction, while the opposing party (an attacker) attempts to remove or degrade the embedded information. The latter generalizes Wyner’s wiretap channel by allowing multiple potential channel states. The information hiding problem concerns active attacks during data transmission, while the compound wiretap channel addresses passive eavesdropping and information leakage. The two problems, both of which consider channels with uncertainties, can be studied under a unified framework by utilizing a covering argument and the Poisson matching lemma by Li and Anantharam. We derive novel one-shot achievability results for both problems that are applicable to any source distribution and any class of channels (not necessarily memoryless or ergodic), and that apply to both discrete and continuous cases. We also show that existing asymptotic results on both problems can be recovered by applying our results to discrete memoryless channels. 
+
+Index Terms 
+
+One-shot achievability, finite blocklength, information hiding, public watermarking, wiretap channels. 
+
+I. I NTRODUCTION 
+
+In data science and wireless communication, secrecy and privacy are becoming increasingly important due to the growing dependence on large amounts of data being communicated, analyzed, and utilized, which inherently contain sensitive and personal information and, therefore, should be well protected from leakage. Over the past few decades, the fundamental information-theoretic limits of various secrecy and privacy problems have been extensively studied. During information transmission, there are two types of concerns regarding information leakage: active attacks and passive wiretapping. In this paper, we consider two fundamental problems in information theory that address these two concerns, respectively: the information hiding problem [1] and the compound wiretap channel [2]. For the information hiding problem [1], it can be formulated as a communication system from a game-theoretic perspective, where an encoder-decoder team seeks to transmit a confidential message embedded in a host data source, while the opposing side is an attacker, modeled as a noisy channel, attempts to destroy or degrade the message. The information-theoretic limits of different variations of information hiding have been extensively investigated over the past two decades [1], [3]–[5], due to its wide range of applications, including watermarking, fingerprinting, steganography, and copyright protection. Existing analyses of information hiding problems borrow techniques from various fields, including wireless communication, signal processing, cryptography, and game theory. For the compound wiretap channel, [2] modeled the problem as a generalization of Wyner’s conventional wiretap channel [6], where the communication channel can take multiple potential states. The objective is to ensure reliable transmission and minimize information leakage regardless of which state occurs. This model is more general and better suited to practical wireless communication scenarios where the transmitter may not have knowledge of the channel conditions or where channel characteristics change rapidly, yet communication performance and security must still be guaranteed. In all existing studies on these two problems, the information-theoretic limits have been analyzed in the asymptotic regime, assuming that the signal has a blocklength approaching infinity. However, this assumption does not hold in practice, as packets have bounded lengths, which can be quite short in certain applications [7]. Over the past decade, finite-blocklength information theory has been extensively studied [8]–[11], leading to the derivation of nonasymptotic limits, where the law of large numbers does not apply and conventional typicality-based tools are inapplicable. More generally, we are interested in 
+
+one-shot achievability results, where the channel or source is arbitrary and used only once . Various one-shot coding techniques 
+
+This work was partially supported by two grants from the Research Grants Council of the Hong Kong Special Administrative Region, China [Project No.s: CUHK 24205621 (ECS), CUHK 14209823 (GRF)]. This paper was presented in part at the 2024 IEEE Information Theory Workshop (ITW 2024). Yanxiao Liu was with the Department of Information Engineering, The Chinese University of Hong Kong, Hong Kong SAR, China, and this work was done during his time there. He is now with the Department of Electrical and Electronic Engineering, Imperial College London, London, UK. Email: yanxiaoliu@link.cuhk.edu.hk Cheuk Ting Li is with the Department of Information Engineering and the Institute of Theoretical Computer Science and Communications, The Chinese University of Hong Kong, Hong Kong SAR of China. Email: ctli@ie.cuhk.edu.hk. arXiv:2609.22439v1 [cs.IT] 18 Sep 2026 2
+
+have been proposed [12]–[14], yielding one-shot bounds that recover existing (first-order and second-order) asymptotic results when applied to memoryless sources or channels. See Section II-C for a review. In this paper, which extends the conference version [15], 1 we study the one-shot achievability results of the information hiding problem and the compound wiretap channel. Compared to the asymptotic information hiding [1], we remove the assumption that the decoder knows the attacker’s strategy, considering instead that the only available knowledge is that the attack channel belongs to a set (which may have infinite cardinality). For both problems, our goal is to provide distributionally robust coding strategies (also see [16]) due to the channel uncertainty, and we hence study them under a unified framework. We briefly summarize our contributions as follows.  
+
+> •
+
+We derive novel one-shot achievability results for the information hiding problem [1] and the compound wiretap chan-nel [2], under a unified framework that is designed for secrecy problem with channel uncertainties.  
+
+> •
+
+For both problems, most of the existing asymptotic analyses assume the decoder knows the channels. 2 We derive one-shot results without such an assumption, by utilizing the Poisson matching lemma [14] and a covering argument [17].  
+
+> •
+
+We show the one-shot results recover existing asymptotic bounds when applied to memoryless channels (possibly subject to distortion constraints), hence providing alternative proofs that can be simpler.  
+
+> •
+
+Additionally, unlike [1], [2], our results apply to both continuous and discrete cases. The paper is organized as follows. We begin with a literature review on information hiding, watermarking, compound wiretap channels, and one-shot information theory in Section II. Next, we present the one-shot information hiding problem in Section IV and recover existing asymptotic results in Section IV-B. Within the same framework, we study the one-shot compound wiretap channel in Section V. Finally, in Section VI, we discuss how our analysis on information hiding can benefit the design of better AI-based watermarking tools, which are becoming increasingly important in the era of generative models. II. R ELATED LITERATURE 
+
+A. Information Hiding 
+
+The information hiding problem has been studied since [1], [3]–[5], due to its wide range of applications, including watermarking, fingerprinting, audio/image/video processing, copyright protection, and steganography. The goal is to hide amessage into some host signal (by introducing a certain level of distortion), so that the message can be correctly reconstructed after suffering attacks (which introduce another level of distortion). This problem was modeled as a communication problem, and asymptotic information-theoretic capacity was derived in [1]. In general, information hiding is closely related to the Gelfand–Pinsker problem [18], [19], and various extensions have been studied, e.g., the case where side information is available to the encoder, decoder, and adversary [20], and the case where the decoder has rate-limited side information [21]. See [22] for its duality with the Wyner–Ziv problem, and [23] for a comprehensive survey. We discuss its applications and related settings with different objectives as follows. 
+
+1) Watermarking, Fingerprinting, and Steganography : The setting in [1] can be viewed as public watermarking [4], where the host signal is available only at the encoder. In contrast, when it is also available at the decoder, private watermarking 
+
+has been studied in [3], [24]. In the Gaussian case, public and private watermarking have the same capacity [5], but this is not true in general. Watermarking problems consider messages containing personal identification information to be protected from attacks, but secrecy is not always required. In comparison, digital fingerprinting [1], [25] embeds fingerprints into the host data to uniquely identify users for tracing illegal data usage, which can be more challenging due to potential collusion. A provably good data embedding strategy was introduced by [26]. Random coding error exponents have been investigated in these problems [20], [27], [28]. In [1, Sec. VII.C] it was indicated that information hiding was applicable to steganography, and this was later studied by [29] for the capacity of perfectly secure steganographic systems. See [30] for trellis codes and [31] for polar codes, which are used in steganographic code designs. See [] 
+
+2) Host, Stegotext, and Reversibility : In the conventional information hiding [1], the message is embedded into host data by producing an encoded signal (“stegotext”), with the goal of recovering the message only. Other objectives have been considered later, such as conveying the host [33] or reconstructing the stegotext [34], [35]. Reversible information embedding has also been investigated [36]–[38], where the host signal needs to be decoded. However, this can incur a high cost when the host has high entropy [36], making perfect reversibility even impossible for continuous host signals [38]. Nevertheless, in practice, the goal is often to enable retransmission of the stegotext, and codes for stegotext recovery have been studied [34], [35]. For this setting, single-letter capacity-distortion tradeoffs are known only for logarithmic distortion [33] and quadratic distortion in the Gaussian case [39]. We discuss these generalizations on our setting in Section IV-D. 
+
+> 1The conference version [15] studies the information hiding setting only. In comparison, this journal version not only provides more detailed discussions and generalizations of the information hiding problem, but also extends the framework to the compound wiretap channel and derives novel one-shot achievability results, which were not covered in [15].
+> 2This assumption can be reasonable when the blocklength is large, but should be dropped in the one-shot scenarios. See Section IV-C for discussions. 3
+
+B. Compound Wiretap Channels 
+
+Compound wiretap channels [2] generalize the conventional wiretap channel model [6] by allowing both the legitimate channel and the eavesdropper’s channel to have multiple possible states. The objective is to guarantee reliable and secure signal transmission regardless of which state occurs. This is a practical model for channel uncertainty, where the transmitter may have no knowledge of the channel (due to the dynamic nature of the wireless medium or unavoidable implementation/estimation inaccuracies), but zero performance outage is still required (e.g., for ultra-reliable communications [7]). [2] proposed achievable and converse results, with the converse bounds shown to be tight in certain cases by [40]. They also studied the achievable secrecy degrees of freedom (s.d.o.f.) region for a multi-input multi-output (MIMO) model, which was later extended to the case of two confidential messages in [41]. The s.d.o.f. of compound wiretap parallel channels were also studied in [42]. See [43], [44] for discussions on Gaussian MIMO compound wiretap channels. In [2], [40], the results focused on discrete memoryless channels with a countably finite uncertainty set (i.e., the set from which the exact channel realization is drawn). This was later extended to arbitrary uncertainty sets , including continuous alphabets, by [45], which is also one of the contributions of our paper. Moreover, [46] showed that the secrecy capacity is a continuous function of the uncertainty set. 
+
+C. One-shot Information Theory 
+
+For all the literature discussed in this section so far, the information-theoretic bounds are investigated asymptotically in the large blocklength limit, based on the law of large numbers. However, this assumption is impractical, as packets have bounded lengths, which can be very short in low-latency communications [7]. Over the past decade, finite blocklength [8]–[10] and 
+
+one-shot [11]–[14], [47], [48] information theory have been widely studied, leading to nonasymptotic results. In the one-shot setting, we assume the channel or source is used only once (i.e., it need not be memoryless or ergodic), and the blocklength is 
+
+1. These results are expected to recover existing (first-order and second-order) asymptotic bounds when applied to memoryless channels or sources (e.g., asymptotic channel coding capacity by Shannon [49] can be implied by the one-shot bounds of Feinstein [50], Shannon [51], or [10], [11]). Similar to [52], [53], in this paper we utilize the Poisson functional representation [54] for one-shot results. It has also been used for differential privacy [55], [56] and watermarked speculative sampling [57]. In this paper, we consider the one-shot scenario and derive achievability results using the Poisson matching lemma [14], which has been shown to improve upon previously known one-shot bounds in various settings with simpler analyses [14], with recent applications including hypothesis testing [58], secret key generation [59], unequal message protection [60] and oblivious relaying [53]. It is based on the Poisson functional representation [54], which has also recently been applied to various fields in combination with other techniques, such as neural estimation [61] and differential privacy [55]. A refined version of the Poisson matching lemma has been used to analyze general (multi-hop) noisy networks in [52]. 
+
+Notations 
+
+We assume logarithm and entropy are to the base 2. For a statement S, we use 1{S} to denote its indicator, i.e., 1{S} = 1 if 
+
+S holds, and otherwise 1{S} = 0 . We use δa to denote the degenerate distribution P{X = a} = 1 . For two random variables 
+
+X, Y , the information density is defined as ιX;Y (x; y) = log((d PX|Y (·| y)/dPX )( x)) , where dPX|Y (·| y)/dPX denotes the Radon-Nikodym derivative. We sometimes omit the subscript and write ι(x; y) if the random variables are clear from the context. The total variation (TV) distance between two distributions P, Q over X is ∥P − Q∥TV := sup A⊆X measurable |P (A) − Q(A)|.The set of positive integers is denoted by N+. We write [i] := {1, . . . , i } for i ∈ N+. We write P ≪ Q to denote that P is absolutely continuous with respect to Q.III. P OISSON MATCHING LEMMA 
+
+In this section, we review the Poisson matching lemma [14], which will be used throughout this paper. The techniques in [1], [4], e.g., tools based on typical sets , which have resemblances to Gelfand–Pinsker coding [18], [19], are not suitable for the one-shot setting, since they rely on the law of large numbers to study asymptotic behavior. The Poisson matching lemma has been shown to be useful in proving one-shot achievability results of network information theory [14], [52], see Section IV-C for a detailed discussion. The Poisson matching lemma is rooted in the Poisson functional representation [54] that is reviewed as follows. Fix a probability distribution ¯P over U. Let (Ti)i=1 ,2,... be a Poisson process with rate 1, i.e., T1, T 2 − T1, T 3 − T2iid 
+
+∼ Exp(1) .Let ( ¯Ui)i be an independent i.i.d. sequence with distribution ¯P . This “marked” Poisson process ( ¯Ui, T i)i supports a “query operation” given by the Poisson functional representation, where one can input a distribution P over U, and obtain one sample 
+
+˜UP with distribution P . The Poisson functional representation is given by 
+
+˜UP := ¯UK , where K := arg min 
+
+> i
+
+Ti ·
+
+ dP
+
+d ¯P ( ¯Ui)
+
+−1
+
+.
+
+The way this Poisson process is used in communication settings (e.g., in [14], [52]) is that the encoder would query the process using the prior distribution of the signal to obtain the signal to be sent, and the decoder would query using the posterior 4
+
+distribution of the signal given the noisy observation to obtain the message. There is no error in the communication if the two queries return the same sample. The probability of error can be bounded by the Poisson matching lemma [14], shown as follows. 
+
+Lemma 1 (Poisson matching lemma [14]) . Consider two distributions P, Q ≪ ¯P . Almost surely, we have 
+
+P  ˜UQ̸ = ˜UP ˜UP
+
+ ≤ 1 −
+
+
+
+1 + dP
+
+dQ ( ˜UP )
+
+−1
+
+.
+
+IV. O NE -SHOT INFORMATION HIDING 
+
+In this section, we formulate the one-shot information hiding problem, provide our one-shot achievability results, show that they recover the existing asymptotic results, and discuss generalizations of the problem as well as some related problems.  
+
+> Fig. 1. The information hiding problem.
+
+The one-shot information hiding problem is described in Figure 1. A message M is uniformly chosen from the set [1 : L],where L is the message size . The goal is to hide the message M into a host data source S ∈ S to produce X. The stegotext 
+
+X is sent through the attack channel AY |X , which is chosen by an attacker that attempts to remove or degrade the embedded message during the signal transmission. We allow the common randomness K ∈ K to be available at both the encoder and the decoder, but not the attacker, and the decoder attempts to reconstruct the original message M after observing Y, K . The common randomness K reveals information about S to the decoder, which may be correlated with K according to the joint distribution PS,K .Given the random variables, the information hiding problem can be viewed as a game between two parties: the first party consists of the encoder (information hider) and the decoder, who are cooperatively transmitting the message M ; the second party is an attacker, who is trying to remove or degrade the hidden message M in S so that the decoder cannot correctly reconstruct it. See [1], [3]–[5] for more discussions on the game-theoretic formulation. Their roles and assumptions are elaborated as follows.  
+
+> •
+
+Encoder : The encoder observes a message M that is uniformly chosen from the set [1 : L], and the goal of encoding is to hide M into a host data source S ∈ S by introducing some tolerable level of distortions. Given S, K, M , the encoder outputs X = f (S, K, M ), where f : S × K × [1 : L] → X . It is expected that X is close to S, in the sense that d1(S, X )
+
+is small, where d1 : S × X → [0 , ∞) is a distortion measure. We want d1(S, X ) ≤ D1 with high probability. This will be elaborated later. The encoded steogtext X is then transmitted through the a channel AY |X ∈ A . 
+
+> •
+
+Attacker : The attacker is formulated as a noisy channel AY |X , called the attack channel . With input X, it performs data processing attacks by introducing another level of distortion and produces Y , a corrupted version of X. Unlike the asymptotic study [1], we do not assume the attacker’s strategy is known by the encoder and the decoder (See IV-C for discussions). The attacker is free to choose AY |X from a class of channels A (e.g., the class of channels satisfying some distortion constraint between X and Y , or the class of memoryless channels where X and Y are sequences), whose cardinality can be infinite. Both deterministic and randomized attacks can be performed. We assume the attacker has knowledge of the distributions (but not the values) of S, M, K , and also knows the code that the encoder-decoder team uses.  
+
+> •
+
+Decoder : Upon observing the attacker’s output Y and the side information K, the decoder wishes to recover the message 
+
+M . It outputs ˆM = ϕ(K, Y ), where ϕ : K × Y → [1 : L]. The decoder is uninformed of the attacker’s strategy. We require the following worst case failure probability to be small: 
+
+Pe := sup   
+
+> AY|X∈A
+
+P d1(S, X ) > D1 OR M̸ = ˆM , (1) where (S, K, M ) ∼ PS,K × Unif[1 : L], X = f (S, K, M ), Y |X ∼ AY |X and ˆM = ϕ(K, Y ) in the probability. 3      
+
+> 3Note that [1] imposes a constraint on the expected distortion E[d1(S, X )] , which is reasonable in the context of [1] because the memoryless assumption and the law of large numbers ensure that the actual distortion is close to the expected distortion. Since we are considering a one-shot setting where we only assume the attack channel is chosen from a set A, if constraint need to be specified, it might be more reasonable to consider d1(S, X )>D1as a failure event and bound the probability of failure, i.e., the excess distortion probability instead, compared to expected distortion. 5
+
+A. One-shot Achievability Results 
+
+We then provide one-shot achievability results of the information hiding problem. Since we let the encoder-decoder team account for all possible attack channels in a set A, the achievability results have to suffer a penalty depending on the “size” of A. Though the cardinality of A could be infinite, we can often find a finite subset ˜A such that every attack channel A ∈ A 
+
+is close enough to some ˜A ∈ ˜A. We capture this notion of size by the ϵ-covering number defined below (see similar covering arguments in [1], [17]). 
+
+Definition 1. Given a set of channels A from X to Y, its ϵ-covering number is defined as 
+
+Nϵ(A) := min 
+
+n
+
+| ˜A| : ˜A ⊆ A , sup 
+
+> A∈A
+
+min  
+
+> ˜A∈˜A
+
+sup 
+
+> x∈X
+
+AY |X (·| x) − ˜AY |X (·| x) TV 
+
+≤ ϵ
+
+o
+
+,
+
+where ∥AY |X (·| x) − ˜AY |X (·| x)∥TV ∈ [0 , 1] denotes the total variation distance between AY |X (·| x) (the distribution of Y if 
+
+X = x, and Y follows AY |X ) and ˜AY |X (·| x).We now present the main result, which is a one-shot achievability result with a bound on the error probability in terms of 
+
+Nϵ(A) and the information density terms. 
+
+Theorem 2. Fix any PU,X |S,K and channel ˆAY |X . For any ϵ ≥ 0, there exists an information hiding scheme satisfying 
+
+Pe ≤ Nϵ(A) sup   
+
+> AY|X∈A
+
+EY |X∼AY |X
+
+"
+
+1 − 1{d1(S, X ) ≤ D1}·
+
+
+
+1 + L2−ˆι(U ;Y |K)+ ι(U ;S|K)−1
+
+#
+
++ ϵ, 
+
+where we assume (S, K, U, X, Y ) ∼ PS,K PU,X |S,K AY |X in the expectation, and ˆι(U ; Y |K) is the information density computed by the joint distribution PS,K PU,X |S,K ˆAY |X (instead of AY |X ), assuming that ι(U ; S|K), ˆι(U ; Y |K) are almost surely finite for every AY |X ∈ A .Proof. The idea is that we design the decoder assuming that the attack channel is fixed to ˆAY |X , and prove that that this decoder works for every attack channel AY |X ∈ A . Let C := (( ¯Ui, ¯Mi), T i)i where (Ti)i is a Poisson process, ¯Ui
+
+> iid
+
+∼ PU , and 
+
+¯Mi
+
+> iid
+
+∼ PM (where PM = Unif[1 : L]). This will act as a random codebook shared between the encoder and the decoder (and this codebook will be fixed later). The encoder observes the message M ∼ PM , the host signal S and side information K, by the Poisson functional representation [14], [54] on the distribution PU |S,K (·| S, K ) × δM over U × [1 : L] it produces U = ˜UPU |S,K (·| S,K )×δM ,4
+
+and sends the generated X|(S, K, U ) ∼ PX|S,K,U . The decoder observes Y, K and outputs ˆM = ˜M ˆPU |Y,K (·| Y,K )×PM by the Poisson functional representation, where ˆPU |Y,K is the conditional probability distribution computed by the joint distribution 
+
+PS,K PU,X |S,K ˆAY |X . When the attack channel is AY |X ∈ A , the error probability is bounded as follows: 
+
+Pe(A) := 1 − PY |X∼AY |X
+
+ d1(S, X ) ≤ D1 AND M = ˆM 
+
+= E
+
+
+
+1 − 1{d1(S, X ) ≤ D1} · 1{M = ˆM }
+
+
+
+= E
+
+
+
+1 − 1{d1(S, X ) ≤ D1} · P M = ˆM |M, S, U, Y, K 
+
+≤ E
+
+
+
+1 − 1{d1(S, X ) ≤ D1}· P (U, M ) = ( ˜U , ˜M ) ˆPU |Y,K (·| Y,K )×PM |M, S, U, Y, K 
+
+> (a)
+
+≤ E
+
+
+
+1 − 1{d1(S, X ) ≤ D1}·
+
+
+
+1 + dPU |S,K (·| S, K ) × δM
+
+d ˆPU |Y,K (·| Y, K ) × PM
+
+(U, M )
+
+−1
+
+= E
+
+
+
+1 − 1{d1(S, X ) ≤ D1}
+
+
+
+1 + L2−ˆι(U ;Y |K)+ ι(U ;S|K)−1
+
+≤ sup   
+
+> AY|X∈A
+
+EY |X∼AY |X
+
+
+
+1 − 1{d1(S, X ) ≤ D1}     
+
+> 4The Poisson functional representation produces a pair ( ˜U , ˜M), and Uis set to be the first component of the pair. 6
+
+·
+
+
+
+1 + L2−ˆι(U ;Y |K)+ ι(U ;S|K)−1
+
+=: Pe,
+
+where (a) is by the Poisson matching lemma. 5 If we allow the encoder and the decoder to share unlimited additional common randomness, we can assume the codebook C = (( ¯Ui, ¯Mi), T i)i is actually shared, and conclude that Pe = sup A∈A Pe(A) ≤ Pe.Nevertheless, the only actual common randomness between the encoder and the decoder is K, which we cannot control. Therefore, we have to fix the codebook. Let Pe(A, c ) be the probability of error when the attack channel is A and the codebook is C = c. We have Pe(A) = 
+
+EC [Pe(A, C)] . Let ˜A ⊆ A attain the minimum in Nϵ(A).Consider any A ∈ A , and let ˜A ∈ ˜A satisfy 
+
+sup 
+
+> x∈X
+
+AY |X (·| x) − ˜AY |X (·| x) TV 
+
+≤ ϵ. 
+
+The total variation distance between the joint distribution of M, S, K, U, X, Y under the attack channel A conditional on C = c
+
+and the joint distribution under the attack channel ˜A conditional on C = c is also bounded by ϵ. Hence |Pe(A, c )−Pe( ˜A, c )| ≤ ϵ
+
+and 
+
+Pe(A, c ) ≤ Pe( ˜A, c ) + ϵ
+
+≤ X 
+
+> ˜A∈˜A
+
+Pe( ˜A, c ) + ϵ. 
+
+Therefore, 
+
+EC
+
+h
+
+sup 
+
+> A∈A
+
+Pe(A, C)
+
+i
+
+≤ EC
+
+h X  
+
+> ˜A∈˜A
+
+Pe( ˜A, C) + ϵ
+
+i
+
+= X 
+
+> ˜A∈˜A
+
+Pe( ˜A) + ϵ
+
+≤ | ˜A| · Pe + ϵ. 
+
+The proof is completed by the existence of a codebook c such that sup A∈A Pe(A, c ) ≤ | ˜A| · Pe + ϵ.
+
+Remark 1. Note that when K = ∅, d1(s, x ) = 0 , and A = {AY |X } is a singleton set, taking ˆAY |X = AY |X , Theorem 2 recovers the one-shot Gelfand-Pinsker coding result in [14], which is the only known one-shot bound that attains the best known second order result in [62]. The asymptotic Gelfand-Pinsker capacity [18], [19] can be readily recovered. 
+
+Remark 2. The one-shot achievability results can be converted to a finite blocklength result where n is a fixed number using the Berry-Esseen theorem [63]–[65]. For example, see [14, Section IV] for converting the one-shot result of the Gelfand-Pinsker problem to a second-order result by the Berry-Esseen theorem [63]–[65], which can also be recovered by Theorem 2. 
+
+B. Recovery of the Asymptotic Information Hiding Capacity 
+
+In this subsection, we show that our Theorem 2 recovers the asymptotic information hiding capacity [1] when applied to the discrete and memoryless setting, with the attack channels subject to a distortion constraint. This gives an alternative proof to [1]. Note that, from a similar procedure, we can recover the achievable bound for information hiding with stegotext reconstruction [35, Theorem 1] (which, in turn, is an extension of [34] and [38]) by using Theorem 4. We choose to present the details of Theorem 2 recovering the information hiding capacity [1] for simplicity, as it already captures the core idea. We first provide a simple bound on the ϵ-covering number in the case that X and Y are discrete and finite. 
+
+Proposition 3. If X and Y are finite, then 
+
+Nϵ(A) ≤
+
+ 12ϵ + |Y| + 1 2
+
+|X |·|Y| 
+
+.
+
+Proof. Write 
+
+d(A, ˜A) := sup 
+
+> x∈X
+
+∥AY |X (·| x) − ˜AY |X (·| x)∥TV .
+
+We use the standard method to bound the covering number, where we start with ˜A = ∅, and add A ∈ A not currently covered by ˜A (i.e., min ˜A∈ ˜A d(A, ˜A) > ϵ ) to ˜A one by one until all of A is covered. Note that every two different ˜A, ˜A′ ∈ ˜A produced this way must satisfy d( ˜A, ˜A′) > ϵ , and hence the (ϵ/ 2) -balls {A : d(A, ˜A) ≤ ϵ/ 2} must be disjoint for ˜A ∈ ˜A. 
+
+> 5The Poisson matching lemma is applied on the conditional distributions given M, S, U, Y, K . Also see the conditional Poisson matching lemma [14]. 7
+
+We now treat AY |X as a transition probability matrix A ∈ R|Y|×|X | . We have 
+
+d(A, ˜A) = 12 ∥A − ˜A∥1
+
+= 12 max 
+
+> x
+
+X
+
+> y
+
+|Ay,x − ˜Ay,x |.
+
+The volume of the ball {A ∈ R|Y|×|X | : d(A, ˜A) ≤ ϵ/ 2} (i.e., its Lebesgue measure in the space R|Y|·|X | ) is ((2 ϵ)|Y| /(|Y| !)) |X | ,and all these balls are subsets of {A ∈ R|Y|×|X | : min x,y Ay,x ≥ − ϵ, max x
+
+P 
+
+> y
+
+Ay,x ≤ 1 + ϵ}, which has a volume 
+
+((1 + ( |Y| + 1) ϵ)|Y| /(|Y| !)) |X | . Hence, the size of ˜A is upper-bounded by 
+
+ 1 + ( |Y| + 1) ϵ|Y| /(|Y| !) 
+
+|X | 
+
+ (2 ϵ)|Y| /(|Y| !) |X | =
+
+ 12ϵ + |Y| + 1 2
+
+|X |·|Y| 
+
+.
+
+We now show that Theorem 2 recovers the asymptotic result in [1] when S, K, X, Y are finite and discrete, and the attack channel is memoryless and is subject to a distortion constraint. Consider sequences Sn = ( S1, . . . , S n), Kn, Xn, Y n where (Si, K i) iid 
+
+∼ PS,K . Consider a channel input distribution PX .The class of attack channels An = An(PX ) (which depends on PX ) is taken to be 
+
+An(PX ) := AnY |X : AY |X ∈ A (PX ) ,
+
+and we let 
+
+A(PX ) := AY |X : E(X,Y )∼PX AY |X [d2(X, Y )] ≤ D2 ,
+
+where d2 : X × Y → [0 , ∞) is a distortion measure, and D2 is the allowed distortion level. In other words, the attacker can only use memoryless channels AnY |X that satisfy the expected distortion constraint E[d2(X, Y )] ≤ D2. The asymptotic hiding capacity given in [1] is 
+
+C = max 
+
+> PU,X |S,K
+
+min     
+
+> AY|X:E[d2(X,Y )] ≤D2
+
+ I(U ; Y |K) − I(U ; S|K).
+
+where the maximum is over PU,X |S,K with E[d1(S, X )] ≤ D1.We now show the achievability of the above asymptotic rate as a direct corollary of Theorem 2. Fix PU,X |S,K which achieves the above maximum subject to E[d1(S, X )] ≤ D′ 
+
+> 1
+
+where ˜D1 < D1. Take ˆAY |X to be the minimizer of the rate-distortion function 
+
+min AY |X : E[d2(X,Y )] ≤D2 I(U ; Y |K), and assume (S, K, U, X, Y ) ∼ PS,K PU,X |S,K ˆAY |X . Write the information density and mutual information obtained from this distribution as ˆιU ;Y |K and ˆI(U ; Y |K), respectively. Fix a coding rate R < ˆI(U ; Y |K)−
+
+I(U ; S|K). We want to show that this rate is achievable. Consider any attack channel AY |X with E[d2(X, Y )] ≤ D2. Let AλY |X := (1 − λ) ˆAY |X + λA Y |X for 0 ≤ λ ≤ 1. Write 
+
+Iλ(U ; Y |K) for the mutual information computed assuming Y |X ∼ AλY |X . It is straightforward to check that 
+
+ddλ Iλ(U ; Y |K) λ=0 
+
+= EY |X∼AY |X [ˆ ι(U ; Y |K)] − ˆI(U ; Y |K).
+
+By the optimality of ˆA, the above derivative is nonnegative, and hence EY |X∼AY |X [ˆ ι(U ; Y |K)] ≥ ˆI(U ; Y |K). Therefore, when we have i.i.d. sequences (Sn, K n, U n, X n, Y n) ∼ P nS,K P nU,X |S,K AnY |X and L = ⌊2nR ⌋, by the law of large numbers, 
+
+L2−ˆι(U n;Y n|Kn)+ ι(U n;Sn|Kn)
+
+≤ 2nR −Pni=1 (ˆ ι(Ui;Yi|Ki)−ι(Ui;Si|Ki)) 
+
+→ 0
+
+exponentially as n → ∞ since E[ˆ ι(Ui; Yi|Ki) − ι(Ui; Si|Ki))] ≥ ˆI(U ; Y |K) − I(U ; S|K) > R . We also have d1(Sn, X n) = Pni=1 d1(Si, X i) > n D1 with probability approaching 0 exponentially since ˜D1 < D1. These convergences are uniform over all such attack channels AY |X since the random variables are discrete and finite. Therefore, to bound Pe using Theorem 2, it is left to bound the ϵ-covering number Nϵ(An(PX )) . Note that 
+
+AnY |X (·| xn) − ˜AnY |X (·| xn) TV 
+
+≤
+
+> n
+
+X
+
+> i=1
+
+AY |X (·| xi) − ˜AY |X (·| xi) TV 
+
+,8
+
+and hence we can construct an ϵ-cover of An(PX ) using an (ϵ/n )-cover of A(PX ). Therefore, 
+
+Nϵ(An(PX )) 
+
+≤ Nϵ/n (A(PX )) = O(( n/ϵ )|X |·|Y| )
+
+by Proposition 3, which grows much slower than the exponential decrease of the expectation in Theorem 2. Therefore, taking 
+
+ϵ = 1 /n , we have Pe → 0 as n → ∞ . Taking ˜D1 → D1 completes the proof. 
+
+C. Discussions 
+
+In [1], it is assumed that the attack channel must be memoryless, and the decoder can obtain full knowledge of the attack channel. This assumption can be reasonably justified by the large blocklength, as one can use training symbols at the beginning of transmission, with their size becoming negligible compared to the blocklength. However, this assumption becomes questionable in the one-shot scenario, where the attack channel can be arbitrary and is only used once. We drop this assumption and allow the decoder to be totally uninformed of the attack channel. In [4] this assumption is also dropped, and an asymptotic hiding capacity expressed as the limit of a sequence of single-letter expressions has been derived using constant composition codes. The key difference between [4] and our setting is that the side information in [4] is a shared key of unlimited size independent of M, S that can be chosen as a part of the coding scheme, whereas in our paper and [1] the K is a given side information that may be correlated with S (where the dependence is from the joint distribution PS,K ), and cannot be changed. In some watermarking problems [24], [66] certain components can be further constrained, e.g., there may exist a mapping from the message M to a codeword V (M ) which is independent of S, and then composite data are obtained by a mapping from S, K
+
+and V (M ).The information hiding setting can be regarded as a variant of Gelfand-Pinsker coding for channels with side information at the encoder [18], [19], where the channel is fixed and not chosen by the attacker, and there is no shared side information between the encoder and the decoder. Since the encoder and the decoder have to account for all possible attack channels, this can be regarded as a combination of Gelfand-Pinsker coding and compound channel [17], [67], [68]. The analyses in [1], [4] utilize techniques such as random binning, joint typicality decoding and constant composition codes, which are also commonly utilized in the asymptotic analyses of Gelfand-Pinsker coding [18], [62]. These techniques may not be suitable for our one-shot setting. Strong typicality and constant composition codes are inapplicable when the blocklength is 1. While random binning can be applied to one-shot Gelfand-Pinsker coding [12], [13], [48], it produces weaker results compared to the Poisson matching lemma [14]. To obtain tight one-shot bounds for information hiding, we utilize the Poisson matching lemma instead, which has been shown to perform well in various one-shot settings [14], [52]. 
+
+D. Generalizations 
+
+We discuss some generalizations of the information hiding setting. As shown in Figure 1, we have a host signal S available to the encoder and a side information K available to both the encoder and the decoder. This can be generalized by letting the encoder have a side information source SEnc , the decoder have another side information source SDec , and they possibly share a codebook C. In this case, our setting (also [1] and public watermarking [4]) correspond to SEnc = ( S, K ) and SDec = K,while private watermarking [3] corresponds to SEnc = SDec = S. This setting has been investigated in [20]. Moreover, in [34], [35], the decoder not only recovers the message M , but also lossily reconstructs the stegotext X, within another level of distortion d′
+
+> 1
+
+(X, ˆX). See Figure 2 for an illustration.  
+
+> Fig. 2. The generalized information hiding problem.
+
+By employing these generalizations, the information hiding setting can be extended as follows: Upon observing side information SEnc and the message M , the encoding function f : SEnc × [1 : L] → X outputs X = f (SEnc , M ); the decoder observes Y , the output of the attacker, together with another side information SDec , and computes ( ˆM , ˆX) = ϕ(SDec , Y ),the distorted versions of M and X, where ϕ : SDec × Y → [1 : L] × X . To highlight the potential advantage of randomized 9
+
+coding schemes, we allow both the encoding function f and decoding function g to depend on a random variable C, which is shared between the encoder and decoder but unknown to the attacker. This random variable C serves as a source of common randomness (or equivalently, as a shared codebook). The distortion of the stegotext X is measured by d′
+
+> 1
+
+(X, ˆX), where 
+
+d′ 
+
+> 1
+
+: X × X → [0 , ∞) is another distortion measure. The decoder is uninformed of the attack channel, and we intend to bound the worst case failure probability 
+
+Pe := sup   
+
+> AY|X∈A
+
+P d1(S, X ) > D1 OR d′
+
+> 1
+
+(X, ˆX) > D′ 
+
+> 1
+
+OR M̸ = ˆM , (2) where we assume (SEnc , S Dec , M ) ∼ PSEnc ,S Dec × Unif[1 : L], X = f (SEnc , M ), Y |X ∼ AY |X and ( ˆM , ˆX) = ϕ(SDec , Y )
+
+in the probability. Based on this setting, we can derive the following theorem, which is a generalized version of Theorem 2. The proof is similar to that of Theorem 2 and is therefore omitted. 
+
+Theorem 4. Fix any PU,X |SEnc ,S Dec and channel ˆAY |X . For any ϵ ≥ 0, there exists a scheme for the information hiding problem satisfying 
+
+Pe ≤ Nϵ(A) · sup 
+
+> A∈A
+
+EY |X∼A
+
+"
+
+1 − 1{d1(SEnc , X ) ≤ D1}· 1{d′
+
+> 1
+
+(X, ˆX) ≤ D′
+
+> 1
+
+} · 
+
+
+
+1 + L · 2−ˆι(U ;Y,S Dec )+ ι(U ;SEnc )−1
+
+#
+
++ ϵ, 
+
+where we assume (SEnc , S Dec , U, X, Y ) ∼ PSEnc ,S Dec PU,X |SEnc AY |X in the expectation, and ˆι(U ; Y, S Dec ) is the information density computed by the joint distribution PS,K PU,X |S,K ˆAY |X (instead of AY |X ), assuming that ι(U ; SEnc ), ˆι(U ; Y, S Dec ) are almost surely finite for every AY |X ∈ A .
+
+V. O NE -SHOT COMPOUND WIRETAP CHANNELS 
+
+In this section, we consider the compound wiretap channel [2] in the one-shot setting. We utilize the Poisson matching lemma [14], under a framework similar to the one-shot information hiding discussed in Section IV. We provide novel one-shot achievablity results for the compound wiretap channel [2]. To the best of our knowledge, the one-shot results of this problem has not been discussed in literature, though finite-blocklength bounds on the single wiretap channel (without uncertainties/multiple-states of the channel) can be found in [69]–[71]. Unlike the asymptotic analysis of the discrete memoryless compound wiretap channel [2], our one-shot results also apply to continuous scenarios. Note that [45] also studied the continuous case of compound wiretap channels, but the focus in [45] was mainly on the compound Gaussian MIMO wiretap channels, and the analysis was not one-shot. 
+
+A. Problem Formulation 
+
+The one-shot compound wiretap channel setting is described as follows. A message M is uniformly chosen from Unif[ L].Upon observing M ∼ Unif[ L], the encoder produces X = f (M ), where f : [ L] → X is a randomized encoding function. Then X is sent through a channel PY,Z |X that is unknown to the encoder and the decoder but known to the eavesdropper. A legitimate decoder observes Y and recovers ˆM = g(Y ), where g : Y → [L] is a decoding function. The eavesdropper observes Z ∈ Z . Justified by [2] and [72, Lemma 1], we can assume the transition probability distribution is PY |X PZ|X by decomposing PY,Z |X without loss of optimality. In this paper, we do not fix PY |X , but rather allow PY |X to be any element in D, a set of channels to the legitimate decoder. Similarly, we allow PZ|X to be any element in E, a set of channels to the eavesdropper. We assume the encoder and decoder have no knowledge of PY |X and PZ|X , making them universal in the sense that their performance guarantees do not depend on specific channel realizations. For the secrecy guarantee, we make the conservative assumption that the eavesdropper knows both PY |X and PZ|X that are in use. Unlike [2] but similar to our discussions on the information hiding problem, the set of channels to the legitimate decoder 
+
+D and the set of channels to the eavesdropper E can be infinite, which captures the infinite variability of real-world signals and their propagation characteristics in practical applications. While the cardinalities of D, E can be infinite, we can often find finite subsets ˜D, ˜E such that every channel to the decoder (or eavesdropper) in ˜D (or ˜E) would be close enough to some 
+
+˜PY |X ∈ ˜D (or ˜PZ|X ∈ ˜E). This idea has appeared in Section IV and also in [17], [45]. The objective is to bound the worst case error probability 
+
+Pe := sup   
+
+> PY|X∈D
+
+P M̸ = ˆM , (3) 10 
+
+while also ensure the secrecy is guaranteed, which is measured by the total variation distance 
+
+γ := sup  
+
+> PZ|X∈E
+
+∥PM,Z − PM × PZ ∥TV (4) being small. 
+
+B. One-Shot Achievability 
+
+We then provide one-shot achievability results of the compound wiretap channel. The result can be viewed as a combination of the covering argument appeared in Section IV and the one-shot soft covering lemma in [14, Proposition 3]. Other existing one-shot wiretap channel results [69], [70] might also be utilized in a similar framework as well. 
+
+Theorem 5. Fix any PU,X and any wiretap channel ˆPY,Z |X = ˆPY |X PZ|X . For any ν ≥ 0, any ϵ1, ϵ 2 ≥ 0 and A, B ∈ N, there exists a code for the compound wiretap channel setting, with message M ∼ Unif[ L], satisfying 
+
+Pe + ν · γ
+
+≤ Nϵ1 (D) sup   
+
+> PY|X∈D
+
+EY |X∼PY |X
+
+h
+
+min 
+
+n
+
+LA 2−ˆι(U ;Y ), 1
+
+o i 
+
++ ϵ1 (5) 
+
++ ν · Nϵ2 (E)
+
+
+
+sup  
+
+> ˜PZ|X∈E
+
+2 · EZ|X∼ ˜PZ|X
+
+h 1 + 2 −ι(U ;Z)−Bi
+
++ √BA −1
+
+
+
++ ν · ϵ2, (6) 
+
+where we assume (U, X, Y, Z ) ∼ PU,X PY |X PZ|X in the expectation, and ι(U ; Z), ˆι(U ; Y ) are the information densities computed for compound channels by the joint distribution PU,X ˆPY |X PZ|X , assuming that they are almost surely finite for every PY |X ∈ D , P Z|X ∈ E .Proof. Since the encoder and the decoder are uninformed of the transmission channel, we first design our coding strategy assuming that the transmission channel to the legitimate decoder is fixed to ˆPY |X ∈ D . The eavesdropper is aware of both the transmission channel and the eavesdropping channel PZ|X ∈ E that are in use. Let C := (( ¯Ui, ¯Mi), T i)i where (Ti)i is a Poisson process, ¯Ui
+
+> iid
+
+∼ PU , and ¯Mi
+
+> iid
+
+∼ PM (where PM = Unif[ L]). This is a random codebook that is known to both the encoder and the decoder. We first analyze the performance averaged over the random codebook C; and later we will fix the codebook. we analyze the error probability and secrecy as follows. Let A ∼ Unif[ A] be independent of (M, C). The encoder observes the message M ∼ PM , computes U = ˜UPU ×δM (A) by the Poisson functional representation [54], and sends the generated X|U ∼ PX|U . The decoder observes the channel ouptut Y and recovers ˆM = ˜M ˆPU |Y (·| Y )×PM where ˆPU |Y is the conditional distribution computed by the joint distribution PU,X ˆPY |X . We have (M, A, U, X, Y, Z ) ∼ PM × PA × PU,X ˆPY |X ˆPZ|X . For the case of a fixed ˆPY |X ∈ D , the error probability PM̸ = ˆM
+
+in this case, denoted by Pe( ˆPY |X ), can be bounded as follows: 
+
+Pe( ˆPY |X )
+
+≤ E
+
+
+
+P (U, M )̸ = ( ˜U , ˜M ) ˆPU |Y (·| Y )×PM |M, A, U, Y 
+
+> (a)
+
+≤ E
+
+
+
+min 
+
+n
+
+A dP U × δM
+
+d ˆPU |Y (·| Y ) × PM
+
+(U, M ), 1
+
+o
+
+= E
+
+
+
+min 
+
+n
+
+LA 2−ˆιU ;Y (U ;Y ), 1
+
+o
+
+≤ sup   
+
+> PY|X∈D
+
+EY |X∼AY |X
+
+h
+
+min 
+
+n
+
+LA 2−ˆιU ;Y (U ;Y ), 1
+
+oi 
+
+(7) 
+
+=: Pe
+
+where (a) is by the conditional generalized Poisson matching lemma [14], and we define (7) to be Pe.For the secrecy measure γ, note again that the wiretap channel PZ|X is known to the eavesdropper, and for this choice of 
+
+PZ|X , for the total variation distance γ(PZ|X ) we can write: 
+
+E
+
+h
+
+PM,Z |C (·, ·|C ) − PM × PZ|C (·|C ) TV 
+
+i
+
+= E
+
+h
+
+PZ|M, C (·, ·|C ) − PZ|C (·|C ) TV 
+
+i
+
+≤ E
+
+h
+
+PZ|M, C (·, ·|C ) − PZ (·) TV 
+
+i
+
++ E
+
+h
+
+PZ|C (·|C ) − PZ (·) TV 
+
+i11 
+
+> (a)
+
+≤ 2 · E
+
+h
+
+PZ|M, C (·, ·|C ) − PZ (·) TV 
+
+i
+
+= 2 · E
+
+h
+
+A−1
+
+> A
+
+X
+
+> a=1
+
+PZ|U (·| ˜UPU ×δM (a)) − PZ (·) TV 
+
+i
+
+> (b)
+
+≤ 2 · E
+
+h 1 + 2 −ι(U ;Z)−Bi
+
++ √BA −1
+
+≤ sup  
+
+> PZ|X∈E
+
+2 · E
+
+h 1 + 2 −ˆι(U ;Z)−Bi
+
++ √BA −1 (8) 
+
+=: ¯ γ
+
+where (a) is by the convexity of total variation distance, (b) is by [14, Proposition 3] since { ˜UPU ×δm (a)}a∈[A]iid 
+
+∼ PU for any 
+
+m, and we define (8) to be γ.Let Pe(PY |X , c ) denote be the probability of error when the legitimate channel is PY |X and the codebook is C = c and also let γ(PZ|X , c ) denote the total variation distance γ when the wiretap channel is PZ|X and the codebook is C = c.Let ˜D ⊆ D attain the minimum in Nϵ1 (D) and ˜E ⊆ E attain the minimum in Nϵ2 (E). Consider any PY |X ∈ D and any 
+
+PZ|X ∈ E , and let ˜PY |X ∈ ˜D, ˜PZ|X ∈ ˜E satisfy 
+
+sup 
+
+> x∈X
+
+PY |X (·| x) − ˜PY |X (·| x) TV 
+
+≤ ϵ1,
+
+sup 
+
+> x∈X
+
+PZ|X (·| x) − ˜PZ|X (·| x) TV 
+
+≤ ϵ2.
+
+The total variation distance between the joint distribution of M, A, U, X, Y, Z under the channel PY |X (or PZ|X ) conditional on C = c and the joint distribution under the channel ˜PY |X (or ˜PZ|X ) conditional on C = c is also bounded by ϵ1 (or ϵ2). Therefore, we have |Pe(PY |X , c ) − Pe( ˜PY |X , c )| ≤ ϵ1 and |γ(PZ|X , c ) − γ( ˜PZ|X , c )| ≤ ϵ2. Hence, 
+
+Pe(PY |X , C) + ν · γ(PZ|X , C)
+
+≤ Pe
+
+ ˜PY |X , c 
+
+
+
++ ϵ1 + ν · γ
+
+ ˜PZ|X , c 
+
+
+
++ ν · ϵ2
+
+≤ X   
+
+> ˜PY|X∈˜D
+
+Pe
+
+ ˜PY |X , c 
+
+
+
++ ϵ1
+
++ ν · X  
+
+> ˜PZ|X∈˜E
+
+γ
+
+ ˜PZ|X , c 
+
+
+
++ ν · ϵ2.
+
+Therefore, combining with our previous analyses on the error probability and secrecy, we have 
+
+EC
+
+h
+
+sup    
+
+> PY|X∈D ,P Z|X∈E
+
+ Pe(PY |X , C) + ν · γ(PZ|X , C) i
+
+≤ EC
+
+" X   
+
+> ˜PY|X∈˜D
+
+Pe
+
+ ˜PY |X , C
+
+
+
++ ϵ1
+
++ ν · X  
+
+> ˜PZ|X∈˜E
+
+γ
+
+ ˜PZ|X , C
+
+
+
++ ν · ϵ2
+
+#
+
+≤ | ˜D| · Pe + ν · | ˜E| · γ + ϵ1 + ν · ϵ2,
+
+and there exists a fixed set of points ((¯ ui, ¯mi), t i)i∈N such that conditioned on codebook C = (( ¯Ui, ¯Mi), T i)i∈N = ((¯ ui, ¯mi), t i)i∈N
+
+the desired bound is attained, and hence the proof is completed. 
+
+C. Recovery of the Asymptotic Results 
+
+In this section, we recover the existing asymptotic results [2]. The procedure is generally similar to Section IV-B where we recover the asymptotic information hiding capacity [1]. In [2], it was assumed that all the random variables are discrete, the channels are memoryless, and Dn := {P nY1|X , . . . , P nYJ|X } and En := {P nZ1|X , . . . , P nZK|X } for some finite J, K ∈ N+. The setting [2] is depicted in Figure 3. By [2], for discrete memoryless channels, an achievable secrecy rate is 
+
+R = max 
+
+
+
+min  
+
+> j
+
+I(U ; Yj ) − max  
+
+> k
+
+I(U ; Zk)
+
+12  
+
+> Fig. 3. Discrete memoryless compound wiretap channel setting from [2].
+
+= max min 
+
+> j,k
+
+ I(U ; Yj ) − I(U ; Zk), (9) where the maximum is taken over all distributions PU,X such that the auxiliary random variable U satisfies the Markov chain 
+
+U ↔ X ↔ (Yj , Z k) for j = 1 , . . . , J and k = 1 , . . . , K. Intuitively, this means that we should design the auxiliary random variable U that maximizes the worst-case communication rate I(U ; Yj ) − I(U ; Zk), where we consider the worst receiver in 
+
+Dn and the most-powerful eavesdropper in En.We now show that Theorem 5 recovers above asymptotic achievable rate in (9), for discrete memoryless compound wiretap channels with finite channel sets and finite U, X , Y, Z. We note that although the notations become more complicated, the idea is similar to the recovery of the asymptotic information-hiding capacity in Section IV-B. Let 
+
+Dn := {P nY1|X , . . . , P nYJ|X },
+
+En := {P nZ1|X , . . . , P nZK|X },
+
+for some J, K ∈ N+. Fix PU,X that achieves 
+
+max 
+
+> PU,X
+
+min 
+
+> j,k
+
+ I(U ; Yj ) − I(U ; Zk),
+
+and write 
+
+IY := min  
+
+> j∈[1: J]
+
+I(U ; Yj ),IZ := max  
+
+> k∈[1: K]
+
+I(U ; Zk).
+
+Fix any ϵ > 0 and any rate 
+
+R < I Y − IZ − ϵ. 
+
+We will show that R is achievable. Let L = ⌊2nR ⌋. Take A := 2 ⌊n(IZ +ϵ/ 2) ⌋ and B := 2 ⌊n(IZ +ϵ/ 3) ⌋, and also take 
+
+ˆPY n|Xn := 1
+
+J
+
+> J
+
+X
+
+> j=1
+
+P nYj |X . (10) We apply Theorem 5 with ν = 1 and ϵ1 = ϵ2 = 0 .Fix any j0 ∈ [1 : J] and any k ∈ [1 : K]. Consider the i.i.d. sequences 
+
+(U n, X n, Y n, Z n) ∼ P nU,X P nYj0 |X P nZk |X .
+
+In Theorem 5, the term (5) corresponds to the decoding error, whereas the term (6) corresponds to secrecy. We first consider the decoding error term (5) as follows. 13 
+
+Recall that in Theorem 5, the information density ι(U n; Zn) is computed under P nU,X P nYj0 |X P nZk |X , while ˆι(U n; Y n) is com-puted under P nU,X ˆPY n|Xn P nZk |X . We denote PYj |U (y|u) := P 
+
+> x
+
+PX|U (x|u)PYj |X (y|x) and P nYj |U (yn|un) = Qni=1 PYj |U (yi|ui),considering PXn|U n = P nX|U and (10), we have 
+
+ˆPY n|U n (yn|un) = X
+
+> xn
+
+PXn|U n (xn|un) ˆPY n|Xn (yn|xn) = 1
+
+J
+
+> J
+
+X
+
+> j=1
+
+P nYj |U (yn|un),
+
+and similarly ˆPY n (yn) = 1 /J · PJ 
+
+> j=1
+
+P nYj (yn). Therefore, 
+
+ˆι(un; yn) := log ˆPY n|U n (yn|un)ˆPY n (yn) = log 1/J · PJ 
+
+> j=1
+
+P nYj |U (yn|un)1/J · PJ 
+
+> j=1
+
+P nYj (yn) . (11) For each j ∈ [1 : J], denote PYj (y) := P 
+
+> u
+
+PU (u)PYj |U (y|u) and P nYj (yn) := Qni=1 PYj (yi), and 
+
+ιj (un; yn) := log P nYj |U (yn|un)
+
+P nYj (yn) .
+
+For the chosen channel PYj0 |X , under (U n, Y n) ∼ P nU P nYj0 |U , we know E[ιj0 (U n; Y n)] = nI (U ; Yj0 ). For j̸ = j0, define the following ratio with the convention that it is set to 0 whenever the denominator is 0,
+
+rj := P nYj (Y n)
+
+P nYj0
+
+(Y n) .
+
+Then under Y n ∼ P nYj0
+
+, we have 
+
+E[rj ] = X  
+
+> yn:PnYj0
+> (yn)>0
+
+P nYj0 (yn) P nYj (yn)
+
+P nYj0
+
+(yn) ≤ 1.
+
+Then by Markov’s inequality, for any δ > 0, we have 
+
+P rj > 2nδ  ≤ 2−nδ .
+
+By a union bound over j̸ = j0, with probability at least 1 − (J − 1)2 −nδ ,
+
+X 
+
+> j̸=j0
+
+rj ≤ (J − 1)2 nδ . (12) Using (11), we have 
+
+ˆι(U n; Y n) = log 
+
+PJ 
+
+> j=1
+
+P nYj |U (Y n|U n)
+
+PJ 
+
+> j=1
+
+P nYj (Y n)
+
+> (a)
+
+≥ log P nYj0 |U (Y n|U n)
+
+P nYj0
+
+(Y n)
+
+
+
+1 + P  
+
+> j̸=j0
+
+rj
+
+
+
+= ιj0 (U n; Y n) − log 
+
+
+
+1 + X 
+
+> j̸=j0
+
+rj
+
+
+
+> (b)
+
+≥ ιj0 (U n; Y n) − log  1 + ( J − 1)2 nδ 
+
+> (c)
+
+≥ ιj0 (U n; Y n) − (nδ + log J). (13) where (a) is from PJ 
+
+> j=1
+
+P nYj |U (Y n|U n) ≥ P nYj0 |U (Y n|U n) and PJ 
+
+> j=1
+
+P nYj (Y n) = P nYj0
+
+(Y n) 1 + P  
+
+> j̸=j0
+
+rj
+
+; (b) is from (12); and (c) is from 1 + ( J − 1)2 nδ ≤ J2nδ .Next, since U, Y are finite, by Hoeffding’s inequality, for any δ > 0,
+
+P ιj0 (U n; Y n) ≤ n(I(U ; Yj0 ) − δ) ≤ tn. (14) where tn ≤ exp( −cnδ 2) for some constant c > 0 independent of j0, and hence tn tends to 0 exponentially fast with respect to n.Let Gj0 denote the intersection of the event (12) and the event {ιj0 (U n; Y n) ≥ n(I(U ; Yj0 ) − δ)}. Combining (13) and (14), on Gj0 we have 
+
+ˆι(U n; Y n) ≥ n(I(U ; Yj0 ) − 2δ) − log J,14 
+
+and moreover 
+
+P(Gcj0 ) ≤ (J − 1)2 −nδ + tn.
+
+Therefore, 
+
+EY n|Xn∼P nYj0 |X
+
+h
+
+min LA 2−ˆι(U n;Y n), 1
+
+i
+
+≤ ELA 2−ˆι(U n;Y n)1Gj0
+
+ + P(Gcj0 )
+
+≤ LA · 2−n(I(U ;Yj0 )−2δ) · 2log J + ( J − 1)2 −nδ + tn
+
+≤ J · 2n(R+IZ +ϵ/ 2−I(U ;Yj0 )+2 δ) + ( J − 1)2 −nδ + tn. (15) Choose δ = ϵ/ 8. Since R < I Y − IZ − ϵ and I(U ; Yj0 ) ≥ IY , we have 
+
+R + IZ + ϵ/ 2 − I(U ; Yj0 ) + 2 δ
+
+≤ (IY − IZ − ϵ) + IZ + ϵ/ 2 − IY + ϵ/ 4= −ϵ/ 4,
+
+so the right-hand side of (15) vanishes exponentially as n → ∞ , uniformly over j0. Recall Dn is finite, and N0(Dn) ≤ J,consequently, 
+
+N0(Dn) · sup    
+
+> PnY|X∈D n
+
+EY n|Xn∼P nY |X
+
+h
+
+min LA 2−ˆι(U n;Y n), 1
+
+i
+
+→ 0. (16) We then consider the secrecy term (6). Let PZk |U (z|u) := P 
+
+> x
+
+PX|U (x|u)PZk |X (z|x) and PZk (z) := P 
+
+> u
+
+PU (u)PZk |U (z|u).Fix any k ∈ [1 : K] and define 
+
+ιk(un; zn) := log P nZk |U (zn|un)
+
+P nZk (zn) =
+
+> n
+
+X
+
+> i=1
+
+log PZk |U (zi|ui)
+
+PZk (zi) .
+
+We have E[ιk(U n; Zn)] = nI (U ; Zk) ≤ nI Z . Since U, Z are finite, by Hoeffding’s inequality, for any η > 0,
+
+P ιk(U n; Zn) ≥ n(I(U ; Zk) + η) ≤ sn, (17) where sn ≤ exp( −cnη 2) for some constant c > 0 independent of k, and hence sn tends to 0 exponentially fast with respect to n.Define the event Tk := {ιk(U n; Zn) ≤ n(I(U ; Zk) + η)}. Then by (17), 
+
+E
+
+h 1 + 2 −ιk (U n;Zn)−Bi
+
+≤ P(T ck ) +  1 + 2 −n(I(U ;Zk )+ η)−B
+
+> (a)
+
+≤ sn + exp 
+
+
+
+− (B/2) · 2−n(I(U ;Zk )+ η)
+
+, (18) where the inequality (a) uses ln(1 + t) ≥ t/ 2 for t ∈ (0 , 1] and the fact that 2−n(I(U ;Zk )+ η) ≤ 1. With B = 2 ⌊n(IZ +ϵ/ 3) ⌋ and 
+
+I(U ; Zk) ≤ IZ , taking η = ϵ/ 6 gives 
+
+(B/2) · 2−n(I(U ;Zk )+ η) ≥ 14 · 2n(IZ +ϵ/ 3−IZ −ϵ/ 6) = 14 · 2nϵ/ 6,
+
+i.e., the second term of (18) tends to 0 super-exponentially fast. Hence 
+
+sup   
+
+> PnZ|X∈E n
+
+EZn|Xn∼P nZ|X
+
+h 1 + 2 −ι(U n;Zn)−Bi
+
+→ 0 (19) exponentially fast, and the other term in (6), 
+
+√BA −1 ≤ √2 · 2n/ 2( IZ +ϵ/ 3−IZ −ϵ/ 2) = √2 · 2−nϵ/ 12 → 0, (20) also exponentially fast. Recall En is finite, and N0(En) ≤ K, therefore we conclude 
+
+N0(En)
+
+
+
+sup   
+
+> ˜PnZ|X∈E n
+
+2 · EZn|Xn∼ ˜P nZ|X
+
+h 1 + 2 −ι(U n;Zn)−Bi
+
++ √BA −1
+
+
+
+→ 0 (21) Combining (16) and (21), we conclude that for the terms in Theorem 5, Pe + γ → 0 as n → ∞ , and therefore any rate 
+
+R < I Y − IZ is achievable. Maximizing over PU,X completes the proof and recovers (9). 15 
+
+VI. F UTURE APPLICATIONS 
+
+We briefly discuss some future directions related to the information hiding problem. In recent years, with the great success of artificial intelligence, software based on generative models is now able to produce content as realistic as works by human creators. However, the issue of copyright has become controversial: generative models can potentially be trained on public data without obtaining permission from human authors. To protect intellectual property and prohibit the unauthorized use of original works in the training of generative models, practical watermarking tools have been developed [73]–[75] to embed information into human-created works before they are published. However, most existing implementations rely on ad hoc designs that may introduce vulnerabilities [76]. For better design of such tools, it is crucial to develop a solid understanding of the information hiding problem. As an example, a principled design for text watermarking was proposed in [76], following the theoretical analysis of the information hiding problem [1]. Since our one-shot achievability results generalize the asymptotic information hiding, drop certain assumptions and still recover the asymptotic hiding capacity [1] (thus providing an alternative understanding), it is of interests to explore how can our nonasymptotic information hiding results contribute to improved designs for watermarking technologies. Moreover, steganography is closely related to the information hiding problem [29], and an interesting connection between steganography and minimum entropy coupling [77]–[79] has been discussed in [80]. Considering that the coding scheme in this paper is based on the Poisson functional representation [54], which is also related to the minimum entropy coupling (see discussions in [77]), it is worth investigating whether there are deeper connections between minimum entropy coupling and the one-shot information hiding problem studied in this paper. VII. C ONCLUSION 
+
+In this paper, we derive novel one-shot achievability results for two fundamental secrecy problems in information theory: the information hiding problem [1] and the compound wiretap channel [2]. Our bounds are based on the Poisson matching lemma combined with a covering argument, and they apply to both continuous and discrete settings. For both problems, unlike most existing studies, we do not assume that the decoder knows the channel state in the one-shot setting. The proposed one-shot results hold for arbitrary source distributions and general channel classes (not necessarily memoryless or ergodic), and they recover existing asymptotic results when applied to discrete memoryless channels, potentially under distortion constraints. Thus, our results offer alternative, and potentially simpler, proofs of known capacity theorems. We have also discussed possible generalizations and future applications. REFERENCES [1] P. Moulin and J. A. O’Sullivan, “Information-theoretic analysis of information hiding,” IEEE Transactions on Information Theory , vol. 49, no. 3, pp. 563–593, 2003. [2] Y. Liang, G. Kramer, and H. V. Poor, “Compound wiretap channels,” EURASIP Journal on Wireless Communications and Networking , vol. 2009, pp. 1–12, 2009. [3] A. Somekh-Baruch and N. Merhav, “On the error exponent and capacity games of private watermarking systems,” IEEE Transactions on Information Theory , vol. 49, no. 3, pp. 537–562, 2003. [4] ——, “On the capacity game of public watermarking systems,” IEEE Transactions on Information Theory , vol. 50, no. 3, pp. 511–524, 2004. [5] A. S. Cohen and A. Lapidoth, “The Gaussian watermarking game,” IEEE Transactions on Information Theory , vol. 48, no. 6, pp. 1639–1667, 2002. [6] A. D. Wyner, “The wire-tap channel,” Bell system technical journal , vol. 54, no. 8, pp. 1355–1387, 1975. [7] H. Ji, S. Park, J. Yeo, Y. Kim, J. Lee, and B. Shim, “Ultra-reliable and low-latency communications in 5g downlink: Physical layer aspects,” IEEE Wireless Communications , vol. 25, no. 3, pp. 124–130, 2018. [8] V. Kostina and S. Verd´ u, “Lossy joint source-channel coding in the finite blocklength regime,” IEEE Transactions on Information Theory , vol. 59, no. 5, pp. 2545–2575, 2013. [9] V. Y. Tan and O. Kosut, “On the dispersions of three network information theory problems,” IEEE Transactions on Information Theory , vol. 60, no. 2, pp. 881–903, 2013. [10] Y. Polyanskiy, H. V. Poor, and S. Verd´ u, “Channel coding rate in the finite blocklength regime,” IEEE Transactions on Information Theory , vol. 56, no. 5, pp. 2307–2359, 2010. [11] M. Hayashi, “Information spectrum approach to second-order coding rate in channel coding,” IEEE Transactions on Information Theory , vol. 55, no. 11, pp. 4947–4966, 2009. [12] S. Verd´ u, “Non-asymptotic achievability bounds in multiuser information theory,” in Annual Allerton Conference on Communication, Control, and Computing (Allerton) . IEEE, 2012, pp. 1–8. [13] M. H. Yassaee, M. R. Aref, and A. Gohari, “A technique for deriving one-shot achievability results in network information theory,” in 2013 IEEE International Symposium on Information Theory (ISIT) . IEEE, 2013, pp. 1287–1291. [14] C. T. Li and V. Anantharam, “A unified framework for one-shot achievability via the poisson matching lemma,” IEEE Transactions on Information Theory , vol. 67, no. 5, pp. 2624–2651, 2021. [15] Y. Liu and C. T. Li, “One-shot information hiding,” in 2024 IEEE Information Theory Workshop (ITW) . IEEE, 2024, pp. 169–174. [16] V. Malik, T. Kargin, V. Kostina, and B. Hassibi, “A distributionally robust approach to shannon limits using the wasserstein distance,” in 2024 IEEE International Symposium on Information Theory (ISIT) . IEEE, 2024, pp. 861–866. [17] D. Blackwell, L. Breiman, A. Thomasian et al. , “The capacity of a class of channels,” The Annals of Mathematical Statistics , vol. 30, no. 4, pp. 1229–1241, 1959. [18] S. I. Gel’fand and M. S. Pinsker, “Coding for channel with random parameters,” Problems of Control and Information Theory , vol. 9, no. 1, pp. 19–31, 1980. [19] C. Heegard and A. El Gamal, “On the capacity of computer memory with defects,” IEEE Transactions on Information Theory , vol. 29, no. 5, pp. 731–739, 1983. [20] P. Moulin and Y. Wang, “Capacity and random-coding exponents for channel coding with side information,” IEEE Transactions on Information Theory ,vol. 53, no. 4, pp. 1326–1347, 2007. 16 
+
+[21] Y. Steinberg, “Coding for channels with rate-limited side information at the decoder, with applications,” IEEE Transactions on Information Theory ,vol. 54, no. 9, pp. 4283–4295, 2008. [22] R. J. Barron, B. Chen, and G. W. Wornell, “The duality between information embedding and source coding with side information and some applications,” 
+
+IEEE Transactions on Information Theory , vol. 49, no. 5, pp. 1159–1180, 2003. [23] G. Keshet, Y. Steinberg, N. Merhav et al. , “Channel coding in the presence of side information,” Foundations and Trends® in Communications and Information Theory , vol. 4, no. 6, pp. 445–586, 2008. [24] I. J. Cox, J. Kilian, F. T. Leighton, and T. Shamoon, “Secure spread spectrum watermarking for multimedia,” IEEE Transactions on Image Processing ,vol. 6, no. 12, pp. 1673–1687, 1997. [25] D. Boneh and J. Shaw, “Collusion-secure fingerprinting for digital data,” IEEE Transactions on Information Theory , vol. 44, no. 5, pp. 1897–1905, 1998. [26] B. Chen and G. W. Wornell, “Quantization index modulation: A class of provably good methods for digital watermarking and information embedding,” 
+
+IEEE Transactions on Information Theory , vol. 47, no. 4, pp. 1423–1443, 2001. [27] N. Merhav, “On random coding error exponents of watermarking systems,” IEEE Transactions on Information Theory , vol. 46, no. 2, pp. 420–430, 2000. [28] P. Moulin, “Universal fingerprinting: Capacity and random-coding exponents,” in 2008 IEEE International Symposium on Information Theory (ISIT) .IEEE, 2008, pp. 220–224. [29] Y. Wang and P. Moulin, “Perfectly secure steganography: Capacity, error exponents, and code constructions,” IEEE Transactions on Information Theory ,vol. 54, no. 6, pp. 2706–2722, 2008. [30] Q. Guan, P. Liu, W. Zhang, W. Lu, and X. Zhang, “Double-layered dual-syndrome trellis codes utilizing channel knowledge for robust steganography,” 
+
+IEEE Transactions on Information Forensics and Security , vol. 18, pp. 501–516, 2022. [31] W. Li, W. Zhang, L. Li, H. Zhou, and N. Yu, “Designing near-optimal steganographic codes in practice based on polar codes,” IEEE Transactions on Communications , vol. 68, no. 7, pp. 3948–3962, 2020. [32] A. El Gamal, A. Gohari, and C. Nair, “Achievable rates for the relay channel with orthogonal receiver components,” in 2021 IEEE Information Theory Workshop (ITW) . IEEE, 2021, pp. 1–6. [33] Y.-H. Kim, A. Sutivong, and T. M. Cover, “State amplification,” IEEE Transactions on Information Theory , vol. 54, no. 5, pp. 1850–1859, 2008. [34] P. Grover, A. B. Wagner, and A. Sahai, “Information embedding and the triple role of control,” IEEE Transactions on Information Theory , vol. 61, no. 4, pp. 1539–1549, 2015. [35] Y. Xu, J. Lu, X. Guang, and W. Xu, “Information embedding with stegotext reconstruction,” IEEE Transactions on Information Forensics and Security ,vol. 19, pp. 1415–1428, 2023. [36] T. Kalker and F. M. Willems, “Capacity bounds and constructions for reversible data-hiding,” in 2002 14th International Conference on Digital Signal Processing Proceedings (DSP) , vol. 1. IEEE, 2002, pp. 71–76. [37] Y. Steinberg, “Reversible information embedding with compressed host at the decoder,” in 2006 IEEE International Symposium on Information Theory (ISIT) . IEEE, 2006, pp. 188–191. [38] O. Sumszyk and Y. Steinberg, “Information embedding with reversible stegotext,” in 2009 IEEE International Symposium on Information Theory (ISIT) .IEEE, 2009, pp. 2728–2732. [39] A. Sutivong, M. Chiang, T. M. Cover, and Y.-H. Kim, “Channel capacity and state estimation for state-dependent Gaussian channels,” IEEE Transactions on Information Theory , vol. 51, no. 4, pp. 1486–1495, 2005. [40] I. Bjelakovi´ c, H. Boche, and J. Sommerfeld, “Secrecy results for compound wiretap channels,” Problems of Information Transmission , vol. 49, no. 1, pp. 73–98, 2013. [41] M. Kobayashi, Y. Liang, S. Shamai, and M. Debbah, “On the compound MIMO broadcast channels with confidential messages,” in 2009 IEEE International Symposium on Information Theory (ISIT) . IEEE, 2009, pp. 1283–1287. [42] T. Liu, V. Prabhakaran, and S. Vishwanath, “The secrecy capacity of a class of parallel Gaussian compound wiretap channels,” in 2008 IEEE International Symposium on Information Theory (ISIT) . IEEE, 2008, pp. 116–120. [43] E. Ekrem and S. Ulukus, “On Gaussian MIMO compound wiretap channels,” in Annual Conference on Information Sciences and Systems (CISS) . IEEE, 2010, pp. 1–6. [44] ——, “Degraded compound multi-receiver wiretap channels,” IEEE Transactions on Information Theory , vol. 58, no. 9, pp. 5681–5698, 2012. [45] R. F. Schaefer and S. Loyka, “The secrecy capacity of compound Gaussian MIMO wiretap channels,” IEEE Transactions on Information Theory , vol. 61, no. 10, pp. 5535–5552, 2015. [46] H. Boche, R. F. Schaefer, and H. V. Poor, “On the continuity of the secrecy capacity of compound and arbitrarily varying wiretap channels,” IEEE Transactions on Information Forensics and Security , vol. 10, no. 12, pp. 2531–2546, 2015. [47] E. C. Song, P. Cuff, and H. V. Poor, “The likelihood encoder for lossy compression,” IEEE Transactions on Information Theory , vol. 62, no. 4, pp. 1836–1849, 2016. [48] S. Watanabe, S. Kuzuoka, and V. Y. F. Tan, “Nonasymptotic and second-order achievability bounds for coding with side-information,” IEEE Transactions on Information Theory , vol. 61, no. 4, pp. 1574–1605, April 2015. [49] C. E. Shannon, “A mathematical theory of communication,” Bell system technical journal , vol. 27, no. 3, pp. 379–423, 1948. [50] A. Feinstein, “A new basic theorem of information theory,” IRE Transactions on Information Theory , no. 4, pp. 2–22, 1954. [51] C. E. Shannon, “Certain results in coding theory for noisy channels,” Information and control , vol. 1, no. 1, pp. 6–25, 1957. [52] Y. Liu and C. T. Li, “One-shot coding over general noisy networks,” IEEE Transactions on Information Theory , vol. 71, no. 11, pp. 8346–8357, 2025. [53] Y. Liu, S. H. Advary, and C. T. Li, “Nonasymptotic oblivious relaying and variable-length noisy lossy source coding,” IEEE Transactions on Information Theory , vol. 72, no. 6, pp. 4555–4564, 2026. [54] C. T. Li and A. El Gamal, “Strong functional representation lemma and applications to coding theorems,” IEEE Transactions on Information Theory ,vol. 64, no. 11, pp. 6967–6978, 2018. [55] Y. Liu, W.-N. Chen, A. Ozgur, and C. T. Li, “Universal exact compression of differentially private mechanisms,” Advances in Neural Information Processing Systems , vol. 37, pp. 91 492–91 531, 2024. [56] G. Flamich, O. S. G¨ uner, Y. Liu, and D. G¨ und¨ uz, “Scalable differentially private data compression via diffusion and stochastic codes,” arXiv preprint arXiv:2607.03392 , 2026. [57] Y. Liu, S. Wan, Z. Gao, and D. G¨ und¨ uz, “Watermarkable multi-draft speculative sampling via poisson processes,” 2026, arXiv preprint. [58] Y. Guo, S. Salehkalaibar, S. C. Draper, and W. Yu, “One-shot achievability region for hypothesis testing with communication constraint,” in 2024 IEEE Information Theory Workshop (ITW) . IEEE, 2024, pp. 55–60. [59] H. Hentil¨ a, Y. Y. Shkel, and V. Koivunen, “Communication-constrained secret key generation: Second-order bounds,” IEEE Transactions on Information Theory , vol. 70, no. 11, pp. 8180–8203, 2024. [60] A. Khisti, A. Behboodi, G. Cesa, and P. Kumar, “Unequal message protection: One-shot analysis via poisson matching lemma,” in 2024 IEEE International Symposium on Information Theory (ISIT) . IEEE, 2024, pp. 629–634. [61] E. Lei, H. Hassani, and S. S. Bidokhti, “Neural estimation of the rate-distortion function with applications to operational source coding,” IEEE Journal on Selected Areas in Information Theory , vol. 3, no. 4, pp. 674–686, 2022. [62] J. Scarlett, “On the dispersions of the gel’fand–pinsker channel and dirty paper coding,” IEEE Transactions on Information Theory , vol. 61, no. 9, pp. 4569–4586, 2015. [63] A. C. Berry, “The accuracy of the Gaussian approximation to the sum of independent variates,” Transactions of the American Mathematical Society ,vol. 49, no. 1, pp. 122–136, 1941. 17 
+
+[64] C.-G. Esseen, “On the Liapunov limit error in the theory of probability,” Ark. Mat. Astr. Fys. , vol. 28, pp. 1–19, 1942. [65] W. Feller, An introduction to probability theory and its applications , 2nd ed. Wiley, New York, 1971, vol. 2. [66] F. Hartung and M. Kutter, “Multimedia watermarking techniques,” Proceedings of the IEEE , vol. 87, no. 7, pp. 1079–1107, 1999. [67] R. Dobrushin, “Optimum information transmission through a channel with unknown parameters,” Radio Eng. Electron , vol. 4, no. 12, pp. 1–8, 1959. [68] J. Wolfowitz, Simultaneous Channels . New York: Springer-Verlag, 1980. [69] M. Hayashi, “General nonasymptotic and asymptotic formulas in channel resolvability and identification capacity and their application to the wiretap channel,” IEEE Transactions on Information Theory , vol. 52, no. 4, pp. 1562–1575, 2006. [70] J. Liu, P. Cuff, and S. Verd´ u, “ Eγ -resolvability,” IEEE Transactions on Information Theory , vol. 63, no. 5, pp. 2629–2658, 2016. [71] W. Yang, R. F. Schaefer, and H. V. Poor, “Wiretap channels: Nonasymptotic fundamental limits,” IEEE Transactions on Information Theory , vol. 65, no. 7, pp. 4069–4093, 2019. [72] Y. Liang and H. V. Poor, “Multiple-access channels with confidential messages,” IEEE Transactions on Information Theory , vol. 54, no. 3, pp. 976–1002, 2008. [73] S. Shan, J. Cryan, E. Wenger, H. Zheng, R. Hanocka, and B. Y. Zhao, “Glaze: Protecting artists from style mimicry by text-to-image models,” arXiv preprint arXiv:2302.04222 , 2023. [74] J. Zhu, R. Kaplan, J. Johnson, and L. Fei-Fei, “HiDDeN: Hiding data with deep networks,” in Proceedings of the European Conference on Computer Vision (ECCV) , 2018, pp. 657–672. [75] C. Zhang, C. Lin, P. Benz, K. Chen, W. Zhang, and I. S. Kweon, “A brief survey on deep learning based data hiding,” arXiv preprint arXiv:2103.01607 ,2021. [76] Z. Ji, Q. Hu, Y. Zheng, L. Xiang, and X. Wang, “A principled approach to natural language watermarking,” in ACM Multimedia 2024 .[77] C. T. Li, “Efficient approximate minimum entropy coupling of multiple probability distributions,” arXiv preprint arXiv:2006.07955 , 2020. [78] F. Cicalese, L. Gargano, and U. Vaccaro, “Minimum-entropy couplings and their applications,” IEEE Transactions on Information Theory , vol. 65, no. 6, pp. 3436–3451, 2019. [79] S. Compton, D. Katz, B. Qi, K. Greenewald, and M. Kocaoglu, “Minimum-entropy coupling approximation guarantees beyond the majorization barrier,” in Artificial Intelligence and Statistics . PMLR, 2023, pp. 10 445–10 469. [80] C. S. de Witt, S. Sokota, J. Z. Kolter, J. Foerster, and M. Strohmeier, “Perfectly secure steganography using minimum entropy coupling,” arXiv preprint arXiv:2210.14889 , 2022.

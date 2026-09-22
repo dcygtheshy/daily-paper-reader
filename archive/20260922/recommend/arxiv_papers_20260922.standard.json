@@ -1,0 +1,206 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-22T22:21:08.557066+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 4,
+    "deep_cap": 6,
+    "deep_selected": 4,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.24377v1",
+      "source": "arxiv",
+      "title": "On the Information-Theoretic Limits of Latent-Space Watermarking Through Pretrained Generators",
+      "abstract": "We study latent-space watermarking through a pretrained generator using a prescribed latent-to-output stochastic mapping, called the renderer. A watermark encoder selects the latent input using a message and secret key. For every message and semantic context, the released output must have exactly the desired conditional output distribution. For finite alphabets, we derive rate--key inner and outer bounds and characterize the coding and coordination requirements for realizing watermark communication through the prescribed latent interface. When the target output distribution of the generator uniquely determines the corresponding latent input distribution through the renderer, a strengthened converse yields the capacity region; the same region governs explicit preservation of the pretrained latent distribution. We extend the analysis to general jointly Gaussian models and identify a sufficient statistic of the latent that captures both the watermark-bearing information available at the generated output and the latent coordination required to preserve its target distribution. For the vector Gaussian model, we further characterize the optimal allocation of the secret-key resource across the resulting modes. Finally, we turn to an emerging robustness threat that is particularly natural in generative watermarking: an adversary can regenerate the released sample to obtain a fresh realization of the same underlying content while attenuating or destroying the embedded watermark. We incorporate this robustness axis into our framework and characterize the one-pass compound capacity of the scalar Gaussian model when the semantic context is known to the encoder but hidden from the detector, while the regeneration attack may depend on that context. Extending the analysis to multiple rounds of repeated canonical regeneration, we characterize the resulting watermark-capacity decay.",
+      "authors": [
+        "Jinwan Jeon",
+        "Minju Lee",
+        "Sung Hoon Lim"
+      ],
+      "primary_category": "cs.IT",
+      "categories": [
+        "cs.IT",
+        "cs.LG"
+      ],
+      "published": "2026-09-21T10:10:27+00:00",
+      "link": "https://arxiv.org/pdf/2609.24377v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Information-theoretic limits of latent-space watermarking through pretrained generators",
+      "llm_evidence_cn": "通过预训练生成器的潜在空间水印信息论极限",
+      "llm_evidence": "通过预训练生成器的潜在空间水印信息论极限",
+      "canonical_evidence": "通过预训练生成器的潜在空间水印信息论极限",
+      "llm_tldr_en": "This paper studies latent-space watermarking through a pretrained generator modeled as a latent-to-output renderer, deriving rate-key inner and outer bounds and characterizing the capacity region for watermark communication through the prescribed latent interface.",
+      "llm_tldr_cn": "针对潜在空间水印缺乏理论容量刻画的问题，本文研究通过预训练生成器的潜在空间水印机制。作者将生成器视为潜在到输出的随机渲染器，水印编码器依据消息与密钥选择潜在输入，并在有限字母表下推导速率-密钥的内界与外界。当目标输出分布唯一确定潜在输入分布时，强化逆定理给出容量区域。该工作从信息论层面揭示了生成模型水印的编码与协调极限，为实际水印设计提供理论依据。",
+      "llm_tldr": "针对潜在空间水印缺乏理论容量刻画的问题，本文研究通过预训练生成器的潜在空间水印机制。作者将生成器视为潜在到输出的随机渲染器，水印编码器依据消息与密钥选择潜在输入，并在有限字母表下推导速率-密钥的内界与外界。当目标输出分布唯一确定潜在输入分布时，强化逆定理给出容量区域。该工作从信息论层面揭示了生成模型水印的编码与协调极限，为实际水印设计提供理论依据。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.22981v1",
+      "source": "arxiv",
+      "title": "Dual-Locking Learned AI Models: A PIN-Based Sparse QIM Watermarking and Adaptive Index Permutation Approach",
+      "abstract": "We present a dual-locking method for securing trained neural networks that combines key-driven index permutation with PIN-based watermarking based on Sparse Quantization Index Modulation (QIM). Cryptographic randomness is introduced by independently applying a uniform random permutation to each row of adaptively selected index vectors. A robust blind binary watermark is then embedded into the bias coefficients by modulating their quantized values, binding the network to a user-defined Personal Identification Number (PIN). Without the correct key, the network retains its architecture but becomes functionally impaired due to disrupted internal representations. Inverse permutation fully restores the original model accuracy, while the embedded watermark remains imperceptible and enables blind verification of key association and model authorship. To improve both locking effectiveness and recoverability, an adaptive key selection strategy redistributes high-magnitude weights to low-sensitivity positions and vice versa, increasing degradation in the locked state while preserving full recovery. Experiments on MNIST, CIFAR-10/100, and ImageNet-1K using fully connected networks, ResNet CNNs, and transformer architectures show that locking reduces accuracy below 10\\%, and even below 0.5\\% for CNNs, while the correct key fully restores performance. The watermark introduces no measurable accuracy degradation and reliably authenticates ownership. Analysis of embedding distributions across CNNs and transformers further indicates potential diagnostic value for identifying undertrained or suboptimally designed models. The proposed approach therefore provides simultaneous model protection, recovery, and ownership verification.",
+      "authors": [
+        "Iva Vasic",
+        "Jesús Muñoz-Cádiz",
+        "Bata Vasic"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-09-19T12:24:17+00:00",
+      "link": "https://arxiv.org/pdf/2609.22981v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "PIN-based watermarking with cryptographic randomness and robust blind watermark in model weights",
+      "llm_evidence_cn": "基于PIN与密码学随机性的神经网络水印嵌入",
+      "llm_evidence": "基于PIN与密码学随机性的神经网络水印嵌入",
+      "canonical_evidence": "基于PIN与密码学随机性的神经网络水印嵌入",
+      "llm_tldr_en": "A dual-locking scheme secures trained neural networks by combining key-driven index permutation with PIN-based sparse QIM watermarking, embedding a robust blind watermark in bias coefficients so the model malfunctions without the correct key.",
+      "llm_tldr_cn": "针对训练后神经网络易被盗用、缺乏有效版权与访问控制的问题，本文提出一种双锁定保护方法。该方法将密钥驱动的索引置换与基于稀疏量化索引调制的PIN水印相结合，把鲁棒盲二值水印嵌入网络偏置系数并绑定用户PIN。实验表明，缺少正确密钥时模型虽保留结构却因内部表征被扰乱而功能受损，逆置换可完全恢复原模型精度。该工作为神经网络水印与模型所有权验证提供了兼具鲁棒性与密码学随机性的新思路。",
+      "llm_tldr": "针对训练后神经网络易被盗用、缺乏有效版权与访问控制的问题，本文提出一种双锁定保护方法。该方法将密钥驱动的索引置换与基于稀疏量化索引调制的PIN水印相结合，把鲁棒盲二值水印嵌入网络偏置系数并绑定用户PIN。实验表明，缺少正确密钥时模型虽保留结构却因内部表征被扰乱而功能受损，逆置换可完全恢复原模型精度。该工作为神经网络水印与模型所有权验证提供了兼具鲁棒性与密码学随机性的新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.23586v1",
+      "source": "arxiv",
+      "title": "An Efficient and Effective Watermarking Scheme for the Protection of the Intellectual Property Rights of Video Generative Models",
+      "abstract": "The rapid development of video generative models (VGMs) has enabled the generation of highly realistic synthetic videos, raising concerns about the intellectual property rights (IPR) of these models. In particular, two closely related forensic tasks remain largely unaddressed: synthetic video verification (determining whether a video was generated by a protected VGM) and model ownership verification (determining whether a suspect VGM is an unauthorized copy of a protected VGM). In this paper, we propose a new in-generation watermarking scheme that can address the two verification tasks. First, a novel video watermarking network named VidMark is presented, which incorporates a two-scale discrete wavelet transform (DWT) decomposition and a global temporal attention block (GTAB) to enhance watermark robustness and imperceptibility. Second, we present a decoder-guided fine-tuning procedure. By leveraging the frozen VidMark decoder, this process enables VGMs to synthesize videos carrying an imperceptible, robust, and model-specific watermark. Finally, two verification frameworks are established to perform synthetic video verification and model ownership verification. Extensive experiments on representative VGMs demonstrate that the proposed scheme achieves over 99% watermark extraction accuracy and 100% verification accuracy on both tasks, with negligible impact on video generation quality. Furthermore, the watermarks exhibit strong robustness against a comprehensive range of video-level and model-level attacks.",
+      "authors": [
+        "Wenhong Huang",
+        "Jianwei Fei",
+        "Benedetta Tondi",
+        "Bin Ma",
+        "Fangjun Huang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-20T12:09:16+00:00",
+      "link": "https://arxiv.org/pdf/2609.23586v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "in-generation watermarking for video generative models to verify synthetic video and model ownership",
+      "llm_evidence_cn": "面向视频生成模型的生成内水印，用于合成视频验证与模型所有权验证",
+      "llm_evidence": "面向视频生成模型的生成内水印，用于合成视频验证与模型所有权验证",
+      "canonical_evidence": "面向视频生成模型的生成内水印，用于合成视频验证与模型所有权验证",
+      "llm_tldr_en": "Video generative models raise IPR concerns, yet synthetic video verification and model ownership verification remain unaddressed. This paper proposes an in-generation watermarking scheme with VidMark network to address both forensic tasks.",
+      "llm_tldr_cn": "视频生成模型可生成高度逼真的合成视频，引发知识产权担忧，但合成视频验证与模型所有权验证两个取证任务尚缺乏有效方案。本文提出一种生成内水印方案，设计VidMark视频水印网络，融合双尺度离散变换以嵌入鲁棒水印。该方案能同时判断视频是否由受保护模型生成以及嫌疑模型是否为未授权副本。实验表明其在两类验证任务上高效有效，为生成模型版权保护提供了新工具。",
+      "llm_tldr": "视频生成模型可生成高度逼真的合成视频，引发知识产权担忧，但合成视频验证与模型所有权验证两个取证任务尚缺乏有效方案。本文提出一种生成内水印方案，设计VidMark视频水印网络，融合双尺度离散变换以嵌入鲁棒水印。该方案能同时判断视频是否由受保护模型生成以及嫌疑模型是否为未授权副本。实验表明其在两类验证任务上高效有效，为生成模型版权保护提供了新工具。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.24084v1",
+      "source": "arxiv",
+      "title": "From Bits to Beliefs: Recoverable Semantic Fingerprints for Black-Box Verification of Large Language Models",
+      "abstract": "Open-weight large language models (LLMs) can be copied, modified, and redeployed behind black-box APIs, making post-release ownership verification difficult. Existing black-box fingerprints often rely on secret query-key pairs that reproduce predefined responses, and can therefore be easily disrupted by fine-tuning, pruning, quantization, model merging, and serving-time prompt changes. We propose SimPrint, a recoverable semantic fingerprinting framework for black-box LLM ownership verification. Rather than relying on isolated exact matches, SimPrint encodes a private owner signature into a coded semantic fingerprint domain, distributing ownership evidence across natural binary question-answering probes. It implants only base-deviating probes through a low-interference batch update that preserves the original model behavior, and later recovers the signature by parsing suspect-model responses into reliable bits or erasures with an error-correcting recovery mechanism. Because verification only uses input-output queries, SimPrint remains applicable when model weights or activations are inaccessible. Experiments on three open-weight LLMs show that SimPrint reliably recovers the owner signature in both clean and modified settings, remains robust under fine-tuning, pruning, quantization, model merging, and serving-time perturbations, and maintains comparable downstream utility.",
+      "authors": [
+        "Jiaxin Hong",
+        "Yuxin Peng",
+        "Hongyao Yu",
+        "Hao Fang",
+        "Shuoyang Sun",
+        "Bin Chen"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-09-21T04:11:07+00:00",
+      "link": "https://arxiv.org/pdf/2609.24084v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "recoverable semantic fingerprints for black-box LLM ownership verification",
+      "llm_evidence_cn": "用于黑盒大模型归属验证的可恢复语义指纹",
+      "llm_evidence": "用于黑盒大模型归属验证的可恢复语义指纹",
+      "canonical_evidence": "用于黑盒大模型归属验证的可恢复语义指纹",
+      "llm_tldr_en": "Open-weight LLMs can be copied and redeployed behind black-box APIs, defeating existing query-key fingerprints; SimPrint encodes an owner signature into a coded semantic fingerprint domain via binary QA probes, staying recoverable under fine-tuning and quantization.",
+      "llm_tldr_cn": "开放权重大模型可被复制、微调并部署为黑盒API，导致发布后难以验证所有权。现有黑盒指纹依赖秘密查询-响应对，容易被微调、剪枝、量化、模型合并和提示变化破坏。本文提出SimPrint可恢复语义指纹框架，将私有所有者签名编码进编码语义指纹域，并通过自然二值问答探针分散所有权证据。实验表明该指纹在多种模型变换下仍可恢复，为黑盒模型归属验证提供了更鲁棒的方案。",
+      "llm_tldr": "开放权重大模型可被复制、微调并部署为黑盒API，导致发布后难以验证所有权。现有黑盒指纹依赖秘密查询-响应对，容易被微调、剪枝、量化、模型合并和提示变化破坏。本文提出SimPrint可恢复语义指纹框架，将私有所有者签名编码进编码语义指纹域，并通过自然二值问答探针分散所有权证据。实验表明该指纹在多种模型变换下仍可恢复，为黑盒模型归属验证提供了更鲁棒的方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.22439v1",
+      "source": "arxiv",
+      "title": "One-Shot Information Hiding and Compound Wiretap Channels",
+      "abstract": "In recent years, due to the growing reliance on large amounts of data that are communicated, analyzed, and utilized, which inherently contain sensitive and personal information, secrecy and privacy in communication have become increasingly important. We present nonasymptotic information-theoretic analyses of two fundamental secrecy problems under channel uncertainties: the information hiding problem and the compound wiretap channel. The former admits a game-theoretic formulation, where one party (an information hider and a decoder) seeks to embed secret messages into a host signal for later reconstruction, while the opposing party (an attacker) attempts to remove or degrade the embedded information. The latter generalizes Wyner's wiretap channel by allowing multiple potential channel states. The information hiding problem concerns active attacks during data transmission, while the compound wiretap channel addresses passive eavesdropping and information leakage. The two problems, both of which consider channels with uncertainties, can be studied under a unified framework by utilizing a covering argument and the Poisson matching lemma by Li and Anantharam. We derive novel one-shot achievability results for both problems that are applicable to any source distribution and any class of channels (not necessarily memoryless or ergodic), and that apply to both discrete and continuous cases. We also show that existing asymptotic results on both problems can be recovered by applying our results to discrete memoryless channels.",
+      "authors": [
+        "Yanxiao Liu",
+        "Cheuk Ting Li"
+      ],
+      "primary_category": "cs.IT",
+      "categories": [
+        "cs.IT"
+      ],
+      "published": "2026-09-18T18:01:08+00:00",
+      "link": "https://arxiv.org/pdf/2609.22439v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "information hiding with attacker removing embedded messages",
+      "llm_evidence_cn": "攻击者去除嵌入信息的信息隐藏",
+      "llm_evidence": "攻击者去除嵌入信息的信息隐藏",
+      "canonical_evidence": "攻击者去除嵌入信息的信息隐藏",
+      "llm_tldr_en": "Provides nonasymptotic information-theoretic analyses of information hiding and compound wiretap channels under channel uncertainty.",
+      "llm_tldr_cn": "论文关注信道不确定下的两类保密问题：信息隐藏与复合窃听信道。信息隐藏被建模为博弈，隐藏者将秘密消息嵌入宿主信号供解码，而攻击者试图移除或破坏嵌入信息。作者给出非渐近的信息论分析，刻画信道不确定条件下的可达保密率与容量。该工作为水印类信息隐藏系统的鲁棒性与安全性提供了理论边界。",
+      "llm_tldr": "论文关注信道不确定下的两类保密问题：信息隐藏与复合窃听信道。信息隐藏被建模为博弈，隐藏者将秘密消息嵌入宿主信号供解码，而攻击者试图移除或破坏嵌入信息。作者给出非渐近的信息论分析，刻画信道不确定条件下的可达保密率与容量。该工作为水印类信息隐藏系统的鲁棒性与安全性提供了理论边界。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
