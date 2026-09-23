@@ -1,0 +1,161 @@
+Title: Latent Audio Watermarking for Robustness to Neural Codec Resynthesis
+
+URL Source: https://arxiv.org/pdf/2609.25830v1
+
+Published Time: Wed, 23 Sep 2026 00:49:53 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# LATENT AUDIO WATERMARKING FOR ROBUSTNESS TO NEURAL CODEC RESYNTHESIS 
+
+# Lovro Brulec 1,2∗, Sahil Karawade 1,∗, Leonard Kinzinger 1,21Munich Music Labs 2Technical University of Munich 
+
+lovro.brulec@tum.de, sahil.karawade@munichmusiclabs.com, leonard.kinzinger@tum.de 
+
+ABSTRACT 
+
+Existing waveform-domain audio watermarks are robust to many conventional distortions but can degrade substantially under neural codec resynthesis. We investigate whether continuous neural codec latents provide a more suitable embedding space using a restricted formulation built around frozen pretrained EnCodec. To test this, a feedforward embedder maps a multi-bit payload to an additive latent perturbation decoded through the unchanged codec decoder. Compared with AudioSeal and WavMark, our latent watermark formulation degrades more gradually under repeated and low-bitrate EnCodec resynthesis, transfers to unseen DAC, and retains high de-tection under most waveform distortions. Substantial EnCodec ro-bustness emerges even without codec-resynthesis supervision, indi-cating that this behavior is inherent to our latent formulation and is further strengthened by codec-aware training. Learned perturba-tions are also preserved more strongly through codec cycling than equal-norm random controls, with preservation depending more on channel-specific allocation than temporal structure. End-to-end per-ceptual quality remains close to that of the frozen EnCodec recon-struction, indicating that much of the observed degradation orig-inates from the codec carrier itself. Overall, these results show that continuous neural codec latents provide a promising embedding space for watermarks that remain robust to neural codec resynthesis. 
+
+Index Terms — Audio watermarking, neural audio codecs, latent representations, robustness 
+
+1. INTRODUCTION 
+
+As synthetic speech and music become indistinguishable from human-produced recordings, reliable mechanisms for provenance, attribution, and misuse detection are becoming a pressing technical need. Audio watermarking has therefore attracted growing interest as a means of embedding authenticity or ownership information di-rectly into the signal [1]. A practical watermark, however, must re-main imperceptible, reliably decodable, and robust to downstream transformations [2]. Established methods such as AudioSeal [3], WavMark [4], Silent-Cipher [5], and Timbru [6] satisfy these requirements for most con-ventional distortions but cannot be reliably recovered after neural codec resynthesis [7, 8]. Neural codec resynthesis poses a particu-lar challenge because watermarking methods aim to embed imper-ceptible information, while neural codecs are designed to discard information that is unnecessary for perceptually faithful reconstruc-tion [7]. Since neural codecs form the backbone of current genera-tive audio systems, this transformation is moreover among the most likely to be encountered in the very setting that motivates watermark-ing. 
+
+> ∗
+
+Equal contribution. We therefore investigate embedding the watermark closer to the internal representations that neural codecs preserve. Several re-cent studies explore latent-domain watermarking, for example us-ing optimization-based latent perturbations [6, 9], discrete interme-diate representations [10], steganographic shifts in frozen autoen-coders [11], learned continuous latent embedding within codec-like autoencoders [12], and watermarking the training data of latent au-dio generative models [13]. In contrast, we investigate whether a de-liberately simple, feedforward perturbation of a frozen neural codec latent can provide robustness to codec resynthesis, and how such ro-bustness compares with established waveform-domain methods in terms of conventional attack resistance and perceptual transparency. We study this question using a minimal post-hoc formulation built around a frozen pretrained EnCodec [14] model, illustrated in Fig. 1. A multi-bit payload is mapped to an additive perturbation in the codec’s continuous latent representation and decoded through the unchanged codec decoder. The perturbation depends only on the payload, so the same message produces the same latent perturba-tion regardless of the input audio. This deliberately prevents the embedder from adapting to individual signals and allows us to test whether a shared payload-dependent direction in latent space can survive waveform decoding, re-encoding, and quantization. We re-fer to this formulation as DeltaMark. It is fully feedforward and requires neither codec retraining nor per-audio optimization. Our contributions are: (i) a content-independent latent watermark formulation for a frozen neural codec that requires neither codec retraining nor per-signal optimization; (ii) a comparison with AudioSeal and WavMark under repeated and low-bitrate EnCodec resynthesis, the unseen codecs DAC [15] and TiCodec [16], conventional distortions, and perceptual evaluation, demonstrating stronger robustness un-der EnCodec resynthesis. (iii) an ablation demonstrating that a substantial part of the En-Codec robustness is obtained without codec-aware training. (iv) a perturbation analysis showing that preservation through En-Codec depends more strongly on channel organization than temporal structure. Code is available at https://github.com/Munich-Mus ic-Labs/latent-audio-watermarking .
+
+2. METHOD 2.1. Latent watermarking method 
+
+Let x ∈ RT denote an input waveform and s ∈ { 0, 1}K a binary payload. A frozen EnCodec encoder E(·) produces a continuous latent representation z = E(x). The embedder F (·) predicts a arXiv:2609.25830v1 [cs.SD] 22 Sep 2026 Audio EnCodec Encoder       
+
+> Latent (z)+EnCodec Decoder
+> Watermarked Audio Waveform EnCodec Attack Layer Distorted Audio Extractor Recovered Payload
+> 10110...
+> Embedder Payload
+> 10110...
+> ∆z
+> Embedding Recovery
+> Lmask ,Lmel ,LTF
+> Lmsg
+> Llat
+
+Fig. 1 . Latent watermarking training pipeline. A payload-dependent perturbation ∆z is added to the frozen EnCodec latent and decoded to audio. Training optimizes payload recovery after attacks under perceptual and latent regularization. Snowflakes mark frozen components. payload-dependent perturbation ∆z = αF (s), which is added be-fore decoding: 
+
+xw = D(z + ∆ z) ,
+
+where D(·) is the frozen codec decoder and α is a learned scalar con-trolling perturbation magnitude. During training, the watermarked waveform is passed through a stochastic attack operator A(·) and then the extractor H(·) to predict ˆs = H(A(xw )) .We use the official pretrained mono EnCodec model at 24 kHz and bypass residual vector quantization (RVQ) during watermark in-sertion. For 3-second clips, the encoder produces a 128 × 225 latent representation. The embedder is implemented as a three-layer MLP with hidden width 256 and GELU [17] activations. The 16-bit payload is pro-jected to a 128 × 64 coarse latent tensor and linearly interpolated to the EnCodec temporal length of 225. The extractor is a 1D residual convolutional network with four stages of widths [32 , 64 , 128 , 256] , followed by global average pool-ing and a linear head that predicts the K payload bits. 
+
+2.2. Training objective 
+
+The embedder F and extractor H are trained jointly with an ob-jective that balances payload recoverability under distortions with perceptual transparency: 
+
+Ltotal = λmsg Lmsg +λlat Llat +λmask Lmask +λmel Lmel +λTF LTF .
+
+Robustness is encouraged through the message loss 
+
+Lmsg = BCE(ˆ s, s), where ˆs is predicted from the attacked waveform xa = A(xw ). The remaining terms constrain the perceptual impact of watermark insertion. We penalize the energy of the latent perturbation using Llat = ∥∆z∥22, together with a log-Mel spectral loss and the time–frequency loudness objective introduced by AudioSeal [3]. We additionally use a masking-inspired spectral loss [18, 19] that penalizes residual magnitude more strongly in low-magnitude time–frequency regions. Let r = xw − x denote the water-mark reconstruction residual, with X(f, t ) = | STFT( x)| and 
+
+R(f, t ) = | STFT( r)|, where STFT denotes the short-time Fourier transform. We define 
+
+Lmask = Ef,t 
+
+ R(f, t )max( X(f, t ), ϵ )γ + ϵ
+
+
+
+.
+
+We average this loss across Hann-window STFTs with FFT/window sizes [256 , 512 , 1024] and hops [64 , 128 , 256] , using γ = 0 .5 and 
+
+ϵ = 10 −5.
+
+3. EXPERIMENTAL SETUP 3.1. Training setup 
+
+Training uses 16,000 clips from the LibriSpeech train-clean-100 cor-pus [20], with 2,000 additional clips for validation. All audio is con-verted to mono, resampled to 24 kHz, peak-normalized to 0.95, and segmented into 3-second clips. The embedder and extractor are trained jointly with frozen En-Codec using online random 16-bit payloads. We use AdamW [21] with batch size 64, learning rate 10 −3, weight decay 10 −2, and a ReduceLROnPlateau scheduler for a maximum of 500 epochs, with early stopping on attacked validation loss after 30 epochs without improvement. Following staged optimization used in prior watermarking sys-tems [4, 11], training proceeds through four stages summarized in Table 1. Bootstrap uses a 1,000-clip subset, after which training continues on the full dataset. Stage transitions occur at 80% and 98% clean validation bit accuracy for Bootstrap and Generalization, respectively, and at 99.2% worst-attack validation bit accuracy for Robustness. We reinitialize the optimizer at the Robustness and Re-finement stages to avoid carrying adaptive optimizer state across sub-stantial changes in the training objective. Stage Attacks λmsg λmask λlat λmel λTF 
+
+Bootstrap – 8.0 0.067 0.01 – –Generalization – 1.0 0.4 0.01 – –Robustness yes 1.0 0.667 0.06 – –Refinement yes 1.0 0.667 0.06 0.2 0.2 
+
+Table 1 . Training stages and loss weights. To assess the contribution of codec-resynthesis supervision, we train two matched variants. DeltaMark (waveform-only augmenta-tion; WFA) uses only waveform attacks, whereas DeltaMark addi-tionally applies an EnCodec encoder–decoder cycle without RVQ during robustness training. We omit RVQ in the training attack to retain differentiability and allow gradients to propagate through the codec transformation. During robustness training, one stochastic waveform distortion is sampled per example from white or pink noise, gain, filtering, resampling, clipping, dropout, smoothing, and echo [3, 4]. Attack sampling is adaptively reweighted toward lower-performing ones. 3.2. Evaluation setup 
+
+Robustness is evaluated on 2,000 clips from the LibriSpeech 
+
+test-clean split, processed using the training preprocessing pipeline and used consistently across all methods and transforma-tions. We compare against AudioSeal v0.2.0 [3] and WavMark v0.0.3 [4] using their official pretrained implementations. Since our extractor is trained only for payload recovery, we fit a lightweight binary MLP detection head for 10 epochs on its frozen pooled rep-resentation. The detector threshold is calibrated on validation data to target a 1% attack-weighted FPR and fixed across all test con-ditions. All methods use 16-bit payloads and the same evaluation transformations. AudioSeal and WavMark embedding and extrac-tion are performed at 16 kHz; their watermarked audio is resampled to 24 kHz for the common evaluation transformations and back to 16 kHz before extraction. Evaluation includes the same waveform attack types used dur-ing training, evaluated under harsher conditions, repeated 24 kbps and single-pass 12–1.5 kbps EnCodec resynthesis, unseen 44.1 kHz DAC [15] with 7–9 quantizers, TiCodec-1g4r [16], MP3 [22] at 32 kbps, and AAC [23] at 64 kbps. We report two metrics. Detection performance is measured by the true positive rate (TPR) at the calibrated false positive rate (FPR), which quantifies whether the presence of a watermark can be estab-lished. Full-message accuracy (FMA), defined as the fraction of wa-termarked clips that are both detected and decoded with all 16 pay-load bits correct, quantifies end-to-end payload recovery and serves as the common success criterion across methods. For WavMark, detection is defined by an exact match of its fixed 16-bit synchro-nization pattern; for AudioSeal, the native detector output is used. Perceptual quality is evaluated using SI-SNR [24], PESQ [25], STOI [26], and ViSQOL [27] relative to the original waveform. We additionally report the unwatermarked no-RVQ EnCodec recon-struction, xc = D(E(x)) .To investigate why DeltaMark remains recoverable after EnCodec resynthesis, we analyze whether the latent perturbation itself is pre-served through decoding and subsequent re-encoding. Let z = E(x)
+
+be the clean latent and let d be the watermark perturbation. Without RVQ, we compute z′ 
+
+> 0
+
+= E(D(z)) and z′ 
+
+> d
+
+= E(D(z + d)) . In either case, we define the recovered perturbation as d′ = z′ 
+
+> d
+
+− z′
+
+> 0
+
+. Direc-tion preservation is measured by the projection ratio ⟨d′, d ⟩/∥d∥22.We compare the learned watermark perturbations with equal-norm Gaussian, temporally shuffled, and channel-shuffled controls. The analysis is performed for encoder–decoder cycling without RVQ and for EnCodec quantization/resynthesis at representative bitrates. 
+
+4. RESULTS AND DISCUSSION 4.1. Neural codec robustness 
+
+4.1.1. Robustness to EnCodec resynthesis 
+
+Under increasingly severe EnCodec resynthesis, DeltaMark de-grades more gradually than the waveform baselines (Table 2). After four 24 kbps passes, DeltaMark retains 89.3% TPR and 24.6% FMA, whereas AudioSeal falls to 11.2% TPR and 0.6% FMA, and Wav-Mark produces no detections. Reducing the EnCodec bitrate shows the same overall pattern: DeltaMark remains robust through 12 kbps and retains 37.0% FMA with 92.5% TPR at 6 kbps. At 3 kbps, FMA falls to 4.1% while TPR remains 54.6%, suggesting that increasingly aggressive codec reconstruction first corrupts payload recovery be-fore eliminating the watermark signal entirely. 
+
+DeltaMark DeltaMark (WFA) AudioSeal Setting FMA TPR/FPR FMA TPR/FPR FMA TPR/FPR 24 kbps ×1 84.0 99.9/2.2 63.1 99.9/0.4 65.0 100.0/0.5 24 kbps ×2 60.6 98.5/2.3 24.4 97.4/0.9 20.4 88.4/0.1 24 kbps ×3 40.4 94.9/2.7 11.0 92.0/1.5 4.0 39.3/0.1 24 kbps ×4 24.6 89.3/2.8 4.4 87.0/2.7 0.6 11.2/0 12 kbps ×1 75.8 99.4/1.2 47.0 99.1/0.4 19.8 97.9/0.5 6 kbps ×1 37.0 92.5/1.5 13.1 90.5/0.3 0.1 60.5/3.0 3 kbps ×1 4.1 54.6/1.3 1.1 51.2/0.4 0.0 41.5/5.3 1.5 kbps ×1 0.0 7.3/1.4 0.1 5.6/0.3 0.0 26.9/7.6 
+
+Table 2 . Robustness to EnCodec resynthesis (%). ×N denotes the number of consecutive resynthesis passes. WavMark produced no detections under any of the shown conditions and is omitted. The DeltaMark (WFA) variant follows the same general trend de-spite receiving no EnCodec resynthesis during training. In partic-ular, it retains 87.0% TPR after four 24 kbps passes and 90.5% TPR at 6 kbps, although its FMA is substantially lower than that of the codec-trained DeltaMark model. Codec-aware training im-proves FMA across all non-degenerate EnCodec settings, while de-tection remains strong for both variants under repeated resynthe-sis and moderate bitrate reduction. The persistence of DeltaMark (WFA) nevertheless suggests that EnCodec robustness is not cre-ated solely by attack-specific supervision; codec exposure instead appears to strengthen a robustness property already present in our latent formulation. 
+
+4.1.2. Robustness to unseen codecs 
+
+DeltaMark AudioSeal WavMark Codec FMA TPR/FPR FMA TPR/FPR FMA TPR/FPR DAC q7 56.5 96.5/0.3 48.3 55.2/0 0.0 0/0 DAC q8 67.9 98.7/0.3 73.2 76.7/0 0.0 0/0 DAC q9 76.1 99.5/0.4 89.9 91.0/0 0.0 0/0 TiCodec-1g4r 0.0 6.9/0.2 0.0 0/0 0.0 0/0 MP3 32 kbps 96.5 100/0.6 100 100/0 86.9 96.7/0 AAC 64 kbps 96.6 100/1.0 100 100/0 99.8 100/0 
+
+Table 3 . Robustness to unseen codecs, in %. DAC, TiCodec, MP3, and AAC are not used during training. Under conventional lossy compression, all methods remain highly robust (Table 3). Detection is saturated for DeltaMark and Au-dioSeal under MP3 and AAC, and AudioSeal attains marginally higher FMA (100% versus 96.5–96.6%). Transfer to unseen neural codecs is more differentiated. Across all DAC settings, DeltaMark remains reliably detectable, with TPR between 96.5% and 99.5%, and retains FMA between 56.5% and 76.1% despite DAC not being used during training. Its robustness is therefore not restricted to the exact EnCodec transformation used during optimization. AudioSeal achieves higher FMA than Delta-Mark at DAC q8 and q9, although its TPR remains lower. A pos-sible explanation is that AudioSeal is trained with EnCodec aug-mentation [3], which may promote transfer to related neural-codec distortions. This transfer does not extend to TiCodec-1g4r, under which DeltaMark detection is reduced to 6.9% at 0.2% FPR and no com-plete payload is recovered, while AudioSeal and WavMark produce no detections. Robustness to learned codec reconstruction is thus strongly codec- and method-dependent. 
+
+4.2. Robustness to standard waveform distortions DeltaMark AudioSeal WavMark Attack Setting FMA TPR/FPR FMA TPR/FPR FMA TPR/FPR – – 97.4 100/1.1 100 100/0 100 100/0 White noise 20 dB 61.5 99.7/15.1 34.8 52.0/0 1.5 6.6/0 Pink noise 20 dB 73.2 99.3/3.4 29.1 48.3/0 16.4 33.9/0 Gain 0.1× 58.8 99.9/3.3 35.3 87.1/0 98.9 99.8/0 Low-pass 0.75 kHz 36.6 95.4/0.2 3.0 99.5/0 71.8 88.1/0 High-pass 1.5 kHz 13.8 100/2.6 0.5 76.1/0 100 100/0 Resampling 32 kHz 97.4 100/1.1 100 100/0 100 100/0 Clipping thr. 0.5 97.1 100/1.1 100 100/0 100 100/0 Dropout frac. 0.2 91.6 100/1.2 100 100/0.1 97.1 99.1/0 Smoothing kernel 12 11.1 99.6/8.8 99.5 100/0 96.6 98.6/0 Echo delay 8000 83.1 100/3.7 99.8 99.8/0 64.0 92.0/0 
+
+Table 4 . Robustness to conventional waveform distortions, in %. Table 4 shows that DeltaMark retains broad robustness to conven-tional waveform distortions. Detection remains above 99% TPR for all attacks except low-pass filtering (95.4%). FMA is more attack-dependent, remaining high under resampling, clipping, dropout, and echo but dropping under noise, gain changes, and filtering. Overall, our formulation maintains broad robustness to conventional wave-form distortions alongside its resilience to neural codec resynthesis. No method dominates across all attacks. DeltaMark retains higher FMA under additive noise, although this is accompanied by substan-tially higher FPR, while WavMark performs better under gain and filtering, and both baselines are markedly stronger under smoothing. The gap between detection and payload recovery is especially clear under high-pass filtering (100% TPR vs. 13.8% FMA), while white noise causes the largest increase in FPR to 15.1%. This illustrates the value of reporting detection and exact message recovery separately. 
+
+4.3. Perceptual impact 
+
+Method SI-SNR ↑ PESQ ↑ STOI ↑ ViSQOL ↑
+
+DeltaMark 8.76 3.32 0.969 4.29 EnCodec (no RVQ) 9.07 3.89 0.978 4.36 AudioSeal 27.24 4.48 0.998 4.41 
+
+WavMark 33.71 4.26 0.997 4.39 
+
+Table 5 . Perceptual quality relative to the original audio. EnCodec (no RVQ) denotes the corresponding unwatermarked encoder– decoder reconstruction. Relative to the original waveform, DeltaMark exhibits lower ob-jective quality than the waveform-domain baselines (Table 5). This end-to-end comparison, however, confounds two sources of distor-tion, namely the frozen no-RVQ EnCodec reconstruction and the wa-termark itself. The unwatermarked reconstruction xc = D(E(x)) 
+
+alone yields an SI-SNR of 9.07 dB and a PESQ of 3.89, close to the values obtained for the watermarked output. To isolate the con-tribution of watermark insertion, we compare xw directly with xc.This carrier-referenced evaluation yields an SI-SNR of 15.52 dB, a PESQ of 3.73, a STOI of 0.985, and a ViSQOL of 4.58, indicating that a substantial part of the end-to-end degradation is attributable to the codec reconstruction rather than to the watermark. Future work should therefore prioritize a higher-fidelity latent carrier while pre-serving the observed robustness to neural codec resynthesis. 
+
+4.4. Structure of latent perturbations 
+
+Direction No RVQ EnCodec 24 kbps EnCodec 6 kbps Learned 0.528 0.458 0.375 
+
+Time shuffle 0.496 0.416 0.323 Channel shuffle 0.305 0.246 0.174 Gaussian 0.308 0.242 0.158 
+
+Table 6 . Preservation of learned and control latent perturbations through EnCodec. Entries report the mean projection ratio of the recovered perturbation onto its original direction. All controls are norm-matched to the learned perturbation. A neural codec is designed to discard latent components that are unnecessary for reconstruction. This means a watermark can only survive resynthesis if it occupies directions that the codec retains. Table 6 shows that an arbitrary perturbation is largely removed, as confirmed by the Gaussian control, whereas learned perturbations are preserved substantially more strongly, with mean projection ra-tios of 0.458 versus 0.242 at 24 kbps and 0.375 versus 0.158 at 6 kbps. The same separation is present in the no-RVQ cycle, sug-gesting that it is not caused solely by quantization. The embedder has thus identified directions that the codec treats as signal rather than noise, which explains the robustness observed without codec-aware training. The shuffled controls indicate which structure contributes to this preservation. Temporal shuffling retains most of the learned projec-tion, with ratios of 0.416 at 24 kbps and 0.323 at 6 kbps. In contrast, channel shuffling reduces preservation to 0.246 and 0.174, close to the Gaussian control. This indicates that the advantage of the learned perturbations depends more strongly on how perturbation energy is allocated across latent channels than on its temporal arrangement. 
+
+5. CONCLUSION 
+
+Our latent watermark formulation degrades more gradually than waveform-domain methods under repeated and low-bitrate EnCodec resynthesis, remains detectable under the unseen DAC codec, and re-tains broad robustness to conventional distortions. A substantial part of this robustness is present without codec-aware training, which strengthens rather than creates it. The perturbation analysis provides a mechanism for this behavior. Learned perturbations survive codec cycling considerably better than equal-norm random controls, and disrupting their channel organization is far more damaging than dis-rupting their temporal structure, indicating that robustness is linked to channel-structured latent directions that the codec preferentially preserves. Several limitations remain. The embedding and attack codec co-incide, so the EnCodec results represent a favorable case, and ro-bustness does not generalize to all neural codecs, as the failure un-der TiCodec shows. Perceptual quality is bounded by the frozen codec reconstruction and remains below that of the waveform base-lines. The content-independent design implies that clips carrying the same payload share the same perturbation, which is vulnerable to estimation and removal in an adversarial setting, so practical de-ployment would require keyed or content-dependent embedding. Fu-ture work should therefore address such adaptive latent embedding, higher-fidelity carriers, and the question of which codec representa-tions preserve watermark-aligned directions. Compliance with Ethical Standards 
+
+This study used the publicly available LibriSpeech corpus and in-volved no new human-subject data collection. No ethical approval was required. 
+
+# Acknowledgments 
+
+No funding was received for conducting this study. The authors have no relevant financial or nonfinancial interests to disclose. 
+
+6. REFERENCES 
+
+[1] T. Madiega, “Generative AI and watermarking,” Briefing PE 757.583, European Parliamentary Research Service, December 2023. [2] E. Salah, N. Zermi, A. Khaldi, and K. M. Redouane, “Survey of imperceptible and robust digital audio watermarking sys-tems,” Multimedia Tools and Applications , vol. 84, pp. 3635– 3681, 2025. [3] R. San Roman, P. Fernandez, H. Elsahar, A. Défossez, T. Furon, and T. Tran, “Proactive detection of voice cloning with localized watermarking,” in Proceedings of the 41st Inter-national Conference on Machine Learning . 2024, vol. 235 of 
+
+Proceedings of Machine Learning Research , pp. 43180–43196, PMLR. [4] G. Chen, Y. Wu, S. Liu, T. Liu, X. Du, and F. Wei, “Wav-Mark: Watermarking for audio generation,” arXiv preprint arXiv:2308.12770, 2023. [5] M. K. Singh, N. Takahashi, W.-H. Liao, and Y. Mitsufuji, “SilentCipher: Deep audio watermarking,” in Interspeech 2024 , 2024, pp. 2235–2239. [6] L. A. Lanzendörfer, K. Fearne, F. Grötschla, and R. Watten-hofer, “Multi-bit audio watermarking for music,” in NeurIPS 2025 Workshop on Artificial Intelligence for Music , 2025. [7] Y. Özer, W. Choi, J. Serrà, M. K. Singh, W.-H. Liao, and Y. Mitsufuji, “A comprehensive real-world assessment of audio watermarking algorithms: Will they survive neural codecs?,” in Interspeech 2025 , 2025, pp. 5113–5117. [8] H. Liu, M. Guo, Z. Jiang, L. Wang, and N. Z. Gong, “Au-dioMarkBench: Benchmarking robustness of audio water-marking,” in Advances in Neural Information Processing Sys-tems (NeurIPS) , 2024, vol. 37, pp. 52241–52265. [9] Y.-S. Chen, S.-Y. Lai, Y.-J. Tsou, Y.-C. Lin, B.-Y. Chen, Y.-N. Chen, H.-Y. Lee, and S.-T. Chen, “Latent-Mark: An audio watermark robust to neural codec compression,” in Proc. In-terspeech 2026 , 2026. [10] S. Ji, Z. Jiang, J. Zuo, M. Fang, Y. Chen, T. Jin, and Z. Zhao, “Speech watermarking with discrete intermediate representa-tions,” Proceedings of the AAAI Conference on Artificial Intel-ligence , vol. 39, no. 23, pp. 24239–24247, 2025. [11] T. Bui, S. Agarwal, N. Yu, and J. Collomosse, “RoSteALS: Robust steganography using autoencoder latent space,” in Pro-ceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW) , June 2023, pp. 933–942. [12] Z. Hu, H. Sun, L. Li, Y. Wang, L. Jin, C. Maple, and M. Li, “In-vestigating codec-internal latent audio watermarking for neural codec robustness,” arXiv preprint arXiv:2607.21132, 2026. [13] R. San Roman, P. Fernandez, A. Deleforge, Y. Adi, and R. Ser-izel, “Latent watermarking of audio generative models,” in 
+
+2025 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 2025, pp. 1–5. [14] A. Défossez, J. Copet, G. Synnaeve, and Y. Adi, “High fidelity neural audio compression,” Transactions on Machine Learning Research , 2023. [15] R. Kumar, P. Seetharaman, A. Luebs, I. Kumar, and K. Ku-mar, “High-fidelity audio compression with improved RVQ-GAN,” in Advances in Neural Information Processing Systems (NeurIPS) , 2023, vol. 36, pp. 27980–27993. [16] Y. Ren, T. Wang, J. Yi, L. Xu, J. Tao, C. Y. Zhang, and J. Zhou, “Fewer-token neural speech codec with time-invariant codes,” in 2024 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 2024, pp. 12737–12741. [17] D. Hendrycks and K. Gimpel, “Gaussian error linear units (GELUs),” arXiv preprint arXiv:1606.08415, 2016. [18] M. D. Swanson, B. Zhu, A. H. Tewfik, and L. Boney, “Ro-bust audio watermarking using perceptual masking,” Signal Processing , vol. 66, no. 3, pp. 337–355, 1998. [19] M. Moritz, T. Olán, and T. Virtanen, “Noise-to-mask ratio loss for deep neural network based audio watermarking,” in 2024 IEEE 5th International Symposium on the Internet of Sounds (IS2) , 2024, pp. 1–6. [20] V. Panayotov, G. Chen, D. Povey, and S. Khudanpur, “Lib-riSpeech: An ASR corpus based on public domain audio books,” in 2015 IEEE International Conference on Acous-tics, Speech and Signal Processing (ICASSP) , 2015, pp. 5206– 5210. [21] I. Loshchilov and F. Hutter, “Decoupled weight decay regular-ization,” in International Conference on Learning Representa-tions (ICLR) , 2019. [22] K. Brandenburg and G. Stoll, “ISO/MPEG-1 audio: A generic standard for coding of high-quality digital audio,” Journal of the Audio Engineering Society , vol. 42, no. 10, pp. 780–792, October 1994. [23] ISO/IEC, “Information technology—generic coding of moving pictures and associated audio information—part 7: Advanced audio coding (AAC),” International Standard ISO/IEC 13818-7:1997, International Organization for Standardization, 1997. [24] Y. Luo and N. Mesgarani, “TaSNet: Time-domain audio sep-aration network for real-time, single-channel speech separa-tion,” in 2018 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 2018, pp. 696–700. [25] A. W. Rix, J. G. Beerends, M. P. Hollier, and A. P. Hek-stra, “Perceptual evaluation of speech quality (PESQ)—a new method for speech quality assessment of telephone networks and codecs,” in 2001 IEEE International Conference on Acous-tics, Speech, and Signal Processing (ICASSP) , 2001, vol. 2, pp. 749–752. [26] C. H. Taal, R. C. Hendriks, R. Heusdens, and J. Jensen, “A short-time objective intelligibility measure for time-frequency weighted noisy speech,” in 2010 IEEE International Confer-ence on Acoustics, Speech and Signal Processing (ICASSP) ,2010, pp. 4214–4217. [27] A. Hines, J. Skoglund, A. C. Kokaram, and N. Harte, “ViSQOL: An objective speech quality model,” EURASIP Journal on Audio, Speech, and Music Processing , vol. 2015, no. 1, pp. 13, 2015.

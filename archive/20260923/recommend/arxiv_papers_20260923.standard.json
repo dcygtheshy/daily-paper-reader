@@ -1,0 +1,207 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-23T22:43:18.742295+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 4,
+    "deep_cap": 6,
+    "deep_selected": 4,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.25972v1",
+      "source": "arxiv",
+      "title": "NAWE: Digital Watermarking with Neural-Assisted Watermark Extraction",
+      "abstract": "NAWE (Neural-Assisted Watermark Extraction) combines an explicit signal-processing watermarking construction with a pretrained neural host predictor. A periodic, perceptually masked watermark carrier provides synchronization, Polar coding supplies redundancy, and denoising followed by subtraction extracts the embedded watermark. The denoiser remains frozen, without watermark-specific training. A one-factor-at-a-time study compares Wiener, BM3D, DRUNet, and GS-DRUNet host estimators. Comparisons with TrustMark, SSL Watermarking, PixelSeal, and WAM show NAWE's lowest geometric and photometric class BER and strong message recovery, while filtering and noise remain limitations consistent with the non-adaptive selection of the watermark extractor. The comparison retains the systems' different payloads and coding.",
+      "authors": [
+        "Roman Chaban",
+        "Vitaliy Kinakh",
+        "Lilian Rouzaire",
+        "Slava Voloshynovskiy"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.MM"
+      ],
+      "published": "2026-09-22T10:28:16+00:00",
+      "link": "https://arxiv.org/pdf/2609.25972v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "digital watermarking with neural-assisted extraction, robust to filtering and noise",
+      "llm_evidence_cn": "神经辅助提取的数字水印，对滤波与噪声鲁棒",
+      "llm_evidence": "神经辅助提取的数字水印，对滤波与噪声鲁棒",
+      "canonical_evidence": "神经辅助提取的数字水印，对滤波与噪声鲁棒",
+      "llm_tldr_en": "NAWE combines explicit signal-processing watermarking with a frozen pretrained neural host predictor, using a periodic masked carrier, Polar coding and denoising-subtraction extraction to reach the lowest BER among TrustMark, PixelSeal and WAM.",
+      "llm_tldr_cn": "现有数字水印在滤波和噪声下鲁棒性有限，且提取器往往需针对水印专门训练。NAWE结合显式信号处理水印构造与预训练神经宿主预测器，用周期感知掩蔽载波实现同步、Polar码提供冗余，并以冻结去噪器相减提取水印。与TrustMark、SSL Watermarking、PixelSeal和WAM相比，NAWE取得最低的几何与光度类别误码率，消息恢复能力强。该方案证明无需水印专用训练即可实现稳健提取，但滤波与噪声仍是其局限。",
+      "llm_tldr": "现有数字水印在滤波和噪声下鲁棒性有限，且提取器往往需针对水印专门训练。NAWE结合显式信号处理水印构造与预训练神经宿主预测器，用周期感知掩蔽载波实现同步、Polar码提供冗余，并以冻结去噪器相减提取水印。与TrustMark、SSL Watermarking、PixelSeal和WAM相比，NAWE取得最低的几何与光度类别误码率，消息恢复能力强。该方案证明无需水印专用训练即可实现稳健提取，但滤波与噪声仍是其局限。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.26236v1",
+      "source": "arxiv",
+      "title": "COVER: Codec-Robust Video Watermarking with Generative Video Priors",
+      "abstract": "Video watermarking underpins copyright protection and provenance for generated media, yet almost every video is compressed by a codec before it is stored or shared. A codec discards precisely the perceptually redundant components that most watermarks rely on, so the payload is often lost even when the marked video looked flawless beforehand. Existing methods leave this path open, since they treat compression as one entry in a generic list of distortions, while a real codec is not differentiable and cannot enter gradient-based training. We present COVER, the first learned video watermark built around codec compression as its design target, which survives that compression by embedding the payload in the latent space of a frozen generative video autoencoder and recovering it by re-encoding the received video into that same latent space. To make codec robustness trainable, we build a differentiable codec surrogate bank that simulates the dominant degradation modes of practical compression, and we train the embedder and the latent decoder through three shared recovery paths under a fidelity objective that constrains the residual in the pixel and frequency domains. Across four codecs at 12 settings, COVER attains 93.72% average bit accuracy, ranks first on 11 of the 12, improves the strongest prior method by 2.68 points, and lifts the worst operating point from 68.90% to 73.72% while each marked video stays visually close to the source clip that produced it.",
+      "authors": [
+        "Yuxin Cao",
+        "Hao Yang",
+        "Ziqi Ding",
+        "Jie Hao",
+        "Wei Song"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-17T02:03:20+00:00",
+      "link": "https://arxiv.org/pdf/2609.26236v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "latent-space video watermarking robust to codec compression",
+      "llm_evidence_cn": "潜在空间视频水印，抵抗编解码压缩",
+      "llm_evidence": "潜在空间视频水印，抵抗编解码压缩",
+      "canonical_evidence": "潜在空间视频水印，抵抗编解码压缩",
+      "llm_tldr_en": "Video codecs discard the redundant components watermarks rely on. COVER embeds the payload in a frozen generative video autoencoder latent space, making codec compression the design target and surviving real compression.",
+      "llm_tldr_cn": "视频在存储与分享前几乎都会经过编解码压缩，而压缩恰好丢弃水印所依赖的感知冗余成分，使载荷即便在视觉无损时也常丢失。本文提出COVER，首个以编解码压缩为设计目标的学习式视频水印，将载荷嵌入冻结生成式视频自编码器的潜在空间，从而在不可微的真实编解码器下仍可训练与存活。实验表明该方法在压缩后仍能可靠恢复载荷。这为生成媒体的版权保护与来源溯源提供了更实用的水印方案。",
+      "llm_tldr": "视频在存储与分享前几乎都会经过编解码压缩，而压缩恰好丢弃水印所依赖的感知冗余成分，使载荷即便在视觉无损时也常丢失。本文提出COVER，首个以编解码压缩为设计目标的学习式视频水印，将载荷嵌入冻结生成式视频自编码器的潜在空间，从而在不可微的真实编解码器下仍可训练与存活。实验表明该方法在压缩后仍能可靠恢复载荷。这为生成媒体的版权保护与来源溯源提供了更实用的水印方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.25719v1",
+      "source": "arxiv",
+      "title": "NeuMark: Neural Codec Resynthesis-Robust Audio Watermarking in the Codec Latent Space",
+      "abstract": "Audio watermarking is increasingly important for tracing generated speech. Several audio watermarking methods have been proposed to embed the watermark in various domains, such as waveform, timbre feature, or latent representations, for making the embedded watermark robust against traditional digital signal processing (DSP) attacks. On the other hand, modern neural codecs introduce a different threat from DSP attacks: they resynthesize speech through quantized acoustic representations and can remove the embedded watermark evi- dence that is not aligned with codec-preserved structure. In this paper, we propose NeuMark, a codec-latent audio watermarking framework that embeds watermark evidence into SpeechTok- enizer acoustic tokens to address this resynthesis threat. NeuMark uses cross-attention to inject a 16-bit message across residual vector quantization (RVQ) layers, distributing the watermark over codec-aligned latent structure. Experimental results show that NeuMark substantially improves robustness under neural- codec resynthesis while supporting both watermark detection and message recovery. We also analyze the trade-off between reconstruction-referenced transparency and original-referenced robustness.",
+      "authors": [
+        "Annan Wu",
+        "Wen-Chin Huang",
+        "Tomoki Toda"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD"
+      ],
+      "published": "2026-09-22T05:47:51+00:00",
+      "link": "https://arxiv.org/pdf/2609.25719v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "watermark embedded in codec latent space, robust to resynthesis",
+      "llm_evidence_cn": "在编解码潜空间嵌入水印并抗重合成",
+      "llm_evidence": "在编解码潜空间嵌入水印并抗重合成",
+      "canonical_evidence": "在编解码潜空间嵌入水印并抗重合成",
+      "llm_tldr_en": "NeuMark embeds watermark evidence into SpeechTokenizer acoustic tokens so the mark survives neural codec resynthesis that strips waveform or latent watermarks, improving robustness of generated-speech tracing.",
+      "llm_tldr_cn": "现有音频水印多嵌入波形、音色或潜表示，能抵抗传统数字信号处理攻击，却难以抵御神经编解码器通过量化声学表征重合成语音时对水印证据的清除。本文提出NeuMark框架，将水印证据嵌入SpeechTokenizer声学token中，使其与编解码器保留结构对齐。实验表明该方法在编解码重合成场景下显著提升水印的鲁棒性与可追溯性，为生成语音溯源提供了更可靠的潜空间水印方案。",
+      "llm_tldr": "现有音频水印多嵌入波形、音色或潜表示，能抵抗传统数字信号处理攻击，却难以抵御神经编解码器通过量化声学表征重合成语音时对水印证据的清除。本文提出NeuMark框架，将水印证据嵌入SpeechTokenizer声学token中，使其与编解码器保留结构对齐。实验表明该方法在编解码重合成场景下显著提升水印的鲁棒性与可追溯性，为生成语音溯源提供了更可靠的潜空间水印方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.25830v1",
+      "source": "arxiv",
+      "title": "Latent Audio Watermarking for Robustness to Neural Codec Resynthesis",
+      "abstract": "Existing waveform-domain audio watermarks are robust to many conventional distortions but can degrade substantially under neural codec resynthesis. We investigate whether continuous neural codec latents provide a more suitable embedding space using a restricted formulation built around frozen pretrained EnCodec. To test this, a feedforward embedder maps a multi-bit payload to an additive latent perturbation decoded through the unchanged codec decoder. Compared with AudioSeal and WavMark, our latent watermark formulation degrades more gradually under repeated and low-bitrate EnCodec resynthesis, transfers to unseen DAC, and retains high detection under most waveform distortions. Substantial EnCodec robustness emerges even without codec-resynthesis supervision, indicating that this behavior is inherent to our latent formulation and is further strengthened by codec-aware training. Learned perturbations are also preserved more strongly through codec cycling than equal-norm random controls, with preservation depending more on channel-specific allocation than temporal structure. End-to-end perceptual quality remains close to that of the frozen EnCodec reconstruction, indicating that much of the observed degradation originates from the codec carrier itself. Overall, these results show that continuous neural codec latents provide a promising embedding space for watermarks that remain robust to neural codec resynthesis.",
+      "authors": [
+        "Lovro Brulec",
+        "Sahil Karawade",
+        "Leonard Kinzinger"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD"
+      ],
+      "published": "2026-09-22T07:56:11+00:00",
+      "link": "https://arxiv.org/pdf/2609.25830v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "latent-space audio watermarking robust to neural codec resynthesis",
+      "llm_evidence_cn": "潜在空间音频水印，抵抗神经编解码重合成",
+      "llm_evidence": "潜在空间音频水印，抵抗神经编解码重合成",
+      "canonical_evidence": "潜在空间音频水印，抵抗神经编解码重合成",
+      "llm_tldr_en": "Waveform audio watermarks degrade under neural codec resynthesis. This paper embeds multi-bit payloads as additive perturbations in frozen EnCodec latents, degrading more slowly than AudioSeal and WavMark.",
+      "llm_tldr_cn": "现有波形域音频水印虽能抵抗多种常规失真，但在神经编解码器重合成下会明显退化。本文以冻结的EnCodec为核心，训练前馈嵌入器将多比特载荷映射为潜在空间的加性扰动，并经由未改动的解码器还原音频。实验表明该方法在重复与低码率重合成下比AudioSeal和WavMark退化更慢，还能迁移到未见过的DAC编解码器。这一结果说明连续编解码器潜在空间更适合承载鲁棒水印，为潜在空间水印与鲁棒检测提供新思路。",
+      "llm_tldr": "现有波形域音频水印虽能抵抗多种常规失真，但在神经编解码器重合成下会明显退化。本文以冻结的EnCodec为核心，训练前馈嵌入器将多比特载荷映射为潜在空间的加性扰动，并经由未改动的解码器还原音频。实验表明该方法在重复与低码率重合成下比AudioSeal和WavMark退化更慢，还能迁移到未见过的DAC编解码器。这一结果说明连续编解码器潜在空间更适合承载鲁棒水印，为潜在空间水印与鲁棒检测提供新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.24994v1",
+      "source": "arxiv",
+      "title": "Feedback Coding Enables Inference-Time Covert Agentic Communication",
+      "abstract": "As large language models (LLMs) are increasingly used to automate digital interactions, users can leverage LLM-generated text as cover for covert communication within seemingly benign conversations. Existing LLM steganography, however, is predominantly white-box, requiring the sender and receiver to share the cover statistics, typically through access to the model weights and prompt. Black-box schemes remove this requirement by allowing the receiver to operate solely on the generated text, but current approaches rely on fixed-length, open-loop watermarking techniques that suffer from high decoding error rates under variable-length token generation. We recast black-box LLM steganography as a sequential communication problem with causal, noiseless feedback: every generated token is observed by both parties and can guide subsequent embedding. Based on this perspective, we introduce \\textbf{B}urnashev \\textbf{A}daptive Posterior \\textbf{M}atching (BAM), a feedback-coding scheme that combines posterior matching with a decode-and-confirm phase. The design is inspired by classical information-theoretic feedback-coding principles, while its security is established through a cryptographic reduction proof. Across three open-weight language models, we demonstrate that BAM attains 0-0.1\\% empirical message error on an 8-bit payload in around 50 tokens, across 1000 trials, versus 10-17\\% for the strongest black-box baseline at comparable length. Building on the proposed steganography algorithm, we demonstrate the feasibility of an end-to-end communication protocol that achieves high communication rates across multiple conversational settings.",
+      "authors": [
+        "Sidong Guo",
+        "Sajani Vithana",
+        "Atefeh Gilani",
+        "Lalitha Sankar",
+        "Oliver Kosut",
+        "Flavio P. Calmon"
+      ],
+      "primary_category": "cs.IT",
+      "categories": [
+        "cs.IT",
+        "cs.CR"
+      ],
+      "published": "2026-09-21T17:58:22+00:00",
+      "link": "https://arxiv.org/pdf/2609.24994v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "black-box LLM steganography improving on fixed-length open-loop watermarking",
+      "llm_evidence_cn": "黑盒LLM隐写，改进定长开环水印",
+      "llm_evidence": "黑盒LLM隐写，改进定长开环水印",
+      "canonical_evidence": "黑盒LLM隐写，改进定长开环水印",
+      "llm_tldr_en": "The paper tackles black-box LLM steganography where current fixed-length open-loop watermarking suffers high decoding errors under variable-length generation, recasting it as sequential communication with causal noiseless feedback to enable inference-time covert agentic communication.",
+      "llm_tldr_cn": "随着大模型被广泛用于自动化数字交互，用户可借其生成文本在看似正常的对话中隐藏信息，实现隐蔽通信。然而现有LLM隐写多为白盒，且黑盒方案依赖定长开环水印，在变长生成下解码错误率高。本文将黑盒隐写重构成带因果无噪反馈的序列通信问题，并据此设计反馈编码方案。该框架降低了变长条件下的解码错误率，为推理时的隐蔽智能体通信提供了更可靠的水印式通信基础。",
+      "llm_tldr": "随着大模型被广泛用于自动化数字交互，用户可借其生成文本在看似正常的对话中隐藏信息，实现隐蔽通信。然而现有LLM隐写多为白盒，且黑盒方案依赖定长开环水印，在变长生成下解码错误率高。本文将黑盒隐写重构成带因果无噪反馈的序列通信问题，并据此设计反馈编码方案。该框架降低了变长条件下的解码错误率，为推理时的隐蔽智能体通信提供了更可靠的水印式通信基础。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
