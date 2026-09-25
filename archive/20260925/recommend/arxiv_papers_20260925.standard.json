@@ -1,0 +1,178 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-25T22:02:23.547952+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2609.29737v1",
+      "source": "arxiv",
+      "title": "No Time to Collapse: Unlocking Robustness and Multiplexed Capacity in Frozen Audio Watermarkers",
+      "abstract": "Modern neural audio watermarking systems typically embed a message repeatedly across time and then collapse the resulting temporal evidence into a single payload using averaging, voting, or another fixed aggregation rule. We argue that this temporal collapse limits both robustness and the recovery of multiple payloads, and that the limitation can be addressed without retraining the underlying watermarker. We freeze a pretrained watermarker's encoder and detector and train only a low-latency Conformer-based decoder. The decoder consumes the detector's temporal soft outputs, which a system-specific adapter pools into a sequence of window-level representations, and predicts the embedded message. On three frozen watermarkers (AURA, AudioSeal, and WavMark), the learned decoder improves recovery of attacked messages and yields higher detection AUROC point estimates on all three. Under controlled full- and partial-coverage multiplexing, it improves joint-exact recovery of two alternating payload words by 9.7-48.0, 6.9-17.3, and 8.2-14.2 percentage points, respectively, under one to three chained attacks on feasible clips.",
+      "authors": [
+        "Xuanye Wang",
+        "Linxi Li",
+        "Yechen Wang",
+        "Liwei Jin",
+        "Qianwei Guo",
+        "Carsten Maple"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD"
+      ],
+      "published": "2026-09-24T12:55:05+00:00",
+      "link": "https://arxiv.org/pdf/2609.29737v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "robust audio watermarking improving payload recovery via frozen watermarker decoder",
+      "llm_evidence_cn": "通过冻结水印器解码器提升音频水印鲁棒性与多载荷容量",
+      "llm_evidence": "通过冻结水印器解码器提升音频水印鲁棒性与多载荷容量",
+      "canonical_evidence": "通过冻结水印器解码器提升音频水印鲁棒性与多载荷容量",
+      "llm_tldr_en": "Freezing a pretrained audio watermarker and training only a Conformer decoder over temporal soft outputs improves robustness and multiplexed payload capacity without retraining, across three frozen watermarkers.",
+      "llm_tldr_cn": "现有神经音频水印把跨时间重复嵌入的信息用平均或投票坍缩成单一载荷，既限制鲁棒性也限制多载荷恢复。本文冻结预训练水印器的编码器与检测器，只训练一个低延迟Conformer解码器，对检测器的时间软输出进行池化并预测消息。在AURA等三个冻结水印器上的实验显示鲁棒性与多路容量同时提升，且无需重训水印器。该方案为既有水印系统提供了即插即用的增强路径。",
+      "llm_tldr": "现有神经音频水印把跨时间重复嵌入的信息用平均或投票坍缩成单一载荷，既限制鲁棒性也限制多载荷恢复。本文冻结预训练水印器的编码器与检测器，只训练一个低延迟Conformer解码器，对检测器的时间软输出进行池化并预测消息。在AURA等三个冻结水印器上的实验显示鲁棒性与多路容量同时提升，且无需重训水印器。该方案为既有水印系统提供了即插即用的增强路径。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.29040v1",
+      "source": "arxiv",
+      "title": "The Vulnerability of Neural Audio Watermarks under Speech Enhancement",
+      "abstract": "Neural audio watermarks are increasingly deployed in commercial speech generation systems to make AI-generated speech traceable, yet their robustness has been studied mainly under conventional signal distortions. Since a watermark can be regarded as imperceptible noise added to the speech signal, a natural question is whether speech enhancement (SE), as a denoising model, can remove it. In this paper, we cascade Gaussian noise with SE models as a black-box watermark removal attack, covering both discriminative and generative SE paradigms, against six neural watermarks: AudioSeal, WavMark, SilentCipher, Timbre, Perth, and AlignMark. Experimental results show that the proposed attack significantly outperforms existing neural re-synthesis methods in watermark removal. In particular, we find that generative SE, which reconstructs the harmonic regions of speech while denoising, is highly destructive to watermarks. These findings show that SE poses a serious threat to current audio watermarking methods, and we call for SE-aware robustness evaluation in watermark design.",
+      "authors": [
+        "Xincong Zhong",
+        "Shengyao Wang",
+        "Lingfeng Yao",
+        "Yihang Bao",
+        "Jinze Yu",
+        "Miao Pan",
+        "Jiang Liu"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.CR"
+      ],
+      "published": "2026-09-24T05:17:12+00:00",
+      "link": "https://arxiv.org/pdf/2609.29040v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "watermark removal attack and robustness of neural audio watermarks",
+      "llm_evidence_cn": "神经音频水印的移除攻击与鲁棒性",
+      "llm_evidence": "神经音频水印的移除攻击与鲁棒性",
+      "canonical_evidence": "神经音频水印的移除攻击与鲁棒性",
+      "llm_tldr_en": "Neural audio watermarks make AI speech traceable, yet robustness is tested only under conventional distortions; cascading Gaussian noise with speech-enhancement models as a black-box removal attack on six watermarks beats neural re-synthesis.",
+      "llm_tldr_cn": "神经音频水印常用于让AI生成语音可追溯，但其鲁棒性此前主要在传统信号失真下评估。本文把高斯噪声与判别式、生成式语音增强模型级联，作为黑盒水印移除攻击，测试AudioSeal、WavMark等六种水印。结果显示该攻击显著优于神经重合成方法，说明语音增强可作为强去水印手段，暴露了现有音频水印在真实后处理下的脆弱性。",
+      "llm_tldr": "神经音频水印常用于让AI生成语音可追溯，但其鲁棒性此前主要在传统信号失真下评估。本文把高斯噪声与判别式、生成式语音增强模型级联，作为黑盒水印移除攻击，测试AudioSeal、WavMark等六种水印。结果显示该攻击显著优于神经重合成方法，说明语音增强可作为强去水印手段，暴露了现有音频水印在真实后处理下的脆弱性。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.24575v1",
+      "source": "arxiv",
+      "title": "Single-Fragment Forensic Coding via Multidimensional Cyclically Permutable Codes",
+      "abstract": "The proliferation of 3D printing raises new security and forensic challenges, including the risk of unauthorized fabrication of untraceable firearms and other regulated items. To enable traceability, we consider \\emph{single-fragment forensic coding}, in which a unique identifier is embedded into a printed object and must be recoverable from any fragment containing an axis-parallel box of prescribed minimum volume and coordinatewise thickness, even in the presence of substitution errors. To address this problem, we introduce and study multidimensional cyclically permutable codes (CPCs), for which every cyclic translate uniquely determines both the original codeword and the applied translation. By applying periodic lifting to a CPC base array, every complete period contained in a fragment corresponds to an unknown cyclic translate of a codeword, thereby reducing the forensic alignment problem to multidimensional cyclic synchronization.   We establish theoretical bounds and develop explicit constructions in both the noiseless and substitution-error settings. For fixed dimension $d$ and alphabet size $q$, we obtain the optimal redundancy $d\\log_q k+o(1)$ for noiseless $d$-dimensional CPCs of side length $k$. For fixed $t$, the optimal redundancy of $t$-substitution-correcting $d$-dimensional CPCs lies between $(t+1)d\\log_q k+O(1)$ and $(2t+1)d\\log_q k+O(1)$. For binary alphabets and $d\\geq2$, an explicit robust row-anchor construction achieves $(t+1)d\\log_2 k+O(\\log\\log k)$ redundancy, matching the optimal leading term. In the thick-fragment regime $h=cM^{1/d}$, where $M$ and $h$ lower-bound the volume and the side lengths of a box contained in the fragment, periodic lifting yields single-fragment forensic codes of rate $c^d-o(1)$. In particular, the rate approaches one when $c=1-o(1)$.",
+      "authors": [
+        "Yubo Sun",
+        "Yijun Zhang",
+        "Gennian Ge"
+      ],
+      "primary_category": "cs.IT",
+      "categories": [
+        "cs.IT"
+      ],
+      "published": "2026-09-21T13:42:13+00:00",
+      "link": "https://arxiv.org/pdf/2609.24575v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "embedding recoverable identifier robust to substitution errors",
+      "llm_evidence_cn": "嵌入可恢复标识并抗替换错误，类水印取证编码",
+      "llm_evidence": "嵌入可恢复标识并抗替换错误，类水印取证编码",
+      "canonical_evidence": "嵌入可恢复标识并抗替换错误，类水印取证编码",
+      "llm_tldr_en": "This paper proposes single-fragment forensic coding, embedding a unique identifier into printed objects recoverable from any qualifying fragment, via multidimensional cyclically permutable codes robust to substitution errors.",
+      "llm_tldr_cn": "针对3D打印带来的未授权制造与溯源难题，论文提出单碎片取证编码，将唯一标识嵌入打印物体，并可从任意满足最小体积与厚度约束的碎片恢复，且容忍替换错误。作者引入多维循环可置换码，使每个循环平移唯一确定原始码字与平移量。该编码在替换错误下仍可恢复标识，为物体取证与可追溯性提供稳健方案。",
+      "llm_tldr": "针对3D打印带来的未授权制造与溯源难题，论文提出单碎片取证编码，将唯一标识嵌入打印物体，并可从任意满足最小体积与厚度约束的碎片恢复，且容忍替换错误。作者引入多维循环可置换码，使每个循环平移唯一确定原始码字与平移量。该编码在替换错误下仍可恢复标识，为物体取证与可追溯性提供稳健方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.29264v1",
+      "source": "arxiv",
+      "title": "TP-CRIV: A Framework for Third-Party Challenge-Response Identity Verification of AI Models",
+      "abstract": "Artificial intelligence (AI) models are increasingly deployed through remote services, making model misappropriation a growing concern. Existing approaches, including watermarking, fingerprinting, and model similarity analysis, primarily rely on predefined evidence or direct behavioral comparison and do not explicitly evaluate whether the claimant currently possesses and can utilize model-dependent information relevant to the claimed model identity.   In this paper, we propose Third-Party Challenge-Response Identity Verification (TP-CRIV) for AI models. TP-CRIV targets a third-party verification setting in which the verifier has neither white-box nor API access to the claimant's model, can interact with the suspicious deployed service only through its ordinary black-box inference interface, and does not require protocol-specific cooperation from the service provider. Under these constraints, the framework enables the verifier to obtain empirical evidence as to whether the claimant locally possesses a model satisfying a predeclared identity relative to the deployed model. Verification is conducted under fresh, previously undisclosed requirements and network isolation, so that the demonstrated capability cannot rely on online external assistance after challenge disclosure. The resulting evidence is interpreted relative to independently specified and calibrated matching and non-matching operating situations and is statistical rather than cryptographic. We instantiate TP-CRIV for CNN image classifiers using probability-control-based witness generation. Experiments on ten ImageNet-pretrained TorchVision models demonstrate clear same/cross-model separation and finite-challenge verification using independently calibrated thresholds.",
+      "authors": [
+        "Teruki Sano",
+        "Minoru Kuribayashi",
+        "Masao Sakai",
+        "Shuji Isobe",
+        "Eisuke Koizumi",
+        "Zhang Zhang",
+        "Satoru Matsumoto"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-09-24T09:03:48+00:00",
+      "link": "https://arxiv.org/pdf/2609.29264v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "model identity verification framework complementing watermarking and fingerprinting",
+      "llm_evidence_cn": "面向模型身份验证的挑战-响应框架，补充水印与指纹方法",
+      "llm_evidence": "面向模型身份验证的挑战-响应框架，补充水印与指纹方法",
+      "canonical_evidence": "面向模型身份验证的挑战-响应框架，补充水印与指纹方法",
+      "llm_tldr_en": "TP-CRIV is a third-party challenge-response framework that verifies AI model identity by testing whether a claimant can use model-dependent information, addressing gaps in watermarking and fingerprinting verification.",
+      "llm_tldr_cn": "AI模型经远程服务部署使模型盗用风险上升，但现有水印、指纹与相似度方法依赖预定义证据或直接行为比较，无法判断声称方是否真正掌握目标模型信息。本文提出第三方挑战-响应身份验证框架TP-CRIV，在验证者既无白盒也无API访问的条件下与可疑服务交互验证。该框架显式评估声称方对模型相关信息的掌握与使用能力。它为AI模型身份与所有权验证提供了可第三方执行的验证范式。",
+      "llm_tldr": "AI模型经远程服务部署使模型盗用风险上升，但现有水印、指纹与相似度方法依赖预定义证据或直接行为比较，无法判断声称方是否真正掌握目标模型信息。本文提出第三方挑战-响应身份验证框架TP-CRIV，在验证者既无白盒也无API访问的条件下与可疑服务交互验证。该框架显式评估声称方对模型相关信息的掌握与使用能力。它为AI模型身份与所有权验证提供了可第三方执行的验证范式。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
