@@ -1,0 +1,1323 @@
+Title: AuxMark: Defending Against Unauthorized Agent Distillation via Auxiliary Behavioral Watermarking
+
+URL Source: https://arxiv.org/pdf/2609.34597v1
+
+Published Time: Tue, 29 Sep 2026 03:14:54 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+Preprint 
+
+# AUX MARK : DEFENDING AGAINST UNAUTHORIZED 
+
+# AGENT DISTILLATION VIA AUXILIARY BEHAVIORAL 
+
+# WATERMARKING 
+
+Yiqing Feng 1, Haozhe Feng 2, Shunan Shang 1, Xiaoyu Zhang 1, Jian Lou 3,Haodong Zhao 4, Mingxun Zhou 5∗
+
+> 1
+
+Xidian University, 2Zhejiang University 
+
+> 3
+
+Sun Yat-sen University, 4Shanghai Jiao Tong University, 5HKUST 
+
+## ABSTRACT 
+
+Large language model agents can acquire complex capabilities through multi-step interaction and tool use, but their trajectories can also be illegally collected to dis-till student agents. However, existing watermarking methods either do not fit the structured and interactive nature of agent environments or lack reliable effective-ness across tasks and model architectures. We introduce AuxMark , a behavioral watermarking framework for tracing unauthorized agent distillation. AuxMark 
+
+dynamically inserts safe, non-essential auxiliary action into teacher trajectories, and stores the associated contexts as private evidence cards. To audit a suspicious student model, AuxMark constructs paired real and fake probes from these cards and applies a card-level sign test. This black-box protocol supports both model-level detection and trace-level attribution. Across three agent benchmarks, two teacher agents, and four student architectures, AuxMark detects all 24 distilled models with zero false positives on 48 clean models. It also preserves task utility and remains effective against data flooding, paraphrasing, truncation, and adaptive cleaning attacks. Our code will be released at this URL. 
+
+## 1 INTRODUCTION 
+
+Large language model (LLM) agents can solve complex tasks by interacting with external envi-ronments and using tools (Anthropic, 2026; Team et al., 2025; Xu et al., 2026a). However, train-ing models with these advanced skills requires huge costs and computing resources. For example, training frontier models like OpenAI’s GPT requires tens of thousands of GPUs and costs tens of millions of dollars Singh et al. (2025); Sajadieh et al. (2026). Agent distillation is a cheap way to significantly improve model performance Liu et al. (2026b); Kang et al. (2026), so it has become widely used. Competitors systematically query a powerful teacher agent to collect high-quality in-teraction trajectories, using them to fine-tune their own student models to avoid the high costs of training from scratch. This unauthorized knowledge transfer severely harms the intellectual prop-erty of model developers. This threat is not just a theory; leading AI companies (e.g., OpenAI, Google) have already found massive illegal distillation behaviors in their traffic OpenAI (2026); Group (2026); Anthropic (2026). Furthermore, recent industry disputes and studies have exposed widespread trajectory copying, showing that many models display “behavioral homogenization” that closely mimics the proprietary teachers Yang et al. (2026a). To protect model intellectual property, several methods have been proposed, but they face different critical limitations when applied to agent distillation. First, antidistillation watermarks designed for language models modify text tokens or reasoning traces Savani et al. (2026); Xu et al. (2026b); Ma et al. (2026), which breaks the strict format required for agent tool calls. Second, existing agent antidistillation watermarking schemes usually assume that the teacher and student share the same base model, resulting in poor performance during cross-architecture distillation Wang et al. (2026). Third, unwatermarked fingerprinting methods based on execution similarity Yang et al. (2026a); Rawat et al. (2026) are unreliable, because high behavioral similarity often comes from the standard 
+
+> ∗
+
+Corresponding author. 
+
+1arXiv:2609.34597v1 [cs.CR] 28 Sep 2026 Preprint solutions of the tasks rather than actual distillation. Therefore, finding a reliable way to trace and prove this unauthorized distillation through black-box interactions has become an urgent challenge. In this work, we propose AuxMark , a behavioral watermarking framework to trace agent distilla-tion. Our main insight stems from the multi-step nature of agent interactions and the behavioral homogenization during distillation. Instead of modifying the core actions required for the task, 
+
+AuxMark injects extra auxiliary actions into the trajectory and saves these interaction as private evidence. To align with deployments in the real world, we introduce a more practical threat model: model owners can identify suspicious distillation behaviors via traffic monitoring (existing stud-ies show that such traffic anomaly detection can achieve around 90% recall with extremely low false positive rates Liu et al. (2026c); Huh et al. (2025); Chiang et al. (2024)), and extract the cor-responding evidence for targeted verification. For this verification, we introduce a paired-probe detection protocol. It compares the suspect model’s responses on real probes built from the evi-dence against fake probes where the core actions are semantically altered. This strict comparison effectively isolates the watermarked behavior from natural contextual choices. Empirically, our eval-uation demonstrates that AuxMark achieves highly reliable detection while preserving the agent’s task utility. Across three agent benchmarks, two teacher models, and four student architectures, our method successfully detects all 24 distilled student models with zero false positives. Furthermore, 
+
+AuxMark remains highly robust against various adversarial attacks. 
+
+Key contributions of this paper include: 
+
+• We formulate a highly practical threat model for agent distillation. By combining sus-picious target identification via traffic monitoring with targeted verification using private evidence, this model provides a closed-loop solution for tracing intellectual property theft in the real world scenarios. • We design a novel behavioral watermarking framework and a paired-probe detection pro-tocol. This architecture exploits multi-step interactions to embed auxiliary actions in real time, and provides strong statistical guarantees for verification and trace-level attribution by comparing responses on real and fake probes alongside a card-level sign test. • We conduct comprehensive experiments across multiple benchmarks and model architec-tures. The results demonstrate that AuxMark achieves a 100% detection rate and zero false positives while preserving the agent’s task utility, and exhibits strong robustness against various data-processing operations and adaptive cleaning attacks. 
+
+## 2 PROBLEM FORMULATION AND PRELIMINARIES 
+
+2.1 AGENT DISTILLATION 
+
+LLM agent interacts with an external environment to solve a user task through multiple rounds of reasoning and tool use Yao et al. (2022); Qin et al. (2024). An agent trajectory records intermediate reasoning and tool-use behaviors. Given a user query q, an LLM agent M interacts with the envi-ronment over T steps. At each step i, based on the query q and the interaction history hi, the agent generates a thought ti and an action ai = ( fi, p i), where fi denotes the selected tool and pi denotes its parameters. The environment executes the action and returns an observation oi. A complete interaction trajectory τ is formally represented as: 
+
+τ = {(ti, a i, o i)}Ti=1 , where (ti, a i) = M(q, h i). (1) Agent distillation Kang et al. (2026); Luo et al. (2026); Liu et al. (2026b) aims to transfer such interaction behaviors from a powerful teacher agent Mt to a student agent Ms. The teacher first generates a set of N trajectories (qj , τ j )Nj=1 . In agent distillation, we consider hard distillation based on supervised fine-tuning Ouyang et al. (2022). Through this process, the student can learn the teacher’s reasoning and tool-use behaviors from its interaction trajectories. The student model is trained on (qj , τ j )Nj=1 , where previous thoughts, actions, and observations are used as context, while the teacher’s thoughts and actions are used as supervision Kang et al. (2026); Luo et al. (2026). 2.2 MODEL WATERMARKING 
+
+To protect the intellectual property of a teacher agent Mt, the model owner employs a secret key 
+
+k to embed watermark signals in real time during the generation of trajectories τ . After attackers query the model to obtain a watermarked dataset D, they attempts to clone the teacher’s capabilities 2Preprint by training an base model Mc on D via a distillation algorithm to get the student model Ms.Then model owner audits suspicious student models using a private probe set Pk. A practical anti-distillation watermark should satisfy the following three requirements: 
+
+Effectiveness. An effective watermark must reliably transfer to the student model during distillation while maintaining a minimal false positive rate on independent models. During verification, the owner queries the suspicious model using the probe set Pk and computes a p-value to evaluate the watermark signal. A distilled student model Ms should exhibit statistically significant evidence of the watermark, satisfying p−value < p , whereas a clean model Mc should yield p−value > p .Traffic Analysis        
+
+> Results 𝑀 𝑠 Model Owner
+> Suspicious Set 𝑆 Probes
+> Detection
+> Training Set 𝐷
+> Attacker
+> 𝐷
+> Distilation
+> Teacher Agent 𝑀 𝑡 Student Model 𝑀 s
+
+Figure 1: Overview of the access and threat model. The attacker distills a student model from trajectories, while the model owner identifies sus-picious traffic and audits the student. 
+
+Harmlessness. The real-time watermarking mechanism should not degrade the normal op-eration of the teacher agent Mt. This entails two main aspects: task utility and inference ef-ficiency. Specifically, the watermarked teacher model must maintain a success rate on the same tasks comparable to its unwatermarked coun-terpart, and the watermark embedding process should not significantly inflate the length or computational cost of the generated trajecto-ries. 
+
+Robustness. The watermark must resist data modifications applied by attackers. Even if the attacker alters the dataset through data flood-ing, semantic rewriting, truncation, and adap-tive cleaning attacks. the watermark signal should remain detectable in the student model. 2.3 ACCESS AND THREAT MODEL 
+
+We formulate a two-party threat model comprising a model owner and an attacker as shown in Figure 1. The owner deploys a teacher agent Mt, while the attacker aims to distill a student model 
+
+Ms using a training dataset D collected from the teacher agent. 
+
+Model Owner. The owner deploys and fully controls a teacher agent Mt (e.g., Codex Singh et al. (2025)) as a service. To protect the model, the owner embeds watermarks into the output trajectories in real time. Since data scraping has specific patterns, the owner monitors server-side features Huh et al. (2025); Chiang et al. (2024); Liu et al. (2026c). Any interactions showing such signs are recorded to build a suspicious trajectory set S. To avoid missing potential distillation traces, the owner conservatively records all suspicious traces into S and the owner cannot determine which traces in S were actually used for distillation. When testing the deployed student model Ms, the owner only has black box access and can fully control the API inputs to verify the watermark. 
+
+Attacker. To bypass the high training costs, the attacker aims to clone the capabilities of the teacher 
+
+Mt. Operating under strict black-box access, the attacker systematically queries the teacher agent 
+
+Mt to harvest complete multi-step interaction trajectories and this large-scale automated querying leaves identifiable server-side traffic patterns that can be captured by the model owner. The attacker may then preprocess these collected trajectories through operations such as sanitization, rewriting, truncation, or mixing with other data, forming the final distillation dataset D. Finally, the attacker uses D to distill the student model Ms and deploys it as a black-box API. 
+
+## 3 WATERMARK CONSTRUCTION 
+
+3.1 OVERVIEW 
+
+During agent distillation, the distilled students and their teachers share similar interaction trajec-tories Yang et al. (2026a); Lyu et al. (2025); Gudibande et al. (2023). Based on this property, we proposed a watermark scheme AuxMark as illustrated in Figure 2. Firstly, the owner embeds the watermark by dynamically inserting auxiliary(aux) behaviors into the teacher’s trajectories and pri-vately saves evidence. Once suspicious traffic is identified, the corresponding records are extracted to form an evidence pool in Section 3.2. Next, the owner uses this evidence to construct paired real and fake probes, applying statistical tests to verify if the suspect model reproduces the watermark in 3Preprint Section 3.3. Finally, trace-level attribution in Section 3.4 to evaluate which suspicious trajectories are most likely to have been used in the attacker’s training set. 3.2 WATERMARK EMBEDDING ALGORITHM 𝑎 𝚌𝚘𝚛𝚎 𝑎 𝚌𝚘𝚛𝚎 𝑎 𝚌𝚘𝚛𝚎           
+
+> 𝑎 𝚌𝚘𝚛𝚎
+> 𝑎 𝚌𝚘𝚛𝚎 𝑎 𝚌𝚘𝚛𝚎
+> 𝑎 𝚊𝚞𝚡
+> 𝑎 𝚌𝚘𝚛𝚎 𝑎 𝚊𝚞𝚡 𝑎 𝚊𝚞𝚡
+> 𝑎 𝚊𝚞𝚡 𝑎 𝚌𝚘𝚛𝚎
+> Teacher Agent 𝑀 𝑡
+> Get details >Get usage >Get details (Aux)> Enable roaming
+> Evidence Pool 𝐶 𝑆
+> Watermarked Traces 𝜏
+> Traffic Analysis
+
+Phase 1    
+
+> Fake probes 𝑃 𝚏𝚊𝚔𝚎 𝐶 𝑆
+> 𝑀 𝑡
+> Real probes 𝑃 𝚛𝚎𝚊𝚕
+> Student Model 𝑀 s
+> Results
+
+Phase 2 
+
+Figure 2: Overview of AuxMark . Phase 1: the owner embeds the watermark by inserting aux behaviors; Phase 2: the owner retrieves the pri-vate evidence to construct paired real and fake probes and verify a suspect student model. denotes watermarked thing. Unlike previous watermarking methods that di-rectly change the generated text or the teacher model’s actions Wang et al. (2026); An et al. (2026), AuxMark embeds watermarks by adding extra, non-essential auxiliary actions into the agent’s trajectory. By doing this, AuxMark 
+
+keeps the teacher model’s performance high while creating strong evidence for later tracing. Also, to stay hidden, the added aux actions look and act exactly like normal tool calls: they use valid tools and bind strictly to normal parame-ter values derived from the interaction history. Based on the threat model described in Section 2, the owner can subsequently identify suspicious traces from the API traffic and export their pri-vately saved watermark evidence for later veri-fication. The entire embedding process consists of three main stages shown in Figure8: safe tool classification, dynamic scheduling and candidate generation, and private evidence retention. 
+
+Safe tool classification. To ensure aux actions will not change the environment state, AuxMark 
+
+applies a conservative safety policy to the tool schema F of trace τ . Since the system operates as an agent-as-a-service Li et al. (2026), this safety evaluation is performed in advance and cached to avoid real-time latency. An offline safety model 
+
+Msafe evaluates the tool schema F and maps each tool f ∈ F to a safety label as shown in Eq.2: 
+
+Msafe (f ) = 
+
+safe , if f is read-only, 
+
+unsafe , otherwise. (2) The system exclusively permits tools from the valid subset Fsafe = {f ∈ F | M safe (f ) = safe },categorically rejecting any action that changes the environment state or influences the task process. 
+
+Dynamic scheduling. Having established the safe tool subset Fsafe , the system must determine when to invoke these aux action during the interaction as the watermarking. To make watermark positions unpredictable, AuxMark dynamically evaluates whether to inject an aux action at step t
+
+immediately after the core action at−1 
+
+> core
+
+finishes. If skipped, the system waits and checks again after the next core action. For each trajectory τ named as id τ of an account a, the system keeps a release probability pt and a remaining budget bt at step t. Immediately after the core action at−1 
+
+> core
+
+finishes, the system uses a cryptographic hash function Hash (·) → [0 , 1) Preneel (1994) parameterized by the owner’s secret key k to compute a uniformly distributed random value ut, as defined in Eq. 3: 
+
+ut = Hash (k ∥ a ∥ id τ ∥ t) ∈ [0 , 1) . (3) The system tries to add an aux action when bt > 0 and ut < p t. Depending on whether the auxiliary action is successfully inserted or the turn is skipped (due to generation failure or unmet conditions), the system updates the trigger probability and remaining budget for the next turn as follows: 
+
+(pt+1 , b t+1 ) = 
+
+(p0, b t − 1) , if successfully inserted, 
+
+(min {pt + ∆ p, p max }, b t), otherwise. (4) 
+
+Aux action embedding. If the dynamic scheduling condition is met, AuxMark proceeds to generate and select the optimal aux action. To obtain high quality insertions, the system queries Mt to propose up to K candidates. Each candidate j is formulated as a tuple of a thought and an action: 
+
+(tj
+
+> aux
+
+, a j
+
+> aux
+
+), where the action aj 
+
+> aux
+
+consists of a tool f j 
+
+> aux
+
+and its arguments pj
+
+> aux
+
+. To ensure that the injected action perfectly blends into the trajectory, AuxMark enforces a validation mechanism. 4Preprint First, the chosen tool must belong to the safe subset Fsafe . Second, to prevent model hallucinations and ensure contextual rationality, the arguments pj 
+
+> aux
+
+must be extracted from the context (such as the core action’s observation or history). Consequently, AuxMark categorically discards any candidate that uses an unapproved tool or hallucinates untraceable arguments. For each candidate j that passes the validation, AuxMark employs a scoring model Mq to evaluate it across three dimensions: naturalness, logical consistency, and distillability. Specifically, Mq as-signs a relevance score sj 
+
+> rel
+
+to ensure the injected action aligns naturally with the task. Additionally, a reliability score sj 
+
+> relb
+
+ensures the high quality of the thought. Crucially, to foster a stable behavioral habit that the student model can easily absorb during distillation, the system calculates a repeatabil-ity score sj
+
+> rep
+
+. This score is directly determined by nj , which represents the number of times the candidate’s specific tool pairing (fcore , f j
+
+> aux
+
+) has been successfully injected in the account’s history. The final score Sj for candidate j is computed as a weighted sum: 
+
+Sj = α · sj 
+
+> rel
+
++ β · sj 
+
+> relb
+
++ γ · sj
+
+> rep
+
+. (5) where α, β, γ, and the step-function mapping from repeat count nj to sj 
+
+> rep
+
+are detailed in Ap-pendix B.1. The system selects the candidate with the highest score as the best aux action 
+
+(tbest aux , a best aux ), then injects this aux action, establishing a natural sequence: 
+
+tt−1 
+
+> core
+
+→ at−1 
+
+> core
+
+→ ot−1 
+
+> core
+
+→ tbest aux → abest aux → obest aux . (6) Based on the generation result, the system updates its states. A successful generation applies the success update (Eq. 4) and increases the repeat count nbest for this tool pairing. If the generation fails, the system skips the insertion, applies the failure update, moves to generate core action and waits for next chance. For future auditing, every successful insertion creates a private evidence card 
+
+ct. To securely record the exact context and execution details, this card stores the historical context 
+
+h, the preceding core action and observation, and the injected auxiliary tool parameters. It is saved as a tuple and added to the trajectory’s evidence set Cτ :
+
+ct = ( h, t t−1
+
+> core
+
+, a t−1
+
+> core
+
+, o t−1
+
+> core
+
+, f best aux , p best aux ), Cτ = Cτ ∪ { ct}. (7) As mentioned in our threat model, the model owner uses signals like querying styles, IPs, and traffic patterns to identify a suspicious set S Chiang et al. (2024); Liu et al. (2026c). The owner then collects the evidence from these flagged traces to form a global verification pool CS = S  
+
+> τ∈S
+
+Cτ .3.3 WATERMARK DETECTION 
+
+While the embedding phase injects an aux action into the teacher’s trajectory, the detection phase verifies if a suspect model Ms has learned this specific behavior pattern. To achieve this, AuxMark 
+
+uses paired probes built from the combined evidence pool CS for verification as shown in Figure 9. 
+
+Paired probe construction. To verify watermark retention, AuxMark constructs paired probes for the combined evidence pool CS . A probe is formally defined as a prompt-target tuple: given a history and a core action as the prompt, the suspect model Ms is expected to output a specific aux action. Specifically, based on each evidence card, we derive two types of probes: real probes and fake probes. This paired design ensures that the model Ms has genuinely memorized the specific watermarked trace, rather than unconditionally outputting the target action. For the real side construction of each card ci ∈ C S , the system first locates the nearest core action. To ensure that the suspect model Ms has learned the expected behavior, AuxMark creates up to N
+
+parameterized variants for this real side by modifying one argument of the original core action, the system prompts the teacher model Mt to synchronously generate a logically consistent core triplet 
+
+(tj
+
+> core
+
+, a j
+
+> core
+
+, o j
+
+> core
+
+) alongside the new downstream target aux arguments pj
+
+> aux
+
+. This process directly generates a set of real side probes pi 
+
+> real
+
+for the specific card ci as shown in Eq.8: 
+
+pi 
+
+> real
+
+= (h, t j
+
+> core
+
+, a j
+
+> core
+
+, o j
+
+> core
+
+), (faux , p j
+
+> aux
+
+) Ni 
+
+> j=1
+
+. (8) 
+
+h is the historical context, and faux is the targeted aux tool. Finally, the system aggregates the real-side probes from all cards to form the global real probe set Preal = S 
+
+> ci∈C S
+
+pi
+
+> real
+
+.To better contrast with the real probes Preal , obtain more definitive statistical results, AuxMark 
+
+constructs a set of fake probes based on the Preal . This verifies whether the aux action stems from memorization rather than natural context or random chance.For this fake side. However, it prompts the teacher model Mt to replace the core action with a semantically similar fake core behavior 5Preprint 
+
+(ˆ tj
+
+> core
+
+, ˆaj
+
+> core
+
+, ˆoj
+
+> core
+
+) that achieves the identical goal. This process generates the fake probe set pi
+
+> fake
+
+for card ci, directly matching the variants in pi 
+
+> real
+
+as shown in Eq.9: 
+
+pi 
+
+> fake
+
+= (h, ˆtj
+
+> core
+
+, ˆaj
+
+> core
+
+, ˆoj
+
+> core
+
+), (faux , p j
+
+> aux
+
+) Ni 
+
+> j=1
+
+. (9) Thus, the strict difference between the paired probes lies only in the core action. Similar to the real side, the fake probe set is defined as Pfake = S 
+
+> ci∈C S
+
+pi
+
+> fake
+
+.
+
+Card-level statistical test. After generating the paired probes, AuxMark evaluates the suspect model Ms using (Preal , Pfake ) and performs a card-level statistical test which is discussed in Ap-pendix C. For the j-th probe pair of card ci, the expected aux action is faux and arguments pj
+
+> aux
+
+.Let (fout , p out ) be the tool call parsed from the output of Ms. For both the real and fake sides, 
+
+AuxMark computes the toolhit indicator ti,j and the strict fullhit indicator hi,j ∈ { 0, 1}:
+
+ti,j = Match (fout , f aux ), hi,j = ti,j · Match (pout , p j
+
+> aux
+
+). (10) where the function Match (·, ·) → { 0, 1} evaluates to 1 if and only if there is exact structural and value equivalence between its two arguments, and 0 otherwise. Because the Ni paired variants derived from the same card ci share an identical core-to-aux dependency, they are not independent samples. Therefore, AuxMark aggregates the scores at the card level to calculate the real-side hit rate Rreal  
+
+> i
+
+, the fake-side hit rate Rfake  
+
+> i
+
+, and their difference ∆i for each card ci as shown in Eq.11: 
+
+Rreal  
+
+> i
+
+= 1
+
+NiNiX
+
+> j=1
+
+hreal  
+
+> i,j
+
+, Rfake  
+
+> i
+
+= 1
+
+NiNiX
+
+> j=1
+
+hfake  
+
+> i,j
+
+, ∆i = Rreal  
+
+> i
+
+− Rfake  
+
+> i
+
+. (11) To evaluate the verification, we establish the null hypothesis H0 and the alternative hypothesis H1.
+
+H0 posits that the suspect model Ms has not learned the watermarked habit; any correct action is due to general context or innate biases. Conversely, H1 asserts that Ms has memorized the watermark, making it significantly more likely to output the target action on real probes. Based on the performance difference ∆i for each card ci, we classify the outcomes into a real win ( ∆i > 0), a fake win ( ∆i < 0), or a tie ( ∆i = 0 ). Excluding ties, let w and ℓ be the numbers of real and fake wins across CS . The p-value is computed using a one-sided exact sign-test Hollander et al. (2013): 
+
+p−value =
+
+> w+ℓ
+
+X
+
+> k=w
+
+w + ℓk
+
+
+
+2−(w+ℓ). (12) where p−value = 1 if w + ℓ = 0 . To reject H0 and declare a successful verification, AuxMark 
+
+requires dual criteria: the statistical significance must be p−value < p , and the averaged real fullhit rate must exceed the fake rate by a predefined margin r (i.e., 1 
+
+> |C S|
+
+P ∆i ≥ r). This empirical margin absorbs unpredictable fluctuations caused by context rewriting in the fake probes and guards against false positives. Appendix B.1 specifies the hyperparameters p, r, and N .3.4 TRACE -L EVEL ATTRIBUTION 
+
+While the detection protocol in Section 3.3 determines whether a suspect model Ms has distilled from Mt, it cannot pinpoint which traces within S were utilized. For exact attribution, AuxMark 
+
+introduces a trace-level attribution. For each evaluated trace τ , the system computes four rates to capture both exact and partial matches: the strict full-hit rates Rreal  
+
+> τ
+
+and Rfake  
+
+> τ
+
+, and the toolhit-only rates T real  
+
+> τ
+
+and T fake  
+
+> τ
+
+(where ti,j = 1 ∧ hi,j = 0 ). To ensure fair comparison across traces, 
+
+AuxMark normalizes each rate into an average-rank quantile Q(·) ∈ (0 , 1) :
+
+Q(xτ ) = rank avg (xτ )
+
+|S| + 1 . (13) The attribution logic is designed as follows: Q(Rreal  
+
+> τ
+
+) acts as the primary positive signal for trace memorization. Conversely, if the model outputs the target aux action even on the fake probes, it implies innate biases rather than specific watermark retention. Thus, Q(Rfake  
+
+> τ
+
+) serves as a penalty term. Furthermore, the toolhit-only terms address partial memorization, providing supplementary evidence to calibrate the final score. Consequently, AuxMark ranks these traces using a score Sτ :
+
+Sτ = Q(Rreal  
+
+> τ
+
+) − α′Q(Rfake  
+
+> τ
+
+) + β′Q(T real  
+
+> τ
+
+) − γ′Q(T fake  
+
+> τ
+
+). (14) where the empirical weighting parameters α′, β′, and γ′ are detailed in Appendix B.1. Finally, the system identifies the top-K traces with the highest Sτ most likely included in the training set D.6Preprint 
+
+## 4 EXPERIMENTS 
+
+4.1 EXPERIMENTAL SETUP 
+
+We evaluate AuxMark in agent distillation. We supervise thoughts and actions from the trajectories and fine-tune the student models using LoRA. The specific training configurations are rank 32 , learn-ing rate 2 × 10 −4, and α = 64 . Prior traffic-analysis systems have reported identification precision above 70% Chiang et al. (2024); Liu et al. (2026c). We therefore adopt a more conservative 50% 
+
+precision setting to avoid missing potential distillation traces, with |S| = 100 suspicious trajectories and |D c| = 50 trajectories used for distillation. Appendix B.1 provides the remaining experimen-tal details, including hyperparameter selection and baselines. Our experiments assess watermark effectiveness, harmlessness, robustness against adversarial processing. 
+
+Datasets and Models. Our evaluation spans three datasets: BFCL Patil et al. (2025), SWE-bench Jimenez et al. (2024), and Telecom (a service-tool domain from the Tau2 benchmark 1). GPT-OSS-120B Agarwal et al. (2025) and Kimi-K2.5 Team et al. (2026) serve as teacher agents ( Mt), with Qwen3-8B acting as both the candidate scorer ( Mq ) and safety model ( Msafe ). For distillation, we fine-tune four student models ( Ms): Mistral-Small-3.1-24B Liu et al. (2026a), Qwen3-14B Yang et al. (2025), Qwen3-32B Yang et al. (2025), and GLM-4.7-Flash Glm et al. (2024). 
+
+Evaluation metrics. For detection, we report strict fullhit rates (Rreal  
+
+> τ
+
+, R fake  
+
+> τ
+
+) on real and fake probes, alongside the one-sided p-value. A successful detection requires p < 0.05 and a real-fake mean fullhit gap ≥ 0.05 . For trace-level attribution, we measure Precision @K of top-K
+
+trajectories belonging to the distillation subset Dc. For harmlessness, we compare task accuracy (Acc ) and mean interaction steps ( L) between control and watermarked agents. 4.2 EFFECTIVENESS 
+
+Table 1: True-positive results. Cards is the number of cards; hit-rate cells report hits / probes (rate). 
+
+w/ℓ gives card-level real / fake wins. The ‘Sig’ column indicates statistical significance: ✓ denotes 
+
+p < 0.05 , indicating a statistically significant change, whereas × denotes p ≥ 0.05 .                                                                       
+
+> Teacher Agent MtDataset Cards Student Model MsDetection Results
+> Rreal (%) Rfake (%) w/ℓ p-value Sig.
+> GPT-OSS-120B BFCL 118 Mistral-24B 93 / 182 (51.1%) 59 / 182 (32.4%) 25 / 1 4.0×10 −7✓
+> GLM-4.7-Flash 108 / 182 (59.3%) 80 / 182 (44.0%) 19 / 1 2.0×10 −5✓
+> Qwen3-14B 44 / 182 (24.2%) 28 / 182 (15.4%) 20 / 4 7.7×10 −4✓
+> Qwen3-32B 89 / 182 (48.9%) 58 / 182 (31.9%) 30 / 9 5.3×10 −4✓
+> Kimi-K2.5 BFCL 145 Mistral-24B 175 / 379 (46.2%) 105 / 379 (27.7%) 45 / 10 1.0×10 −6✓
+> GLM-4.7-Flash 155 / 379 (40.9%) 69 / 379 (18.2%) 47 / 4 1.2×10 −10 ✓
+> Qwen3-14B 102 / 379 (26.9%) 26 / 379 (6.9%) 46 / 4 2.2×10 −10 ✓
+> Qwen3-32B 82 / 379 (21.6%) 18 / 379 (4.7%) 39 / 5 7.0×10 −8✓
+
+In this section, all student models are trained on the original dataset Dc. We test our scheme on distilled and clean models via separate true positive and false positive experiments. We also evaluate the performance of existing agent watermark baselines under the matched setting. Furthermore, we evaluate AuxMark ’s trace-level attribution using Precision @K in Appendix B.2. Finally, we measure how identification accuracy affects statistical significance in Appendix B.2. 
+
+True positives. We first evaluate whether AuxMark can successfully identify student models dis-tilled from watermarked trajectories. Our experiments cover all combinations of 3 datasets (SWE and Telecom are in Appendix B.2), 2 teacher agents, and 4 student models. In each setting, we compare the hit rates between the real side and the fake side and calculate the p-value. The results in the Table 1 and 6 show that AuxMark successfully achieves detection in all settings. These results show that AuxMark can extract watermark from student models of different architectures. 
+
+False positives. We evaluate whether AuxMark causes false positives on clean models that have not seen watermarked trajectories. As shown in Table 2 and Table 7 in Appendix B.2, in addition to the four undistilled student models, we also select four base models (DeepSeek-V4-Flash Xu et al. (2026a), MiniMax-M2.5 Chen et al. (2026), Qwen3.5-Flash Yang et al. (2025), and MiMo-V2.5 Xiao et al. (2026)) and build a total of 48 controlled false-positive evaluation settings. The results show that AuxMark achieves zero false positives across all 48 settings. 
+
+> 1
+
+https://github.com/sierra-research/tau2-bench 
+
+7Preprint 
+
+Table 2: False-positive results. The ‘Sig’ column indicates statistical significance: ✓ denotes p < 
+
+0.05 , indicating a statistically significant change, whereas × denotes p ≥ 0.05 .                                                                                                                               
+
+> Teacher Agent MtDataset Cards Clean Model McDetection Results
+> Rreal (%) Rfake (%) w/ℓ p-value Sig.
+> GPT-OSS-120B BFCL 118 DeepSeek-V4-Flash 10 / 182 (5.5%) 11 / 182 (6.0%) 2 / 3 8.1×10 −1×
+> MiniMax-M2.5 9 / 182 (4.9%) 10 / 182 (5.5%) 2 / 3 8.1×10 −1×
+> Mistral-24B 9 / 182 (4.9%) 7 / 182 (3.8%) 3 / 2 5.0×10 −1×
+> Qwen3-14B 7 / 182 (3.8%) 6 / 182 (3.3%) 2 / 1 5.0×10 −1×
+> Qwen3-32B 4 / 182 (2.2%) 4 / 182 (2.2%) 2 / 2 6.9×10 −1×
+> Qwen3.5-Flash 8 / 182 (4.4%) 8 / 182 (4.4%) 2 / 1 5.0×10 −1×
+> MiMo-V2.5 10 / 182 (5.5%) 11 / 182 (6.0%) 2 / 2 6.9×10 −1×
+> GLM-4.7-Flash 5 / 182 (2.7%) 1 / 182 (0.5%) 4 / 0 6.2×10 −2×
+> Kimi-K2.5 BFCL 145 DeepSeek-V4-Flash 10 / 379 (2.6%) 9 / 379 (2.4%) 5 / 4 5.0×10 −1×
+> MiniMax-M2.5 6 / 379 (1.6%) 3 / 379 (0.8%) 4 / 2 3.4×10 −1×
+> Mistral-24B 1 / 379 (0.3%) 3 / 379 (0.8%) 1 / 2 8.8×10 −1×
+> Qwen3-14B 1 / 379 (0.3%) 0 / 379 (0.0%) 1 / 0 5.0×10 −1×
+> Qwen3-32B 1 / 379 (0.3%) 0 / 379 (0.0%) 1 / 0 5.0×10 −1×
+> Qwen3.5-Flash 0 / 379 (0.0%) 0 / 379 (0.0%) 0 / 0 1.0×10 0×
+> MiMo-V2.5 6 / 379 (1.6%) 6 / 379 (1.6%) 4 / 3 5.0×10 −1×
+> GLM-4.7-Flash 2 / 379 (0.5%) 2 / 379 (0.5%) 2 / 1 5.0×10 −1×
+
+Table 3: Baseline effectiveness. Agentwm is signif-icant at ≥ 3/5 passes; SeqWM at median p < 0.05 .                                        
+
+> Dataset Student Model MsAgentwm SeqWM Passes Sig. Median pSig.
+> BFCL Mistral-24B 1/5 ×0.6848 ×
+> GLM-4.7-Flash 3/5 ✓0.5130 ×
+> Qwen3-14B 1/5 ×0.4650 ×
+> Qwen3-32B 2/5 ×0.5744 ×
+> SWE-bench Mistral-24B 1/5 ×0.6274 ×
+> GLM-4.7-Flash 3/5 ✓0.5914 ×
+> Qwen3-14B 1/5 ×0.7073 ×
+> Qwen3-32B 0/5 ×0.4895 ×
+
+Baseline effectiveness. We evaluate the ef-fectiveness of the two baseline schemes un-der the matched distillation setting and the details about baselines are in Appendix B.1. As shown in Table 3, for Agentwm, only the GLM-4.7-Flash student model meets the passing criterion of ≥ 3/5 passes, while all other students fail. For Seqwm, the median 
+
+p-values across all tested models are greater than 0.05, failing to successfully detect any distilled models. As expected, baselines fail, because Seqwm is not designed for antidistillation, and Agentwm has weak watermark signals that requires identical teacher and student base models. 4.3 HARMLESSNESS 
+
+Harmlessness. A reasonable watermark scheme should not noticeably affect the performance of the teacher agent. Therefore, we evaluate impact of AuxMark on the teacher agent Mt’s task utility and inference cost. For the four cohorts in BFCL and Telecom, we compare the unwatermarked agent 
+
+Mtc and the watermarked teacher agent Mt on 200 tasks. We measure the task accuracy difference 
+
+∆Acc = E[Acc (Mt) − Acc (Mtc )] and the expected interaction step difference ∆L = E[L(Mt) −
+
+L(Mtc )] . As summarized in Figure 3, embedding the watermark does not cause a drop in overall performance. The task accuracy difference ∆Acc ranges only from −3.0% to +3 .0% , indicating that the accuracy loss is acceptable. Meanwhile, the increase in interaction cost is acceptable: the average step count increases from 20.49 to 21.09 steps, and ∆L ranges from −1.38 to +2 .04 steps. GPT Kimi 020 40 60 80 
+
+> Task accuracy (\%)
+
+45.5 64.5 48.5 65.5 
+
+(a) BFCL: accuracy GPT Kimi 0510 15 20 25 
+
+> Task accuracy (\%)
+
+18.0 15.0 17.0 12.0 (b) Telecom: accuracy GPT Kimi 036912 
+
+> Mean steps
+
+8.03 6.93 9.79 8.97 (c) BFCL: steps GPT Kimi 010 20 30 40 
+
+> Mean steps
+
+31.60 35.40 30.22 35.38 (d) Telecom: steps 
+
+Figure 3: Harmlessness results. In (a) and (b), the vertical axis reports accuracy; in (c) and (d), it reports the mean number of steps. Colors distinguish ■ unwatermarked and ■ watermarked runs. 4.4 ROBUSTNESS 
+
+To demonstrate the robustness of our watermark scheme, We evaluate AuxMark ’s robustness against four common pre-distillation data transformations. These operations include: data flood-ing, paraphrasing attack, adaptive attack, advanced data flooding and truncation (the last two are in 8Preprint Appendix B.3). We evaluate the robustness of Agentwm under data flooding in Appendix B.3. We use GPT-OSS-120B as the teacher agent. 
+
+Data flooding. Before distillation, an attacker may mix the training set with standard clean data to improve distillation performance Ouyang et al. (2022); Mukherjee et al. (2023), which will dilutes the watermark signals. To evaluate its impact on our watermark strength, we mix the original wa-termarked dataset Dc with clean standard answers. Specifically, in the D1, D5, and D10 settings, we incorporate 1×, 5×, and 10 × the amount of clean data relative to Dc. We evaluate a total of 24 settings across 2 benchmarks (BFCL and SWE-bench), 3 dilution ratios, and 4 student models. As shown in Figure 4, AuxMark successfully detects every setting. Even under the strongest 1:10 
+
+dilution ratio, all 8 tested student models remain successfully detected. Mistral GLM Q14 Q32 0123456 
+
+> −log 10 p 4.2 5.3 4.5 5.3
+> p= 0.05
+
+(a) BFCL: D1 Mistral GLM Q14 Q32 0123456   
+
+> −log 10 p
+> 2.1 2.9 4.7 4.6
+> p= 0.05
+
+(b) BFCL: D5 Mistral GLM Q14 Q32 01234567  
+
+> −log 10 p 4.2 3.0 5.5 4.3
+> p= 0.05
+
+(c) BFCL: D10 Mistral GLM Q14 Q32 0246810 12 14  
+
+> −log 10 p
+> 3.4 9.1 12.1 9.7
+> p= 0.05
+
+(d) SWE-bench: D1 Mistral GLM Q14 Q32 0510 15 20    
+
+> −log 10 p
+> 10.3 15.6 16.6 10.9
+> p= 0.05
+
+(e) SWE-bench: D5 Mistral GLM Q14 Q32 0510 15 20 25     
+
+> −log 10 p 18.3 13.4 13.1 11.3
+> p= 0.05
+
+(f) SWE-bench: D10 
+
+Figure 4: Data-flooding robustness. The vertical axis reports − log 10 p. In (a)–(f), bar colors denote 
+
+■ Mistral-24B, ■ GLM-4.7-Flash, ■ Qwen3-14B, and ■ Qwen3-32B. The marks p = 0 .05 .
+
+Table 4: Paraphrasing attack robustness.                                     
+
+> Dataset Student Model Msp-value Sig.
+> BFCL Mistral-24B 5.7×10 −5✓
+> GLM-4.7-Flash 1.4×10 −4✓
+> Qwen3-14B 3.3×10 −3✓
+> Qwen3-32B 9.8×10 −5✓
+> Telecom Mistral-24B 3.2×10 −2✓
+> GLM-4.7-Flash 1.4×10 −5✓
+> Qwen3-14B 3.5×10 −3✓
+> Qwen3-32B 4.1×10 −3✓
+
+Paraphrasing attack. An attacker may paraphrase the trajectories, aiming to alter semantic patterns and evade watermark detection while preserving the util-ity Krishna et al. (2023). To evaluate the robustness against this rewriting attack, we use DeepSeek-V4-Flash to paraphrase the Dc. Subsequently, we train 4 student models on these rewritten datasets across the BFCL and Telecom and detect their watermark sig-nals. As reported in Table 4, AuxMark successfully detects the watermark across all 8 settings showing our scheme’s robustness under paraphrasing. 
+
+Table 5: Adaptive attack robustness.                                     
+
+> Dataset Student Model Msp-value Sig.
+> BFCL Mistral-24B 9.2×10 −4✓
+> GLM-4.7-Flash 1.4×10 −4✓
+> Qwen3-14B 9.6×10 −3✓
+> Qwen3-32B 4.1×10 −4✓
+> Telecom Mistral-24B 2.8×10 −8✓
+> GLM-4.7-Flash 3.7×10 −3✓
+> Qwen3-14B 1.0×10 −11 ✓
+> Qwen3-32B 5.5×10 −12 ✓
+
+Adaptive attack. In this section, we consider a stronger attacker who knows that our watermark re-lies on auxiliary behaviors. To avoid detection, the attacker uses DeepSeek-V4-Flash to clean the col-lected data by finding and removing suspected aux-iliary action while keeping the trajectories useful. Next, we fine-tune student models on this cleaned data and test them on BFCL and Telecom. As shown in Table 5, even with this removal, AuxMark suc-cessfully detects all student models (with the minimal p-value of 9.6 × 10 −3). This shows that our watermark is highly robust, even when an attacker actively tries to move the signals. 
+
+## 5 CONCLUSION 
+
+We present AuxMark , a behavioral watermarking framework to track the unauthorized distilla-tion of LLM agents. AuxMark inserts useful extra tool calls after normal core actions. To verify 9Preprint if the watermark is copied, it uses paired real and fake probes along with a card-level sign test. This design supports both model-level detection and trace-level tracking.In experiments across three benchmarks, two teacher models, and four student architectures, AuxMark successfully detects all 24 distilled students with zero false positives on 48 clean models. It also remains highly effective under data flooding, rewriting, truncation, and adaptive cleaning attacks. Future work will extend this evaluation to more teacher models, cleaning tools, and training methods. 
+
+## AI USE STATEMENT 
+
+In this work, we used generative AI tools for research execution, generating synthetic datasets, and code generation. Specifically, large language models were employed to generate agent-interaction trajectories, construct paired verification probes for our evaluations, and assist with implementation. We have not used generative AI tools for drafting core sections of the paper or proving mathematical claims, and the rest of the required disclosure tasks are not applicable to this work. Additionally, we used generative AI tools (Gemini 3.1 Pro) for aiding and polishing the English writing of the manuscript. We have reviewed all AI-assisted work. The authors manually assessed AI-assisted research ideas through a literature survey and technical discussion. For the synthetic datasets, the LLM-generated agent trajectories and verification probes were programmatically validated and man-ually sampled to ensure they form valid, executable tool-use sequences that strictly adhere to the pre-defined tool schemas and task objectives. All AI-generated code was reviewed, tested, and, where necessary, revised by the authors before use. For the writing assistance, all AI-polished text was thoroughly reviewed and edited by the authors to guarantee it accurately reflects our original sci-entific intent, methodology, and conclusions without introducing hallucinations or overclaims. We take responsibility for the final content of this work, including text, claims, or artifacts produced with the aid of generative AI. 
+
+## REPRODUCIBILITY STATEMENT 
+
+To ensure the full reproducibility of our results, we have made our complete source code, benchmark adapters, and evaluation scripts publicly available via an anonymous repository (https://github.com/qx041609/Auxmark). Additionally, all trained student model weights (e.g., LoRA adapters) necessary to replicate our detection and trace-level attribution experiments are hosted on Hugging Face (huggingface.co/AuxMark/AuxMark/tree/main). 
+
+## REFERENCES 
+
+Sandhini Agarwal, Lama Ahmad, Jason Ai, Sam Altman, Andy Applebaum, Edwin Arbus, Rahul K Arora, Yu Bai, Bowen Baker, Haiming Bao, et al. gpt-oss-120b & gpt-oss-20b model card. arXiv preprint arXiv:2508.10925 , 2025. Hyeseon An, Shinwoo Park, Dongsu Kim, and Yo-Sub Han. Sequential behavioral watermarking for llm agents. arXiv preprint arXiv:2605.11036 , 2026. Anthropic. Introducing Claude Opus 4.8, May 2026. URL https://www.anthropic.com/ news/claude-opus-4-8 . Released May 28, 2026. Anthropic. Detecting and preventing distillation attacks. https://www.anthropic.com/ news/detecting-and-preventing-distillation-attacks , 2026. [Accessed 17-09-2026]. Aili Chen, Aonian Li, Baichuan Zhou, Bangwei Gong, Binyang Jiang, Boji Dan, Changhao Zhang, Changqing Yu, Chao Wang, Cheng Ma, et al. The minimax-m2 series: Mini activations unleash-ing max real-world intelligence. arXiv preprint arXiv:2605.26494 , 2026. Wei-Lin Chiang, Lianmin Zheng, Ying Sheng, Anastasios Nikolas Angelopoulos, Tianle Li, Dacheng Li, Hao Zhang, Banghua Zhu, Michael Jordan, Joseph E Gonzalez, et al. Chatbot arena: An open platform for evaluating llms by human preference. arXiv preprint arXiv:2403.04132 ,2024. 10 Preprint Ganqu Cui, Lifan Yuan, Ning Ding, Guanming Yao, Bingxiang He, Wei Zhu, Yuan Ni, Guotong Xie, Ruobing Xie, Yankai Lin, et al. Ultrafeedback: Boosting language models with scaled ai feedback. arXiv preprint arXiv:2310.01377 , 2023. Team Glm, Aohan Zeng, Bin Xu, Bowen Wang, Chenhui Zhang, Da Yin, Dan Zhang, Diego Rojas, Guanyu Feng, Hanlin Zhao, et al. Chatglm: A family of large language models from glm-130b to glm-4 all tools. arXiv preprint arXiv:2406.12793 , 2024. Google Threat Intelligence Group. Gtig ai threat tracker: Distillation, exper-imentation, and (continued) integration of ai for adversarial use. https: //cloud.google.com/blog/topics/threat-intelligence/ distillation-experimentation-integration-ai-adversarial-use ,2026. [Accessed 17-09-2026]. Arnav Gudibande, Eric Wallace, Charlie Snell, Xinyang Geng, Hao Liu, Pieter Abbeel, Sergey Levine, and Dawn Song. The false promise of imitating proprietary llms. arXiv preprint arXiv:2305.15717 , 2023. Xuanli He, Qiongkai Xu, Lingjuan Lyu, Fangzhao Wu, and Chenguang Wang. Protecting intellec-tual property of language generation apis with lexical watermark. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 36, pp. 10758–10766, 2022a. Xuanli He, Qiongkai Xu, Yi Zeng, Lingjuan Lyu, Fangzhao Wu, Jiwei Li, and Ruoxi Jia. Cater: Intellectual property protection on text generation apis via conditional watermarks. Advances in Neural Information Processing Systems , 35:5431–5445, 2022b. Geoffrey Hinton, Oriol Vinyals, and Jeff Dean. Distilling the knowledge in a neural network. arXiv preprint arXiv:1503.02531 , 2015. Myles Hollander, Douglas A Wolfe, and Eric Chicken. Nonparametric statistical methods . John Wiley & Sons, 2013. Abe Hou, Jingyu Zhang, Tianxing He, Yichen Wang, Yung-Sung Chuang, Hongwei Wang, Lingfeng Shen, Benjamin Van Durme, Daniel Khashabi, and Yulia Tsvetkov. Semstamp: A semantic water-mark with paraphrastic robustness for text generation. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 4067–4082, 2024. Cheng-Yu Hsieh, Chun-Liang Li, Chih-Kuan Yeh, Hootan Nakhost, Yasuhisa Fujii, Alex Ratner, Ranjay Krishna, Chen-Yu Lee, and Tomas Pfister. Distilling step-by-step! outperforming larger language models with less training data and smaller model sizes. In Findings of the association for computational linguistics: ACL 2023 , pp. 8003–8017, 2023. Kaibo Huang, Zipei Zhang, Zhongliang Yang, and Linna Zhou. Agent guide: A simple agent behavioral watermarking framework. arXiv preprint arXiv:2504.05871 , 2025. Jun Ho Huh, Hyejin Shin, Sunwoo Ahn, Hayoon Yi, Joonho Cho, Taewoo Kim, Minchae Lim, and Nuel Choi. Preventing artificially inflated {SMS } attacks through {Large-Scale } traffic inspec-tion. In 34th USENIX Security Symposium (USENIX Security 25) , pp. 5405–5423, 2025. Jiahao Huo, Shuliang Liu, Bin Wang, Junyan Zhang, Yibo Yan, Aiwei Liu, Xuming Hu, and Mingxun Zhou. Pmark: Towards robust and distortion-free semantic-level watermarking with channel constraints. In International Conference on Learning Representations , volume 2026, pp. 27100–27126, 2026a. Jiahao Huo, Wenjie Qu, Yibo Yan, Kening Zheng, Jiaheng Zhang, Xuming Hu, Philip S Yu, and Mingxun Zhou. Samark: A self-anchored text watermarking with paragraph-level paraphrase robustness. arXiv preprint arXiv:2605.25796 , 2026b. Carlos E Jimenez, John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir Press, and Karthik Narasimhan. Swe-bench: Can language models resolve real-world github issues? In International Conference on Learning Representations , volume 2024, pp. 54107–54157, 2024. 11 Preprint Minki Kang, Jongwon Jeong, Seanie Lee, Jaewoong Cho, and Sung Ju Hwang. Distilling llm agent into small models with retrieval and code tools. Advances in Neural Information Processing Systems , 38:106501–106538, 2026. John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In International conference on machine learning , pp. 17061–17084. PMLR, 2023. Kalpesh Krishna, Yixiao Song, Marzena Karpinska, John Wieting, and Mohit Iyyer. Paraphrasing evades detectors of ai-generated text, but retrieval is an effective defense. Advances in neural information processing systems , 36:27469–27500, 2023. Hao Li, Haoxiang Zhang, and Ahmed E Hassan. Aidev: studying ai coding agents on github. In 
+
+Proceedings of the 23rd International Conference on Mining Software Repositories , pp. 1029– 1033, 2026. Aiwei Liu, Leyi Pan, Xuming Hu, Shiao Meng, and Lijie Wen. A semantic invariant robust wa-termark for large language models. In International Conference on Learning Representations ,volume 2024, pp. 6499–6519, 2024. Alexander H Liu, Kartik Khandelwal, Sandeep Subramanian, Victor Jouault, Abhinav Rastogi, Adrien Sad´ e, Alan Jeffares, Albert Jiang, Alexandre Cahill, Alexandre Gavaudan, et al. Ministral 3. arXiv preprint arXiv:2601.08584 , 2026a. Jun Liu, Zhenglun Kong, Peiyan Dong, Changdi Yang, Tianqin Li, Yanyue Xie, Yifan Gong, Xuan Shen, Pu Zhao, Hao Tang, et al. Structured agent distillation for large language model agents. In 
+
+Proc. of the 25th International Conference on Autonomous Agents and Multiagent Systems , pp. 3676–3685, 2026b. Shuze Liu, Qianwen Guo, and Yushun Dong. An embarrassingly simple detector for model extrac-tion attacks in large language model api traffic. arXiv preprint arXiv:2606.05725 , 2026c. Yinyi Luo, Yiqiao Jin, Weichen Yu, Mengqi Zhang, Srijan Kumar, Xiaoxiao Li, Weijie Xu, Xin Chen, and Jindong Wang. Agentark: Distilling multi-agent intelligence into a single llm agent. 
+
+arXiv preprint arXiv:2602.03955 , 2026. Yuanjie Lyu, Chengyu Wang, Jun Huang, and Tong Xu. From correction to mastery: Reinforced distillation of large language model agents. arXiv preprint arXiv:2509.14257 , 2025. Xinhang Ma, William Yeoh, Ning Zhang, and Yevgeniy Vorobeychik. Protecting language models against unauthorized distillation through trace rewriting. In Proceedings of the 64th Annual Meet-ing of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 11307–11324, 2026. Subhabrata Mukherjee, Arindam Mitra, Ganesh Jawahar, Sahaj Agarwal, Hamid Palangi, and Ahmed Awadallah. Orca: Progressive learning from complex explanation traces of gpt-4. arXiv preprint arXiv:2306.02707 , 2023. OpenAI. Updated Stakes for American-Led, Democratic AI. https://assets.bwbx. io/documents/users/iqjWHBFdfxIU/rRmql_jJcxb4/v0 , 2026. [Accessed 17-09-2026]. Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al. Training language models to fol-low instructions with human feedback. Advances in neural information processing systems , 35: 27730–27744, 2022. Alexander Panfilov, David Schmotz, Ilia Shumailov, Luca Beurer-Kellner, Joachim Schaeffer, Ameya Prabhu, Jonas Geiping, and Maksym Andriushchenko. Stealing reasoning traces from proprietary llm apis. arXiv preprint arXiv:2608.09867 , 2026. 12 Preprint Shishir G Patil, Huanzhi Mao, Fanjia Yan, Charlie Cheng-Jie Ji, Vishnu Suresh, Ion Stoica, and Joseph E Gonzalez. The berkeley function calling leaderboard (bfcl): From tool use to agen-tic evaluation of large language models. In Forty-second International Conference on Machine Learning , 2025. Bart Preneel. Cryptographic hash functions. European Transactions on Telecommunications , 5(4): 431–448, 1994. Yujia Qin, Shihao Liang, Yining Ye, Kunlun Zhu, Lan Yan, Yaxi Lu, Yankai Lin, Xin Cong, Xiangru Tang, Bill Qian, et al. Toolllm: Facilitating large language models to master 16000+ real-world apis. In International Conference on Learning Representations , volume 2024, pp. 9695–9717, 2024. Rajat Rawat, Sizhe Chen, Akshay Anand, Michael Duan, Bob Rotsted, and Sewon Min. Reference-based distillation detection in llms. arXiv preprint arXiv:2607.09692 , 2026. Sha Sajadieh, Loredana Fattorini, Raymond Perrault, Yolanda Gil, Vanessa Parli, Lapo Santarlasci, Juan Pava, Nestor Maslej, Russ Altman, Erik Brynjolfsson, et al. Artificial intelligence index report 2026. arXiv preprint arXiv:2606.15708 , 2026. Yash Savani, Asher Trockman, Zhili Feng, Yixuan Xu, Avi Schwarzschild, Alexander Robey, Marc Finzi, and Zico Kolter. Antidistillation sampling. Advances in Neural Information Processing Systems , 38:117800–117827, 2026. Aaditya Singh, Adam Fry, Adam Perelman, Adam Tart, Adi Ganesh, Ahmed El-Kishky, Aidan McLaughlin, Aiden Low, AJ Ostrow, Akhila Ananthram, et al. Openai gpt-5 system card. arXiv preprint arXiv:2601.03267 , 2025. Kimi Team, Yifan Bai, Yiping Bao, Y Charles, Cheng Chen, Guanduo Chen, Haiting Chen, Huarong Chen, Jiahao Chen, Ningxin Chen, et al. Kimi k2: Open agentic intelligence. arXiv preprint arXiv:2507.20534 , 2025. Kimi Team, Tongtong Bai, Yifan Bai, Yiping Bao, SH Cai, Yuan Cao, Ziwei Chai, Y Charles, HS Che, Cheng Chen, et al. Kimi k2. 5: Visual agentic intelligence. arXiv preprint arXiv:2602.02276 , 2026. Liwen Wang, Zongjie Li, Yuchong Xie, Shuai Wang, Dongdong She, Wei Wang, and Juergen Rah-mel. On protecting agentic systems’ intellectual property via watermarking. arXiv preprint arXiv:2602.08401 , 2026. Bangjun Xiao, Bingquan Xia, Bo Yang, Bofei Gao, Bowen Shen, Chen Zhang, Chenhong He, Chiheng Lou, Fuli Luo, Gang Wang, et al. Mimo-v2-flash technical report. arXiv preprint arXiv:2601.02780 , 2026. Anyi Xu, Bangcai Lin, Bing Xue, Bingxuan Wang, Bingzheng Xu, Bochao Wu, Bowei Zhang, Chaofan Lin, Chen Dong, Chenchen Ling, et al. Deepseek-v4: Towards highly efficient million-token context intelligence. arXiv preprint arXiv:2606.19348 , 2026a. Yixuan Even Xu, John Kirchenbauer, Yash Savani, Asher Trockman, Alexander Robey, Tom Goldstein, Fei Fang, and J Zico Kolter. Antidistillation fingerprinting. arXiv preprint arXiv:2602.03812 , 2026b. An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. Chenghao Yang, Yuning Zhang, Zhoufutu Wen, Tao Gong, Jiaheng Liu, Qi Chu, and Nenghai Yu. When agents look the same: Quantifying distillation-induced similarity in tool-use behaviors. In 
+
+Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 10482–10502, 2026a. Guang Yang, Amir Ghasemian, Fengchen Liu, Zhong Wang, Ninareh Mehrabi, and Homa Hosseinmardi. Asking back: Interaction-layer antidistillation watermarks. arXiv preprint arXiv:2605.16462 , 2026b. 13 Preprint Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. React: Synergizing reasoning and acting in language models. arXiv preprint arXiv:2210.03629 ,2022. Haobo Zhang, Xutao Mao, Guangyuan Dong, Ziwei Li, Xuanbo Su, Kaijie Chen, Jing Yang, and Zheng Lin. Memmark: State-evolution attribution watermarking for agent long-term memory systems. arXiv preprint arXiv:2605.25002 , 2026. 
+
+## A RELATED WORK 
+
+A.1 MODEL DISTILLATION 
+
+Knowledge distillation is originally proposed as to transfer the capicity of a teacher model to a stu-dent model Hinton et al. (2015). With rapid development of LLM, fine-tuning on teacher-generated data has become an increasingly important form of distillation, allowing student models to acquire advanced capabilities directly from the teacher’s responses Hsieh et al. (2023); Mukherjee et al. (2023). This paradigm has also been extended to agent systems Kang et al. (2026); Liu et al. (2026b); Luo et al. (2026). Agent Distillation Kang et al. (2026) proposed an agent distillation method that en-ables student model to learn both tool-use behaviors and reasoning capabilities. AgentArk Luo et al. (2026) introduced a method that distills multi-agent dynamics into the weights of a single model. Agent trajectories record not only generated text but also tool use and multi-step decisions, making them valuable supervision for distillation. As these trajectories can be used to cheaply transfer the capabilities of teacher agents, unauthorized distillation poses a growing threat to model copyright and calls for effective detection and tracing mechanisms. A.2 MODEL WATERMARKING 
+
+Content watermarking. Recent studies have proposed a series of content watermarking methods to identify whether a given output is generated by a specific model. Early methods mainly embed statistical signals during token generation, such as the red-green list mechanism Kirchenbauer et al. (2023). Later studies further improve the robustness and generation quality of watermarks by using semantic information Liu et al. (2024); Huo et al. (2026a;b); Hou et al. (2024). However, with the development of LLM agents, traditional content watermarks are difficult to directly apply to agent settings. These methods usually embed watermark signals by changing token choices or semantic expressions in free-form text, while the key outputs of agents are often tool calls with strict format requirements. Directly modifying these outputs may break the tool calls and affect correct execu-tion. Therefore, recent studies have started to move watermarks from generated content to agent trajectories and behavior patterns Huang et al. (2025); An et al. (2026); Zhang et al. (2026). 
+
+Model watermarking against distillation. Several watermarking methods have been proposed to protect models against unauthorized distillation. Methods such as Lexical Watermark and CATER insert special word patterns into teacher outputs, so that student models trained on these outputs can inherit detectable features He et al. (2022a;b); Yang et al. (2026b). Recent work further targets LLM distillation by changing token generation or rewriting reasoning traces, either reducing the value of teacher outputs for distillation or leaving detectable signals in the student model Savani et al. (2026); Xu et al. (2026b); Ma et al. (2026). However, these methods mainly work on text tokens or reasoning traces, and are difficult to directly apply to agents whose behavior is mainly represented by structured tool calls and multi-step interactions. Recent work has extended anti-distillation watermarking to agent trajectories Wang et al. (2026), but its main evaluation still focuses on settings where the teacher and student models use the same base model, and its robustness to data processing such as data mixing remains limited. Therefore, a more general and robust watermarking method is still needed for tracing agent distillation. 14 Preprint 
+
+## B SUPPLEMENT OF EXPERIMENTS 
+
+B.1 EXPERIMENTAL DETAILS 
+
+Hyperparameter selection. We select AuxMark hyperparameters through preliminary experi-ments to balance stealthiness, utility and detection reliability. For dynamic scheduling, we set 
+
+p0 = 0 .1, ∆p = 0 .1, pmax = 0 .5, and the maximum budget B = 10 . The system generates 
+
+K = 3 candidates, and the scoring weights in Eq. 5 are α = 0 .35 , β = 0 .25 , and γ = 0 .40 . The repeatability score is sj 
+
+> rep
+
+= 0 for nj = 0 , 0.6 for 1 ≤ nj < 5, and 1 for nj ≥ 5. For detection, we generate N = 3 parameterized variants per card and use a significance level p = 0 .05 with margin threshold r = 0 .05 . For trace-level attribution in Eq. 14, we set α′ = 0 .25 , β′ = 0 .10 , and 
+
+γ′ = 0 .10 .
+
+Baselines. We evaluate our approach against two representative agent watermarking baselines. We exclude large language model antidistillation watermarks Xu et al. (2026b); Savani et al. (2026) from our comparison, as agent environments demand formatted outputs and modifying tokens or reason-ing traces can cause format corruption and execution failures. Thus, we focus on agent schemes An et al. (2026); Huang et al. (2025); Luo et al. (2026). We select Seqwm An et al. (2026) and Agen-twm Wang et al. (2026) because Seqwm demonstrates better robustness among trace watermarks generated for agents, and Agentwm specifically targets agent anti-distillation. Their available im-plementations use different watermark encodings, test units, and decision statistics from AuxMark ;we therefore report each baseline in its native metric. Specifically, we train the student models Ms
+
+using the distillation dataset Dc watermarked by each respective scheme, and then have them replay 100 tasks from the set S. For Agentwm, we collect unwatermarked traces using four distinct models to estimate the natural initial distribution Pc of synonymous tool sets. The scheme then modifies this 
+
+Pc into a watermarked distribution Pwm . During detection, it extracts 5 fixed synonymous tool sets (referred to as passes) from the 100 task replays. A pass is considered successfully detected only when the JSD between the student’s empirical distribution and the distribution Pwm is at most 0.015. The student model is flagged as significant only if at least 3 out of 5 passes are detected ( ≥ 3/5). For Seqwm, it evaluates each replayed trace against a background null distribution generated from 1,000 incorrect keys. It uses the median p-value of these 100 test traces to determine whether the student model Ms is distilled, requiring a median p < 0.05 for a successful detection. B.2 SUPPLEMENTARY EFFECTIVENESS RESULTS 
+
+Table 6: Supplementary true-positive results for SWE-bench and Telecom. Cards is the number of cards; hit-rate cells report hits / probes (rate). w/ℓ gives card-level real / fake wins. The Sig. column indicates statistical significance: ✓ denotes p < 0.05 , whereas × denotes p ≥ 0.05 .                                                                                                                               
+
+> Teacher Agent MtDataset Cards Student Model MsDetection Results
+> Rreal (%) Rfake (%) w/ℓ p-value Sig.
+> GPT-OSS-120B SWE-bench 274 Mistral-24B 60 / 387 (15.5%) 18 / 387 (4.7%) 46 / 6 5.2×10 −9✓
+> GLM-4.7-Flash 81 / 387 (20.9%) 21 / 387 (5.4%) 67 / 6 2.0×10 −14 ✓
+> Qwen3-14B 67 / 387 (17.3%) 18 / 387 (4.7%) 54 / 4 1.6×10 −12 ✓
+> Qwen3-32B 72 / 387 (18.6%) 20 / 387 (5.2%) 58 / 6 4.5×10 −12 ✓
+> Telecom 125 Mistral-24B 83 / 146 (56.8%) 46 / 146 (31.5%) 44 / 7 6.1×10 −8✓
+> GLM-4.7-Flash 76 / 146 (52.1%) 42 / 146 (28.8%) 42 / 4 2.6×10 −9✓
+> Qwen3-14B 86 / 146 (58.9%) 44 / 146 (30.1%) 48 / 6 1.6×10 −9✓
+> Qwen3-32B 85 / 146 (58.2%) 36 / 146 (24.7%) 57 / 7 3.8×10 −11 ✓
+> Kimi-K2.5 SWE-bench 262 Mistral-24B 85 / 437 (19.5%) 50 / 437 (11.4%) 38 / 9 1.2×10 −5✓
+> GLM-4.7-Flash 80 / 437 (18.3%) 42 / 437 (9.6%) 34 / 5 1.2×10 −6✓
+> Qwen3-14B 48 / 437 (11.0%) 17 / 437 (3.9%) 33 / 8 5.6×10 −5✓
+> Qwen3-32B 45 / 437 (10.3%) 14 / 437 (3.2%) 27 / 1 1.1×10 −7✓
+> Telecom 122 Mistral-24B 68 / 192 (35.4%) 48 / 192 (25.0%) 37 / 14 8.8×10 −4✓
+> GLM-4.7-Flash 56 / 192 (29.2%) 28 / 192 (14.6%) 33 / 6 7.1×10 −6✓
+> Qwen3-14B 60 / 192 (31.2%) 36 / 192 (18.8%) 33 / 9 1.4×10 −4✓
+> Qwen3-32B 66 / 192 (34.4%) 43 / 192 (22.4%) 27 / 6 1.6×10 −4✓
+
+Trace-level detection. After a successful model-level detection, we further examine whether 
+
+AuxMark can identify the specific trajectories in the suspicious set S that are most likely used for distillation. We separately rank the scores Sτ of the 100 trajectories from S on the four student models and report the arithmetic mean of Precision @K across the four students in Table 8. The overall average precision across the six cohorts remains at least 82 .1% for every reported K. SWE-15 Preprint Table 7: Supplementary false-positive results for SWE-bench and Telecom. Cards is the number of cards; hit-rate cells report hits / probes (rate). w/ℓ gives card-level real / fake wins. The Sig. column indicates statistical significance: ✓ denotes p < 0.05 , whereas × denotes p ≥ 0.05 .
+
+Teacher Agent Mt Dataset Cards Clean Model Mc Detection Results 
+
+Rreal (%) Rfake (%) w/ℓ p-value Sig. 
+
+GPT-OSS-120B SWE-bench 274 DeepSeek-V4-Flash 0 / 387 (0.0%) 0 / 387 (0.0%) 0 / 0 1.0 × 10 0 ×
+
+MiniMax-M2.5 5 / 387 (1.3%) 2 / 387 (0.5%) 4 / 1 1.9 × 10 −1 ×
+
+Mistral-24B 15 / 387 (3.9%) 10 / 387 (2.6%) 10 / 6 2.3 × 10 −1 ×
+
+Qwen3-14B 0 / 387 (0.0%) 3 / 387 (0.8%) 0 / 3 1.0 × 10 0 ×
+
+Qwen3-32B 0 / 387 (0.0%) 2 / 387 (0.5%) 0 / 2 1.0 × 10 0 ×
+
+Qwen3.5-Flash 4 / 387 (1.0%) 5 / 387 (1.3%) 4 / 3 5.0 × 10 −1 ×
+
+MiMo-V2.5 3 / 387 (0.8%) 3 / 387 (0.8%) 2 / 2 6.9 × 10 −1 ×
+
+GLM-4.7-Flash 1 / 387 (0.3%) 2 / 387 (0.5%) 1 / 2 8.8 × 10 −1 ×
+
+Telecom 125 DeepSeek-V4-Flash 18 / 146 (12.3%) 13 / 146 (8.9%) 10 / 5 1.5 × 10 −1 ×
+
+MiniMax-M2.5 21 / 146 (14.4%) 19 / 146 (13.0%) 6 / 3 2.5 × 10 −1 ×
+
+Mistral-24B 11 / 146 (7.5%) 9 / 146 (6.2%) 6 / 5 5.0 × 10 −1 ×
+
+Qwen3-14B 17 / 146 (11.6%) 21 / 146 (14.4%) 3 / 6 9.1 × 10 −1 ×
+
+Qwen3-32B 17 / 146 (11.6%) 18 / 146 (12.3%) 2 / 3 8.1 × 10 −1 ×
+
+Qwen3.5-Flash 11 / 146 (7.5%) 8 / 146 (5.5%) 6 / 3 2.5 × 10 −1 ×
+
+MiMo-V2.5 13 / 146 (8.9%) 13 / 146 (8.9%) 8 / 8 6.0 × 10 −1 ×
+
+GLM-4.7-Flash 1 / 146 (0.7%) 0 / 146 (0.0%) 1 / 0 5.0 × 10 −1 ×
+
+Kimi-K2.5 SWE-bench 262 DeepSeek-V4-Flash 12 / 437 (2.7%) 5 / 437 (1.1%) 8 / 3 1.1 × 10 −1 ×
+
+MiniMax-M2.5 14 / 437 (3.2%) 7 / 437 (1.6%) 9 / 4 1.3 × 10 −1 ×
+
+Mistral-24B 20 / 437 (4.6%) 11 / 437 (2.5%) 10 / 4 9.0 × 10 −2 ×
+
+Qwen3-14B 1 / 437 (0.2%) 1 / 437 (0.2%) 1 / 1 7.5 × 10 −1 ×
+
+Qwen3-32B 2 / 437 (0.5%) 2 / 437 (0.5%) 2 / 2 6.9 × 10 −1 ×
+
+Qwen3.5-Flash 15 / 437 (3.4%) 13 / 437 (3.0%) 6 / 4 3.8 × 10 −1 ×
+
+MiMo-V2.5 10 / 437 (2.3%) 6 / 437 (1.4%) 8 / 5 2.9 × 10 −1 ×
+
+GLM-4.7-Flash 5 / 437 (1.1%) 1 / 437 (0.2%) 4 / 0 6.2 × 10 −2 ×
+
+Telecom 122 DeepSeek-V4-Flash 11 / 192 (5.7%) 8 / 192 (4.2%) 4 / 1 1.9 × 10 −1 ×
+
+MiniMax-M2.5 23 / 192 (12.0%) 18 / 192 (9.4%) 9 / 5 2.1 × 10 −1 ×
+
+Mistral-24B 19 / 192 (9.9%) 16 / 192 (8.3%) 14 / 11 3.5 × 10 −1 ×
+
+Qwen3-14B 10 / 192 (5.2%) 8 / 192 (4.2%) 7 / 5 3.9 × 10 −1 ×
+
+Qwen3-32B 10 / 192 (5.2%) 5 / 192 (2.6%) 6 / 1 6.2 × 10 −2 ×
+
+Qwen3.5-Flash 9 / 192 (4.7%) 3 / 192 (1.6%) 6 / 1 6.2 × 10 −2 ×
+
+MiMo-V2.5 10 / 192 (5.2%) 7 / 192 (3.6%) 6 / 4 3.8 × 10 −1 ×
+
+GLM-4.7-Flash 1 / 192 (0.5%) 0 / 192 (0.0%) 1 / 0 5.0 × 10 −1 ×
+
+bench–GPT achieves a perfect 100 .0% at P@10. These results show that AuxMark can identify the specific leaked data with high precision across all six cohorts. 
+
+Table 8: Trace-level attribution accuracy. Each entry is the arithmetic mean of Precision @K
+
+over the four student models in the cohort. 
+
+Teacher Agent Mt Dataset P@10 P@15 P@20 P@25 P@30 
+
+GPT-OSS-120B BFCL 72.5% 80.0% 80.0% 79.0% 81.7% SWE-bench 100.0% 98.3% 96.2% 96.0% 94.2% Telecom 75.0% 78.3% 80.0% 82.0% 84.2% Kimi-K2.5 BFCL 82.5% 81.7% 82.5% 84.0% 80.8% SWE-bench 85.0% 86.7% 86.2% 82.0% 80.8% Telecom 80.0% 83.3% 82.5% 75.0% 70.8% 
+
+Overall average 82.5% 84.7% 84.6% 83.0% 82.1% 
+
+Impact on identification accuracy. To evaluate the impact of identification accuracy on detection accuracy, we simulate different training shares by resampling our empirical results. In practice, upstream traffic monitoring is often tuned for high recall to avoid missing distillation requests, which can introduce additional benign or unrelated trajectories into the suspicious set S. We test AuxMark 
+
+under lower shares down to 10%. Specifically, we divide the evaluated cards for each cohort and student model into trained and untrained groups. Next, we estimate their outcome distributions and resample these two groups at various target ratios. The 50% share serves as the observed baseline. For other simulated shares, we perform 2,000 independent draws and apply the same one-sided exact sign test. As shown in Figure 5, which reports the median p-value, all 24 settings remain significant at a 20% training share. At 10% , 21 of 24 settings remain significant. 16 Preprint 50 40 30 20 10 
+
+Training share (\%) 
+
+01234567
+
+> −log 10 p
+
+p = 0.05 
+
+(a) BFCL / GPT 50 40 30 20 10 
+
+Training share (\%) 
+
+0246810 12 14 16 
+
+> −log 10 p
+
+p = 0.05 (b) SWE-bench / GPT-OSS-120B 50 40 30 20 10 
+
+Training share (\%) 
+
+0246810 12 
+
+> −log 10 p
+
+p = 0.05 (c) Telecom / GPT 50 40 30 20 10 
+
+Training share (\%) 
+
+012345678910 11 
+
+> −log 10 p
+
+p = 0.05 
+
+(d) BFCL / Kimi 50 40 30 20 10 
+
+Training share (\%) 
+
+012345678
+
+> −log 10 p
+
+p = 0.05 (e) SWE-bench / Kimi-K2.5 50 40 30 20 10 
+
+Training share (\%) 
+
+0123456
+
+> −log 10 p
+
+p = 0.05 (f) Telecom / Kimi 
+
+Figure 5: Impact of identification accuracy. The horizontal axis denotes the training share and the vertical axis denotes − log 10 p, where larger values indicate stronger evidence. In (a)–(f), the colored lines and hollow markers denote student models: ◦ Mistral-24B, □ GLM-4.7-Flash, 
+
+△ Qwen3-14B, and ⋄ Qwen3-32B. The marks p = 0 .05 .B.3 SUPPLEMENTARY OF ROBUSTNESS Mistral GLM Q14 Q32 0246810 12    
+
+> −log 10 p 9.0 5.4 4.2 3.8
+> p= 0.05
+
+(a) BFCL: R1 Mistral GLM Q14 Q32 01234567  
+
+> −log 10 p 4.9 5.8 2.3 6.4
+> p= 0.05
+
+(b) BFCL: R2 Mistral GLM Q14 Q32 0123456  
+
+> −log 10 p 3.9 1.9 4.0 5.0
+> p= 0.05
+
+(c) BFCL: R3 Mistral GLM Q14 Q32 0510 15 20 25  
+
+> −log 10 p 14.0 19.2 13.5 9.0
+> p= 0.05
+
+(d) SWE-bench: R1 Mistral GLM Q14 Q32 0510 15 20 25    
+
+> −log 10 p 18.3 20.7 12.9 10.1
+> p= 0.05
+
+(e) SWE-bench: R2 Mistral GLM Q14 Q32 0510 15 20 25    
+
+> −log 10 p
+> 19.9 13.2 14.9 12.1
+> p= 0.05
+
+(f) SWE-bench: R3 
+
+Figure 6: Advanced data flooding robustness. The horizontal axis lists the four student models and the vertical axis reports − log 10 p. In (a)–(f), bar colors denote ■ Mistral-24B, ■ GLM-4.7-Flash, 
+
+■ Qwen3-14B, and ■ Qwen3-32B. The marks p = 0 .05 .
+
+Advanced data flooding. An attacker may build a diverse training set by collecting solutions to the same tasks from different teacher agents to improve the distilled model’s performance Cui et al. (2023); Luo et al. (2026), which also dilutes the watermark signals. To evaluate the robustness 17 Preprint of AuxMark against this advanced data flooding tactic, we mix the original watermarked dataset 
+
+Dc with clean trajectories generated by alternative teacher agents. Specifically, we sequentially introduce clean data from DeepSeek-V4-Flash, MiMo-V2.5, and Qwen3-235B-A22B. In the R1, R2, and R3 settings, we incorporate data from 1, 2, and 3 alternative teachers, resulting in ratios of 
+
+1:1 , 1:2 , and 1:3 . Then we use the combined dataset to train the student models and detect their watermarks. We evaluate a total of 24 settings across BFCL and SWE-bench, 3 dilution ratios, and 4 student models. As shown in Figure 6, AuxMark successfully detects every setting. Even under the most challenging R3 setting, all 8 tested student models remain successfully detected. 
+
+Truncation. Before distillation, an attacker may truncate the trailing tokens of the interaction trajec-tories to fit the student models’ context length limits or to deliberately disrupt potential watermark signals Kirchenbauer et al. (2023). To evaluate the robustness against this operation, we remove 10%, 15%, and 20% of the tokens from the tail of each watermarked training sequence, and train the student models using these truncated trajectories. We evaluate a total of 24 settings across the BFCL and SWE-bench benchmarks, 3 truncation levels (T10, T15, and T20), and 4 student models. As shown in Figure 7, AuxMark successfully detects the watermark in every setting. Even under the most aggressive T20 truncation setting, all 8 tested student models remain successfully detected. Mistral GLM Q14 Q32 012345678 
+
+> −log 10 p
+> 2.4 6.6 2.2 3.6
+> p= 0.05
+
+(a) BFCL: T10 Mistral GLM Q14 Q32 0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5     
+
+> −log 10 p
+> 2.9 2.8 2.2 1.9
+> p= 0.05
+
+(b) BFCL: T15 Mistral GLM Q14 Q32 012345678   
+
+> −log 10 p
+> 2.7 2.4 3.9 6.6
+> p= 0.05
+
+(c) BFCL: T20 Mistral GLM Q14 Q32 0510 15 20    
+
+> −log 10 p
+> 16.4 16.1 6.4 7.4
+> p= 0.05
+
+(d) SWE-bench: T10 Mistral GLM Q14 Q32 0246810 12 14 16    
+
+> −log 10 p 10.9 9.9 13.7 4.7
+> p= 0.05
+
+(e) SWE-bench: T15 Mistral GLM Q14 Q32 0510 15 20   
+
+> −log 10 p 12.1 14.8 11.7 9.3
+> p= 0.05
+
+(f) SWE-bench: T20 
+
+Figure 7: Truncation robustness. The horizontal axis lists the four student models and the vertical axis reports − log 10 p . In (a)–(f), bar colors denote ■ Mistral-24B, ■ GLM-4.7-Flash, ■ Qwen3-14B, and ■ Qwen3-32B. The marks p = 0 .05 .
+
+Table 9: Agentwm robustness to data flooding.                                     
+
+> Dataset Student Model MsD1 D5
+> BFCL Mistral-24B 0/5×0/5×
+> GLM-4.7-Flash 0/5×0/5×
+> Qwen3-14B 2/5×0/5×
+> Qwen3-32B 1/5×0/5×
+> SWE-bench Mistral-24B 1/5×1/5×
+> GLM-4.7-Flash 2/5×0/5×
+> Qwen3-14B 0/5×1/5×
+> Qwen3-32B 0/5×1/5×
+
+Baseline robustness. Since Seqwm does not successfully detect distilled students(Table 3), we focus our robustness evaluation on Agen-twm under data flooding (the D1 and D5 set-tings). To ensure a rigorous comparison, we process the clean standard data to match the initial distribution Pc before mixing it with the watermarked traces. As shown in Table 9, all 16 evaluated settings fail to meet Agentwm’s 
+
+≥ 3/5 detection threshold. Agentwm encodes its watermark by shifting the tool-variant distribution towards Pwm . By flooding the training corpus with clean trajectories calibrated to Pc, the overall frequencies are pulled back towards the unwatermarked state. This directly dilutes the artificial dis-tributional signal, resulting in the distilled students not sufficiently reproducing the watermarked patterns for reliable detection. 18 Preprint 
+
+## C DISCUSSION ON STATISTICAL TEST 
+
+Table 10: Statistical-unit sensitivity. Entries count settings with an unadjusted one-sided sign-test p < 0.05 ; the 15% training-share row uses the median over 2,000 resamples.                
+
+> Condition Card-level Trace-level Probe-level
+> True positives 24/24 24/24 24/24 False positives 0/48 0/48 3/48 Paraphrasing attack 8/8 7/8 8/8 15% training share 24/24 22/24 24/24
+
+To evaluate how the choice of statistical unit affects detection results, we perform the same paired-probe tests at three granularities: card, trace, and probe levels. The card-level test ag-gregates parameterized probes derived from the same card, the trace-level test further aggregates all cards from the same trajectory, and the probe-level test directly treats each paired probe as an individual statistical unit. As shown in Table 10, the card- and trace-level tests remain consistent in the main effectiveness evaluation: both achieve 24/24 detections in the true-positive settings and 0/48 significant results in the false-positive settings. Differences mainly appear under more challenging conditions. Trace-level aggregation compresses multiple watermark releases from the same trajectory into a single sign, allowing evidence from different cards to cancel and thereby reducing statistical power and robustness. Consequently, de-tection decreases from 8/8 to 7/8 under the paraphrasing attack, and from 24/24 to 22/24 at a 15% training share. In contrast, although probe-level testing shows stronger apparent statistical power, it repeatedly counts parameterized probes that share the same underlying release behavior and context, resulting in 3/48 cases with p < 0.05 in the false-positive settings. Although none of these cases exceeds the final fullhit-gap threshold and therefore no actual false-positive decision is triggered, the results indicate a higher false-positive risk when probes are counted individually. Based on these observations, we use the card as the primary statistical unit: it avoids repeated counting of the same watermark release event while preserving effective evidence from distinct release events. 19 Preprint 
+
+## D DETAILED WATERMARKING PROTOCOLS 
+
+AuxMark Watermark Embedding Protocol 
+
+Inputs: Tool schema F, Secret key k, Trajectory ID id τ , Hyperparameters (p0, ∆p, p max , B, K ).
+
+Outputs: Watermarked trajectory τ , Private evidence card set Cτ .
+
+1. Initialization Phase: 
+
+• System Setup: 
+
+– Evaluate the tool schema F using the safety model Msafe to obtain the valid subset Fsafe .
+
+– Initialize the dynamic trigger probability p1 = p0, the remaining budget b1 = B, and an empty evidence set Cτ = ∅.
+
+2. Real-Time Embedding Phase: 
+
+For each step t immediately following a completed core action at−1
+
+> core
+
+, the system executes: • Dynamic Scheduling: 
+
+– Compute a cryptographic hash ut = Hash (k ∥ a ∥ id τ ∥ t) ∈ [0 , 1) .
+
+– If the budget is none ( bt = 0 ) or the condition is not met ( ut ≥ pt), skip and failure update. • Candidate Generation & Scoring: 
+
+– Generate K auxiliary candidates (tj
+
+> aux
+
+, a j
+
+> aux
+
+)Kj=1 using the teacher model Mt and filter them through the validation mechanism. 
+
+– For each valid candidate (tj
+
+> aux
+
+, a j
+
+> aux
+
+), compute the score Sj based on naturalness ( sj
+
+> rel
+
+), logical consistency ( sj
+
+> relb
+
+), and repeatability sj 
+
+> relb
+
+for the tool pairing (fcore , f j
+
+> aux
+
+).
+
+– Select the candidate with the highest score as (tbest aux , a best aux ). If no valid candidates exist, skip to the failure update. • Injection & Success Update: 
+
+– Inject (tbest aux , a best aux ) into the trajectory to receive the auxiliary observation obest aux .
+
+– Reset the probability pt+1 = p0 and decrement the budget bt+1 = bt − 1.
+
+– Increment the historical repeat count for this specific tool pairing (fcore , f best aux ).
+
+– Create an evidence card ct = ( h, t t−1
+
+> core
+
+, a t−1
+
+> core
+
+, o t−1
+
+> core
+
+, f best aux , p best aux ) and append it to Cτ .• Failure/Skip Update (Executed only if no injection occurred): 
+
+– Increase the trigger probability pt+1 = min {pt + ∆ p, p max } to boost future injection chances, and retain the current budget bt+1 = bt.
+
+Figure 8: The watermark embedding protocol of AuxMark .20 Preprint 
+
+AuxMark Watermark Detection Protocol 
+
+Inputs: Combined evidence pool CS , Suspect model Ms, Teacher model Mt, Hyperparameters (p, r, N ).
+
+Outputs: Detection decision ∈ { True , False }, and the statistical p−value .
+
+1. Probe Construction Phase: 
+
+For each evidence card ci ∈ C S , the system executes: • Paired Probes Generation: 
+
+– Generate up to Ni parameterized variants using card ci to form the real probe set pi
+
+> real
+
+.
+
+– Construct the corresponding fake probe set pi 
+
+> fake
+
+by replacing the core action in pi 
+
+> real
+
+with a semantically altered fake core. 
+
+2. Evaluation Phase: 
+
+For each probe variant j ∈ [1 , N i] of card ci, the system executes: • Target Model Query & Parsing: 
+
+– Submit the real probe pi 
+
+> real ,j
+
+to the suspect model Ms and parse the output to compute the strict fullhit indicator hreal  
+
+> i,j
+
+∈ { 0, 1}.
+
+– Submit the fake probe pi 
+
+> fake ,j
+
+to the suspect model Ms and parse the output to compute the strict fullhit indicator hfake  
+
+> i,j
+
+∈ { 0, 1}.
+
+3. Card-Level Aggregation Phase: 
+
+For each card ci ∈ C S , the system executes: • Hit Rate & Performance Calculation: 
+
+– Compute the hit rates across all Ni variants: Rreal  
+
+> i
+
+= 1
+
+> Ni
+
+P 
+
+> j
+
+hreal  
+
+> i,j
+
+and Rfake  
+
+> i
+
+= 1
+
+> Ni
+
+P 
+
+> j
+
+hfake  
+
+> i,j
+
+.
+
+– Calculate the performance difference: ∆i = Rreal  
+
+> i
+
+− Rfake  
+
+> i
+
+.
+
+– Tally the results: increment the real win count w if ∆i > 0, and increment the fake win count 
+
+ℓ if ∆i < 0 (ties where ∆i = 0 are excluded). 
+
+4. Statistical Test & Decision Phase: 
+
+• Hypothesis Testing: 
+
+– Compute the one-sided exact sign-test p−value = Pw+ℓk=w
+
+ w+ℓk
+
+2−(w+ℓ).
+
+– Compute the global mean difference ∆mean = 1 
+
+> |C S|
+
+P 
+
+> i
+
+∆i.• Dual Criteria Check: 
+
+– Output True (Detection Successful) if both p−value < p and ∆mean ≥ r hold. Otherwise, output False .
+
+Figure 9: The watermark detection protocol of AuxMark .21 Preprint 
+
+## E LIMITATIONS OF UNWATERMARKED DISTILLATION DETECTION 
+
+We additionally investigate approaches that infer distillation from similarity to a suspected teacher without an embedded watermark. We examine two representative similarity-based analyses of dis-tillation: token-level n-gram overlap under reasoning prefilling (Panfilov et al., 2026) and agent execution graph similarity (Yang et al., 2026a). These approaches assess similarity at the levels of surface text and structured tool-use behavior, respectively. Our analyses show that shared so-lution patterns and response formatting can yield high textual overlap, while structurally different dependency graphs can receive near-perfect similarity scores. High scores therefore admit multiple explanations and do not uniquely identify a training source. E.1 VULNERABILITIES IN TOKEN -L EVEL N-GRAM MATCHING 
+
+Panfilov et al. (2026) study visible-answer overlap after prefilling a model’s reasoning channel with a short teacher reasoning prefix. Their Appendix B.2 evaluates 30 Humanity’s Last Exam problems using shared 1-, 2-, and 3-grams against the first 100 tokens of the reference answer, with best-of-
+
+k sampling up to k = 100 . The visible answer is generated entirely by the target model. Their Figures 11–23 illustrate 13 public examples with problem statements, teacher reasoning excerpts, and visible-answer excerpts. Using selected public cases, we test whether alternative prefixes and shared solution patterns can produce high overlap with the same teacher reference. We use a fixed local overlap implementation. For each candidate a and reference b, we tokenize both texts with the same regex tokenizer and retain up to their first 100 tokens. Let Gn(x) denote the set of distinct n-grams in the retained tokens of x. We compute 
+
+sngram (a, b ) = 
+
+P3 
+
+> n=1
+
+|Gn(a) ∩ Gn(b)|
+
+P3 
+
+> n=1
+
+|Gn(b)| . (15) 
+
+Alternative prefixes and comparisons across model versions. On the geometry problem in Fig-ure 11 of Panfilov et al. (2026), Kimi-K2.6, which was publicly released before Claude Opus 4.8 (Team et al., 2025; Anthropic, 2026), obtains mean/best-of-4 scores of 0.274 /0.565 with the teacher opening This is a known , compared with 0.373 /0.662 under This is an unfamiliar 
+
+and 0.250 /0.415 without a prefix. The best local score of 0.662 approaches the reported 0.80 over-lap between prefilled Kimi-K3 and Opus 4.8. Within this fixed scoring setup, the alternative prefix produces a larger increase than the authentic prefix across both metrics. The selected 0.662 answer shares the opening derivation order C, F, E, D, B with the Opus 4.8 reference, as shown in Fig-ure 10. The sampled Opus 4.6 answers use tables or different orders; the highest score among these answers is 0.343 against the same reference. Thus, this local formatting match is not exclusive to the teacher prefix or to the sampled Claude-family answers. 
+
+Convergence on standard solutions. For the linear differential equation in Figure 13 of Panfilov et al. (2026), a standard solution uses a cosh integrating factor. Without a teacher prefix, GPT-OSS-120B reaches a mean overlap of 0.500 and a best-of-4 score of 0.537 . Kimi-K2.6 similarly scores 
+
+0.501 without a prefix and 0.502 with the teacher prefix. The unprefilled local scores are numerically close to the reported 0.50 overlap between prefilled Kimi-K3 and Opus 4.8. The unprefilled answer excerpts are shown in Figure 11. Our results show that substantial local overlap can arise in standard solutions with conventional terminology and ordering, while the teacher prefix adds little in the Kimi-K2.6 comparison. 
+
+Response steering and sampling. Visible-answer overlap must also be interpreted in light of how responses are generated, presented, and selected. In our geometry evaluation of Kimi-K3, all 20 completions across five prefix conditions re-derive the solution, and none states the answer within its first 50 reasoning tokens, unlike the early answer in the reference trace. Higher visible overlap can therefore coexist with a different observed reasoning pattern. At the level of answer presentation, even correct solutions can receive very low scores when little matching text is available: for the problem in Figure 15 of Panfilov et al. (2026), four correct answers constrained to at most 15 words each score 0.005 . Such sensitivity to presentation also matters when interpreting best-of-k results, which report the largest overlap in a sampling pool. Formatting cues can therefore raise the reported score through occasional high-overlap completions without representing typical output behavior. 22 Preprint Opus 4.8                                                         
+
+> ## Setting Up Coordinates Let me place the points on anumber line with $A =0$. **Finding positions from the given distances:** -$AC =26 \Rightarrow C=26$ -$AF =73 \Rightarrow F=73$ -$CE =31 \Rightarrow E=57$ -$DF =33 \Rightarrow D=73 -33 =40$ -$BD =22 \Rightarrow B=40 -22 =18$
+
+Kimi-K2.6 (prefilled)                                                          
+
+> Place the six collinear points on the $x$-axis. Set $A$ at the origin, so $a=0$. From the given lengths: -$AC =26 \Rightarrow c=26$ -$AF =73 \Rightarrow f=73$ -$CE =31 \Rightarrow e=c+31 =57$ -$DF =33 \Rightarrow d=f-33 =40$ -$BD =22 \Rightarrow b=d-22 =18$ Thus the coordinates are $$A(0),\; B(18),\; C(26),\; D(40),\; E(57),\; F(73).$$
+
+Opus 4.6                                                                                       
+
+> ## Setting Up Coordinates Iplace the points on anumber line with **A =0**. Using the given distances: |Equation |Result ||---|---| |AF =73 |**F =73** ||AC =26 |**C =26** ||DF =33 →d=73 −33 |**D =40** ||BD =22 →b=40 −22 |**B =18** ||CE =31 →e=26 +31 |**E =57** |**Verification of order:** A(0) <B(18) <C(26) <D(40) <E(57) <F(73) ✓
+
+Figure 10: Excerpts from the original answers to the geometry problem in Figure 11 of Panfilov et al. (2026). Green shading marks the shared C, F, E, D, B derivation order. For each candidate model, we show the highest-overlap answer from four samples. Opus 4.8               
+
+> ## Setting Up the Solution The equation is linear: $$x_3' +\tanh(t) x_3 =e^{-t/3}.$$ **Integrating factor:** $$\mu(t)=\exp\left(\int\tanh t\,dt\right)=\exp(\ln\cosh t)=\cosh t.$$
+
+Kimi-K2.6 (unprefilled)                
+
+> The given first-order linear ODE is $$x_3'(t)+\tanh(t)\,x_3(t)=e ^{-t/3}, \qquad x_3(0)=5. $$ **1. Solve the ODE.** The integrating factor is $$\mu(t)=\exp\!\left(\int \tanh t\,dt\right)=\exp\! \bigl(\ln\cosh t\bigr)= \cosh t.$$
+
+GPT-OSS-120B (unprefilled)           
+
+> The linear equation \[ x_3'(t)+\tanh t\,x_3(t)=e^{-t/3},\qquad x_3(0)=5 \] has integrating factor \[ \mu(t)=\exp\!\Bigl(\int \tanh t\,dt\Bigr)=\exp(\ln \cosh t)=\cosh t.\]
+
+Figure 11: Excerpts from the original answers to the differential-equation problem in Figure 13 of Panfilov et al. (2026). Green shading marks the shared cosh t integrating factor. Each candidate has the highest reported overlap among four unprefilled samples. E.2 VULNERABILITIES IN AGENT EXECUTION GRAPH SIMILARITY 
+
+AgentEcho’s Action Graph Similarity (AGS) averages optional-tool agreement Snode , sequential-pattern similarity Sseq , and dependency-pattern similarity Sdep (Yang et al., 2026a). Moving from text to tool behavior introduces structural evidence, but its interpretation depends on which graph properties the metrics preserve. 
+
+Scale invariance and structural ambiguity. For a dependency graph G, Sdep compares ϕ(G) = (rreuse , d max , r fanout ) by cosine similarity (Yang et al., 2026a, Appendix B.4). These features de-scribe the fraction of calls after the first that receive dependency inputs, the longest dependency path, and the fraction of source nodes with multiple outgoing dependency edges. Cosine similarity ignores feature-vector magnitude. Consider two graphs with 11 nodes: one contains a single dependency edge, whereas the other is a complete 10-edge chain. With path length measured in edges, 
+
+ϕ(Gsingle ) = (0 .1, 1, 0) , ϕ(Gchain ) = (1 , 10 , 0) = 10 ϕ(Gsingle ). (16) 23 Preprint Their Sdep is exactly 1 despite large differences in reuse and dependency depth. Hence, a perfect score does not guarantee closely matching dependency structures. 
+
+Evidence from tool trajectories. We audit 75 trajectories from five models on 15 tasks and compare all ten model pairs within each task, yielding 150 comparisons. The mean Sdep is 0.885 , and 121 comparisons score at least 0.9. Among these, 53 have dependency edge counts differing by at least three, and 49 pair a successful trajectory with a failed one. In retail-37 , a failed trajectory with one dependency edge and a successful trajectory with 12 edges score 0.991 . We further verify candidate dependency edges with an LLM judge, using anonymized values and a prompt adapted from the published protocol (Yang et al., 2026a, Appendix B.1). Both the score and the edge-count discrepancy remain unchanged for this example. Thus, near-perfect dependency similarity persists despite substantial structural differences, even after LLM-based edge verification. 
+
+Behavioral convergence after reasoning distillation. Inspired by the reference-based formulation of Rawat et al. (2026), we measure changes in behavioral similarity relative to the base checkpoint. We use the Qwen3.5-9B base model as the reference checkpoint and evaluate its publicly released reasoning-distilled variant. 2 The model card identifies Claude Opus 4.6 as the teacher. Our audit of 12,592 publicly available examples from the model card’s listed datasets finds no structured tool trajectories. We use the same agent harness and user simulator for 15 τ -bench-style tasks, with one rollout per model and task. Claude Sonnet 4.5 (thinking), Kimi-K2 (thinking), and GPT-OSS-120B serve as comparison models.                         
+
+> Comparison model AGS base AGS dist ∆AGS ∆Snode ∆Sseq ∆Sdep
+> Claude Sonnet 4.5 (thinking) 0.549 0.709 +0.160 −0.031 +0.425 +0.086 Kimi-K2 (thinking) 0.561 0.850 +0.289 +0.042 +0.750 +0.077 GPT-OSS-120B 0.584 0.770 +0.186 −0.047 +0.525 +0.080
+
+Table 11: Changes in AGS and its components after reasoning distillation on the same 15 tasks. Component values are rounded independently. Table 11 shows that AGS increases toward all three models, alongside a rise in task success from 
+
+4/15 to 12 /15 . The gains are dominated by Sseq , which increases by 0.425 –0.750 . In contrast, 
+
+Sdep increases by 0.077 –0.086 , while Snode decreases toward both Claude and GPT-OSS. Thus, these gains primarily reflect convergence in local execution statistics and do not uniquely identify teacher-specific tool-use inheritance. 
+
+Implications for attribution. These cases expose ambiguity in interpreting high unwatermarked similarity as evidence of a specific training source. They motivate controls for shared solutions, re-sponse presentation, and general behavioral improvement, alongside calibrated false-positive rates. Our watermarking framework provides private verification signals tied to recorded teacher interac-tions. 
+
+> 2Model card: Jackrong’s reasoning-distilled Qwen3.5-9B (GGUF).
+
+24

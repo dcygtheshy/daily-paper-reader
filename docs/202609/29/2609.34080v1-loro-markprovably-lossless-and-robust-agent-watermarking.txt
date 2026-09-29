@@ -1,0 +1,647 @@
+Title: LoRo-Mark:Provably Lossless and Robust Agent Watermarking
+
+URL Source: https://arxiv.org/pdf/2609.34080v1
+
+Published Time: Tue, 29 Sep 2026 02:58:29 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# LORO-M ARK : PROVABLY LOSSLESS AND ROBUST 
+
+# AGENT WATERMARKING 
+
+HaoYang Zou 
+
+University of Science and Technology of China 
+
+Yao Wang 
+
+University of Science and Technology of China 
+
+Jun Yao 
+
+University of Science and Technology of China 
+
+Weiming Zhang 
+
+University of Science and Technology of China 
+
+Han Fang 
+
+University of Science and Technology of China 
+
+# ABSTRACT 
+
+As large language model (LLM) agents are increasingly deployed as commer-cial services, protecting their proprietary orchestration logic and tool-use policies has become an important concern. We consider a realistic infringement scenario, termed agent repackaging , in which an adversary integrates a protected agent into its own application through an API and presents it under its own service iden-tity. The adversary may further modify parts of its execution process to obscure the original source. In such cases, the owner typically has access only to the repackaged service interface, making black-box ownership verification essential. Agent watermarking provides a natural way to embed ownership evidence into the agent’s behavior for later verification. Under this setting, we argue that an effective watermark should satisfy two key requirements: losslessness, requiring watermarking to preserve the agent’s original functionality, and robustness, re-quiring ownership evidence to remain recoverable after partial modification of the execution process. Existing methods, however, typically embed ownership signals into behavior selection or execution trajectories, intervene in normal agent decisions and provide limited robustness to behavior modification. To address these limitations, we propose LoRo-Mark , a provably lo ssless and ro bust agent water mark ing mechanism. For losslessness, LoRo-Mark isolates watermarking into a cryptographically authenticated forensic branch that remains inactive during normal execution and can only be activated by owner-authorized requests. By reducing unauthorized branch activation to standard MAC security, LoRo-Mark provides a formal cryptographic guarantee of performance preservation. For ro-bustness, it redundantly distributes ownership information across forensic behavior sequences, enabling reliable recovery under partial behavior substitution and se-quence truncation. Experiments across multiple LLM agents demonstrate zero degradation on normal tasks and reliable ownership verification under sequence modifications. 
+
+# 1 INTRODUCTION 
+
+Large language model (LLM) agents are increasingly deployed in enterprise automation, software engineering, and other real-world applications (Yang et al., 2024; Zhou et al., 2023; Bran et al., 2023; Wang et al., 2023). Beyond the underlying foundation model, their practical value often lies in system-level capabilities such as task decomposition, tool-use strategies, domain-specific prompting, and the handling of intermediate observations, which together determine how an agent plans and executes complex multi-step tasks (Xi et al., 2025; Yao et al., 2023b; Schick et al., 2023; Park et al., 2023; Liu et al., 2024a; Shinn et al., 2023; Yao et al., 2023a; Wei et al., 2022; Nakano et al., 2021; Qin et al., 2023; Patil et al., 2023; Karpas et al., 2022). Developing such orchestration logic typically requires substantial engineering effort and accumulated operational expertise, making it an 1arXiv:2609.34080v1 [cs.CR] 28 Sep 2026 Figure 1: Scenario of repackaging infringement: A downstream user sends a request to the repackaged agent to book a specific flight. The repackaged agent completes the booking task via a sequence of tool calls and returns an edited output modified from the initial output to obscure the original source. increasingly important form of intellectual property. Protecting this system-level IP has therefore become a growing concern as agent-based services move toward large-scale deployment (Wang et al., 2026). Among the potential threats to agent IP, we focus on a realistic yet under-explored infringement scenario, which we term agent repackaging. As illustrated in Figure 1, an adversary may integrate a protected agent into its own application through an API and present it under its own service identity. To obscure the original source, the adversary can alter the host application’s front-end presentation, including the displayed agent thinking process, behavior sequence, action trajectory, and observation results. Such repackaging allows the adversary to exploit the capabilities of a non-self-developed agent while presenting them as its own. More importantly, the original owner typically has no access to the internal implementation of the suspicious service and can only interact with its exposed interface, making black-box ownership verification particularly important. Agent watermarking therefore provides a natural means of embedding ownership evidence into agent behavior for subsequent verification (Uchida et al., 2017; Adi et al., 2018; Rouhani et al., 2018; Chen et al., 2018; 2019; Kirchenbauer et al., 2023; Christ et al., 2024; Kuditipudi et al., 2024; Dathathri et al., 2024; Huang et al., 2025; 2026; Wang et al., 2026). Under agent repackaging, an effective watermark should satisfy two key requirements: losslessness and robustness (Christ et al., 2024; Kuditipudi et al., 2024). First, watermarking is introduced for ownership protection and should therefore preserve the agent’s original functionality during normal use. Second, a repackaging adversary may partially modify the agent’s execution process to obscure its source, requiring ownership evidence to remain recoverable after such modifications. Existing agent watermarks, however, typically encode ownership signals through specific behavior selections or execution trajectories (Huang et al., 2025; 2026; Wang et al., 2026; An et al., 2026). Such designs intervene in the agent’s decision process, making strict functionality preservation difficult, while the resulting ownership evidence remains vulnerable to downstream behavior modification. These limitations motivate us to rethink how watermarking should interact with agent execution. For provable losslessness, the key is to maintain an untouched normal execution path while making unauthorized activation of the watermark branch cryptographically negligible. Rather than minimizing watermark-induced perturbations, we preserve the original execution path for ordinary requests and activate watermarking only through a MAC-authenticated forensic branch (Bellare et al., 1996; Goldwasser et al., 2022; National Institute of Standards and Technology, 2008). For robustness, we redundantly distribute ownership information across the forensic behavior sequence, preventing the evidence from depending on any single behavior and enabling its recovery after partial behavior modification or truncation (Lin & Costello, 2004). Building on these principles, we propose LoRo-Mark , a provably lo ssless and ro bust agent wa-ter mark ing mechanism for black-box ownership verification. LoRo-Mark uses cryptographic authen-tication to control access to the forensic branch and redundantly embeds copyright information across the resulting behavior sequence (Bellare et al., 1996; National Institute of Standards and Technology, 2008). During verification, the owner uses the secret key to reconstruct the pseudorandom behavior mappings, translate the observed behaviors back into watermark bits, and recover the copyright 2message through redundancy-aware decoding (Goldreich et al., 1986; Lin & Costello, 2004). We formally reduce unauthorized branch activation to MAC-EUF-CMA security, establishing provable performance preservation for ordinary requests, and derive recovery guarantees under behavior substitution and sequence truncation. Our main contributions are summarized as follows: • We focus on agent repackaging , a realistic yet under-explored infringement scenario in which a protected agent can be proxied, redeployed, and partially modified behind a black-box service. We identify losslessness and robustness as two key requirements for agent watermarking under this setting: preserving the agent’s original functionality while retaining ownership evidence after repackaging. • We propose LoRo-Mark , a provably lossless and robust agent watermarking mechanism. LoRo-Mark maintains an untouched normal execution path through a MAC-authenticated forensic branch, making unauthorized activation cryptographically negligible, while redundantly encoding ownership information across forensic behavior sequences to enable reliable recovery under partial behavior substitution and sequence truncation. • We provide rigorous theoretical and empirical validation of both properties. Extensive experiments across diverse agents, models, and tasks demonstrate zero degradation on normal execution and reliable ownership verification under substantial sequence modifications. 
+
+# 2 RELATED WORK 
+
+2.1 AGENT WATERMARKING 
+
+Existing agent watermarking approaches embed ownership signals across three principal loci— planning behaviors, execution trajectories, and memory-state evolutions. At the behavior layer, Agent-Guide (Huang et al., 2025) targets high-level planning decisions rather than surface tokens (Kirchen-bauer et al., 2023; Christ et al., 2024; Kuditipudi et al., 2024; Dathathri et al., 2024). It biases the behavior distribution over a predefined set B via a pseudorandom green-list (Kirchenbauer et al., 2023) and uses a 𝑧 -statistic aggregated over multiple rounds for single-bit presence detection. 
+
+AgentMark (Huang et al., 2026) instead encodes multi-bit identifiers through distribution-preserving conditional sampling , which preserves the marginal behavior distribution while remaining compatible with black-box agent APIs. At the trajectory layer, SeqWM (An et al., 2026) conditions each embed-ding step on history-dependent state transitions; ACTHOOK (Meng et al., 2026) injects auxiliary decoy actions activated by predefined trigger keys; and AGENTWM (Wang et al., 2026) discovers pools of semantically equivalent tool-execution paths and biases the agent toward user-specific subsets, with verification based on Jensen–Shannon divergence. At the memory layer, MEMMARK (Zhang et al., 2026) embeds signals into latent memory-state transitions, enabling provenance attribution from the final memory snapshot even when intermediate trajectories are unavailable. 2.2 CRYPTOGRAPHICALLY UNDETECTABLE BACKDOORS 
+
+Shafi Goldwasser and his coworkers demonstrated that a malicious trainer can plant undetectable backdoors in classifiers: no computationally bounded observer, whether black-box or white-box, can tell backdoored models apart from clean ones without the secret key (Goldwasser et al., 2022). Their design runs a digital-signature verification circuit parallel to the base model, activating the backdoor solely for valid-signature inputs while leaving others intact, with white-box undetectability grounded in Sparse PCA hardness. The core insight is that a secret key provides cryptographically secure control over model behavior — key holders can reliably trigger target outputs, whereas observers without keys detect nothing. We draw inspiration from this key-driven behavioral asymmetry. Nevertheless, agent scenarios bring unique hurdles including multi-step reasoning, tool calls, and emergent plan-level semantics, so we cannot directly reuse classifier-level constructions and must build an agent-tailored watermarking protocol instead. 3Figure 2: An overview of LoRo-Mark. 
+
+# 3 METHODOLOGY 
+
+3.1 THREAT MODEL 
+
+Adversary Capabilities. We model a protected agent as 𝐴 = (𝑀, Π, T ) , where 𝑀 denotes the underlying LLM, Π the orchestration policy, and T the available tool set. At step 𝑡 , the agent selects a high-level behavior 𝑏 𝑡 ∈ B 𝑡 from a candidate behavior set B𝑡 and instantiates it into a concrete action 
+
+𝑎 𝑡 . A complete execution produces a behavior sequence 𝜏 𝑏 = (𝑏 1, . . . , 𝑏 𝑛 ) and the corresponding action trace 𝜏 𝑎 = (𝑎 1, . . . , 𝑎 𝑛 ) (Huang et al., 2025; 2026; Wang et al., 2026). After obtaining access to the protected agent, the adversary may repackage it into a new service 𝐴 ′ = (𝑀, Π, T ) ,while preserving the underlying LLM, orchestration policy, available tools, and actual execution process. Instead, the adversary may modify the host application’s front-end presentation, including the displayed agent thinking process, behavior sequence, action trajectory, and observation results, before exposing them to downstream users. We therefore view agent repackaging as a service-level transformation 
+
+R : 𝐴 → 𝐴 ′,
+
+where R leaves the execution flow, decision logic, tool set, and actual trajectory unchanged, but modifies their exposed presentation while still preserving the core utility and advertised functionality of the original agent. The adversary may know the watermarking mechanism and interact with the protected agent through public interfaces, but does not possess the owner’s secret keys. 
+
+Defender Goal. Given only black-box access to the repackaged agent 𝐴 ′, the defender aims to determine whether 𝐴 ′ still contains or invokes the protected agent 𝐴 (Huang et al., 2025; 2026; Wang et al., 2026). The defender constructs an owner-authorized forensic request 𝑥 ∗ using the secret key 𝑘 and submits it to 𝐴 ′. The repackaged service returns an observable execution trace 
+
+𝜏 ′ =  𝑏 ′
+
+> 1
+
+, 𝑎 ′
+
+> 1
+
+, . . . , 𝑏 ′
+
+> 𝑚
+
+, 𝑎 ′
+
+> 𝑚
+
+, which may already have been modified by the repackaging transformation 
+
+R. The defender then applies a keyed extractor ˆ𝑐 = Ext 𝑘 (𝜏 ′) to recover the ownership message and accepts the ownership claim iff Ver 𝑘 ( ˆ𝑐, 𝑐 ) = 1, where 𝑐 is the claimed watermark payload. Accordingly, the verification goal is successful black-box watermark recovery from the repackaged execution trace, even when 𝜏 ′ has undergone partial modification or truncation. 3.2 LORO-M ARK 
+
+Figure 2 presents an overview of LoRo-Mark. LoRo-Mark is designed around the two requirements identified above: provable losslessness and robustness . Accordingly, its design consists of two key components. First, forensic branching preserves an untouched execution path for ordinary requests while making unauthorized activation of the watermark branch cryptographically negligible, thereby enabling provable losslessness. Second, redundant behavioral watermarking (Lin & Costello, 2004) 4distributes ownership information across the forensic behavior sequence, allowing the watermark to remain recoverable under partial sequence modification. 3.2.1 FORENSIC BRANCHING 
+
+The key to provable losslessness is not merely to reduce watermark-induced perturbations, but to ensure that ordinary requests remain on an execution path untouched by watermarking, except with cryptographically negligible probability. To achieve this, we place all watermark functionality behind an authenticated forensic branch. An ordinary request follows the original agent execution path without watermark intervention, whereas only a request carrying a valid owner-generated authentication tag can activate the forensic branch. We instantiate this design through three modules: 
+
+Key Generation , Trigger Task Generation , and Forensic Detection .
+
+Key Generation. At deployment time, given a security parameter 𝜆 , the developer samples a master key 𝑘 master and derives three subkeys {𝑘 det , 𝑘 prv , 𝑘 emb } through domain-separated PRF evalua-tions (Goldreich et al., 1986). The detection key 𝑘 det authenticates forensic requests, 𝑘 emb determines how authentication information is encoded into valid task parameters, and 𝑘 prv is reserved for keyed behavioral watermarking in the forensic branch. The owner retains these keys for forensic verification, while the deployed agent stores the corresponding keys required for request detection and watermark generation. 
+
+Trigger Task Generation. To initiate ownership verification, the owner constructs an authenticated forensic request from an otherwise valid task 𝑇 body . Let 𝑃 denote a set of semantically valid task parameters, such as budget, date, quantity, preference, or priority. We first compute (Bellare et al., 1996) 
+
+𝜎 = MAC (𝑘 det , 𝑇 body ),
+
+and then use 𝑘 emb to encode 𝜎 into the parameter values 𝑃 . The resulting forensic request is 
+
+𝑇 ∗ = 𝑇 body ⊕ 𝑃, 
+
+where ⊕ denotes assembling the task body with the encoded parameters. Because 𝑃 occupies legitimate parameter slots and remains within their valid domains, 𝑇 ∗ retains the syntax and semantics of a valid agent request. When the available parameter capacity is smaller than the full MAC output, the authentication tag can be truncated to ℓ bits; the resulting security–capacity trade-off is evaluated in Section 5. 
+
+Forensic Detection. Forensic detection (denoted as F ) is implemented in the agent harness and is performed before LLM execution. Given an incoming request 𝑇 = (𝑇 body , 𝑃 ), it computes 
+
+𝜎 expected = MAC (𝑘 det , 𝑇 body ), (1) 
+
+𝜎 decoded = D ( 𝑃, 𝑘 emb ). (2) where D indicates the operation that decodes 𝜎 decoded from the parameters 𝑃 . If 𝜎 expected = 𝜎 decoded ,the request is routed to the forensic branch; otherwise, it proceeds along the original execution path. Hence, activating the forensic branch without the owner’s keys requires producing a valid authentication tag. For any unauthorized request 𝑇 ,
+
+Pr [F ( 𝑇 ) = 1] ≤ 𝜀 MAC (𝜆 ), (3) where 𝜀 MAC (𝜆 ) is negligible under standard MAC security (Bellare et al., 1996). Consequently, ordinary requests remain on the original execution path except with cryptographically negligible probability, providing the basis for LoRo-Mark’s provable losslessness. 3.2.2 REDUNDANT BEHAVIORAL WATERMARKING 
+
+LoRo-Mark embeds the ownership information into the resulting behavior sequence. The key design principle for robustness is to avoid relying on any individual behavior as ownership evidence. Instead, we redundantly encode the copyright message and distribute the encoded bits across multiple forensic behaviors. Consequently, even if part of the behavior sequence is substituted or truncated during repackaging, the surviving behaviors can still provide sufficient evidence for watermark recovery. This process consists of three stages: Redundant Encoding , Behavioral Embedding , and Watermark Verification .5Redundant Encoding. Let 𝑐 denote the copyright message and 𝑛 = 8|𝑐 | its bit length, with 
+
+𝑐 = (𝑐 0, 𝑐 1, . . . , 𝑐 𝑛 −1). To distribute each copyright bit across different positions of the forensic sequence, we encode 𝑐 with repetition redundancy 𝑟 (Lin & Costello, 2004). Rather than placing the 
+
+𝑟 copies of each bit consecutively, we interleave multiple copies of the entire copyright message: 
+
+𝑀 = (𝑐 0𝑐 1 · · · 𝑐 𝑛 −1) ∥ · · · ∥ ( 𝑐 0𝑐 1 · · · 𝑐 𝑛 −1), (4) where the message is repeated 𝑟 times and |𝑀 | = 𝑛𝑟 . Hence, the 𝑘 -th copy of copyright bit 𝑐 𝑖 appears at position 𝑖 + 𝑘𝑛 in 𝑀 . This interleaved layout spreads different copies of the same copyright bit across distant positions of the behavior sequence, allowing them to survive partial sequence corruption and truncation. 
+
+Behavioral Embedding. LoRo-Mark next maps the redundantly encoded bitstream 𝑀 into a sequence of forensic behaviors. Given the authentication tag 𝜎 generated for the forensic request, we derive a request-specific embedding key 
+
+𝑘 step = MAC (𝑘 prv , 𝜎 ). (5) At execution step 𝑡 , the agent observes 𝑜 𝑡 and constructs an admissible candidate behavior set B𝑡 .Using 𝑘 step and 𝑜 𝑡 , LoRo-Mark generates a pseudorandom permutation 𝜋 𝑡 = PRF (𝑘 step , 𝑜 𝑡 , B𝑡 ) (Gol-dreich et al., 1986) over the candidate behaviors. The number of bits that can be embedded at this step is 𝑞 𝑡 = log 2 |B 𝑡 |. LoRo-Mark reads the next 𝑞 𝑡 bits from 𝑀 , interprets them as an integer 
+
+𝑗 𝑡 ∈ [ 0, 2𝑞 𝑡 − 1], and selects 𝑏 𝑡 = 𝜋 𝑡 [ 𝑗 𝑡 ]. Repeating this process across execution steps produces the forensic behavior sequence 
+
+𝜏 = (𝑏 1, 𝑏 2, . . . , 𝑏 𝑆 ),
+
+through which the redundant copyright bitstream is distributed across multiple observable behaviors. 
+
+Watermark Verification. Given a behavior sequence 𝜏 ′ = (𝑏 ′
+
+> 1
+
+, . . . , 𝑏 ′ 
+
+> 𝑆 ′
+
+) observed from a suspi-cious repackaged service, the owner reverses the embedding process using the secret key. For each surviving behavior 𝑏 ′ 
+
+> 𝑡
+
+, the verifier reconstructs the same candidate set and pseudorandom ordering 𝜋 𝑡 ,identifies the index of 𝑏 ′ 
+
+> 𝑡
+
+in 𝜋 𝑡 , and converts that index back into the corresponding embedded bits. Aggregating the extracted bits yields a recovered redundant bitstream b𝑀 .The verifier then groups the surviving copies corresponding to each copyright bit and performs majority decoding (Lin & Costello, 2004) to obtain 
+
+ˆ𝑐 = ( ˆ𝑐 0, . . . , ˆ𝑐 𝑛 −1).
+
+The ownership claim is accepted iff ˆ𝑐 = 𝑐 claimed .Because each copyright bit is represented at multiple positions, as long as sufficient copies survive for decoding, the ownership message remains recoverable. We formalize these robustness guarantees under behavior substitution and sequence truncation in Section B.3. 
+
+# 4 PROVABLE LOSSLESSNESS 
+
+The losslessness of LoRo-Mark follows from a simple observation: the watermarked agent differs from the original agent only when the forensic branch is activated. Therefore, it suffices to show that an unauthorized request activates this branch only with cryptographically negligible probability. We first bound such unauthorized activation through the security of the underlying MAC (Bellare et al., 1996; National Institute of Standards and Technology, 2008), and then show that this bound directly implies losslessness. 
+
+Definition 1 ((𝜀, 𝑡, 𝑞, 𝜆 )-losslessness) . Let API WM denote the LoRo-Mark-protected agent and 
+
+API plain the original agent. LoRo-Mark is (𝜀, 𝑡, 𝑞, 𝜆 )-lossless if, for every PPT distinguisher A
+
+running in time at most 𝑡 and making at most 𝑞 API queries without access to the owner’s secret keys, 
+
+Adv loss (A) := Pr [A API WM → 1] − Pr [A API plain → 1] ≤ 𝜀 (𝜆 ). (6) 
+
+Theorem 1 (Provable Losslessness of LoRo-Mark) . Suppose the MAC scheme used by LoRo-Mark is (𝜀 MAC , 𝑡, 𝑞, 𝜆 )-EUF-CMA secure. Then LoRo-Mark is (𝜀 MAC , 𝑡, 𝑞, 𝜆 )-lossless. 
+
+6Proof. We prove the result in two steps. 
+
+Step 1: Unauthorized forensic activation is negligible. Consider any request 𝑇 = (𝑇 body , 𝑃 ) that is not generated by the authorized Trigger Task Generation process. Forensic Detection accepts 𝑇 only if 
+
+D ( 𝑃, 𝑘 emb ) = MAC (𝑘 det , 𝑇 body ). (7) Hence, an adversary that successfully constructs an unauthorized request accepted by Forensic Detection also produces a valid authentication tag for 𝑇 body .Suppose an adversary A can cause such an activation with probability 𝑝 . We construct a MAC forger B that samples 𝑘 emb independently and runs A. Whenever A outputs an accepted request 
+
+𝑇 = (𝑇 body , 𝑃 ), B outputs  𝑇 body , D ( 𝑃, 𝑘 emb ) (8) as a MAC forgery. Therefore, by EUF-CMA security, 
+
+Pr [Bad ] := Pr [∃ 𝑇 : F ( 𝑇 ) = 1 for an unauthorized 𝑇 ] ≤ 𝜀 MAC (𝜆 ). (9) 
+
+Step 2: No forensic activation implies identical normal execution. Conditioned on ¬Bad , every query issued by A follows the original execution path of the agent. LoRo-Mark does not mod-ify the underlying model, orchestration policy, tool invocation, or output generation on this path. Consequently, API WM and API plain induce identical output distributions conditioned on ¬Bad .The two APIs can therefore differ only if Bad occurs, yielding 
+
+Adv loss (A) ≤ Pr [Bad ] (10) 
+
+≤ 𝜀 MAC (𝜆 ). (11) Thus, LoRo-Mark is (𝜀 MAC , 𝑡, 𝑞, 𝜆 )-lossless. □
+
+# 5 EXPERIMENTS 
+
+We evaluate LoRo-Mark around the two central properties established in our design: losslessness 
+
+and robustness . For losslessness, we examine whether forensic branching introduces any unintended activation or performance degradation during normal agent execution. For robustness, we evaluate whether the embedded ownership information remains recoverable when the forensic behavior sequence is partially modified during agent repackaging. 5.1 EXPERIMENTAL SETUP 
+
+Dataset. We conduct our experiments on XLAM-FUNCTION -CALLING -60 K (Liu et al., 2024b), which contains 60,000 function-calling trajectories covering 3,673 tools across 21 domains. We use the natural-language queries as task bodies 𝑇 body and their associated tool specifications to construct agent execution tasks. For utility evaluation, we select three representative domains, Data , Business ,and Social , and sample 100 tasks from each domain. 
+
+Agent Setup. Unless otherwise specified, we use Qwen3-4B (Yang et al., 2025) as the default LLM backbone and ReAct (Yao et al., 2023b) as the agent framework, with tools executed through a function-calling interface. To evaluate whether LoRo-Mark depends on a particular backbone, we additionally conduct experiments with Qwen3-8B (Yang et al., 2025) and Ministral-8B-Instruct-2410 (Mistral AI, 2024). The experimental results remain highly consistent across all models because both Forensic Detection and Behavioral Embedding operate within the agent harness before the underlying LLM is invoked, making LoRo-Mark independent of the backbone model. Due to space constraints, the following section focuses on agents built on a single LLM backbone as a representative example. For agent utility evaluation, we use DeepSeek-V3 (DeepSeek-AI et al., 2024) as the judge model to assess both final responses and execution trajectories. 
+
+Watermark Configuration. LoRo-Mark uses HMAC-SHA256 as the authentication primitive (Bel-lare et al., 1996; National Institute of Standards and Technology, 2008). Forensic requests are generated by computing an authentication tag over 𝑇 body and encoding the tag into semantically valid parameter slots, while normal tasks are left unchanged. Unless otherwise specified, we use the copyright message corresponding to 104 bits, and an interleaved repetition redundancy of 𝑟 = 3.7Table 1: Utility comparison of different agent watermarking schemes.                                                                                                               
+
+> Data Business Social Method PR ↑RS ↑TS ↑SR ↑PR ↑RS ↑TS ↑SR ↑PR ↑RS ↑TS ↑SR ↑
+> Unwatermarked 0.6200 0.6175 0.8850 0.9900 0.6000 0.6025 0.8825 0.9900 0.7100 0.6375 0.8825 0.9800 AGENTWM 0.5500 0.5700 0.8375 0.8800 0.5100 0.5400 0.8075 0.8500 0.6300 0.5875 0.8150 0.8900 Per. Drop ( Δ)−11 .29% −7.69% −5.37% −11 .11% −15 .00% −10 .37% −8.50% −14 .14% −11 .27% −7.84% −7.65% −9.18%
+> AgentMark 0.5600 0.5975 0.8675 0.9600 0.5000 0.5550 0.8300 0.9300 0.5900 0.5900 0.8250 0.9200 Per. Drop ( Δ)−9.68% −3.24% −3.03% −3.03% −16 .67% −7.88% −5.95% −6.06% −16 .90% −7.45% −6.52% −6.12%
+> LoRo-Mark 0.6200 0.6175 0.8850 0.9900 0.6000 0.6025 0.8825 0.9900 0.7100 0.6375 0.8825 0.9800 Per. Drop ( Δ)0.00 %0.00 %0.00 %0.00 %0.00 %0.00 %0.00 %0.00 %0.00 %0.00 %0.00 %0.00 %
+
+Evaluation Metrics. We evaluate LoRo-Mark from two primary perspectives. For watermark verification, we report the true-positive rate (TPR) on authorized forensic requests and the false-positive rate (FPR) on normal or unauthorized requests. For agent utility, we report Pass Rate (PR), Response Score (RS), Trajectory Score (TS), and Success Rate (SR) (Huang et al., 2026; Wang et al., 2026), computed over 𝑁 evaluation tasks as 
+
+PR = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+I response 𝑖 fulfills the request  ,
+
+RS = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+𝑟 𝑖 − 14 , TS = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+𝑡 𝑖 − 14 , SR = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+I [task 𝑖 is successfully completed ] ,
+
+where 𝑟 𝑖 , 𝑡 𝑖 ∈ { 1, . . . , 5} are the response-quality and trajectory-quality scores, respectively, and 
+
+I[·] is the indicator function. Higher values indicate better task performance. For robustness, we report TPR, computed using the same definition above, after applying different degrees of behavior substitution or sequence truncation to the forensic behavior sequence. 5.2 LOSSLESSNESS 
+
+We first evaluate whether LoRo-Mark preserves normal agent execution in practice. According to our theoretical analysis, losslessness relies on two conditions: ordinary requests should not activate the forensic branch, and, when the branch is not activated, the agent should follow the original execution path without watermark intervention. We therefore evaluate both false activation and task utility. 
+
+False Activation. We first measure whether normal requests accidentally activate the forensic branch. We randomly sample 10,000 normal tasks from XLAM-FUNCTION -CALLING -60 K (Liu et al., 2024b) and pass them through Forensic Detection. None of the requests is accepted as a forensic task, yielding FPR = 010 ,000 = 0.00% .This empirical result is consistent with our theoretical analysis that unauthorized forensic activation is bounded by the security of the underlying authentication mechanism. 
+
+Utility Preservation. We next examine whether introducing LoRo-Mark changes the agent’s perfor-mance on ordinary tasks. We compare LoRo-Mark with the unwatermarked agent and two existing agent watermarking methods, AGENTWM (Wang et al., 2026) and AgentMark (Huang et al., 2026), on the Data , Business , and Social domains. For each domain, we evaluate 100 tasks and report Pass Rate (PR), Response Score (RS), Trajectory Score (TS), and Success Rate (SR), with DeepSeek-V3 (DeepSeek-AI et al., 2024) serving as the judge. As shown in Table 1, existing watermarking methods introduce different degrees of performance degradation because watermark embedding intervenes in normal behavior selection or execution. In contrast, LoRo-Mark achieves exactly the same scores as the unwatermarked agent across all three domains and all four metrics, resulting in 
+
+ΔPR = Δ RS = Δ TS = Δ SR = 0. These results empirically confirm that ordinary requests remain on the untouched execution path of the original agent, consistent with the losslessness guarantee established in Section 4. 5.3 ROBUSTNESS 
+
+We evaluate the robustness of LoRo-Mark against two representative repackaging operations: partial behavior substitution and sequence truncation. 8Table 2: True-positive rates under different behavior-substitution ratios ( 𝜌 ) and repetition factors ( 𝑟 ).                                                           
+
+> TPR (%)
+> 𝑟 Steps 𝜌 =0.05 𝜌 =0.10 𝜌 =0.15 𝜌 =0.20 𝜌 =0.25 𝜌 =0.30 𝜌 =0.35 𝜌 =0.40 𝜌 =0.50
+> 352 100.00 88.00 57.95 33.60 15.10 4.70 1.70 0.15 0.00
+> 587 100.00 98.65 91.10 73.95 52.20 27.45 12.30 1.30 0.00
+> 7122 100.00 100.00 98.70 91.25 77.65 59.00 37.00 8.05 0.60
+
+Behavior Substitution. We randomly replace a fraction 𝜌 of behaviors in the forensic sequence and evaluate whether the copyright message can still be recovered. As shown in Figure 3(a), LoRo-Mark consistently achieves higher TPR than AGENTWM (Wang et al., 2026) and AgentMark (Huang et al., 2026) under increasing substitution ratios. With 𝑟 = 3, LoRo-Mark remains reliable under moderate behavior modification. 
+
+Sequence Truncation. We further truncate the forensic sequence and retain only a prefix of the original execution trace. As shown in Figure 3(b), with 𝑟 = 3, LoRo-Mark achieves 100% TPR once approximately 34.6% of the original steps are retained, while shorter prefixes are insufficient for complete recovery. These results confirm that redundant behavioral watermarking preserves ownership evidence under partial modification and truncation of the execution sequence. 
+
+Figure 3: (a) Comparison of TPR for different watermarking schemes under behavior substitution with varying ratios 𝜌 . (b) TPR for LoRo-Mark under different prefix retention ratios. 5.4 ABLATION AND PARAMETER ANALYSIS 
+
+Effect of Redundancy. We first study the effect of the repetition factor 𝑟 , which directly controls the trade-off between robustness and forensic trace length. For a copyright message of |𝑐 | bytes and a candidate behavior set of size |B| , LoRo-Mark embeds ⌊log 2 |B|⌋ bits per step. Accordingly, the number of steps required to encode the redundant copyright message is 𝑆 =
+
+l 8|𝑐 |𝑟  
+
+> ⌊log 2| B | ⌋
+
+m
+
+. Thus, increasing 𝑟 introduces additional forensic steps but provides more redundant copies for watermark recovery. To quantify this trade-off, we fix |B| = 64 and |𝑐 | = 13 bytes, and vary 𝑟 ∈ { 3, 5, 7}. As shown in Table 2, larger 𝑟 consistently improves TPR under the same behavior-substitution ratio, confirming that additional redundancy strengthens resistance to sequence corruption (Lin & Costello, 2004). Meanwhile, the required forensic trace length grows linearly with 𝑟 . We therefore use 𝑟 = 3 as the default setting, which provides a practical balance between robustness and verification overhead. 
+
+Effect of Parameter Capacity. We evaluate how parameter capacity and MAC length jointly affect false activation. Across 12 configurations with capacity _bits ∈ { 14 , 64 , 96 } and 
+
+mac _bits ∈ {32 , 64 , 96 , 128 }, the empirical FPR consistently follows the theoretical bound 
+
+2− min (capacity _bits ,mac _bits ) . For the 14-bit capacity setting, we observe an FPR of 5.0 × 10 −5, close to the theoretical 2−14 , while all configurations with at least 32 effective bits produce zero false activations in 10,000 trials. These results confirm that the effective security is determined by the smaller of parameter capacity and MAC length. 96 CONCLUSION 
+
+We study black-box ownership verification under agent repackaging and propose LoRo-Mark , a provably lossless and robust agent watermarking mechanism. LoRo-Mark isolates watermarking from normal execution through an authenticated forensic branch and redundantly distributes ownership information across forensic behavior sequences. We formally establish performance preservation under standard MAC security and empirically demonstrate unchanged utility on normal tasks together with robust watermark recovery under behavior substitution and sequence truncation. Our results suggest a simple design principle for agent watermarking: ownership verification can be separated from normal execution by design. AI USE STATEMENT 
+
+In this work, we used generative AI tools to assist with literature research on the agent-repackaging threat scenario and related work. We also used generative AI tools to help refine the experimental design for evaluating losslessness, robustness, and ablation settings; organize relevant benchmarks; and structure and summarize experimental data. After completing the manuscript, we used generative AI tools for language polishing, including correcting grammatical and typographical errors, checking presentation details, and improving clarity and fluency. All AI-assisted research, experimental designs, data summaries, citations, and textual revisions were independently reviewed and verified by the authors. We take full responsibility for the final content of this work, including all text, claims, experimental results, and artifacts produced with the aid of generative AI. REPRODUCIBILITY STATEMENT 
+
+We provide the information and materials necessary to reproduce our theoretical and empirical results. The main paper describes the threat model, watermark construction, experimental settings, evaluation metrics, baselines, benchmarks, and parameter configurations. The appendix provides detailed algorithms, assumptions, and complete proofs of the losslessness, unforgeability, and robustness results. The supplementary materials include the implementation code, environment dependencies, configuration files, and instructions for reproducing the losslessness, robustness, and ablation experiments. The experimental settings and reported parameters are documented in the accompanying README to facilitate consistent reproduction of the results. 
+
+# REFERENCES 
+
+Yossi Adi, Carsten Baum, Moustapha Cisse, Benny Pinkas, and Joseph Keshet. Turning your weakness into a strength: Watermarking deep neural networks by backdooring. In 27th USENIX Security Symposium , pp. 1615–1631, 2018. Hyeseon An, Shinwoo Park, Dongsu Kim, and Yo-Sub Han. Sequential behavioral watermarking for LLM agents. arXiv preprint arXiv:2605.11036 , 2026. URL https://arxiv.org/abs/ 2605.11036 .Mihir Bellare, Ran Canetti, and Hugo Krawczyk. Keying hash functions for message authentication. In Advances in Cryptology—CRYPTO ’96 , pp. 1–15, 1996. doi: 10.1007/3-540-68697-5_1. Andres M. Bran, Sam Cox, Oliver Schilter, Carlo Baldassari, Andrew D. White, and Philippe Schwaller. ChemCrow: Augmenting large-language models with chemistry tools. arXiv preprint arXiv:2304.05376 , 2023. URL https://arxiv.org/abs/2304.05376 .Huili Chen, Bita Darvish Rouhani, and Farinaz Koushanfar. DeepMarks: A digital fingerprinting framework for deep neural networks. arXiv preprint arXiv:1804.03648 , 2018. URL https: //arxiv.org/abs/1804.03648 .Huili Chen, Bita Darvish Rouhani, and Farinaz Koushanfar. BlackMarks: Blackbox multi-bit watermarking for deep neural networks. arXiv preprint arXiv:1904.00344 , 2019. URL 
+
+https://arxiv.org/abs/1904.00344 .Miranda Christ, Sam Gunn, and Or Zamir. Undetectable watermarks for language models. arXiv preprint arXiv:2306.09194 , 2024. 10 Sumanth Dathathri, Abigail See, Sumit Ghaisas, et al. Scalable watermarking for identifying large language model outputs. Nature , 634:818–823, 2024. doi: 10.1038/s41586-024-08025-4. DeepSeek-AI et al. DeepSeek-V3 technical report. arXiv preprint arXiv:2412.19437 , 2024. URL 
+
+https://arxiv.org/abs/2412.19437 .Oded Goldreich, Shafi Goldwasser, and Silvio Micali. How to construct random functions. Journal of the ACM , 33(4):792–807, 1986. doi: 10.1145/6490.6503. Shafi Goldwasser, Michael P. Kim, Vinod Vaikuntanathan, and Or Zamir. Planting undetectable backdoors in machine learning models. In 2022 IEEE 63rd Annual Symposium on Foundations of Computer Science (FOCS) , pp. 931–942, 2022. doi: 10.1109/FOCS54457.2022.00092. Kaibo Huang, Zipei Zhang, Zhongliang Yang, and Linna Zhou. Agent guide: A simple agent behavioral watermarking framework. arXiv preprint arXiv:2504.05871 , 2025. Kaibo Huang, Jin Tan, Yukun Wei, Wanling Li, Zipei Zhang, Hui Tian, Zhongliang Yang, and Linna Zhou. AgentMark: Utility-preserving behavioral watermarking for agents. In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) ,pp. 12581–12603, San Diego, California, United States, July 2026. Association for Computational Linguistics. doi: 10.18653/v1/2026.acl-long.573. URL https://aclanthology.org/ 2026.acl-long.573/ .Ehud Karpas, Omri Abend, Yonatan Belinkov, Barak Lenz, Opher Lieber, Nir Ratner, Yoav Shoham, Hofit Bata, Yoav Levine, Kevin Leyton-Brown, Dor Muhlgay, Noam Rozen, Erez Schwartz, Gal Shachaf, Shai Shalev-Shwartz, Amnon Shashua, and Moshe Tenenholtz. MRKL systems: A modular, neuro-symbolic architecture that combines large language models, external knowledge sources and discrete reasoning. arXiv preprint arXiv:2205.00445 , 2022. URL https://arxiv. org/abs/2205.00445 .John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In Proceedings of the 40th International Conference on Machine Learning , volume 202 of Proceedings of Machine Learning Research , pp. 17061–17084, 2023. Rohith Kuditipudi, John Thickstun, Tatsunori Hashimoto, and Percy Liang. Robust distortion-free watermarks for language models. Transactions on Machine Learning Research , 2024. Shu Lin and Daniel J. Costello. Error Control Coding: Fundamentals and Applications . Pearson Prentice Hall, Upper Saddle River, NJ, 2 edition, 2004. Xiao Liu, Hao Yu, Hanchen Zhang, Yifan Xu, Xuanyu Lei, Hanyu Lai, Yu Gu, Hangliang Ding, Kaiwen Men, Kejuan Yang, Shudan Zhang, Xiang Deng, Aohan Zeng, Zhengxiao Du, Chenhui Zhang, Sheng Shen, Tianjun Zhang, Yu Su, Huan Sun, Minlie Huang, Yuxiao Dong, and Jie Tang. AgentBench: Evaluating LLMs as agents. In International Conference on Learning Representations , 2024a. URL https://arxiv.org/abs/2308.03688 .Zuxin Liu, Thai Hoang, Jianguo Zhang, Ming Zhu, Tian Lan, Shirley Kokane, Juntao Tan, Weiran Yao, Zhiwei Liu, Yihao Feng, et al. APIGen: Automated pipeline for generat-ing verifiable and diverse function-calling datasets. In Advances in Neural Information Processing Systems , volume 37, pp. 54463–54482, 2024b. doi: 10.52202/079017-1725. URL https://proceedings.neurips.cc/paper_files/paper/2024/ hash/61cce86d180b1184949e58939c4f983d-Abstract-Datasets_and_ Benchmarks_Track.html .Wenlong Meng, Chen Gong, Terry Yue Zhuo, Fan Zhang, Kecen Li, Zheng Liu, Zhou Yang, Chengkun Wei, and Wenzhi Chen. Watermarking LLM agent trajectories. arXiv preprint arXiv:2602.18700 ,2026. URL https://arxiv.org/abs/2602.18700 .Mistral AI. Ministral 8B Instruct 2410. Hugging Face model card, 2024. URL https:// huggingface.co/mistralai/Ministral-8B-Instruct-2410 . Accessed 2026-09-16. 11 Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, Xu Jiang, Karl Cobbe, Tyna Eloundou, Gretchen Krueger, Kevin Button, Matthew Knight, Benjamin Chess, and John Schulman. WebGPT: Browser-assisted question-answering with human feedback. arXiv preprint arXiv:2112.09332 ,2021. URL https://arxiv.org/abs/2112.09332 .National Institute of Standards and Technology. The keyed-hash message authentication code (HMAC). Technical Report Federal Information Processing Standards Publication 198-1, National Institute of Standards and Technology, 2008. Joon Sung Park, Joseph C. O’Brien, Carrie J. Cai, Meredith Ringel Morris, Percy Liang, and Michael S. Bernstein. Generative agents: Interactive simulacra of human behavior. In Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology , 2023. doi: 10.1145/3586183.3606763. Shishir G. Patil, Tianjun Zhang, Xin Wang, and Joseph E. Gonzalez. Gorilla: Large language model connected with massive APIs. arXiv preprint arXiv:2305.15334 , 2023. URL https: //arxiv.org/abs/2305.15334 .Yujia Qin, Shihao Liang, Yining Ye, Kunlun Zhu, Lan Yan, Yaxi Lu, Yankai Lin, Xin Cong, Xiangru Tang, Bill Qian, Sihan Zhao, Lauren Hong, Runchu Tian, Ruobing Xie, Jie Zhou, Mark Gerstein, Dahai Li, Zhiyuan Liu, and Maosong Sun. ToolLLM: Facilitating large language models to master 16000+ real-world APIs. arXiv preprint arXiv:2307.16789 , 2023. URL https: //arxiv.org/abs/2307.16789 .Bita Darvish Rouhani, Huili Chen, and Farinaz Koushanfar. DeepSigns: A generic watermarking framework for IP protection of deep learning models. arXiv preprint arXiv:1804.00750 , 2018. URL https://arxiv.org/abs/1804.00750 .Timo Schick, Jane Dwivedi-Yu, Roberto Dessì, Roberta Raileanu, Maria Lomeli, Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. Toolformer: Language models can teach themselves to use tools. In Advances in Neural Information Processing Systems , volume 36, pp. 68539–68551, 2023. URL https://proceedings.neurips.cc/paper_files/paper/2023/ hash/d842425e4bf79ba039352da0f658a906-Abstract-Conference.html .Noah Shinn, Federico Cassano, Edward Berman, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. Reflexion: Language agents with verbal reinforcement learning. arXiv preprint arXiv:2303.11366 , 2023. URL https://arxiv.org/abs/2303.11366 .Yusuke Uchida, Yuki Nagai, Shigeyuki Sakazawa, and Shin’ichi Satoh. Embedding watermarks into deep neural networks. In Proceedings of the 2017 ACM on International Conference on Multimedia Retrieval , pp. 269–277, 2017. doi: 10.1145/3078971.3078974. Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Mandlekar, Chaowei Xiao, Yuke Zhu, Linxi Fan, and Anima Anandkumar. Voyager: An open-ended embodied agent with large language models. arXiv preprint arXiv:2305.16291 , 2023. URL https://arxiv.org/abs/2305.16291 .Liwen Wang, Zongjie Li, Yuchong Xie, Shuai Wang, Dongdong She, Wei Wang, and Juergen Rahmel. On protecting agentic systems’ intellectual property via watermarking. arXiv preprint arXiv:2602.08401 , 2026. Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc V. Le, and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models. In 
+
+Advances in Neural Information Processing Systems , 2022. URL https://arxiv.org/abs/ 2201.11903 .Zhiheng Xi, Wenxiang Chen, Xin Guo, Wei He, Yiwen Ding, Boyang Hong, Ming Zhang, Junzhe Wang, Senjie Jin, Enyu Zhou, et al. The rise and potential of large language model based agents: A survey. Science China Information Sciences , 68(2):121101, 2025. doi: 10.1007/ s11432-024-4222-0. URL https://doi.org/10.1007/s11432-024-4222-0 .An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 ,2025. URL https://arxiv.org/abs/2505.09388 .12 John Yang, Carlos E. Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik Narasimhan, and Ofir Press. SWE-agent: Agent-computer interfaces enable automated software engineering. 
+
+arXiv preprint arXiv:2405.15793 , 2024. URL https://arxiv.org/abs/2405.15793 .Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik Narasimhan. Tree of thoughts: Deliberate problem solving with large language models. In 
+
+Advances in Neural Information Processing Systems , 2023a. URL https://arxiv.org/ abs/2305.10601 .Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R. Narasimhan, and Yuan Cao. ReAct: Synergizing reasoning and acting in language models. In International Conference on Learning Representations , 2023b. Haobo Zhang, Xutao Mao, Guangyuan Dong, Ziwei Li, Xuanbo Su, Kaijie Chen, Jing Yang, and Zheng Lin. MemMark: State-evolution attribution watermarking for agent long-term memory systems. arXiv preprint arXiv:2605.25002 , 2026. URL https://arxiv.org/abs/2605. 25002 .Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng, Tianyue Ou, Yonatan Bisk, Daniel Fried, Uri Alon, and Graham Neubig. WebArena: A realistic web environment for building autonomous agents. arXiv preprint arXiv:2307.13854 , 2023. URL 
+
+https://arxiv.org/abs/2307.13854 .13 A DETAILED ALGORITHMS OF LORO-M ARK 
+
+This appendix uses the component names and notation introduced in Section 3.2. In particular, 
+
+|𝑐 | denotes the byte length of the copyright message, 𝑛 = 8|𝑐 | denotes its bit length, and 𝑐 =
+
+(𝑐 0, . . . , 𝑐 𝑛 −1) denotes its binary representation. When the available parameter capacity supports only an ℓ-bit tag, we write 
+
+MAC ℓ (𝑘, 𝑥 ) := Trunc ℓ (MAC (𝑘, 𝑥 )) ;
+
+without truncation, MAC ℓ is simply MAC . The parameter encoder E and decoder D use the same key 𝑘 emb and tag length ℓ. Their correctness requires 
+
+D  E ( 𝑇 body , 𝜎, 𝑘 emb ), 𝑘 emb 
+
+ = 𝜎 
+
+for every encodable ℓ-bit tag 𝜎 . At each step, 𝑜 𝑡 denotes the reproducible, domain-separated execution context, including the step identifier and the observation needed to reconstruct B𝑡 . We write WatermarkVerify for Algorithm 5. 
+
+Algorithm 1 Key Generation 
+
+Require: Security parameter 𝜆 
+
+Ensure: 𝑘 det , 𝑘 prv , 𝑘 emb 
+
+1: 𝑘 master ← { 0, 1}𝜆 
+
+2: 𝑘 det ← PRF (𝑘 master , detect ) (Goldreich et al., 1986) 
+
+3: 𝑘 prv ← PRF (𝑘 master , prove )
+
+4: 𝑘 emb ← PRF (𝑘 master , embed )
+
+5: return (𝑘 det , 𝑘 prv , 𝑘 emb )
+
+Algorithm 2 Trigger Task Generation 
+
+Require: Valid task body 𝑇 body , keys 𝑘 det , 𝑘 emb , tag length ℓ
+
+Ensure: Authenticated forensic request 𝑇 ∗
+
+1: 𝜎 ← MAC ℓ (𝑘 det , 𝑇 body )
+
+2: 𝑃 ← E ( 𝑇 body , 𝜎, 𝑘 emb )
+
+3: 𝑇 ∗ ← 𝑇 body ⊕ 𝑃 
+
+4: return 𝑇 ∗
+
+Algorithm 3 Forensic Detection 
+
+Require: Incoming request 𝑇 = (𝑇 body , 𝑃 ), keys 𝑘 det , 𝑘 emb , tag length ℓ
+
+Ensure: Detection result (𝑠, 𝜎 ), where 𝑠 ∈ { 0, 1}
+
+1: 𝜎 expected ← MAC ℓ (𝑘 det , 𝑇 body )
+
+2: 𝜎 decoded ← D ( 𝑃, 𝑘 emb )
+
+3: if 𝜎 decoded = 𝜎 expected then 
+
+4: return (1, 𝜎 expected )
+
+5: else 
+
+6: return (0, ⊥) 
+
+7: end if 
+
+14 Algorithm 4 Redundant Encoding and Behavioral Embedding 
+
+Require: Copyright message 𝑐 , repetition factor 𝑟 , tag 𝜎 , key 𝑘 prv 
+
+Require: Reproducible execution contexts (𝑜 𝑡 , B𝑡 ) with |B 𝑡 | ≥ 2
+
+Require: Sufficient cumulative capacity to encode 𝑛𝑟 bits 
+
+Ensure: Forensic behavior sequence 𝜏 = (𝑏 1, . . . , 𝑏 𝑆 )
+
+1: 𝑛 ← 8|𝑐 |; 𝑀 ← ( 𝑐 0 · · · 𝑐 𝑛 −1)∥ · · · ∥( 𝑐 0 · · · 𝑐 𝑛 −1) with 𝑟 copies 
+
+2: 𝑘 step ← MAC (𝑘 prv , 𝜎 )
+
+3: 𝜏 ← [ ] ; 𝑝 ← 0; 𝑡 ← 1
+
+4: while 𝑝 < 𝑛𝑟 do 
+
+5: 𝑞 𝑡 ← ⌊ log 2 |B 𝑡 |⌋ 
+
+6: 𝜋 𝑡 ← PRF (𝑘 step , 𝑜 𝑡 , B𝑡 )
+
+7: ℓ𝑡 ← min {𝑞 𝑡 , 𝑛𝑟 − 𝑝 }
+
+8: 𝑢 𝑡 ← 𝑀 [ 𝑝 : 𝑝 + ℓ𝑡 − 1] ∥ 0𝑞 𝑡 −ℓ𝑡 
+
+9: 𝑗 𝑡 ← int (𝑢 𝑡 ); 𝑏 𝑡 ← 𝜋 𝑡 [ 𝑗 𝑡 ]
+
+10: Append 𝑏 𝑡 to 𝜏 ; 𝑝 ← 𝑝 + ℓ𝑡 ; 𝑡 ← 𝑡 + 1
+
+11: end while 
+
+12: 𝑆 ← | 𝜏 |
+
+13: return 𝜏 
+
+Algorithm 5 Watermark Verification 
+
+Require: 𝑇 ∗ = (𝑇 body , 𝑃 ), observed behavior sequence 𝜏 ′ = (𝑏 ′
+
+> 1
+
+, . . . , 𝑏 ′ 
+
+> 𝑆 ′
+
+)
+
+Require: Claimed message 𝑐 claimed , keys 𝑘 det , 𝑘 prv , 𝑘 emb , repetition factor 𝑟 , tag length ℓ
+
+Ensure: 1 if ownership verification succeeds; otherwise 0
+
+1: 𝜎 expected ← MAC ℓ (𝑘 det , 𝑇 body )
+
+2: 𝜎 decoded ← D ( 𝑃, 𝑘 emb )
+
+3: if 𝜎 decoded ≠ 𝜎 expected then 
+
+4: return 0
+
+5: end if 
+
+6: 𝑛 ← 8|𝑐 claimed |; 𝑘 step ← MAC (𝑘 prv , 𝜎 expected )
+
+7: b𝑀 ← [ ] ; 𝑝 ← 0
+
+8: for 𝑡 ∈ { 1, . . . , 𝑆 ′ } do 
+
+9: Reconstruct (𝑜 𝑡 , B𝑡 ) from 𝑇 ∗ and the exposed execution context 
+
+10: 𝑞 𝑡 ← ⌊ log 2 |B 𝑡 |⌋ 
+
+11: 𝜋 𝑡 ← PRF (𝑘 step , 𝑜 𝑡 , B𝑡 )
+
+12: 𝑗 ′ 
+
+> 𝑡
+
+← IndexOf (𝑏 ′ 
+
+> 𝑡
+
+, 𝜋 𝑡 ) ⊲ ⊥ if 𝑏 ′ 
+
+> 𝑡
+
+∉ B𝑡 
+
+13: ℓ𝑡 ← min {𝑞 𝑡 , 𝑛𝑟 − 𝑝 }
+
+14: if 𝑗 ′ 
+
+> 𝑡
+
+≠ ⊥ and 𝑗 ′ 
+
+> 𝑡
+
+< 2𝑞 𝑡 then 
+
+15: Append the first ℓ𝑡 bits of bits ( 𝑗 ′ 
+
+> 𝑡
+
+, 𝑞 𝑡 ) to b𝑀 
+
+16: else 
+
+17: Append ℓ𝑡 erasure symbols to b𝑀 
+
+18: end if 
+
+19: 𝑝 ← 𝑝 + ℓ𝑡 
+
+20: if 𝑝 = 𝑛𝑟 then 
+
+21: break 
+
+22: end if 
+
+23: end for 
+
+24: if 𝑝 < 𝑛𝑟 then 
+
+25: Append 𝑛𝑟 − 𝑝 erasure symbols to b𝑀 
+
+26: end if 
+
+27: ˆ𝑐 ← MajorityDecode ( b𝑀, 𝑟, 𝑛 ) (Lin & Costello, 2004) ⊲ Ignore erasures; reject empty groups or ties 
+
+28: return I[ ˆ𝑐 = 𝑐 claimed ]
+
+15 B SUPPLEMENTARY PROOFS 
+
+B.1 CORRECTNESS (N O FALSE NEGATIVES )
+
+Proposition 1 (No false negatives) . Let 𝑐 be the copyright message configured in the protected agent, let 𝑟 be a positive odd repetition factor, and let 𝑇 ∗ be produced by Trigger Task Generation using a correct parameter encoder–decoder pair. If 𝜏 is the intact forensic behavior sequence produced by Redundant Encoding and Behavioral Embedding under reconstructible execution contexts, then 
+
+WatermarkVerify (𝑇 ∗, 𝜏, 𝑐, 𝑘 det , 𝑘 prv , 𝑘 emb , 𝑟, ℓ ) = 1.
+
+Proof. Trigger Task Generation constructs 𝑇 ∗ = (𝑇 body , 𝑃 ) with 
+
+D ( 𝑃, 𝑘 emb ) = MAC ℓ (𝑘 det , 𝑇 body ) = 𝜎. 
+
+Consequently, Forensic Detection returns (1, 𝜎 ) and activates the forensic branch. Both Behavioral Embedding and Watermark Verification derive 𝑘 step = MAC (𝑘 prv , 𝜎 ) and reconstruct the same 
+
+𝜋 𝑡 = PRF (𝑘 step , 𝑜 𝑡 , B𝑡 ) at every step. Therefore, each intact behavior 𝑏 𝑡 = 𝜋 𝑡 [ 𝑗 𝑡 ] is mapped back to the same index 𝑗 𝑡 and hence to the same 𝑞 𝑡 -bit chunk. Because the verifier retains only the first ℓ𝑡 
+
+bits of the final chunk, their concatenation is exactly 
+
+𝑀 = (𝑐 0 · · · 𝑐 𝑛 −1)∥ · · · ∥( 𝑐 0 · · · 𝑐 𝑛 −1), 𝑛 = 8|𝑐 |,
+
+with 𝑟 identical copies. Majority decoding thus returns ˆ𝑐 = 𝑐 , so Watermark Verification returns 
+
+1. □
+
+B.2 BEHAVIOR -S EQUENCE UNFORGEABILITY 
+
+The following one-shot statement excludes replay of an authentic forensic sequence generated for the same execution contexts. Such a freshness condition is necessary because any accepted sequence could otherwise be replayed verbatim. 
+
+Proposition 2 (Fresh-context behavior-sequence unforgeability) . Let 𝑛 = 8|𝑐 | and let 𝑟 be positive and odd. Consider a one-shot PPT adversary that knows 𝑇 ∗, 𝑘 det , and 𝑘 emb , but not 𝑘 prv , has no oracle access to the target per-step permutations, and has not observed an authentic forensic behavior for any of the pairwise distinct, domain-separated target execution contexts. Assume also that 
+
+𝑛 ≥ max 𝑡 𝑞 𝑡 . Suppose the derivation of 𝑘 step is 𝜀 KDF (𝜆 )-pseudorandom and the domain-separated PRF evaluations are jointly indistinguishable from independent uniform per-step permutations with multi-context advantage 𝜀 PRF (𝜆, 𝑆 ′). Then 
+
+Pr WatermarkVerify (𝑇 ∗, 𝜏 ′, 𝑐, 𝑘 det , 𝑘 prv , 𝑘 emb , 𝑟, ℓ ) = 1 (12) 
+
+≤ 2−𝑛 + 𝜀 KDF (𝜆 ) + 𝜀 PRF (𝜆, 𝑆 ′). (13) 
+
+Proof. Replace the derivation of 𝑘 step by a uniform key and then replace the domain-separated PRF evaluations by independent uniform permutations. The two hybrid transitions incur advantages at most 𝜀 KDF (𝜆 ) and 𝜀 PRF (𝜆, 𝑆 ′), respectively. In the ideal experiment, a supplied nonmember behavior is an erasure. For each supplied 𝑏 ′ 
+
+> 𝑡
+
+∈ B 𝑡 , its index under the independent uniform permutation is uniform on {0, . . . , |B 𝑡 | − 1}. Condition on the resulting per-step active-or-erasure pattern. At every active step, conditioning on 𝑗 ′ 
+
+> 𝑡
+
+< 2𝑞 𝑡 leaves 𝑗 ′
+
+> 𝑡
+
+uniform on {0, . . . , 2𝑞 𝑡 − 1}, so the recovered payload positions at that step are independent unbiased bits. Independence of the ideal per-step permutations makes these bits independent across active steps. Since 𝑛 ≥ max 𝑡 𝑞 𝑡 , the 𝑟 positions associated with any fixed copyright bit lie in distinct steps. For each copyright bit, an empty group or a tie is rejected; otherwise bit-complement symmetry implies that its surviving majority equals the fixed target bit with probability at most 1/2. Distinct copyright bits use disjoint random bit positions, so the conditional acceptance probability is at most 2−𝑛 . Averaging over the active-or-erasure pattern and adding the two hybrid losses proves the claim. □
+
+16 B.3 ROBUSTNESS 
+
+For closed-form bounds matching the experiments, suppose |B 𝑡 | = 2𝛽 at every embedding step, so each step carries the constant capacity 𝛽 = log 2 |B 𝑡 | ≥ 1. Let 𝑛 = 8|𝑐 |, let 𝑟 be positive and odd, and let 
+
+𝑀 = (𝑐 0 · · · 𝑐 𝑛 −1)∥ · · · ∥( 𝑐 0 · · · 𝑐 𝑛 −1)
+
+contain 𝑟 copies and have length 𝑁 = 𝑛𝑟 . Copy 𝑘 of bit 𝑐 𝑖 occupies position 𝑖 + 𝑘𝑛 and step 
+
+𝑡 𝑖,𝑘 =
+
+ 𝑖 + 𝑘𝑛 𝛽 
+
+
+
++ 1, 𝑆 =
+
+ 𝑛𝑟 𝛽 
+
+
+
+.
+
+Watermark Verification ignores erased copies and takes a majority over the surviving copies, rejecting when none survives or when a tie occurs. 
+
+Proposition 3 (Robustness to prefix truncation) . Let 𝛼 ∈ [ 0, 1]. Suppose only the first 𝑆 ′ = ⌊𝛼𝑆 ⌋
+
+steps of an otherwise uncorrupted forensic behavior sequence are retained. If 
+
+𝛼 ≥ ⌈𝑛 /𝛽 ⌉
+
+𝑆 ≈ 1
+
+𝑟 , (14) 
+
+then Watermark Verification returns 1 with probability 1.Proof. The retained prefix contains the first 𝑆 ′ 𝛽 encoded bits. All positions 0, . . . , 𝑛 − 1, which form the first complete copy of 𝑐 , are retained when 𝑆 ′ 𝛽 ≥ 𝑛 , equivalently when 𝑆 ′ ≥ ⌈ 𝑛 /𝛽 ⌉. The assumed lower bound on 𝛼 guarantees this condition. Every copyright bit therefore has at least one surviving copy, and all surviving copies are correct. Erasure-aware majority decoding returns ˆ𝑐 = 𝑐 ,so verification succeeds. □
+
+Remark 1. For the default configuration 𝑛 = 104 , 𝛽 = 6, and 𝑟 = 3, we have 𝑆 = 52 and the sufficient retained-prefix threshold is ⌈104 /6⌉/ 52 = 18 /52 ≈ 34 .6% .
+
+Proposition 4 (Robustness to random behavior substitution) . Let 𝜌 ∈ [ 0, 1] and assume 𝑛 ≥ 𝛽 .Independently at each step, replace the authentic behavior with probability 𝜌 by a behavior sampled uniformly from B𝑡 . Then 
+
+Pr WatermarkVerify (𝑇 ∗, 𝜏 ′, 𝑐, 𝑘 det , 𝑘 prv , 𝑘 emb , 𝑟, ℓ ) = 1 ≥ 1 − 𝑛𝑝 bit (𝜌 ), (15) 
+
+where, for 𝑋 ∼ Bin (𝑟, 𝜌 /2),
+
+𝑝 bit (𝜌 ) := Pr 
+
+h
+
+𝑋 ≥
+
+l 𝑟 
+
+2
+
+mi 
+
+. (16) 
+
+Proof. The 𝑟 copies of 𝑐 𝑖 occur at positions 𝑖, 𝑖 + 𝑛, . . . , 𝑖 + ( 𝑟 − 1)𝑛 . Since 𝑛 ≥ 𝛽 , these positions lie in distinct steps. Their substitution events and replacement draws are therefore independent under the stated attack model. An unsubstituted copy is correct. Conditional on substitution, the replacement behavior is uniform in 
+
+B𝑡 and hence its index under the fixed permutation 𝜋 𝑡 is uniform in {0, . . . , 2𝛽 − 1}. Each decoded bit is then wrong with probability 1/2, giving the unconditional per-copy error probability 𝜌 /2.Consequently, the number of wrong copies of 𝑐 𝑖 follows Bin (𝑟, 𝜌 /2), and majority decoding fails for this bit with probability 𝑝 bit (𝜌 ). A union bound over the 𝑛 copyright bits gives a total failure probability at most 𝑛𝑝 bit (𝜌 ), proving the result. □
+
+Remark 2. For 𝑟 = 3,
+
+𝑝 bit (𝜌 ) = 3
+
+ 𝜌 
+
+2
+
+2 
+
+1 − 𝜌 
+
+2
+
+
+
++
+
+ 𝜌 
+
+2
+
+3
+
+.
+
+This equals approximately 0.007 , 0.028 , and 0.156 at 𝜌 = 0.1, 0.2, and 0.5, respectively. The union bound may be loose because different copyright bits can share step-level substitution events; no cross-bit independence is required for the bound. 
+
+17

@@ -1,0 +1,482 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-29T22:42:01.380602+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 5,
+    "deep_cap": 6,
+    "deep_selected": 5,
+    "quick_candidates": 7,
+    "quick_skim_target": 11,
+    "quick_selected": 7
+  },
+  "deep_dive": [
+    {
+      "id": "2609.34744v1",
+      "source": "arxiv",
+      "title": "Optimizing and Securing the Modern Watermarking Channel for Images",
+      "abstract": "To comply with recent regulations requiring traceable generated content, modern watermarking has adopted multi-bit post-hoc watermarking schemes. These modern designs rest on an encoder-decoder pair implemented as deep neural networks. These models are usually treated as pure black-boxes trained end-to-end, with the noise of the watermarking channel modeled through a fixed set of geometric and valuemetric transforms applied to watermarked images. We argue that this purely empirical approach leads to unquestioned design flaws and a lack of theoretical performance guarantees. This work proposes a general theoretical model of modern post-hoc watermarking schemes grounded in a statistical analysis of the outputs of the encoder/decoder pair. We show that these deep neural networks implicitly define a watermarking channel modeled as parallel AWGN channels, with messages transmitted using BPSK modulation. This imposes a binary alphabet, greatly limiting the capacity of these watermarking systems. Another fatal flaw is their lack of a secret key, making them intrinsically insecure. We make this notion of watermarking security precise for post-hoc schemes by linking it to the possibility of estimating the secret key under a given statistical model of the decoder's output. By putting together the results from this theoretical analysis, we introduce SNW: a novel post-hoc watermarking system that significantly outperforms existing state-of-the-art baselines in terms of capacity while also providing strong security guarantees. Notably, it does not depend on a fixed codebook or binary alphabet, allowing it to reach a rate close to Shannon capacity through the use of capacity-achieving error-correcting codes.",
+      "authors": [
+        "Enoal Gesny",
+        "Eva Giboulot"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CV"
+      ],
+      "published": "2026-09-28T09:37:19+00:00",
+      "link": "https://arxiv.org/pdf/2609.34744v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "theoretical model and security of modern image watermarking channel against transforms",
+      "llm_evidence_cn": "现代图像水印信道的理论建模与鲁棒安全性",
+      "llm_evidence": "现代图像水印信道的理论建模与鲁棒安全性",
+      "canonical_evidence": "现代图像水印信道的理论建模与鲁棒安全性",
+      "llm_tldr_en": "Modern multi-bit post-hoc image watermarking is trained as a black box with a fixed set of transforms, lacking theoretical guarantees. This work builds a statistical model of the encoder-decoder channel, revealing design flaws and enabling more secure watermarking.",
+      "llm_tldr_cn": "为满足生成内容可溯源的监管要求，现代图像水印采用基于神经网络编解码器的多比特后置水印方案，但通常被当作黑盒端到端训练，信道噪声仅用固定几何与值域变换模拟，缺乏理论保证。本文提出后置水印方案的一般理论模型，基于编解码器输出的统计分析刻画其性能与设计缺陷。研究揭示了现有设计中的问题，为构建可优化、可安全保障的水印信道提供了分析框架。",
+      "llm_tldr": "为满足生成内容可溯源的监管要求，现代图像水印采用基于神经网络编解码器的多比特后置水印方案，但通常被当作黑盒端到端训练，信道噪声仅用固定几何与值域变换模拟，缺乏理论保证。本文提出后置水印方案的一般理论模型，基于编解码器输出的统计分析刻画其性能与设计缺陷。研究揭示了现有设计中的问题，为构建可优化、可安全保障的水印信道提供了分析框架。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.31722v1",
+      "source": "arxiv",
+      "title": "Where Does the Watermark Hide? Push-Pull Disentanglement for Invisible Watermark Removal",
+      "abstract": "Fixed image distortions do not cover an attacker that learns from paired clean and watermarked images. We study this paired-training threat with single-image inference: deployment uses neither the clean reference nor the watermark key, payload, or decoder. An encoder maps each image to a structural latent $g$ and an auxiliary residual latent $u$. Push supervision reconstructs the watermarked image from $D(g_w,u_w)$. Pull supervision trains the zero-auxiliary output $D(A_g(g_w;k),0)$ toward the paired clean image. At $k=1.10,u=0$, the four-method sweep gives an average BER of $0.3958$, PSNR of $31.07$ dB, and SSIM of $0.9554$. Restoring $u$ from $0$ to $0.15$ moves average BER from $0.3893$ to $0.3357$, while PSNR falls from $30.99$ to $28.23$ dB. The intervention supports decoder dependence on the auxiliary input in the evaluated setting. The accompanying theory is a conditional, post-hoc account of this behavior rather than an experimentally verified information-relocation result.",
+      "authors": [
+        "Jidong Yang",
+        "Huaike Yu",
+        "Qi Li",
+        "Chunpeng Wang",
+        "Yuantian Miao",
+        "Suo Gao",
+        "Xiao Chen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-22T00:54:36+00:00",
+      "link": "https://arxiv.org/pdf/2609.31722v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "studies watermark removal attack via paired training, fitting attacks/defenses in generative watermarking",
+      "llm_evidence_cn": "研究配对训练下的水印移除攻击，契合生成模型水印攻防方向",
+      "llm_evidence": "研究配对训练下的水印移除攻击，契合生成模型水印攻防方向",
+      "canonical_evidence": "研究配对训练下的水印移除攻击，契合生成模型水印攻防方向",
+      "llm_tldr_en": "Studies a paired-training watermark removal threat where deployment uses no clean reference or key; proposes push-pull latent disentanglement separating structural and residual latents, reaching average BER 0.3958 at PSNR 31.07 dB.",
+      "llm_tldr_cn": "针对固定图像失真无法抵御从成对干净与水印图像中学习攻击者的问题，本文研究单图像推理下的配对训练水印移除威胁，部署时既无干净参考也无水印密钥或解码器。方法提出推拉解耦框架，编码器将图像映射为结构潜在g与辅助残差潜在u，推监督由D(g_w,u_w)重建水印图像，拉监督令零辅助输出逼近配对干净图像。四方法扫描在k=1.10,u=0时平均BER为0.3958、PSNR 31.07dB、SSIM 0.9554，恢复u可进一步降低BER但牺牲保真度。结果表明水印可被有效剥离，为水印鲁棒性评估提供攻击视角。",
+      "llm_tldr": "针对固定图像失真无法抵御从成对干净与水印图像中学习攻击者的问题，本文研究单图像推理下的配对训练水印移除威胁，部署时既无干净参考也无水印密钥或解码器。方法提出推拉解耦框架，编码器将图像映射为结构潜在g与辅助残差潜在u，推监督由D(g_w,u_w)重建水印图像，拉监督令零辅助输出逼近配对干净图像。四方法扫描在k=1.10,u=0时平均BER为0.3958、PSNR 31.07dB、SSIM 0.9554，恢复u可进一步降低BER但牺牲保真度。结果表明水印可被有效剥离，为水印鲁棒性评估提供攻击视角。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.32241v1",
+      "source": "arxiv",
+      "title": "Residual Transferability in Neural Image Watermarking",
+      "abstract": "Neural image watermarks can be forged by extracting watermark-bearing residuals from released images and transferring them to unrelated content. While prior work has demonstrated this vulnerability, what makes these residuals transferable remains poorly understood. We formalize this vulnerability with \\textbf{residual transferability (RT)}, a metric that quantifies how well watermark evidence remains decodable after transfer across unrelated images. Through comparative analyses and controlled interventions, we find that common training-side variations do not account for the large RT differences across watermarking systems; instead, architectural design plays a central role. By contrasting high- and low-RT systems and validating their architectural differences through controlled interventions, we identify two mechanisms that strengthen the dependence of watermark evidence on the cover image, thereby suppressing the residual transferability. These findings provide concrete design guidance for developing more forgery-resistant watermarking architectures. Complementarily, for existing watermarking systems where architectural redesign is impractical, we introduce \\textbf{CoverLock}, a plug-and-play strategy for existing watermarking systems that strengthens such image dependence without architectural redesign. Across representative watermarking systems exhibiting high residual transferability, CoverLock achieves a more favorable security--robustness trade-off than both traditional handcrafted defenses and learned classifier-based defenses.",
+      "authors": [
+        "Ziping Dong",
+        "Qi Li",
+        "Xinchao Wang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CV"
+      ],
+      "published": "2026-09-26T04:59:33+00:00",
+      "link": "https://arxiv.org/pdf/2609.32241v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "attacks on neural image watermarking via residual transfer",
+      "llm_evidence_cn": "通过残差迁移对神经图像水印的攻击分析",
+      "llm_evidence": "通过残差迁移对神经图像水印的攻击分析",
+      "canonical_evidence": "通过残差迁移对神经图像水印的攻击分析",
+      "llm_tldr_en": "This paper formalizes residual transferability, showing neural image watermarks can be forged via transferable residuals, and identifies architectural design as the key cause.",
+      "llm_tldr_cn": "针对神经图像水印可被提取残差并迁移到无关图像以伪造、但残差为何可迁移尚不清楚的问题，本文形式化了残差可迁移性RT指标，用以度量水印证据在跨图像迁移后仍可解码的程度。通过对比分析与受控实验发现，训练侧差异不足以解释各水印系统的RT差异，架构设计才是关键因素。该工作揭示了神经图像水印的可伪造机理，为设计抗迁移、更安全的水印系统提供了指导。",
+      "llm_tldr": "针对神经图像水印可被提取残差并迁移到无关图像以伪造、但残差为何可迁移尚不清楚的问题，本文形式化了残差可迁移性RT指标，用以度量水印证据在跨图像迁移后仍可解码的程度。通过对比分析与受控实验发现，训练侧差异不足以解释各水印系统的RT差异，架构设计才是关键因素。该工作揭示了神经图像水印的可伪造机理，为设计抗迁移、更安全的水印系统提供了指导。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.33332v1",
+      "source": "arxiv",
+      "title": "CertMark: Distortion-Free Multi-Bit Watermarking with Certified Decoding",
+      "abstract": "Leading multi-bit watermarking methods for language models encode messages by biasing the model's next-token probabilities, creating a trade-off between message recovery and text quality. Their decoders typically return the highest-scoring candidate from accumulated token-level evidence, without a certified abstention rule that bounds the probability of outputting an incorrect message. We introduce CertMark, a distribution-preserving multi-bit watermark with certified decoding. Rather than modifying probabilities, CertMark uses the embedded message to seed an exact Gumbel-max sampler, thereby preserving the model's original sampling distribution. We propose two scalable decoders: a model-agnostic, text-only decoder and a model-aware variant that leverages the original next-token distributions for stronger recovery. Both support certified abstention with mathematical bounds on the probability of returning an incorrect message. Across text completion, summarization, and story generation, CertMark matches the perplexity of unwatermarked text while reliably recovering multi-bit messages. The model-aware decoder further achieves higher bit accuracy than probability-biasing baselines. Our code is publicly available at https://github.com/Batorskq/CertMark.",
+      "authors": [
+        "Paweł Batorski",
+        "Przemysław Spurek",
+        "Paul Swoboda"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-09-27T08:02:03+00:00",
+      "link": "https://arxiv.org/pdf/2609.33332v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "certified decoding multi-bit watermarking with distribution-preserving sampler",
+      "llm_evidence_cn": "具备认证解码与分布保持采样的多比特水印",
+      "llm_evidence": "具备认证解码与分布保持采样的多比特水印",
+      "canonical_evidence": "具备认证解码与分布保持采样的多比特水印",
+      "llm_tldr_en": "CertMark is a distortion-free multi-bit watermark for language models that seeds an exact Gumbel-max sampler to preserve the sampling distribution, plus certified decoders bounding wrong-message probability.",
+      "llm_tldr_cn": "现有多比特水印通过偏置下一词概率嵌入消息，导致消息恢复与文本质量之间的权衡，且解码器缺乏有界错误率的认证弃权规则。本文提出CertMark，用嵌入消息为精确Gumbel-max采样器播种，从而保持模型原始采样分布，实现无失真水印。作者设计文本级模型无关解码器与模型感知变体两种可扩展解码方案。该方法为水印解码提供了可证明的错误概率界，兼顾文本质量与可靠提取。",
+      "llm_tldr": "现有多比特水印通过偏置下一词概率嵌入消息，导致消息恢复与文本质量之间的权衡，且解码器缺乏有界错误率的认证弃权规则。本文提出CertMark，用嵌入消息为精确Gumbel-max采样器播种，从而保持模型原始采样分布，实现无失真水印。作者设计文本级模型无关解码器与模型感知变体两种可扩展解码方案。该方法为水印解码提供了可证明的错误概率界，兼顾文本质量与可靠提取。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.35224v1",
+      "source": "arxiv",
+      "title": "TANGO: Watermarking Masked Diffusion Language Models in Token Pairs",
+      "abstract": "Masked-diffusion language models fill in masked positions in parallel and in no fixed order. Most practical text watermarks assume left-to-right generation. They key each token to the tokens before it, and in a diffusion model those tokens may still be masked. A fixed green list needs no such context, but it favors the same tokens at every position, so these tokens appear more often in watermarked text. An attacker who compares token frequencies in watermarked and unwatermarked text can recover the list and forge text that the provider's own detector accepts. We present TANGO, a watermark for masked-diffusion language models that keys each new token to a nearby token that is already unmasked. A secret key splits the vocabulary into color classes, and TANGO biases the new token toward a color determined by the key and the nearby token's color. The watermark is therefore embedded in pairs of tokens. Because the favored color changes from position to position, token frequencies stay much closer to those of unwatermarked text than under a fixed green list. Detection needs only the text and the key, and it does not assume any unmasking order. On two masked-diffusion models, TANGO detects nearly all unedited watermarked texts and most edited ones, and frequency attacks that forge the fixed green list fail against it.",
+      "authors": [
+        "Kasra Arabi",
+        "Nir Weinberger",
+        "Micah Goldblum",
+        "Niv Cohen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL",
+        "cs.CR"
+      ],
+      "published": "2026-09-28T14:08:33+00:00",
+      "link": "https://arxiv.org/pdf/2609.35224v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "watermarking for diffusion language models robust to attacks",
+      "llm_evidence_cn": "面向扩散语言模型、抗攻击的水印",
+      "llm_evidence": "面向扩散语言模型、抗攻击的水印",
+      "canonical_evidence": "面向扩散语言模型、抗攻击的水印",
+      "llm_tldr_en": "TANGO watermarks masked diffusion language models by keying each new token to an already-unmasked neighbor, resisting frequency-based attacks that break fixed green-list watermarks.",
+      "llm_tldr_cn": "针对多数文本水印假设从左到右生成、难以适配并行填充的掩码扩散语言模型，且固定绿名单易被词频分析破解的问题，本文提出TANGO水印。它用密钥将词表划分为颜色类，并把每个新词元绑定到已解掩的邻近词元，从而在并行生成中嵌入可检测信号。实验表明该方法能抵抗基于词频统计的绿名单恢复与伪造攻击，为扩散语言模型提供了更稳健的水印方案，拓展了扩散水印的适用范围。",
+      "llm_tldr": "针对多数文本水印假设从左到右生成、难以适配并行填充的掩码扩散语言模型，且固定绿名单易被词频分析破解的问题，本文提出TANGO水印。它用密钥将词表划分为颜色类，并把每个新词元绑定到已解掩的邻近词元，从而在并行生成中嵌入可检测信号。实验表明该方法能抵抗基于词频统计的绿名单恢复与伪造攻击，为扩散语言模型提供了更稳健的水印方案，拓展了扩散水印的适用范围。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking techniques for diffusion models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.33774v1",
+      "source": "arxiv",
+      "title": "Tokens Change, Structure Endures: Spectral Watermarking for Generated Speech",
+      "abstract": "Watermarking is a promising tool for establishing the provenance of AI-generated speech. While many neural audio watermarking methods rely on a separately trained watermark generator, token-level watermarking is a training-free alternative that operates directly during generation. Its main weakness is retokenization: decoding generated speech to a waveform and encoding it again can change token identities and erode the watermark. To make the watermark robust to these changes, we propose Redwing, REtokenization-Durable Watermarking IN Generation. It builds a graph from the token substitutions observed under retokenization, whose Laplacian yields a basis that assigns similar values to tokens likely to substitute for one another. Over this basis, embedding and detection functions are jointly optimized to preserve watermark signal through retokenization while limiting embedding distortion and detector variability on unwatermarked speech. On the Moshi full-duplex system, after eight consecutive passes of Mimi resynthesis, Redwing achieves 80.7% TPR at a calibrated 1% FPR, compared with 8.3% for KGW and at most 7.3% for WMAR. It also has the highest TPR after eight passes through three other neural codecs (77.5-93.0%), and the gains generalize to TTS models at a speech-quality cost close to that of KGW. These results show that retokenization is not merely a source of noise: its transition structure can be exploited as a design principle for robust token-level watermarking.",
+      "authors": [
+        "Kanghwi Lee",
+        "Kyeongseok Jeong",
+        "Jeongmin Liu"
+      ],
+      "primary_category": "cs.SD",
+      "categories": [
+        "cs.SD",
+        "cs.CL",
+        "cs.CR",
+        "cs.LG",
+        "eess.AS"
+      ],
+      "published": "2026-09-27T17:13:53+00:00",
+      "link": "https://arxiv.org/pdf/2609.33774v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "robust watermarking for generated speech against retokenization",
+      "llm_evidence_cn": "面向生成语音抗重token化的鲁棒水印",
+      "llm_evidence": "面向生成语音抗重token化的鲁棒水印",
+      "canonical_evidence": "面向生成语音抗重token化的鲁棒水印",
+      "llm_tldr_en": "Redwing builds a graph of token substitutions under retokenization and uses its Laplacian basis to assign similar values to substitutable tokens, making speech watermarking durable to decoding and re-encoding.",
+      "llm_tldr_cn": "针对AI生成语音溯源中token级水印易受重token化侵蚀的问题，本文提出Redwing方法，在生成过程中构建token替换图，利用其拉普拉斯基为易互相替换的token分配相近值以嵌入水印。实验表明该方法在解码再编码的重token化攻击下仍能保持水印可检测性。该工作提升了生成语音水印的鲁棒性，有助于AI语音溯源。",
+      "llm_tldr": "针对AI生成语音溯源中token级水印易受重token化侵蚀的问题，本文提出Redwing方法，在生成过程中构建token替换图，利用其拉普拉斯基为易互相替换的token分配相近值以嵌入水印。实验表明该方法在解码再编码的重token化攻击下仍能保持水印可检测性。该工作提升了生成语音水印的鲁棒性，有助于AI语音溯源。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.31968v1",
+      "source": "arxiv",
+      "title": "Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation",
+      "abstract": "Knowledge distillation (KD) enables model transfer across heterogeneous platforms and deployment environments, yet it exposes proprietary models to distillation-based theft, where an adversary extracts intellectual property (IP) by training a student model on teacher outputs. Current defenses, such as software watermarking or hardware-based access control, either fail to survive the distillation process or lack the granularity to identify the specific device responsible for a leak. Aiming to provide post-theft accountability and traceability, we propose a novel fingerprinting framework that superimposes device-specific Physical Unclonable Function (PUF) signatures onto teacher logits during distillation. By utilizing signatures derived from Ring Oscillator (RO) PUFs measured on a Xilinx Zynq-7020 FPGA, we ensure that any student model trained via KD inherits a unique, hardware-linked identity. Our framework is architecture-agnostic, enabling reliable identity inheritance across heterogeneous structures, including Convolutional Neural Networks, Vision Transformers, and encoders. To ensure robust attribution, we implement a two-stage recovery pipeline consisting of a neural decoder and Hamming-distance refinement, maintaining high detection accuracy even under noisy conditions. Furthermore, we introduce a multi-level logit encoding scheme to support large-scale device deployment. Experimental results demonstrate that the embedded fingerprints are resilient against common post-distillation modifications. These results establish a practical system-level approach for enabling hardware-linked model traceability in distributed AI deployment environments.",
+      "authors": [
+        "Ning Lyu",
+        "Yuntao Liu",
+        "Yonghong Bai",
+        "Zhiyuan Yan"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-25T20:12:47+00:00",
+      "link": "https://arxiv.org/pdf/2609.31968v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "fingerprinting framework for model IP traceability",
+      "llm_evidence_cn": "面向模型知识产权的指纹溯源框架",
+      "llm_evidence": "面向模型知识产权的指纹溯源框架",
+      "canonical_evidence": "面向模型知识产权的指纹溯源框架",
+      "llm_tldr_en": "A hardware-rooted fingerprinting framework superimposes device-specific PUF signatures on teacher logits, enabling post-distillation accountability and identifying the leaking device.",
+      "llm_tldr_cn": "针对知识蒸馏窃取模型知识产权、现有软件水印或硬件访问控制难以在蒸馏后追责并定位泄露设备的问题，本文提出一种硬件根植的指纹框架，将设备专属的物理不可克隆函数签名叠加到教师模型的logits上。实验表明该指纹能在蒸馏后保留，从而识别具体泄露设备并提供事后问责能力。该工作为生成模型与模型的指纹溯源及知识产权保护提供了硬件层面的可追溯方案。",
+      "llm_tldr": "针对知识蒸馏窃取模型知识产权、现有软件水印或硬件访问控制难以在蒸馏后追责并定位泄露设备的问题，本文提出一种硬件根植的指纹框架，将设备专属的物理不可克隆函数签名叠加到教师模型的logits上。实验表明该指纹能在蒸馏后保留，从而识别具体泄露设备并提供事后问责能力。该工作为生成模型与模型的指纹溯源及知识产权保护提供了硬件层面的可追溯方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.34003v1",
+      "source": "arxiv",
+      "title": "DeMark: A Query-Free Black-Box Attack for Quality-Preserving Audio Watermark Removal",
+      "abstract": "Audio watermarking protects digital speech by embedding imperceptible signals for ownership verification and misuse tracing. However, the security of learning-based watermarking remains insufficiently understood under realistic adversarial removal, where attackers cannot access or query the watermark encoder, decoder, or detector. Existing attacks either rely on model feedback, require clean-watermarked pairs, or reconstruct the waveform with generative models, often leading to high query costs, limited generalization, or degraded perceptual quality. In this paper, we propose DeMark, a query-free black-box attack for quality-preserving audio watermark removal. Our key insight is that watermark embedding, while perceptually hidden, can introduce subtle non-speech artifacts in the time-frequency domain that are not fully aligned with natural speech. DeMark removes watermarks by suppressing these artifacts through two stages: Diverse Artifact Learning, which extracts complementary non-stationary and stationary artifact patterns, and Adaptive Artifact Scaling, which adaptively combines and amplifies them under quality-preserving constraints. Across two speech datasets and four state-of-the-art watermarking methods, DeMark achieves average attack success rates of 0.92 and 0.96 while consistently preserving higher perceptual quality than existing adaptive attacks. These results reveal a practical vulnerability of current audio watermarking systems and call for more robust watermark designs against query-free adversarial removal.",
+      "authors": [
+        "Weikang Ding",
+        "Binhao Ma",
+        "Hanqing Guo",
+        "Rui Duan"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-27T23:03:19+00:00",
+      "link": "https://arxiv.org/pdf/2609.34003v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "query-free black-box attack for watermark removal, attacks on learning-based watermarking",
+      "llm_evidence_cn": "面向水印去除的无查询黑盒攻击",
+      "llm_evidence": "面向水印去除的无查询黑盒攻击",
+      "canonical_evidence": "面向水印去除的无查询黑盒攻击",
+      "llm_tldr_en": "Learning-based audio watermarking security is poorly understood under realistic adversarial removal. DeMark is a query-free black-box attack that strips watermarks while preserving perceptual quality, exposing the fragility of learned watermarking.",
+      "llm_tldr_cn": "音频水印通过学习式模型嵌入不可感知信号以用于版权溯源，但其在真实对抗删除场景下的安全性尚不清楚，现有攻击依赖模型反馈或干净-水印数据对。本文提出DeMark，一种无需查询的黑盒攻击，利用水印嵌入虽感知隐藏却仍残留的可检测痕迹实现去除。实验表明该方法在保持音频质量的同时有效去除水印，揭示了学习式音频水印的脆弱性。",
+      "llm_tldr": "音频水印通过学习式模型嵌入不可感知信号以用于版权溯源，但其在真实对抗删除场景下的安全性尚不清楚，现有攻击依赖模型反馈或干净-水印数据对。本文提出DeMark，一种无需查询的黑盒攻击，利用水印嵌入虽感知隐藏却仍残留的可检测痕迹实现去除。实验表明该方法在保持音频质量的同时有效去除水印，揭示了学习式音频水印的脆弱性。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.32222v1",
+      "source": "arxiv",
+      "title": "Geometry-Preserving Blind Watermarking for Raw 3D Point Clouds",
+      "abstract": "Raw 3D point clouds are a core geometric representation. Establishing their ownership is challenging because point sets are irregular, unstructured, and frequently altered by resampling and geometric preprocessing. We present a blind watermarking framework that operates directly on xyz coordinates and supports both object-level shapes and scene-scale scans. At verification time, the embedded message is recovered from the observed point cloud alone, without access to the original point cloud, color, normals, or mesh connectivity. The method jointly learns watermark embedding and extraction through a feed-forward octree-based architecture, enabling efficient multi-scale geometric reasoning on large point sets. During training, a stochastic transformation layer exposes the decoder to common geometric perturbations, while progressive pose alignment improves robustness to pose changes.   Experiments on object-level and scene-level benchmarks demonstrate reliable message recovery under common geometric processing while maintaining low geometric distortion. Qualitative comparisons further show that the learned perturbations are less visually conspicuous and less spatially structured than those of handcrafted alternatives.",
+      "authors": [
+        "Rungui Zhou",
+        "Chuanzhi Zhou",
+        "Ruihuan Wang",
+        "Peng-Shuai Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-26T04:32:14+00:00",
+      "link": "https://arxiv.org/pdf/2609.32222v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "blind watermarking robust to resampling and geometric preprocessing",
+      "llm_evidence_cn": "对重采样和几何预处理鲁棒的盲水印",
+      "llm_evidence": "对重采样和几何预处理鲁棒的盲水印",
+      "canonical_evidence": "对重采样和几何预处理鲁棒的盲水印",
+      "llm_tldr_en": "A blind watermarking framework embeds and extracts ownership messages directly in raw 3D point cloud xyz coordinates using a feed-forward octree architecture, remaining robust to resampling and geometric transforms without needing the original data.",
+      "llm_tldr_cn": "针对原始三维点云所有权认证困难、点集不规则且易受重采样和几何预处理影响的问题，本文提出一种直接作用于xyz坐标的盲水印框架。方法通过前馈八叉树结构联合学习水印嵌入与提取，支持物体级与场景级点云，并在训练中引入随机变换层提升鲁棒性。验证时仅凭观测点云即可恢复嵌入信息，无需原始点云、颜色或法线，实现了对重采样和几何变换的稳健所有权验证。",
+      "llm_tldr": "针对原始三维点云所有权认证困难、点集不规则且易受重采样和几何预处理影响的问题，本文提出一种直接作用于xyz坐标的盲水印框架。方法通过前馈八叉树结构联合学习水印嵌入与提取，支持物体级与场景级点云，并在训练中引入随机变换层提升鲁棒性。验证时仅凭观测点云即可恢复嵌入信息，无需原始点云、颜色或法线，实现了对重采样和几何变换的稳健所有权验证。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.34080v1",
+      "source": "arxiv",
+      "title": "LoRo-Mark:Provably Lossless and Robust Agent Watermarking",
+      "abstract": "As LLM agents are increasingly deployed as commercial services, protecting proprietary orchestration logic and tool-use policies is important. We consider agent repackaging: an adversary integrates a protected agent into its own application via API and presents it under its own identity. It may modify parts of execution to obscure the source. The owner typically has only black-box access to the repackaged service, so black-box ownership verification is essential. Agent watermarking embeds ownership evidence into agent behavior for later verification. An effective watermark should satisfy two requirements: losslessness, preserving original functionality, and robustness, keeping ownership evidence recoverable after partial modification of execution. Existing methods often embed signals into behavior selection or execution trajectories, intervene in normal decisions, and offer limited robustness to behavior modification. We propose LoRo-Mark, a provably lossless and robust agent watermarking mechanism. For losslessness, it isolates watermarking into a cryptographically authenticated forensic branch that remains inactive during normal execution and is activated only by owner-authorized requests. By reducing unauthorized branch activation to standard MAC security, LoRo-Mark formally guarantees performance preservation. For robustness, it redundantly distributes ownership information across forensic behavior sequences, enabling reliable recovery under partial behavior substitution and sequence truncation. Experiments across multiple LLM agents show zero degradation on normal tasks and reliable ownership verification under sequence modifications.",
+      "authors": [
+        "Haoyang Zou",
+        "Yao Wang",
+        "Jun Yao",
+        "Weiming Zhang",
+        "Han Fang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-28T01:16:46+00:00",
+      "link": "https://arxiv.org/pdf/2609.34080v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "lossless and robust agent watermarking for ownership verification",
+      "llm_evidence_cn": "无损且鲁棒的智能体水印归属验证",
+      "llm_evidence": "无损且鲁棒的智能体水印归属验证",
+      "canonical_evidence": "无损且鲁棒的智能体水印归属验证",
+      "llm_tldr_en": "LoRo-Mark embeds ownership evidence into LLM agent behavior, targeting losslessness and robustness under black-box repackaging, enabling ownership verification after partial execution modification.",
+      "llm_tldr_cn": "针对LLM智能体被API重打包后难以进行黑盒归属验证的问题，本文提出LoRo-Mark智能体水印方法，将所有权证据嵌入智能体行为中。该方法同时满足无损性（保持原有功能）与鲁棒性（执行被部分修改后仍可恢复证据）两个要求。实验验证其在黑盒场景下可有效验证归属。该工作为智能体服务的水印保护提供了可行方案。",
+      "llm_tldr": "针对LLM智能体被API重打包后难以进行黑盒归属验证的问题，本文提出LoRo-Mark智能体水印方法，将所有权证据嵌入智能体行为中。该方法同时满足无损性（保持原有功能）与鲁棒性（执行被部分修改后仍可恢复证据）两个要求。实验验证其在黑盒场景下可有效验证归属。该工作为智能体服务的水印保护提供了可行方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.34807v1",
+      "source": "arxiv",
+      "title": "ControlTrace: Recovering Control Fields for Hidden-Content Recognition",
+      "abstract": "Spatially conditioned diffusion models can embed words and contours in natural-looking images, but vision-language models (VLMs) may fail to recognize the hidden content. Transformation-based recovery depends on parameter and view selection. To evaluate hidden-content recovery and recognition, we construct FreqBlind, a 6,000-image benchmark spanning contours, real words and non-words across three conditioning strengths. The evaluated transformation-based methods show limited recognition of contour patterns and weakly conditioned hidden content. To address this limitation, we propose ControlTrace to recover the grayscale control field used during generation. An 8.4M-parameter U-Net predicts this field from the carrier image, and a VLM then identifies its content. With Qwen2.5-VL-7B-Instruct, ControlTrace achieves 60.2% open-ended contour recognition accuracy across the three conditioning strengths, exceeding the best of the three evaluated prior methods by 26.9 percentage points. On an A100 GPU, the complete pipeline adds only 7.4 ms (5.3%) to direct VLM inference. Recovered fields have lower pixel errors and higher structural similarity than the evaluated transformation views. Across four evaluated VLMs, ControlTrace retains its overall contour recognition advantage. Recognition remains stable under the tested JPEG compression, Gaussian noise and downsampling. These results support control-field recovery for hidden-content recognition in the evaluated setting.",
+      "authors": [
+        "Zijian Liu",
+        "Yaoguang Chen",
+        "Liwei Liu",
+        "Weixi Wu",
+        "Hanming Zhang",
+        "Jiashui Wang",
+        "Na Ruan"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-28T10:10:41+00:00",
+      "link": "https://arxiv.org/pdf/2609.34807v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "recovering hidden content embedded by conditioned diffusion models",
+      "llm_evidence_cn": "恢复条件扩散模型嵌入的隐藏内容",
+      "llm_evidence": "恢复条件扩散模型嵌入的隐藏内容",
+      "canonical_evidence": "恢复条件扩散模型嵌入的隐藏内容",
+      "llm_tldr_en": "Spatially conditioned diffusion models can hide words and contours in natural images, but VLMs fail to recognize them and transformation-based recovery is parameter sensitive. ControlTrace predicts the grayscale control field with a U-Net, improving hidden-content recognition.",
+      "llm_tldr_cn": "空间条件扩散模型能在自然图像中嵌入文字与轮廓等隐藏内容，但视觉语言模型往往难以识别，基于变换的恢复方法又依赖参数与视角选择。本文构建FreqBlind基准，并提出ControlTrace，用8.4M参数的U-Net从载体图像中恢复生成时使用的灰度控制场，再由VLM识别。实验显示该方法能更好恢复弱条件与轮廓类隐藏内容，为扩散模型生成内容溯源与检测提供新思路。",
+      "llm_tldr": "空间条件扩散模型能在自然图像中嵌入文字与轮廓等隐藏内容，但视觉语言模型往往难以识别，基于变换的恢复方法又依赖参数与视角选择。本文构建FreqBlind基准，并提出ControlTrace，用8.4M参数的U-Net从载体图像中恢复生成时使用的灰度控制场，再由VLM识别。实验显示该方法能更好恢复弱条件与轮廓类隐藏内容，为扩散模型生成内容溯源与检测提供新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.34597v1",
+      "source": "arxiv",
+      "title": "AuxMark: Defending Against Unauthorized Agent Distillation via Auxiliary Behavioral Watermarking",
+      "abstract": "Large language model agents can acquire complex capabilities through multi-step interaction and tool use, but their trajectories can also be illegally collected to dis- till student agents. However, existing watermarking methods either do not fit the structured and interactive nature of agent environments or lack reliable effective- ness across tasks and model architectures. We introduce AuxMark, a behavioral watermarking framework for tracing unauthorized agent distillation. AuxMark dynamically inserts safe, non-essential auxiliary action into teacher trajectories, and stores the associated contexts as private evidence cards. To audit a suspicious student model, AuxMark constructs paired real and fake probes from these cards and applies a card-level sign test. This black-box protocol supports both model- level detection and trace-level attribution. Across three agent benchmarks, two teacher agents, and four student architectures, AuxMark detects all 24 distilled models with zero false positives on 48 clean models. It also preserves task utility and remains effective against data flooding, paraphrasing, truncation, and adaptive cleaning attacks. Our code will be released at this URL.",
+      "authors": [
+        "Yiqing Feng",
+        "Haozhe Feng",
+        "Shunan Shang",
+        "Xiaoyu Zhang",
+        "Jian Lou",
+        "Haodong Zhao",
+        "Mingxun Zhou"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-28T08:32:03+00:00",
+      "link": "https://arxiv.org/pdf/2609.34597v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "behavioral watermarking defense against unauthorized distillation",
+      "llm_evidence_cn": "防御未授权蒸馏的行为水印",
+      "llm_evidence": "防御未授权蒸馏的行为水印",
+      "canonical_evidence": "防御未授权蒸馏的行为水印",
+      "llm_tldr_en": "AuxMark inserts safe auxiliary actions into teacher agent trajectories as behavioral watermarks, then audits suspicious students with paired probes to trace unauthorized distillation.",
+      "llm_tldr_cn": "针对大模型智能体的交互轨迹可被非法采集用于蒸馏、而现有水印难以适配结构化交互环境且跨任务效果不稳的问题，本文提出AuxMark行为水印框架。它在教师轨迹中动态插入安全的非必要辅助动作，并保存相关上下文作为私有证据卡，审计时据此构造真假探针检测可疑学生模型。该方法可有效追踪未授权的智能体蒸馏行为，为智能体版权溯源提供了可靠的行为水印手段。",
+      "llm_tldr": "针对大模型智能体的交互轨迹可被非法采集用于蒸馏、而现有水印难以适配结构化交互环境且跨任务效果不稳的问题，本文提出AuxMark行为水印框架。它在教师轨迹中动态插入安全的非必要辅助动作，并保存相关上下文作为私有证据卡，审计时据此构造真假探针检测可疑学生模型。该方法可有效追踪未授权的智能体蒸馏行为，为智能体版权溯源提供了可靠的行为水印手段。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

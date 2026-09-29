@@ -1,0 +1,717 @@
+Title: Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation
+
+URL Source: https://arxiv.org/pdf/2609.31968v1
+
+Published Time: Tue, 29 Sep 2026 00:26:05 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 
+
+NING LYU, Lehigh University, USA 
+
+YUNTAO LIU, Lehigh University, USA 
+
+YONGHONG BAI, Broadcom Inc., USA 
+
+ZHIYUAN YAN, Lehigh University, USA Knowledge distillation (KD) enables model transfer across heterogeneous platforms and deployment environ-ments, yet it exposes proprietary models to distillation-based theft, where an adversary extracts intellectual property (IP) by training a student model on teacher outputs. Current defenses, such as software watermarking or hardware-based access control, either fail to survive the distillation process or lack the granularity to identify the specific device responsible for a leak. Aiming to provide post-theft accountability and traceability, we propose a novel fingerprinting framework that superimposes device-specific Physical Unclonable Function (PUF) signatures onto teacher logits during distillation. By utilizing signatures derived from Ring Oscillator (RO) PUFs measured on a Xilinx Zynq-7020 FPGA, we ensure that any student model trained via KD inherits a unique, hardware-linked identity. Our framework is architecture-agnostic, enabling reliable identity inheri-tance across heterogeneous structures, including Convolutional Neural Networks, Vision Transformers, and encoders. To ensure robust attribution, we implement a two-stage recovery pipeline consisting of a neural decoder and Hamming-distance refinement, maintaining high detection accuracy even under noisy conditions. Furthermore, we introduce a multi-level logit encoding scheme to support large-scale device deployment. Experimental results demonstrate that the embedded fingerprints are resilient against common post-distillation modifications. These results establish a practical system-level approach for enabling hardware-linked model traceability in distributed AI deployment environments. CCS Concepts: • Security and privacy → Hardware-based security protocols .
+
+ACM Reference Format: 
+
+Ning Lyu, Yuntao Liu, Yonghong Bai, and Zhiyuan Yan. 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation. J. ACM 37, 4, Article 111 (August 2026), 24 pages. https://doi.org/XXXXXXX.XXXXXXX 
+
+1 Introduction 
+
+Knowledge distillation (KD) has become a fundamental technique in modern machine learning, enabling the effective transfer of predictive power from high-capacity teacher models to student models[12]. By leveraging the teacher’s soft labels, student models can achieve competitive gener-alization performance with significantly reduced computational and memory requirements. This paradigm is particularly vital for edge deployment on platforms such as Field Programmable Gate Arrays (FPGAs), IoT systems, and embedded hardware, where teachers are increasingly deployed 
+
+Authors’ Contact Information: Ning Lyu, nil418@lehigh.edu, Lehigh University, Bethlehem, PA, USA; Yuntao Liu, yule24@lehigh.edu, Lehigh University, Bethlehem, PA, USA; Yonghong Bai, Broadcom Inc., Palo Alto, CA, USA; Zhiyuan Yan, Lehigh University, Bethlehem, PA, USA. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org. © 2018 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM 1557-735X/2026/8-ART111 https://doi.org/XXXXXXX.XXXXXXX J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. arXiv:2609.31968v1 [cs.CR] 25 Sep 2026 111:2 Ning Lyu et al. 
+
+locally to facilitate real-time fine-tuning, continual learning, and adaptive AI applications without persistent cloud reliance. However, deploying proprietary teacher models on edge hardware introduces a significant security risk. Once a model is mapped onto hardware, its intellectual property (IP), which represents immense training and architectural investment, is exposed to adversaries. Beyond traditional model extraction[14, 29], distillation-based theft presents a sophisticated threat: an attacker can probe the teacher, collect input-output response pairs, and train a surrogate student model to replicate its behavior. This distillation-based theft enables unauthorized reproduction of proprietary model functionality. Prior work has explored digital watermarking and ownership protection. Recent approaches im-prove robustness against functionality-stealing attacks, including model extraction and distillation, through margin-based watermarking and transferable trigger-set design[19, 26]. Nevertheless, these approaches remain software-level protections: although effective for model ownership verification, they do not inherently bind the learned behavior to a unique physical device, and therefore offer limited support for device-level attribution after distillation-based leakage. In addition, distillation-aware defenses such as Safe Distillation Box seek to prevent unauthorized KD, but do not address post-leakage hardware-rooted traceability[32]. Recent hardware-oriented defenses have emerged to secure deep learning systems. Grailoo 
+
+et al . [10] introduced prediction poisoning via truncation-based noise to obstruct unauthorized distillation; however, this approach inadvertently restricts legitimate local optimization for edge devices. Olney and Karam [25] proposed hardware-locked input obfuscation, yet this mechanism offers no protection once the model is unlocked by an authorized user. Furthermore, while Deep-HardMark [7] employs accelerator-level watermarking for ownership verification, it lacks the device-specific traceability required to identify the source of leaked distilled models. A detailed comparison with representative software- and hardware-based model-protection approaches is provided in Table 1, highlighting differences in protection objective, verification access, hardware awareness, and support for device-level attribution. Consequently, existing software and hardware protections may verify model theft or restrict unauthorized access, but they generally cannot identify which authorized deployment was the source of a leaked distilled model. This is important when the same proprietary teacher is deployed across many hardware instances. If a suspicious student model can be linked to one enrolled device identity, the owner can narrow the investigation to that deployment and take targeted actions such as revoking access, rotating credentials, or inspecting the affected environment. Our framework provides this capability by embedding a hardware-rooted signature into the teacher outputs, allowing the distilled student to inherit a device-specific fingerprint for post-leak attribution. While previous works [17, 22] have utilized PUFs for model binding or hardware authentication, they primarily address runtime access control. To support post-leak device-level attribution, we introduce a lightweight fingerprinting framework that superimposes PUF signatures onto teacher logits via structured perturbations. Our method embeds the hardware identity at the model output level, allowing the fingerprint to be transferred and recovered even when the teacher and student use different architectures. The main contributions of this work are summarized as follows: 
+
+• Hardware-Rooted Logit Fingerprinting: We introduce a fingerprinting framework that embeds device identities derived from physical PUF measurements on a Xilinx Zynq-7020 (ZedBoard) FPGA directly into the teacher model logits. By incorporating real hardware measurements into the training process, the method enables device-level fingerprinting  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:3
+
+while capturing non-ideal behaviors of physical PUFs, including process variation, routing asymmetry, and environmental effects. 
+
+• Cross-Architecture Fingerprint Inheritance: We demonstrate that the embedded fin-gerprint can propagate through knowledge distillation across heterogeneous architectures, including Encoder-to-Encoder, Transformer-to-CNN, and CNN-to-CNN settings. Conse-quently, the embedded hardware identity can be consistently recovered from the student model, even under cross-architecture distillation. 
+
+• Robust Two-Stage Identity Recovery: We develop a two-stage recovery pipeline consisting of a Stage-I neural decoder for bit prediction and a Stage-II Hamming-distance refinement module for error correction. To eliminate the need for real distilled student models from every enrolled device, we introduce a synthetic logit simulation strategy to emulate the statistical effects of fingerprint embedding and distillation noise, enabling scalable decoder training. This hierarchical recovery framework significantly improves robustness and supports accurate device attribution under noisy conditions. 
+
+• Scalable PUF-to-Logit Encoding: We introduce a scalable PUF-to-logit encoding framework that adapts to different relationships between the hardware signature length and the model output dimension. When the two dimensions match, the signature is directly embedded into the logits. When extra logit dimensions are available, the signature is distributed across the larger logit space to improve robustness. When the desired hardware identity exceeds the output dimension, multi-level encoding packs multiple PUF bits into each output value for high-capacity attribution. 
+
+• Robustness to Post-Distillation Modifications: We evaluate whether the embedded signatures remain recoverable under common post-distillation changes, including in-domain fine-tuning, cross-domain adaptation, and latent-space perturbations. Our results show that the embedded identity is stable under standard fine-tuning, and can only be weakened through either extended retraining or direct perturbations to the latent space. In practice, these modifications either require significant additional training effort or lead to a noticeable drop in model performance. The remainder of this paper is organized as follows: Section II discusses background in hardware security and model protection. Section III details the proposed PUF-Logit framework. Section IV presents comprehensive experimental results. Finally, Section V concludes the paper. 
+
+2 Background and Preliminaries 2.1 Knowledge Distillation 
+
+Knowledge Distillation, originally formalized by Hinton et al. [12], has evolved into a founda-tional paradigm for model compression and efficient deployment. In modern AI ecosystems, high-performance teacher models are often implemented on hardware, such as FPGAs. KD enables a compact student model to inherit the predictive power of these hardware-accelerated teachers by leveraging the latent information embedded in the teacher’s softened output distributions. Unlike standard supervised learning that relies on hard categorical labels, KD utilizes the logits 
+
+(z), which are the raw, unnormalized outputs of the final fully connected layer. These logits capture the teacher’s perception of inter-class similarities. To extract this information, the teacher’s logit vector z𝑡 and the student’s logit vector z𝑠 are transformed using a temperature-scaled softmax 
+
+function. This produces softened probability distributions p𝑡 and p𝑠 , defined as: 
+
+p𝑡 = Softmax 
+
+ z𝑡 
+
+𝑇 
+
+
+
+, p𝑠 = Softmax 
+
+ z𝑠 
+
+𝑇 
+
+
+
+(1)  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:4 Ning Lyu et al.
+
+where 𝑇 is the temperature hyperparameter. As 𝑇 increases, the resulting distribution becomes more uniform, effectively amplifying the signals from the non-target classes. The student model is trained to minimize the information discrepancy between these distributions, typically measured via the Kullback–Leibler (KL) divergence :
+
+LKD = 𝑇 2 ·
+
+> 𝑑
+
+∑︁ 
+
+> 𝑖 =1
+
+𝑝 𝑡,𝑖 log 
+
+ 𝑝 𝑡,𝑖 
+
+𝑝 𝑠,𝑖 
+
+
+
+(2) where 𝑑 denotes the number of classes in the label space. Although knowledge distillation is used for efficient model transfer, it can also serve as a potential vector for intellectual property theft. By querying a deployed teacher model and using its output responses as supervision, an adversary may train an unauthorized student model that approximates the teacher’s behavior. Consequently, the functional knowledge of the proprietary model can be replicated without exposing its internal parameters or architecture. 
+
+2.2 PUFs as Hardware Fingerprints 
+
+A PUF is a hardware security component that exploits the inherent, stochastic physical variations introduced during the integrated circuit (IC) manufacturing process. These microscopic deviations, such as gate-level delay variations, threshold voltage shifts, or interconnect impedance, are unpre-dictable and uncontrollable, even by the manufacturer. Consequently, a PUF serves as a “silicon fingerprint" unique to an individual hardware instance. In FPGA-based deployments, various architectures are utilized to extract this entropy. SRAM-based PUFs [2, 6, 11] leverage the random power-up states of memory cells [21], while Ring Oscillator (RO) PUFs compare the frequency differences between multiple oscillating loops [15]. Alternatively, 
+
+Arbiter PUFs exploit timing differences in parallel delay paths [18, 23, 28]. Unlike traditional non-volatile memory (NVM), PUFs generate cryptographic keys on-demand only when the circuit is powered, significantly reducing the risk of physical probing and permanent key leakage. While PUFs provide device-unique identities derived from manufacturing variations in silicon, their responses are not perfectly stable under real conditions. In practical deployments, two hard-ware characteristics must be considered when using PUF responses for device-level fingerprinting: 
+
+intra-device noise and reduced effective entropy .
+
+1). PUF Reliability and Uniqueness: Environmental factors such as temperature variation, supply voltage fluctuations, and silicon aging can introduce bit flips in PUF responses. Prior studies report bit-error rates of approximately 1%–5% [4, 5, 20, 24]. To ensure reliable device attribution, our framework incorporates noise characteristics measured from the FPGA RO-PUF during training, enabling robust fingerprint recovery under realistic hardware conditions. Different FPGA instances, even within the same device family, are expected to produce different PUF responses because their signatures arise from instance-specific manufacturing variations. For a given device, voltage and temperature changes may cause a limited number of unstable bits to flip; these variations are treated as intra-device response noise rather than a change of identity. 
+
+2). Effective Key Space and Entropy: Although an 𝑛 -bit PUF theoretically supports 2 𝑛 unique identifiers, the effective entropy may be lower due to bit bias, spatial correlations, and unstable bit positions [13]. For example, a nominal 10-bit PUF may provide an effective entropy closer to 8 bits, corresponding to roughly 2 8 = 256 distinguishable identities. Such bias or correlation can also reduce the Hamming-distance separation between enrolled PUF identities, which may decrease the attribution margin during Stage-II matching. In practical enrollment, this effect can be mitigated by selecting stable and discriminative PUF bits and, when necessary, increasing the fingerprint length.  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:5
+
+Table 1. Comparison with representative model protection and ownership-verification approaches.                                        
+
+> Method Primary Objective Ownership / Leakage Detection Black-Box Verification Hardware Aware Device-Level Attribution
+> Adi et al. [3] Watermarking ✓✓××
+> Uchida et al. [30] Watermarking ✓×××
+> Grailoo et al. [10] KD theft prevention ×–✓×
+> Olney and Karam [25] Model IP protection ×–✓×
+> Jiang et al. [17] PUF-based IP protection ✓✓✓×
+> Clements and Lao [7] Hardware watermarking ✓–✓×
+> PUF-Logit (Ours) Source attribution ✓✓✓✓
+> ✓indicates that the capability is supported by the method’s intended design; ×indicates that it is not provided; “–” indicates that the criterion is not directly applicable to the method’s primary protection objective.
+
+By accounting for both response noise and reduced entropy, our framework ensures that the embedded device signatures remain reliable and traceable in practical deployments. 
+
+2.3 Representative Model Architectures 
+
+To evaluate whether the embedded hardware fingerprint remains recoverable across different teacher–student structures, we consider three representative architectural settings. By injecting device-specific signatures at the behavioral output (logits) rather than modifying internal layers, our framework maintains compatibility with heterogeneous backbones. 
+
+Convolutional Neural Networks (CNNs) : CNNs remain the standard for computer vision tasks due to their inductive bias of translation invariance and local feature extraction. In a typical CNN-to-CNN distillation setup, both the teacher and student utilize convolutional layers to process spatial hierarchies. Our framework leverages the logit outputs of these networks, ensuring that the spatial feature maps remain undisturbed while the final classification behavior carries the hardware-rooted signature. 
+
+Vision Transformers (ViTs) [9]: Transformer-to-CNN distillation has become a common setting for cross-architecture knowledge transfer. Vision Transformers use self-attention mechanisms to capture global relationships in the input, often producing strong teacher signals for distillation. Evaluating this setting allows us to test whether the PUF-based fingerprint remains inheritable when the teacher and student use different internal architectures. 
+
+Representation Learning and Encoders [1]: In many edge scenarios, the goal is not direct classifica-tion but rather generating robust embeddings for downstream tasks. Encoder-to-Encoder distillation (often found in self-supervised or metric learning) focuses on the latent-space representation. Extending our framework to this setting demonstrates that the PUF signature can be superimposed onto continuous embedding spaces, ensuring traceability even when traditional class-based logits are absent. 
+
+2.4 Comparison with Existing Model Protection Methods 
+
+Table 1 summarizes representative software- and hardware-based model-protection approaches. Since these methods were developed under different threat models and protection objectives, we compare their primary purpose, ownership or leakage detection capability, support for black-box verification, use of hardware-specific information, and ability to provide post-leak device-level attribution. The comparison highlights that the proposed framework is complementary to conventional ownership-verification and model-protection mechanisms by providing hardware-instance-level source attribution after leakage.  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:6 Ning Lyu et al.
+> Fig. 1. System overview of the proposed hardware-rooted framework for device-level traceability in knowledge distillation.
+
+3 Proposed Framework 
+
+The proposed framework embeds a hardware-rooted identity into the behavioral outputs of deep learning models. As illustrated in Fig. 1, this enables post-leak traceability, allowing a stolen or distilled model to be reliably linked back to its originating device through output analysis. Because the fingerprint is introduced at the model output level rather than inside architecture-specific internal layers, the same embedding mechanism can be applied to different model structures. Our experiments evaluate whether this fingerprint remains transferable and recoverable when the teacher and student architectures differ. 
+
+3.1 System Roles and Threat Model 
+
+To provide a rigorous foundation for accountability, we explicitly define the responsibilities and security boundaries of the three primary stakeholders in this ecosystem. 
+
+Model Owner (Defender) : The model owner serves as the central authority and defender. This entity is responsible for training the teacher model and managing its distribution to licensed hardware platforms. The owner maintains a Secure Enrollment Database containing the mapping between each authorized hardware instance and its enrolled reference PUF key k(𝑚 ) . During traceback, the recovered signature is compared with these enrolled device-specific references using Hamming-distance matching, allowing limited PUF response variations to be tolerated. The database is strictly internal and is used exclusively for ownership verification and device attribution. Importantly, traceback is an offline process performed solely by the owner and does not require the cooperation of the attacker. 
+
+Authorized PUF-Enabled Devices : Each authorized platform (e.g., an FPGA-based accelerator) contains an embedded PUF that generates a device-specific binary key k(𝑚 ) ∈ { 0, 1}𝑛 , where 𝑚 
+
+indexes the device and 𝑛 denotes the key length. The device uses its local PUF key to perturb the teacher model’s output logits during operation. The key itself remains physically isolated within the hardware, ensuring that only its behavioral effect is visible in the output distribution.  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:7
+
+Attacker (Distillation Adversary): The adversary aims to steal the teacher model’s functionality through a distillation-based model theft attack. By gaining query access to the deployed teacher model, the attacker trains a surrogate student model to replicate its behavior. Crucially, the attacker aims to mimic the teacher’s performance but unknowingly transfers the PUF signature into the student model’s parameters. The attacker is assumed to have no access to the owner’s enrollment database. Instead of focusing on preventing theft, our framework is designed for post-leak traceability. We assume that an attacker may successfully obtain a functional student model; therefore, our primary objective is to ensure the model owner can still recover the embedded signature to identify the specific device that served as the source. To verify the robustness of this approach, we evaluate the system’s performance against three adversarial strategies: In-Domain Fine-Tuning, Cross-Domain Transfer, and Logits/Latent Noise Injection. These tests confirm that the hardware identity remains recoverable even if an attacker attempts to clean the model by retraining it, repurposing it for a new task, or corrupting it with noise. 
+
+3.2 FPGA-based RO-PUF Implementation 
+
+A practical evaluation must consider the non-ideal behavior of physical entropy sources. Therefore, we implement a hardware-rooted RO-PUF on a Xilinx Zynq-7020 (ZedBoard) FPGA to support robust end-to-end traceability. The proposed framework, however, is not FPGA-specific; it only requires a stable, device-specific PUF response. Therefore, the same embedding and recovery procedures can be extended to ASIC platforms using an appropriate on-chip PUF. In the proposed framework, intra-device stability is critical because the embedded fingerprint must remain reproducible under environmental variation for reliable recovery. The RO-PUF is selected for our FPGA prototype because its frequency-comparison mechanism provides a practi-cal way to obtain a stable device-specific response. Although latch-based PUFs have lower area overhead, their metastability-based operation makes them sensitive to transient noise. In contrast, RO-PUFs generate each bit through frequency comparison over a measurement window, where tem-poral integration smooths high-frequency jitter and improves reliability. The measurement window length ( MEAS_CYC ) can be adjusted to further enhance stability without changing the RTL. Other PUF architectures, such as SRAM- or arbiter-based PUFs, could also be used provided that they offer sufficiently stable and distinctive device-specific responses. Since mid-range FPGAs provide sufficient logic resources, we prioritize RO-PUF stability to maintain a consistent silicon-to-model identity mapping. The experimental platform implements a fully parallel 1024-bit RO-PUF pipeline ( 𝑛 = 1024) operating at 100 MHz. Importantly, the 1024-bit response length is an experimental implementation choice rather than a requirement of the proposed fingerprinting framework. The required PUF key length depends on the output or latent dimension of the target model and the desired identity capacity; therefore, substantially shorter PUF responses may be sufficient in practical deployments. We use a 1024-bit implementation to obtain a large hardware-derived bit pool from which multiple non-overlapping shorter PUF keys can be selected for controlled device-identity experiments. Our goal is to construct multiple distinct logical PUF identities from the measured 1024-bit response so that the fingerprinting and attribution pipeline can be evaluated under different enrolled PUF keys. Because these shorter keys are derived from the measured RO-PUF response, they reflect hardware-dependent characteristics present in the prototype device, including bit bias, instability, and correlation. For example, a 1024-bit response can provide up to 51 non-overlapping 20-bit identities or 20 non-overlapping 50-bit identities. However, because all of these logical identities are derived from one physical FPGA, this construction does not constitute a full characterization of chip-to-chip inter-device variation.  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:8 Ning Lyu et al.
+> Fig. 2. Block diagram of the fully parallel 1024-bit RO-PUF experimental prototype. Each response-bit cell contains two ring oscillators, synchronization/counting logic, and a comparator, and the cell is replicated across the 1024-bit measurement array.
+
+As illustrated in Figure 2, the prototype contains three main components: (i) a parallel RO-PUF measurement engine that generates response bits by comparing ring-oscillator frequencies over a predefined measurement interval, (ii) control and capture logic that coordinates measurement and stores the generated response, and (iii) an on-chip debug interface used for experimental observation and data collection. For hardware evaluation, the ZedBoard was connected to a host PC through the on-board PROG/JTAG interface, and Vivado Hardware Manager was used to capture the internal RO-PUF responses for offline analysis. For each response bit 𝑖 ∈ [ 0, 𝑛 − 1], the measurement engine instantiates two independent ring oscillators, 𝑅𝑂 (𝑖 ) 
+
+> 𝐴
+
+and 𝑅𝑂 (𝑖 ) 
+
+> 𝐵
+
+. Each oscillator is implemented as a reusable ro_osc primitive, consisting of an odd-length inverter chain mapped to FPGA LUTs. The LUTs are annotated with 
+
+KEEP and DONT_TOUCH attributes to preserve the combinational feedback loop during synthesis, and a global enable signal controls oscillation. When enable is asserted, the final inverter output is fed back to the first stage, forming a closed oscillating loop. When deasserted, the feedback node is forced to zero, breaking the loop and disabling oscillation. Since the RO outputs are asynchronous, they pass through a two-stage register chain to reduce metastability. Saturating counters cntA [𝑖 ]
+
+and cntB [𝑖 ] count rising edges over the measurement window, and the response bit is generated as 
+
+𝑘 𝑖 = I cntA [𝑖 ] > cntB [𝑖 ]. The resulting 1024-bit vector k is latched for downstream embedding. Because the prototype generates all 1024 response bits in parallel, the RO-pair, synchronization, counting, and comparison logic is replicated across the response-bit positions. Thus, the two ROs and two counters described for each response bit are instantiated repeatedly across the 1024-bit measurement array rather than shared by the entire PUF. The reported FPGA utilization also includes response storage, control/capture logic, and the on-chip debugging infrastructure used during hardware measurement. Therefore, the utilization reported in Table 2 represents the complete fully parallel 1024-bit experimental prototype rather than the minimum hardware overhead required by the proposed fingerprinting framework. A deployment using a shorter PUF response would require fewer replicated measurement resources; alternatively, resource sharing can trade additional response-generation latency for lower area. The goal of this implementation is to provide a stable and observable hardware PUF source for end-to-end validation rather than to demonstrate an area-optimal RO-PUF architecture. Using measured RO-PUF responses allows the evaluation to incorporate real hardware-derived effects from the prototype FPGA, including RO delay variation, response instability, bit bias, and  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:9
+> Table 2. Post-Placement Resource Utilization of the 1024-bit RO-PUF Experimental Prototype on xc7z020
+
+Resource Used Available Utilization (%) 
+
+Slice LUTs 36,210 53,200 68.1 Registers 30,300 106,400 28.5 BRAM Tiles 15.5 140 11.1 BUFGCTRL 3 32 9.4  
+
+> Note: Utilization is reported for the parallel 1024-bit experimental prototype, including response generation, con-trol/capture, and on-chip debugging logic.
+
+correlation. By partitioning the measured 1024-bit RO-PUF response into non-overlapping shorter key groups, we construct multiple distinct logical PUF identities to represent multiple enrolled device identities in the fingerprinting and recovery experiments. A broader evaluation across multiple FPGA devices remains important for characterizing population-level inter-device uniqueness and variation. 
+
+3.3 PUF-Based Fingerprinting Across Heterogeneous Architectures 
+
+The proposed fingerprint is embedded into the behavioral output of the teacher rather than into architecture-specific internal layers. This allows the same embedding mechanism to be applied to different model structures. The key question is therefore not whether cross-architecture distillation is possible, but whether the embedded PUF perturbation can preserve the teacher’s predictive behavior while remaining sufficiently detectable to be inherited and recovered from the student. The perturbation magnitude is controlled by 𝜖 , which determines the trade-off between model utility and fingerprint recoverability. During knowledge distillation, the student is trained to match the perturbed output distribution generated by the teacher and can therefore inherit the hardware identity associated with the originating device. As a result, a successfully distilled student model may carry a hardware-rooted fingerprint that can later be recovered for source attribution. Each hardware device is represented by a binary PUF key k ∈ { 0, 1}𝑛 generated by its local hardware PUF. To make this hardware identity compatible with neural network outputs, the binary key is converted into a bipolar signature vector s ∈ {− 1, +1}𝑛 using 
+
+𝑠 𝑖 = 1 − 2𝑘 𝑖 . (3) Let z𝑡 ∈ R𝑑 denote the clean output logits of the teacher model for an input sample, where 𝑑 
+
+represents the output dimension of the model (e.g., the number of classes in classification tasks). The hardware-conditioned teacher target is generated by superimposing the PUF signature onto the teacher output: 
+
+zPUF = z𝑡 + 𝜖 (U · s) (4) where 𝜖 controls the perturbation strength. The matrix U ∈ R𝑑 ×𝑛 is an optional orthonormal projection matrix that distributes the hardware entropy across the model output space when the PUF key length smaller than the output dimension. When 𝑛 = 𝑑 , the projection matrix is unnecessary and the perturbation can be applied directly as 𝜖 s. By keeping 𝜖 small relative to the natural variance of the logits, the primary prediction behavior of the model is preserved while embedding a structured hardware signature into the output distribution. 
+
+Categorical Fingerprinting (CNNs and Transformers) : For supervised classification models, the PUF signature is embedded at the logit layer. This design applies uniformly to both CNNs and  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:10 Ning Lyu et al.
+
+transformer-based architectures, such as ViTs. This output-level embedding preserves the architecture-agnostic property of the proposed framework and enables consistent fingerprint propagation under model distillation or structural modification. Since the fingerprint is introduced at the model output level, a student model can inherit the hardware identity even when its architecture differs from the teacher. For example, a CNN student distilled from a ViT teacher can still reproduce the embedded hardware signature. The student model is trained using a standard knowledge distillation objective: 
+
+Ltotal = (1 − 𝛼 )L CE (𝑦 𝑠 , 𝑦 true ) + 𝛼𝜏 2LKD 
+
+
+
+𝜎 
+
+ 𝑧 𝑠 
+
+𝜏 
+
+
+
+, 𝜎 
+
+ 𝑧 PUF 
+
+𝜏 
+
+ 
+
+(5) where LCE (·) denotes the cross-entropy loss between the student prediction 𝑦 𝑠 and the ground-truth label 𝑦 true . The second term LKD (·) represents the knowledge distillation loss, which encourages the student to match the softened output distribution of the teacher. In this formulation, 𝑧 𝑠 denotes the student logits and 𝑧 PUF denotes the perturbed teacher logits containing the embedded hardware signature. The operator 𝜎 (·) represents the softmax function, while 𝜏 is the temperature parameter used to smooth the logit distributions during distillation. The weighting coefficient 𝛼 ∈ [ 0, 1]
+
+balances the contribution between the supervised learning objective and the distillation objective. Through this optimization process, the student model learns to replicate both the predictive behavior of the teacher and the PUF embedded perturbations in the output distribution. 
+
+Latent-Space Fingerprinting (Encoder-to-Encoder) : The same fingerprinting mechanism can be extended to representation-learning systems where the model output is a feature embedding rather than class probabilities. For an encoder model, the teacher produces a latent representation 
+
+z𝑇 (𝑥 ) = E𝑇 (𝑥 ) ∈ R𝑑 , where E𝑇 (·) denotes the teacher encoder and 𝑑 is the embedding dimension. This scenario commonly arises in metric-learning systems such as face recognition, where models output fixed-dimensional feature embeddings (e.g., 512-dimensional representations). In such systems, the embedding dimension and representation space are typically standardized across architectures, allowing encoder-to-encoder distillation to directly align the student embed-ding with the teacher representation. Under this setting, the device-specific PUF signature can be embedded into the teacher latent representation prior to distillation. Unlike classifier distillation aligns class logits, encoder-based distillation operates directly on latent representations. The teacher encoder produces the hardware-conditioned embedding z(𝑚 ) 
+
+> 𝑇
+
+(𝑥 ),while the student encoder E𝑆 (·) is trained to reproduce this representation using a latent alignment objective: 
+
+L = 𝜆 lat E𝑆 (𝑥 ) − z(𝑚,𝑤 ) 
+
+> 𝑇
+
+(𝑥 ) 22 . (6) This encoder-to-encoder distillation process transfers the embedding space from the teacher to the student model. Consequently, the embedded PUF signature becomes an intrinsic component of the learned representation, enabling device attribution by decoding the fingerprint from the recovered embedding. To accurately reflect the constraints of FPGA-based edge accelerators, the teacher model is quantized to 𝑞 bits (e.g., 𝑞 = 8). We apply uniform quantization over weights, activations, and inputs to simulate the integer-only arithmetic pipelines used in standard deployments. For a real value 
+
+𝑥 ∈ [ 𝑥 min , 𝑥 max ], the quantized value ˆ 𝑥 is calculated as: ˆ𝑥 = 1
+
+𝑆 · round (𝑆 · clip (𝑥, 𝑥 min , 𝑥 max )) , (7) where 𝑆 = 2𝑞 −1  
+
+> 𝑥 max −𝑥 min
+
+is the scaling factor. The teacher model is fine-tuned under these quantization-aware constraints to maintain its baseline utility. The signature perturbation 𝜖 · ( U · s) is applied to  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:11
+
+these quantized logits, ensuring the framework’s compatibility with low-power hardware accelera-tors. 
+
+3.4 Scalable Multi-Level Logit Encoding Scheme 
+
+A primary constraint in behavioral model fingerprinting arises from the limited dimensionality of the model output space. In the simplest formulation, each PUF bit is mapped to one logit dimension (𝑛 = 𝑑 ), resulting in a one-to-one correspondence between the PUF key and the output vector. Under this mapping, the theoretical identifier space is bounded by 2 𝑑 . In practice, the effective identifier capacity is even smaller due to entropy loss, bit-bias, and environmental instability in real PUF measurements, as discussed in Section 2.2. Consequently, such a direct mapping becomes insufficient for large-scale industrial deployments where millions or billions of unique device identifiers may be required. To address this limitation, we introduce a Multi-Level Logit Encoding strategy that increases the information density carried by the model output. Instead of assigning a single PUF bit to each logit dimension, the proposed scheme treats the teacher’s logits as a multi-level communication channel, allowing each logit to encode 𝑒 bits of PUF entropy. This design effectively increases the fingerprint capacity without modifying the model architecture. As a result, the total identity space expands exponentially to 2 𝑒 ·𝑑 , enabling scalable device-level fingerprinting for large deployment scenarios. In this formulation, the 𝑛 -bit PUF key k is partitioned into 𝑑 segments, where each segment contains 𝑒 bits. Each segment is mapped to a single logit dimension 𝑧 𝑖 . To implement this, we interpret each 𝑒 -bit segment (𝑏 0, 𝑏 1, . . . , 𝑏 𝑒 −1) as a signed integer 𝐼 𝑖 using standard two’s complement representation: 
+
+𝐼 𝑖 ∈ {− 2𝑒 −1, . . . , 2𝑒 −1 − 1}. (8) The integer value 𝐼 𝑖 is then linearly transformed into a logit perturbation 𝛿 𝑖 via 𝛿 𝑖 = 𝜖 · ( 𝐼 𝑖 + 0.5),
+
+where 𝜖 is a hyperparameter representing the perturbation strength. The +0.5 shift ensures the hardware signature is balanced around zero, preventing it from constantly pushing the model’s outputs in one direction. Table 3 illustrates an example using a 3-bit-per-logit configuration ( 𝑒 = 3). This mapping provides 8 discrete perturbation levels for each logit dimension with a perturbation strength of 𝜖 = 0.4.       
+
+> Table 3. Encoding Mapping for 𝑒 =3(𝜖 =0.4)
+
+Binary Segment ( b𝑖 ) Integer ( 𝐼 𝑖 ) Perturbation ( 𝛿 𝑖 )000 0 +0.2001 1 +0.6010 2 +1.0011 3 +1.4100 -4 −1.4101 -3 −1.0110 -2 −0.6111 -1 −0.2The computational overhead of the multi-level encoding is confined to the fingerprinted teacher side. For a 𝑑 -dimensional output and an 𝑛 = 𝑒 · 𝑑 -bit PUF key, each 𝑒 -bit segment is mapped to one perturbation level and added to the corresponding teacher logit. Thus, the encoding requires only 
+
+𝑑 bit-to-level mappings and 𝑑 element-wise additions after the teacher forward pass, without intro-ducing additional neural-network layers or extra forward passes. These operations are independent across output dimensions and can be performed in parallel. The more implementation-dependent  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:12 Ning Lyu et al.
+
+Algorithm 1 Synthetic Logit Simulation and Neural Decoder Training  
+
+> 1:
+
+Input: Master PUF bitstream B𝑟𝑎𝑤 , key length 𝑛 , logit dimension 𝑑 , perturbation set E, noise level 𝜎 , device registry size 𝑀 , optional projection matrix U 
+
+> 2:
+
+Output: Trained MLP Identity Decoder D𝜃  
+
+> 3:
+
+Step 1: Synthetic Data Initialization  
+
+> 4:
+
+Extract 𝑀 unique keys from {0, 1}𝑛 to form subset K = {k1, . . . , k𝑀 } 
+
+> 5:
+
+Initialize training dataset S = ∅ 
+
+> 6:
+
+Step 2: Synthetic Logit Simulation  
+
+> 7:
+
+for each device key k𝑖 ∈ K do  
+
+> 8:
+
+Randomly sample perturbation scale 𝜖 ∼ E  
+
+> 9:
+
+Map bits to bipolar signs: s𝑖 = (1 − 2k𝑖 ) 
+
+> 10:
+
+if U is provided: 𝜹 𝑖 = 𝜖 · ( U · s𝑖 ) else: 𝜹 𝑖 = 𝜖 · s𝑖  
+
+> 11:
+
+for sample 𝑗 = 1 to 𝑄 do  
+
+> 12:
+
+Generate clean teacher logits: z( 𝑗 ) 
+
+> 𝑡
+
+∼ N ( 0, I𝑑 ) 
+
+> 13:
+
+Perturb teacher logits: z( 𝑗 ) 
+
+> PUF
+
+= z( 𝑗 ) 
+
+> 𝑡
+
++ 𝜹 𝑖  
+
+> 14:
+
+Simulate student behavior: z( 𝑗 ) 
+
+> 𝑠
+
+= z( 𝑗 ) 
+
+> PUF
+
++ 𝜼  
+
+> 15:
+
+Compute logit residual: Δz( 𝑗 ) = z( 𝑗 ) 
+
+> 𝑠
+
+− z( 𝑗 ) 
+
+> 𝑡
+> 16:
+
+S ← S ∪ {( Δz( 𝑗 ) , k𝑖 )}  
+
+> 17:
+
+end for  
+
+> 18:
+
+end for  
+
+> 19:
+
+Step 3: Neural Decoder Training and Optimazation  
+
+> 20:
+
+Train MLP decoder D𝜃 on S using BCE loss  
+
+> 21:
+
+Use sigmoid activation and early stopping to optimize parameters 𝜃  
+
+> 22:
+
+return Trained Identity Decoder D𝜃 
+
+overhead arises from generating the 𝑛 = 𝑒 · 𝑑 PUF bits. In a parallel hardware implementation, PUF response generation can potentially overlap with the teacher inference pipeline, while a more serialized implementation can reduce hardware cost at the expense of additional latency. The primary advantage of this multi-level encoding is its exponential scalability relative to the encoding density 𝑒 . While increasing 𝑒 significantly expands the identity space, it also reduces the spacing between adjacent encoding levels in the logit space. Assuming the perturbation values are uniformly distributed within the interval [− 𝜖, 𝜖 ], the minimum spacing between two neighboring levels can be expressed as Δ = 2𝜖   
+
+> 2𝑒 −1
+
+. As 𝑒 increases, the number of encoding levels grows exponen-tially, while the spacing Δ correspondingly decreases. Consequently, even small deviations in the student outputs caused by distillation noise may shift a perturbed logit across neighboring decision boundaries, increasing the probability of decoding errors. This introduces a practical capacity–utility–robustness trade-off. Increasing 𝑒 allows more PUF bits to be encoded per logit, but the denser encoding requires sufficient perturbation strength to remain distinguishable after distillation. The operating point is therefore selected to provide reliable fingerprint recovery while keeping the student-model utility close to its unencoded baseline. The two-stage recovery pipeline described in Section 3.5 further improves robustness to decoding errors. The neural decoder estimates the embedded PUF key from the distorted student outputs, while the Stage-II Hamming-distance matcher can tolerate a limited number of recovered-bit errors by selecting the nearest enrolled identity. By allowing multiple PUF bits to be encoded per output dimension, the scheme increases identity capacity without requiring a proportional increase in the teacher output dimension.  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:13
+
+3.5 Two-Stage Signature Recovery 
+
+Once a suspicious distilled student model becomes available for analysis or black-box querying, the model owner can recover its inherited PUF fingerprint using the proposed two-stage recovery process. The defender does not need physical access to the adversary’s device. The PUF-enabled hardware is only used when the teacher generates device-specific outputs during distillation. During verification, the suspicious student model is queried, the embedded fingerprint is recovered, and the result is compared with the enrolled PUF keys to identify the associated hardware instance. If the suspicious student model is completely inaccessible, post-leak attribution cannot be performed. As shown in Fig. 1, we propose a two-stage recovery process that combines the pattern-recognition capabilities of deep learning with the rigorous error-correction of nearest-neighbor decoding. 
+
+Stage I: Neural Network-Based Recovery . The first stage of the verification process involves a neural decoder D𝜃 designed to map behavioral model deviations back to their underlying hardware-rooted keys. A primary challenge in training a neural decoder is the unavailability of real student models for every possible PUF key in the space K. To overcome this, we utilize a Synthetic Logit Simulation approach to generate a robust training dataset without requiring expensive distillation cycles. Because the decoder does not require the specific internal weights of the student model; instead, it learns to distinguish the structured perturbation 𝜹 from the combined noise of the teacher’s quantization and the student’s learning variance. As detailed in Algorithm 1, we construct a training set S by simulating the statistical relationship between a teacher model’s output and a distilled student’s behavior. The simulation follows three main steps: (1) Synthetic Data Initialization: Extract 𝑀 unique 𝑛 -bit hardware keys, denoted as K =
+
+{k1, . . . , k𝑀 }.(2) Synthetic Logit Simulation: For each device, we model the student’s output z𝑠 as a stochastic function of the teacher’s clean logits z𝑡 . We generate synthetic teacher logits following a standard normal distribution, z𝑡 ∼ N ( 0, I𝑑 ). We map the binary key to bipolar signs s𝑖 and compute a perturbation vector 𝜹 𝑖 . If the projection matrix U is provided (to handle cases where 𝑛 ≠ 𝑑 ), the signature is defined as 𝜹 𝑖 = 𝜖 · ( Us 𝑖 ); otherwise, it is directly applied as 
+
+𝜹 𝑖 = 𝜖 · s𝑖 . Therefore, the simulated student behavior is then expressed as: 
+
+z( 𝑗 ) 
+
+> s
+
+= z( 𝑗 ) 
+
+> 𝑡
+
++ 𝜹 𝑖 + 𝜼 , 𝜼 ∼ N ( 0, 𝜎 2I𝑑 ) (9) where 𝜼 represents the approximation noise inherent in the distillation process. By calculating the logit residual Δz = z𝑠 − z𝑡 , the decoder is trained to isolate the hardware signature from the model’s original prediction information. (3) Neural Decoder Training and Optimization: We implement D𝜃 as a Multi-Layer Percep-tron (MLP) optimized for multi-label classification. Given a residual vector Δz, the decoder outputs a probability vector p ∈ [ 0, 1]𝑛 . The objective is to minimize the Bitwise Binary Cross-Entropy (BCE) loss: 
+
+LBCE = − 1
+
+𝑛 
+
+> 𝑛
+
+∑︁ 
+
+> 𝑏 =1
+
+h
+
+𝑘 𝑖,𝑏 log 𝑝 ( 𝑗 ) 
+
+> 𝑏
+
++ ( 1 − 𝑘 𝑖,𝑏 ) log (1 − 𝑝 ( 𝑗 ) 
+
+> 𝑏
+
+)
+
+i
+
+(10) where 𝑘 𝑖,𝑏 denotes the ground-truth value of the 𝑏 -th bit of the PUF key. Each output dimension 𝑝 ( 𝑗 )
+
+> 𝑏
+
+represents the predicted probability that the 𝑏 -th PUF bit equals 1. After inference, the recovered PUF bits are obtained through a threshold operation on the predicted probabilities: ˆ𝑘 𝑏 =
+
+(
+
+1, 𝑝 𝑏 ≥ 0.50, otherwise . (11)  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:14 Ning Lyu et al.
+
+The resulting binary vector ˆk ∈ { 0, 1}𝑛 represents the recovered PUF key. 
+
+Stage II: Hamming Distance decoder. The output of the neural decoder is a predicted binary string ˆk. However, due to the 1%–5% intra-device bit flips characteristic of physical hardware (as discussed in Section 2.2) and the stochastic nature of the distillation process, ˆk may contain localized bit errors. To provide deterministic accountability, we apply a second-stage Hamming distance decoder. This stage acts as a nearest neighbor estimator by comparing the predicted string ˆk against the model owner’s internal enrollment registry database K. The final recovered identity k∗ is defined as a registered key that minimizes the Hamming distance: k∗ = arg min k∈ K 𝑑 𝐻 ( ˆk, k), where 𝑑 𝐻 (· , ·) 
+
+denotes the Hamming distance. This two-stage approach enhances robustness to bit errors by combining neural decoding with a nearest-neighbor search in the authorized database, enabling reliable attribution even when the recovered signature is imperfect. The neural decoder first extracts the hidden signal from the high-dimensional logits, while the Hamming distance decoder then refines the result by correcting small errors. This two-stage design makes the recovery process robust to noise from the student model and stable even under variations in hardware-based PUF responses. 
+
+4 Experimental Evaluation 
+
+This section presents a comprehensive quantitative evaluation of the proposed PUF-based finger-printing framework. We systematically assess its ability to trace distilled models back to their originating hardware device under varying classification complexities, architectural paradigms, and identity-space scales, demonstrating its effectiveness for device-level traceability. 
+
+4.1 Experimental Setup and Methodology 
+
+The unique fingerprints for our system are taken from a RO-PUF built on a Xilinx Zynq-7020 (ZedBoard) FPGA. We collected a 1024-bit RO-PUF response under standard operating conditions (25 ◦C, 1.0V). This response is used as the physical entropy source for the identity registry. For large-scale evaluation, we partition the measured 1024-bit RO-PUF response into non-overlapping 
+
+𝑘 -bit segments to construct multiple hardware-derived candidate identities for evaluating the multi-identity recovery pipeline By using this hardware-aware simulation, we ensure that the identity embedded in the model remains easy to verify even when hardware noise occur. To prove the framework’s architecture-agnostic versatility, we evaluate three distinct “Teacher-Student” couplings. These configurations, detailed in Table 4, represent significant structural shifts, testing the fingerprint’s survival across global attention mechanisms, local convolutions, and latent-space projections. 
+
+• Enc-to-Enc (CIFAR-10): we evaluate the framework’s efficacy within the paradigm of representation learning. While the teacher is a full Symmetric Autoencoder (AE) capable of image reconstruction, the student is implemented as a resource-constrained model by using case 2 in Section 3.3 with latent dimension 64 and PUF bit length 50. The encoder backbone utilizes a sequence of strided and standard convolutions: 32 𝑐 3(𝑠 2) → 64 𝑐 3(𝑠 2) → 
+
+64 𝑐 3 → 𝐹 64, mapping the input to a 64-dimensional latent bottleneck. To establish the baseline manifold, the teacher employs a mirrored decoder: 𝐹 4096 → 64 𝑐 3 → 𝑈 2 → 32 𝑐 3 →
+
+𝑈 2 → 3𝑐 3. To ensure that the hardware-rooted signature survives the distillation process, the loss incorporates a critical latent alignment term (MSE (𝑧 𝑠 , 𝑧 𝑡,𝑞,𝑤 )) as shown in Eq. 6. This objective forces the student’s latent space to replicate the teacher’s fingerprinted and quantized manifold. 
+
+• Trans-to-CNN (CIFAR-20): We investigate heterogeneous distillation by transferring knowl-edge from a TinyViT-21M model to a customized SmallCNN on CIFAR-20. The TinyViT-21M                          
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:15
+> Table 4. System Configurations and Detailed Architectural Mappings for Identity Verification
+> Workflow Teacher Structure Student Structure Dataset Enc-to-Enc Symmetric AE 3𝑐 3-2 𝑠 -32-32 𝑐 3-2 𝑠 -64-64 𝑐 3-𝐹 64 CIFAR-10
+> Trans-to-CNN TinyViT: 𝑀𝐻𝑆𝐴 (6ℎ)+𝑀𝐿𝑃 64 𝑐 3-128 𝑐 3(𝑠 2)-256 𝑐 3(𝑠 2)-256 𝑐 3-𝐹 192-𝐹 20 CIFAR-20
+> CNN-to-Trans CNN ( ∼3.46M params) ViT: 𝑃 4-𝐹 96-[𝑀𝐻𝑆𝐴 (4ℎ)+𝑀𝐿𝑃 ]×4-𝐹 20 CIFAR-20
+> CNN-to-CNN 8-layer CNN 64 𝑐 3(𝑠 2)-128 𝑐 3(𝑠 2)-128 𝑐 3(𝑠 2)-𝐹 256-𝐹 50 CIFAR-50
+
+teacher uses a 192-dimensional feature representation and 6 multi-head self-attention (MHSA) heads. The student is designed as a compact convolutional network with the following ar-chitecture: 64 𝑐 3 → 128 𝑐 3(𝑠 2) → 256 𝑐 3(𝑠 2) → 256 𝑐 3 → 𝐺𝐴𝑃 → 𝐹 192 → 𝐹 20, where 𝐺𝐴𝑃 
+
+denotes Global Average Pooling. 𝐹 192 is a 192-dimensional embedding layer, and 𝐹 20 is the final classifier for the 20 classes. 
+
+• CNN-to-Transformer (CIFAR-20): To evaluate the reverse direction of heterogeneous distillation, we additionally distill a CNN teacher into a compact Vision Transformer student on CIFAR-20. The CNN teacher contains approximately 3.46M parameters, while the Trans-former student contains approximately 0.387M parameters. The student uses a patch size of 4, a 96-dimensional embedding, four Transformer blocks, and four self-attention heads, followed by a 20-class classification head. This configuration complements the Transformer-to-CNN setting and evaluates whether the hardware-rooted fingerprint can remain recoverable when the architectural ordering of the teacher and student is reversed. 
+
+• CNN-to-CNN (CIFAR-50): The teacher model is a compact VGG-style CNN (Mini-VGG), derived from the stacked convolutional design of VGG [27]. Specifically, the teacher follows a structural sequence of (64 𝑐 3 × 2) → MP → ( 128 𝑐 3 × 2) → MP → ( 256 𝑐 3 × 2) → GAP →
+
+𝐹 256 → 𝐹 50, where 𝑀𝑃 denotes MaxPooling. This high-capacity teacher is distilled into a highly compressed student backbone: 64 𝑐 3(𝑠 2) → 128 𝑐 3(𝑠 2) → 128 𝑐 3(𝑠 2) → 𝐹 256 → 𝐹 50. This configuration is specifically designed to test whether the hardware-rooted signature can survive significant spatial information loss and structural simplification during the transition from a deep, block-based network to a shallow network. We define three core metrics to quantify the trade-off between model utility and recovery reliability: 
+
+• Baseline and Fingerprinted Utility: These metrics evaluate the functional performance of the student model in two states: the Baseline (the model after standard distillation) and the Fingerprinted (the model after the PUF identity has been embedded). The specific metric used depends on the workflow: For the Enc-to-Enc workflow, utility is quantified via Mean Squared Error (MSE). In this context, lower values represent higher reconstruction fidelity. For the Trans-to-CNN and CNN-to-CNN workflows, utility is quantified via Top-1 Classification Accuracy (%), where higher values signify superior task performance. 
+
+• Bit Error Rate (BER): Measures the fraction of incorrect bits in reconstructed keys. 𝐵𝐸𝑅 =
+
+> 1
+> 𝑛
+
+Í𝑛 𝑖 =1 |𝑏 𝑖 − ˆ𝑏 𝑖 | where 𝑛 is the key length, 𝑏 is the enrolled bit, and ˆ𝑏 is the bit reconstructed. 
+
+• Frame Error Rate (FER): Represents the probability that the recovered key is not correct. A final FER of 0% indicates that the identity was traced with absolute certainty back to the specific source device.  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:16 Ning Lyu et al.
+
+We evaluate representative values of the fingerprinting-strength parameter 𝜖 to examine the trade-off between student utility and fingerprint recoverability. The selected values are intended to capture an unreliable recovery regime, the smallest evaluated value that achieves reliable recovery, and a larger value used to examine whether further increasing the fingerprint strength provides additional recovery benefit. 
+
+4.2 Impact of Fingerprint Strength on Model Performance and Traceability 
+
+The effectiveness of fingerprinting depends on the perturbation magnitude 𝜖 , which controls the 
+
+traceability–utility trade-off . To quantify this trade-off, we measure the performance of a clean baseline student and the corresponding fingerprinted student model. For the classification tasks (CIFAR-20 and CIFAR-50), utility is measured by top-1 accuracy, while for the encoder task (CIFAR-10), utility is measured by MSE. Traceability is evaluated using the final BER and FER after Stage-II Hamming-distance refinement. Table 5 reports representative operating points rather than a fine-grained characterization of the complete BER/FER-versus-𝜖 curve. For each workflow, we identify the smallest evaluated 𝜖 at which both final BER and FER reach zero while maintaining acceptable student-model utility, and we additionally report a larger 𝜖 value to examine whether further increasing the fingerprinting strength provides additional recovery benefit. The reported values should therefore be interpreted as practical evaluated operating points rather than exact theoretical thresholds. 
+
+• Enc-to-Enc (CIFAR-10): At 𝜖 = 0.005, the identity remains poorly resolved, with a final BER of 12 .21% and a final FER of 25 .0%. Among the evaluated values, 𝜖 = 0.010 is the smallest reliable operating point, achieving 0 .0% final BER and FER. Increasing 𝜖 further to 0 .020 maintains zero-error recovery but provides no additional recovery benefit. 
+
+• Trans-to-CNN (CIFAR-20): At 𝜖 = 0.05, recovery remains unreliable, with a final BER of 15 .62% and a final FER of 43 .75%. Among the evaluated values, 𝜖 = 0.10 is the smallest value that achieves 0% final BER and FER. Increasing 𝜖 to 0 .25 maintains the same zero-error recovery performance. 
+
+• CNN-to-Transformer (CIFAR-20): At 𝜖 = 0.05, recovery remains unreliable, with a final BER of 19 .17% and a final FER of 50 .0%. Among the evaluated perturbation strengths, 𝜖 = 0.09 is the smallest value that achieves 0% final BER and 0% final FER, corresponding to 100% device recovery accuracy. Increasing 𝜖 to 0 .25 maintains the same zero-error final recovery. The student classification accuracy remains approximately 50% across these evaluated operating points. 
+
+• CNN-to-CNN (CIFAR-50): At 𝜖 = 0.020, recovery remains unreliable, with a final BER of 23 .0% and a final FER of 45 .0%. Among the evaluated values, 𝜖 = 0.05 is the smallest value that achieves 0% final BER and FER, while 𝜖 = 0.10 maintains zero-error recovery. The measured student accuracy at 𝜖 = 0.05 is slightly higher than the baseline in this experiment, but this utility increase is treated as an empirical observation rather than a required effect of the fingerprinting mechanism. The experimental results show that the student model can inherit the hardware signature when the fingerprinting strength is sufficiently large. For the Enc-to-Enc workflow, 𝜖 = 0.005 results in a final BER of 12 .21% and a final FER of 25 .0%, whereas 𝜖 = 0.010 is the smallest evaluated value that achieves 0% final BER and FER. Increasing the strength further to 𝜖 = 0.020 maintains zero-error recovery but provides no additional recovery benefit. Similar behavior is observed for the Trans-to-CNN and CNN-to-CNN workflows. The reported operating point should therefore be interpreted as the smallest evaluated perturbation strength that achieves reliable recovery while maintaining acceptable model utility, rather than as an exact  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:17
+
+Table 5. Model Utility and Final Identity Traceability at Representative Fingerprint Strengths 
+
+Workflow Baseline 𝜖 Fingerprinted Value Final BER (%) Final FER (%) Trace-ability Metric Value Enc-to-Enc 
+
+(CIFAR-10) MSE ( ×10 −3) 7.45 0.005 7.49 ± 0.028 12.21 25.0 Low 0.01 7.11 ± 0.084 0.00 0.0 High 
+
+0.02 7.43 ± 0.095 0.00 0.0 High 
+
+Trans-to-CNN 
+
+(CIFAR-20) Acc. (%) 70.81 0.05 70 .76 ± 0.33 15.62 43.75 Low 0.10 70 .83 ± 0.34 0.00 0.0 High 
+
+0.25 70 .78 ± 0.58 0.00 0.0 High 
+
+CNN-to-Trans 
+
+(CIFAR-20) Acc. (%) 50.74 0.05 50 .21 ± 0.37 19.17 50.0 Low 0.09 50 .18 ± 0.66 0.00 0.0 High 
+
+0.25 50 .02 ± 0.40 0.00 0.0 High 
+
+CNN-to-CNN 
+
+(CIFAR-50) Acc. (%) 52.40 0.02 52 .40 ± 1.34 23.00 45.0 Low 0.05 53 .17 ± 1.56 0.00 0.0 High 
+
+0.10 53 .16 ± 1.81 0.00 0.0 High  
+
+> Note: For Enc-to-Enc, the baseline and fingerprinted values are MSE, where lower is better. For Trans-to-CNN, CNN-to-Transformer, and CNN-to-CNN, they are top-1 accuracy (%), where higher is better. Final BER and FER are reported after the two-stage recovery process.
+
+theoretical threshold. In practice, 𝜖 can be calibrated by evaluating candidate values and selecting the smallest value that satisfies the desired recovery reliability and utility requirements. 
+
+4.3 Two-Stage Recovery Efficiency 
+
+While the perturbation magnitude 𝜖 dictates the primary signal quality, the ultimate reliability of the proposed framework depends on the transition from soft-bit estimation to hard-identity attribution. We evaluate this through a hierarchical two-stage recovery pipeline: (i) the Neural Decoder Stage ,which isolates the signature from the logit residuals, and (ii) the Hamming-Distance Refinement Stage , which serves as the final identity attribution layer by identifying the closest matching device within the enrolled PUF registry. 
+
+4.3.1 Stage-I: Neural Decoder Performance. The first stage serves as the primary mechanism for extracting the hardware signature from the student model. As illustrated in Figure 3, the neural decoder demonstrates a significant capacity to recover a large fraction of the fingerprint bits, with BER decreasing as the perturbation strength 𝜖 increases. However, the system-level reliability remains poor at low 𝜖 values, as shown in Fig. 4. For example, in the Enc-to-Enc (CIFAR-10) 
+
+setup at 𝜖 = 0.005, the decoder achieves a BER of 23%, yet the resulting FER is 100%. This indicates that while the first stage successfully extracts the majority of the signature, the remaining bit errors are sufficient to prevent correct device authentication. We observe a similar trend in the 
+
+CNN-to-CNN (CIFAR-50) architecture; at 𝜖 = 0.02, a 29 .5% initial BER results in a 100% FER, as every recovery attempt contains at least one bit-flip error. These results highlight a critical gap: the first stage provides a strong foundation for bit recovery but is insufficient for reliable  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:18 Ning Lyu et al.
+
+identification on its own. This discrepancy—where bit-level success does not yet translate to error-free authentication—directly motivates the necessity of the second-stage refinement to achieve the 0% FER required for secure hardware-rooted identification. 
+
+4.3.2 Stage-II: Hamming Refinement and Attribution. The second stage acts as a closest match search to finalize the identification process. By calculating the difference between the recovered bits and the stored keys, the system identifies the enrolled device that is closest to the noisy estimate. The efficacy of this refinement is evident across all evaluated paradigms, as the Hamming-distance search bridges the gap between noisy neural estimations and deterministic hardware identities. In the Enc-to-Enc (CIFAR-10) workflow at a minimal strength of 𝜖 = 0.005, Stage-II refinement successfully reduces the initial 100% FER down to 25 .0%, achieving a perfect 0 .0% FER once the perturbation is increased to 𝜖 = 0.010. A similar corrective trend is observed in the Trans-to-CNN (CIFAR-20) architecture, where a raw Stage-I FER of 100% at 𝜖 = 0.05 is drastically suppressed to 43% through refinement, eventually achieving perfect recovery at 𝜖 = 0.10. Furthermore, the 
+
+CNN-to-CNN (CIFAR-50) system demonstrates the robustness of the Hamming-distance decoder; despite a failure in Stage-I recovery at 𝜖 = 0.02, Stage-II refinement manages to recover nearly half of the identities (44% final FER), before achieving reliable identification (0% FER) at strengths of 
+
+𝜖 ≥ 0.05.   
+
+> Enc-to-Enc Trans-to-CNN CNN-to-CNN
+> 10 20 30 40 50
+> 0.005 0.01 0.02 0.05 0.10 0.25 0.01 0.02 0.05 0.1
+> 23 4.2021 .98.7040 .329 .58.44 0.8
+> BER(%)
+> Fig. 3. BER after first-stage recovery across different PUF lengths and perturbation levels.
+
+4.4 PUF Length Selection and Identity Scalability 
+
+Fig. 5 evaluates how the PUF length 𝑛 should be selected relative to the logit/latent dimension 𝑑 
+
+when 𝑛 ≤ 𝑑 . For each fixed dimension 𝑑 , we sweep different PUF lengths and report the normalized ratio 𝑛 /𝑑 . Within each dimension group, the teacher–student architecture, dataset, enrolled-device setting, and perturbation strength 𝜖 are kept fixed, while 𝜖 is calibrated separately for each 𝑑 to keep the PUF signal recoverable under the corresponding dimensional constraint. Each configuration is evaluated using multiple independently generated projection matrices 𝑈 , and the curves report the mean success rate after Stage-II Hamming matching and the mean BER after the Stage-I decoder. Although the standard-deviation bars are omitted from the figure for readability, the measured deviations show that recovery generally becomes more stable when 𝑛 is close to 𝑑 . For example, when 𝑑 = 128, the BER standard deviation is 5 .03% at 𝑛 /𝑑 = 0.938, but decreases to 1 .54% at 
+
+𝑛 /𝑑 = 0.953 and 0 .09% at 𝑛 /𝑑 = 1.0.  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:19
+
+Enc-to-Enc Trans-to-CNN CNN-to-CNN 
+
+> 030 60 90
+> 0.005 0.01 0.02 0.05 0.10 0.25 0.02 0.05 0.1
+
+100 93 625 0 0100 87 043 0 0100 100 36 44 0 0
+
+> FER(%)
+
+First decoder Second decoder 
+
+Fig. 4. Final FER after second-stage recovery across different PUF lengths and perturbation levels.         
+
+> 50 60 70 80 90 100
+> (a) Success rate Shorter keys: lower margin Recommended region
+> Success Rate (%)
+> 0.95 0.97 0.99 190 95 100
+> Zoomed success region
+> 0.50.60.70.80.910510 15 20 25
+> (b) Average BER
+
+Normalized PUF Length 𝑛 /𝑑         
+
+> Avg. BER (%)
+> 𝑑 =64 𝑑 =128 𝑑 =256
+
+Fig. 5. PUF-length tradeoff for 𝑑 = 64 , 𝑑 = 128 , and 𝑑 = 256 under normalized PUF lengths 𝑛 /𝑑 . The top panel reports final success rate after Stage-II Hamming matching, and the bottom panel reports average BER after the Stage-I decoder. 
+
+The results show that shorter PUF signatures tend to produce lower success rate (higher FER) and higher BER, likely because they provide weaker inter-device separation and make Stage-II matching more sensitive to Stage-I bit errors. As 𝑛 /𝑑 increases, the enrolled keys become more discriminative, improving recovery reliability. Based on these observations, we identify 0 .95 ≤ 𝑛 /𝑑 ≤ 1.0 as the recommended practical operating region, which provides high success rate, controlled BER, and reduced projection-dependent variation across the evaluated dimensions. Therefore, in practical  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:20 Ning Lyu et al.
+
+deployment, selecting 𝑛 close to the logit/latent dimension provides a stable tradeoff between device-code discriminability and recovery robustness. We then evaluate the high-capacity regime where the PUF length exceeds the output dimension. For CIFAR-10, the output space contains 10 classes, which limits the number of directly embedded identity bits. To scale beyond this limit, we use Multi-Level Encoding, where each output dimension carries multiple PUF bits through discrete perturbation levels. This allows the identity length to increase from 10 bits to 20 and 30 bits in the CNN-to-CNN distillation setting. The results show a clear trade-off between fingerprint capacity, recovery reliability, and model utility. The baseline CNN student accuracy is 82 .4% when 𝜖 = 0. With a 10-bit key, the student accuracy remains 81 .67 ± 0.55%, while 𝜖 = 0.05 is sufficient to achieve 0% FER. For a 20-bit key, stronger perturbation is required: 𝜖 = 0.1 still results in 32% FER, whereas 𝜖 = 0.2 achieves reliable recovery. For the 30-bit setting, 𝜖 = 0.4 is required to reach 0% FER, and a larger accuracy variation is observed, with a standard deviation of up to 16 .54%. These results indicate that packing more PUF bits into each logit increases identity capacity but reduces the available utility margin, requiring careful selection of the perturbation strength.                
+
+> 10-bit 20-bit 30-bit
+> 20 40 60 80 100
+> 81.67 ±0.55 15 81.67 ±0.56 00.02 0.05 65.99 ±8.31 32 70.22 ±10.19 00.1 0.2 83.22 ±15.65 57 82.82 ±16.54 00.3 0.4
+> FER/Acc.(%)
+> Student Accuracy PUF FER
+> Fig. 6. Trade-off between student classification accuracy (CIFAR-10) and Final FER with CNN-to-CNN architecture for Multi-Level Encoding scheme.
+
+4.5 Robustness Against Post-Distillation Model Modifications 
+
+Once deployed, a distilled student model may undergo further modifications due to routine op-timization or deliberate attempts to remove the embedded hardware identity. To evaluate the robustness of the proposed PUF-based fingerprinting framework, we consider three representative post-distillation transformations: in-domain fine-tuning, cross-domain adaptation, and latent-space stochastic corruption. For each device, we first perform PUF recovery on the trained student model prior to any modification. We then apply each transformation independently and repeat the recovery process using the same decoder. Performance is evaluated using both bit-level and device-level metrics, including raw BER (before first-stage recovery), final BER (after two-stage recovery), and recovery success rate. We additionally report Structural Similarity Index Measure (SSIM) to quantify model utility. To quantify the extent of parameter modification during post-training, we additionally      
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:21
+> Downstream FT Diff Dataset FT Latent Noise SSIM 𝐷 𝑊 (𝑡 )
+
+0 25 50 010 20 30 40 Training Epochs Raw BER (%) 0 25 50 010 20 30 40 Training Epochs Final BER (%) 0 25 50 020 40 60 80 100 120 Training Epochs Success Rate (%) 00.10.20.30.40.50.60.7
+
+> 𝐷 𝑊  (𝑡 )
+
+0 5 · 10 −2 0.1 0.15 010 20 30 40 
+
+𝜎 
+
+> Raw BER (%)
+
+0 5 · 10 −2 0.1 0.15 010 20 30 40 
+
+𝜎 
+
+> Final BER (%)
+
+0 5 · 10 −2 0.1 0.15 020 40 60 80 100 120 
+
+𝜎 
+
+> Success Rate (%)
+
+020 40 60 80 100 120 SSIM (%)    
+
+> Fig. 7. Robustness analysis under fine-tuning (top row) and noise injection (bottom row). The top-right panel additionally reports normalized weight displacement 𝐷 𝑊 (𝑡 )during post-training.
+
+report the normalized weight displacement 𝐷 𝑊 (𝑡 ) = ∥W𝑡 −W0 ∥2  
+
+> ∥W0∥2
+
+, where W0 denotes the fingerprinted student parameters before post-training and W𝑡 denotes the parameters after 𝑡 additional training epochs. 
+
+4.5.1 Fine-Tuning Attack: In-Domain and Cross-Domain. We consider a realistic post-distillation scenario in which the released student model consists of an encoder-only architecture. Since the encoder does not directly produce pixel-space outputs, an adversary may augment the model with a lightweight decoder to enable reconstruction-based optimization. Under this setting, the attacker performs additional fine-tuning using a standard reconstruction objective, defined as MSE between the input image x and its reconstruction ˆ x: LMSE = 1
+
+> 𝑁
+
+Í𝑁 𝑖 =1 ∥ ˆx𝑖 − x𝑖 ∥22, where ˆ x𝑖 = 𝐷 (𝐸 (x𝑖 )) , with 
+
+𝐸 (·) denoting the distilled encoder and 𝐷 (·) representing the attacker-introduced decoder. Importantly, the fine-tuning process only aims to improve reconstruction and does not try to keep the embedded hardware identity. This tests whether normal retraining can wash out the fingerprint. As shown in Fig. 7 (top row), in-domain fine-tuning (Downstream FT) with CIFAR-10 has negligible impact on fingerprint recovery . Both raw and final BER remain close to zero, and the recovery success rate stays at 100% even after 50 additional epochs-a duration matching the original training budget of the teacher model. This suggests that fingerprints embedded in task-aligned representations are inherently stable under standard optimization. In contrast, cross-domain fine-tuning (Diff Dataset FT) with dataset STL-10 introduces limited degradation . While recovery remains stable for moderate training (up to 25 epochs), extended fine-tuning (50 epochs) increases the final BER to approximately 6% and and reduces  
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:22 Ning Lyu et al.
+
+the success rate to approximately 90%. However, this attack duration equals the original 50-epoch training budget of the teacher model and significantly exceeds the 30-epoch distillation process required to generate the student. From an economic perspective, a 50-epoch “cleaning" phase effectively doubles the total IP development cost. For an adversary whose primary motivation is the rapid and low-cost acquisition of proprietary model functionality, such a requirement imposes a substantial additional training cost, rendering the theft nearly as expensive as legitimate model development. These results suggest that while cross-domain adaptation can partially weaken the embedded signature, it does so inefficiently, requiring prolonged retraining while still preserving high traceability. Nearly all floating-point weights change numerically after only a small number of post-training updates, indicating that the fraction of changed weights alone is not a meaningful robustness threshold. As shown in Fig. 7 (top-right), the normalized weight displacement increases progres-sively with continued training. Despite this growing parameter drift, Stage-II Hamming matching still preserves correct device attribution in many evaluated cases. 
+
+4.5.2 Latent Noise Injection Attack. We further evaluate the robustness of the embedded fingerprint under direct perturbations applied to the latent representation. Unlike fine-tuning-based attacks, which require additional training, this setting models a low-cost adversarial strategy that modifies the internal feature representation at inference time. Specifically, given the latent embedding z𝑠 produced by the student encoder, the attacker injects additive Gaussian noise: z′ 
+
+> 𝑠
+
+= z𝑠 + 𝝐 , 𝝐 ∼ N ( 0, 𝜎 2I), where 𝜎 controls the perturbation strength. The perturbed latent z′ 
+
+> 𝑠
+
+is then used for both reconstruction (via the decoder) and fingerprint recovery. This attack directly disrupts the structured perturbation introduced by the PUF-based embedding. As shown in Fig. 7 (bottom row), increasing 𝜎 progressively degrades fingerprint recovery. At 𝜎 = 0.15, the recovery success rate drops to approximately 70%, with a corresponding increase in final BER. However, this reduction in traceability is accompanied by a noticeable degradation in model utility. To quantify this effect, we measure the SSIM[31]. SSIM captures perceptual structural similarity between the original image x and its reconstruction ˆ x. The final SSIM score is obtained by averaging over all local windows across the image. As the noise level increases, the SSIM decreases from approximately 60% to 54%, indicating a loss in structural fidelity. This demonstrates a clear utility–security trade-off : effective signature suppression requires perturbations that simultaneously impair the model’s functional performance. Importantly, while the observed SSIM degradation appears moderate in reconstruction tasks, the impact of latent perturbations is significantly more severe in representation learning scenarios such as face recognition. In such settings, even small shifts in the latent space can distort the embedding geometry, leading to substantial errors [8, 16] in identity matching or clustering. This highlights that latent noise injection not only weakens traceability but can also critically undermine downstream task reliability. Across all evaluated scenarios, the proposed PUF-based fingerprinting framework exhibits strong persistence. In-domain optimization does not affect the embedded identity, cross-domain adaptation requires substantial retraining to achieve limited degradation, and direct noise-based attacks incur a clear loss in model utility. These results indicate that removing the hardware-rooted fingerprint is either ineffective under standard training procedures or requires aggressive modifications that degrade model utility. 
+
+5 Conclusion 
+
+This work presents a hardware-rooted fingerprinting framework for device-level traceability of AI intellectual property. By embedding RO-PUF-derived device signatures into teacher-model 
+
+> J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026.
+
+Hardware-Rooted PUF Fingerprinting for Device-Level Traceability in Knowledge Distillation 111:23 
+
+logits, the proposed method enables hardware-linked identity inheritance through knowledge distillation. Experimental results show that the fingerprints are recoverable across heterogeneous teacher–student architectures, including CNNs, Vision Transformers, and encoder-based models. The two-stage recovery pipeline, combining neural decoding with Hamming-distance refinement, improves attribution reliability under PUF variation, distillation noise, fine-tuning, and cross-domain adaptation. Overall, the framework provides a scalable mechanism to trace a suspicious student model back to its source hardware. 
+
+References 
+
+[1] Soroush Abbasi Koohpayegani, Ajinkya Tejankar, and Hamed Pirsiavash. 2020. CompRess: Self-Supervised Learning by Compressing Representations, Vol. 33. 12980–12992. https://proceedings.neurips.cc/paper_files/paper/2020/file/ 975a1c8b9aee1c48d32e13ec30be7905-Paper.pdf [2] Zain Ul Abideen, Rui Wang, Tiago Diadami Perez, Geert-Jan Schrijen, and Samuel Pagliarini. 2024. Impact of Orientation on the Bias of SRAM-Based PUFs. IEEE Design & Test 41, 3 (2024), 14–20. doi:10.1109/MDAT.2023.3322621 [3] Yossi Adi, Carsten Baum, Moustapha Cisse, Benny Pinkas, and Joseph Keshet. 2018. Turning Your Weakness Into a Strength: Watermarking Deep Neural Networks by Backdooring. In 27th USENIX Security Symposium (USENIX Security 18) . USENIX Association, Baltimore, MD, 1615–1631. https://www.usenix.org/conference/usenixsecurity18/ presentation/adi [4] A. Alheyasat, G. Torrens, S. Bota, and B. Alorda. 2020. Bit-Cell Selection Analysis for Embedded SRAM-Based PUF. In 
+
+2020 IEEE International Symposium on Circuits and Systems (ISCAS) . 1–4. doi:10.1109/ISCAS45731.2020.9180780 [5] Yonghong Bai and Zhiyuan Yan. 2017. Physical unclonable functions with improved robustness based on polar codes. In 2017 IEEE International Workshop on Signal Processing Systems (SiPS) . IEEE, 1–6. [6] Yonghong Bai and Zhiyuan Yan. 2025. A New Non-Binary Response Generation Scheme from Physical Unclonable Functions. In 2025 IEEE Workshop on Signal Processing Systems (SiPS) . IEEE, 1–5. [7] Joseph Franklin Clements and Yingjie Lao. 2024. Reliable Hardware Watermarks for Deep Learning Systems. IEEE Transactions on Very Large Scale Integration (VLSI) Systems 32, 4 (2024), 752–762. doi:10.1109/TVLSI.2024.3360240 [8] Jun Dan, Yang Liu, Jiankang Deng, Haoyu Xie, Siyuan Li, Baigui Sun, and Shan Luo. 2025. TopoFR: A Closer Look at Topology Alignment on Face Recognition. arXiv:2410.10587 [cs.CV] https://arxiv.org/abs/2410.10587 [9] Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, Jakob Uszkoreit, and Neil Houlsby. 2021. An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale. In International Conference on Learning Representations . https://openreview.net/forum?id=YicbFdNTTy [10] Mahdieh Grailoo, Zain Ul Abideen, Mairo Leier, and Samuel Pagliarini. 2022. Preventing Distillation-based Attacks on Neural Network IP. arXiv:2204.00292 [cs.CR] https://arxiv.org/abs/2204.00292 [11] Jorge Guajardo, Sandeep S. Kumar, Geert-Jan Schrijen, and Pim Tuyls. 2007. FPGA Intrinsic PUFs and Their Use for IP Protection. In Cryptographic Hardware and Embedded Systems - CHES 2007 , Pascal Paillier and Ingrid Verbauwhede (Eds.). Springer Berlin Heidelberg, Berlin, Heidelberg, 63–80. [12] Geoffrey E. Hinton, Oriol Vinyals, and Jeffrey Dean. 2015. Distilling the Knowledge in a Neural Network. ArXiv 
+
+abs/1503.02531 (2015). https://api.semanticscholar.org/CorpusID:7200347 [13] Daniel E. Holcomb, Wayne P. Burleson, and Kevin Fu. 2009. Power-Up SRAM State as an Identifying Fingerprint and Source of True Random Numbers. IEEE Trans. Comput. 58, 9 (2009), 1198–1210. doi:10.1109/TC.2008.212 [14] Weizhe Hua, Zhiru Zhang, and G. Edward Suh. 2018. Reverse Engineering Convolutional Neural Networks Through Side-channel Information Leaks. In 2018 55th ACM/ESDA/IEEE Design Automation Conference (DAC) . 1–6. doi:10.1109/ DAC.2018.8465773 [15] Zhengfeng Huang, Jingchang Bian, Yankun Lin, Huaguo Liang, and Tianming Ni. 2024. Design Guidelines and Feedback Structure of Ring Oscillator PUF for Performance Improvement. IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems 43, 1 (2024), 71–84. doi:10.1109/TCAD.2023.3301386 [16] Nathan Inkawhich, Wei Wen, Hai Helen Li, and Yiran Chen. 2019. Feature Space Perturbations Yield More Transferable Adversarial Examples. In 2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) . 7059–7067. doi:10.1109/CVPR.2019.00723 [17] Jingdong Jiang, Yue Zheng, and Chip-Hong Chang. 2025. PUF-based Edge DNN Model IP Protection with Self-obfuscation and Publicly Verifiable Ownership. In 2025 IEEE International Symposium on Circuits and Systems (ISCAS) .1–5. doi:10.1109/ISCAS56072.2025.11044032 [18] Meenakshi Kansal, Animesh Roy, Dibyendu Roy, Srinivasu Bodapati, and Anupam Chattopadhyay. 2024. Priority Arbiter PUF: Analysis. Discrete Applied Mathematics 356 (2024), 71–95. doi:10.1016/j.dam.2024.05.013 J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026. 111:24 Ning Lyu et al. 
+
+[19] Byungjoo Kim, Suyoung Lee, Seanie Lee, Sooel Son, and Sung Ju Hwang. 2023. Margin-based neural network watermarking. In Proceedings of the 40th International Conference on Machine Learning (Honolulu, Hawaii, USA) 
+
+(ICML’23) . JMLR.org, Article 685, 16 pages. [20] Moon-Seok Kim, Sang-Kyung Yoo, Junki Kang, and Sungho Kim. 2025. Impact of temperature fluctuations on SRAM-based physically unclonable functions. International Journal of Information Security 24, 3 (2025), 113. [21] Ashwija Reddy Korenda, Fatemeh Afghah, Bertrand Cambou, and Christopher Philabaum. 2019. A Proof of Concept SRAM-based Physically Unclonable Function (PUF) Key Generation Mechanism for IoT Devices. In 2019 16th Annual IEEE International Conference on Sensing, Communication, and Networking (SECON) . 1–8. doi:10.1109/SAHCN.2019. 8824887 [22] Dawei Li, Yangkun Ren, Di Liu, Zhenyu Guan, Qianyun Zhang, and Yanzhao Wang. 2020. PUF-Based Intellectual Property Protection for CNN Model. In Proceedings of the 2020 IEEE International Symposium on Circuits and Systems (ISCAS) . IEEE, 1–5. doi:10.1109/ISCAS45731.2020.9180883 [23] Yuntao Liu, Yang Xie, Chongxi Bao, and Ankur Srivastava. 2016. An optimization-theoretic approach for attacking physical unclonable functions. In 2016 IEEE/ACM International Conference on Computer-Aided Design (ICCAD) . IEEE, 1–6. [24] Roel Maes and Vladimir van der Leest. 2011. Modeling and evaluating the reliability of a physical unclonable function during device lifetime. In 2011 IEEE International Conference on Computer Design (ICCD) . IEEE, 480–485. doi:10.1109/ICCD.2011.6081443 [25] Brooks Olney and Robert Karam. 2022. Protecting Deep Neural Network Intellectual Property with Architecture-Agnostic Input Obfuscation. In Proceedings of the 2022 Great Lakes Symposium on VLSI (GLSVLSI ’22) . Association for Computing Machinery, New York, NY, USA, 111–115. doi:10.1145/3526241.3530386 [26] Mikhail Pautov, Nikita Bogdanov, Stanislav Pyatkin, Oleg Rogov, and Ivan Oseledets. 2024. Probabilistically robust wa-termarking of neural networks. In Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence 
+
+(Jeju, Korea) (IJCAI ’24) . Article 528, 10 pages. doi:10.24963/ijcai.2024/528 [27] Karen Simonyan and Andrew Zisserman. 2015. Very Deep Convolutional Networks for Large-Scale Image Recognition. In International Conference on Learning Representations (ICLR) .[28] G Edward Suh and Srinivas Devadas. 2007. Physical unclonable functions for device authentication and secret key generation. In Proceedings of the 44th annual design automation conference . 9–14. [29] Florian Tramèr, Fan Zhang, Ari Juels, Michael K. Reiter, and Thomas Ristenpart. 2016. Stealing Machine Learning Models via Prediction APIs. In 25th USENIX Security Symposium (USENIX Security 16) . USENIX Association, Austin, TX, USA, 601–618. https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/tramer [30] Yusuke Uchida, Yuki Nagai, Shigeyuki Sakazawa, and Shin’ichi Satoh. 2017. Embedding Watermarks into Deep Neural Networks. In Proceedings of the 2017 ACM on International Conference on Multimedia Retrieval (ICMR ’17) . ACM, 269–277. doi:10.1145/3078971.3078974 [31] Zhou Wang, Alan Bovik, Hamid Sheikh, and Eero Simoncelli. 2004. Image Quality Assessment: From Error Visibility to Structural Similarity. Image Processing, IEEE Transactions on 13 (05 2004), 600 – 612. doi:10.1109/TIP.2003.819861 [32] Jingwen Ye, Mao Yining, Jie Song, Xinchao Wang, Cheng Jin, and Mingli Song. 2022. Safe Distillation Box. Proceedings of the AAAI Conference on Artificial Intelligence 36 (06 2022), 3117–3124. doi:10.1609/aaai.v36i3.20219 J. ACM, Vol. 37, No. 4, Article 111. Publication date: August 2026.
