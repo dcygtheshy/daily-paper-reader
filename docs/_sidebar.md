@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-10-01 <!--dpr-date:20261001-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202610/01/2609.32131v1-gaussian-image-steganography-via-parameter-domain-keyed-embeddings" data-sidebar-item="{&quot;title&quot;: &quot;Gaussian Image Steganography via Parameter-Domain Keyed Embeddings&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.32131v1-gaussian-image-steganography-via-parameter-domain-keyed-embeddings&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;基于密钥的参数域信息嵌入隐写&quot;}">Gaussian Image Steganography via Parameter-Domain Keyed Embeddings</a>
   * 2026-09-29 <!--dpr-date:20260929-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/29/2609.34744v1-optimizing-and-securing-the-modern-watermarking-channel-for-images" data-sidebar-item="{&quot;title&quot;: &quot;Optimizing and Securing the Modern Watermarking Channel for Images&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.34744v1-optimizing-and-securing-the-modern-watermarking-channel-for-images&quot;, &quot;score&quot;: &quot;9.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;watermarking&quot;}], &quot;evidence&quot;: &quot;现代图像水印信道的理论建模与鲁棒安全性&quot;}">Optimizing and Securing the Modern Watermarking Channel for Images</a>

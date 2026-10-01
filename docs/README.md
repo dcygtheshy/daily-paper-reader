@@ -6,22 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-30
-- 运行时间：2026-09-30 22:38:50 UTC
+- 最新运行日期：2026-10-01
+- 运行时间：2026-10-01 23:06:00 UTC
 - 运行状态：成功
-- 本次总论文数：0
+- 本次总论文数：1
 - 精读区：0
-- 速读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-- 详情：[/202609/30/README](/202609/30/README)
+今日速读1篇，聚焦高斯图像隐写中的参数域密钥嵌入方案。该文以6.0分值得一看，核心在于把密钥嵌入参数域以提升隐写安全性。普通读者可先了解参数域嵌入与传统像素域隐写的差异，再判断是否深入。
+- 详情：[/202610/01/README](/202610/01/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Gaussian Image Steganography via Parameter-Domain Keyed Embeddings](/202610/01/2609.32131v1-gaussian-image-steganography-via-parameter-domain-keyed-embeddings)  
+   标签：评分：6.0/10、query:watermarking
+   evidence：基于密钥的参数域信息嵌入隐写
 
 
 <div class="dpr-home-promo-card">

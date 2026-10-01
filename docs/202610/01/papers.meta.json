@@ -1,0 +1,24 @@
+{
+  "label": "2026-10-01",
+  "date": "2026-10-01",
+  "generated_at": "2026-10-01T23:06:06",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202610/01/2609.32131v1-gaussian-image-steganography-via-parameter-domain-keyed-embeddings",
+      "section": "quick",
+      "title_en": "Gaussian Image Steganography via Parameter-Domain Keyed Embeddings",
+      "authors": "Tong Wu, Runze Cheng, Xiaoyue Fan, Kaan Akşit",
+      "date": "2026-09-26",
+      "pdf": "https://arxiv.org/pdf/2609.32131v1",
+      "score": "6.0",
+      "evidence": "基于密钥的参数域信息嵌入隐写",
+      "tldr": "针对2D高斯图像表示，现有隐写多在像素域。本文改为在高斯参数域嵌入信息：先用密钥选部分参数微调，嵌入8位消息。合成图30次拟合中正确密钥无误恢复，错误密钥BER约0.543；自然图4096高斯下正确密钥BER为0，错误密钥约0.520，PSNR代价仅0.091 dB。该工作验证参数域密钥嵌入可行，并揭示编辑选择与参数类型缩减对安全性的影响。",
+      "tags": "query:watermarking",
+      "abstract_en": "2D Gaussian-based image representation is becoming increasingly popular, and our work proposes a new approach to steganography by embedding information within Gaussian parameters rather than image pixels. We first fit the parameters of this representation to the target image and employ a secret key to select a subset of these parameters for fine-tuning, allowing us to embed an 8-bit message while maintaining high visual fidelity in the reconstructed image. Thirty fitting experiments on three synthetic images show that the correct key can recover the message without error, while decoding with incorrect keys yields a Bit Error Rate (BER) of $0.543$, close to random guessing. Compared with random selection using the key, selecting the least-disturbing edits recovers the message more reliably (one-sided $p=0.031$), and the average PSNR cost is only $0.091$ dB in visual quality. The embedding method transfers to 112 natural images at $256\\times256$ using 4,096 Gaussians. The correct-key BER is $0.000$, and decoding under a wrong key stays close to random guessing at $0.520$. Our method embeds the payload through three Gaussian parameter types: log-anisotropy, opacity, and color luminance. In a separate nine-fit reduced setting, color luminance is removed, so the payload uses two instead of three parameter types, a $33.3\\%$ reduction; all 256 Gaussians remain in the fitted representation. The correct key still recovers the message without error. However, wrong-key BER rises from $0.514$ to $0.571$, moving farther from random guessing ($0.5$).",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
