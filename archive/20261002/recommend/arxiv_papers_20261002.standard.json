@@ -1,0 +1,463 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-02T22:46:43.663048+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 4,
+    "deep_cap": 6,
+    "deep_selected": 4,
+    "quick_candidates": 7,
+    "quick_skim_target": 11,
+    "quick_selected": 7
+  },
+  "deep_dive": [
+    {
+      "id": "2609.39024v1",
+      "source": "arxiv",
+      "title": "Persistent Watermarking of Text-to-Image Models",
+      "abstract": "Text-to-image (T2I) generation is gaining increasing popularity with the general public, motivating the development of reliable mechanisms for copyrighting such models given their expensive training costs. An adversary may obtain and reuse a pretrained T2I model without authorization, and then serve a modified version through an API service. Such modifications may arise from ordinary downstream adaptation or deliberate attempts to erase ownership, including input-prompt preprocessing, model fine-tuning, and output post-processing. From the model owner's perspective, a key challenge is therefore to embed trigger data that remain persistent under such changes while preserving the model's normal image-generation capabilities. In this work, we propose a contrastive-style watermarking objective with a term that explicitly encourages the watermarked model to behave differently from the original model on trigger inputs. Experiments show substantially stronger trigger-data persistence than prior methods across a wide range of downstream modifications and deliberate attempts to weaken the watermark, resulting in higher detection rates, often approaching 100% TPR@FPR<$10^{-4}$.",
+      "authors": [
+        "Dixi Yao",
+        "Kaiwen Chen",
+        "Tahseen Rabbani",
+        "Tian Li"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-30T05:29:04+00:00",
+      "link": "https://arxiv.org/pdf/2609.39024v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "persistent watermarking of text-to-image models robust to fine-tuning and post-processing",
+      "llm_evidence_cn": "对微调与后处理保持鲁棒的文本到图像模型持久水印",
+      "llm_evidence": "对微调与后处理保持鲁棒的文本到图像模型持久水印",
+      "canonical_evidence": "对微调与后处理保持鲁棒的文本到图像模型持久水印",
+      "llm_tldr_en": "To copyright expensive text-to-image models, this work proposes a contrastive-style watermark embedding trigger data that stays persistent under prompt preprocessing, fine-tuning and output post-processing while preserving image-generation quality.",
+      "llm_tldr_cn": "文本到图像模型训练成本高昂，被未授权复用并经提示预处理、微调或输出后处理后，版权归属难以证明。作者提出一种对比式水印方案，向模型嵌入在多种修改下仍保持持久的触发数据，同时不损害正常图像生成能力。该工作面向模型所有者的版权保护需求，为T2I模型提供可靠的溯源手段。",
+      "llm_tldr": "文本到图像模型训练成本高昂，被未授权复用并经提示预处理、微调或输出后处理后，版权归属难以证明。作者提出一种对比式水印方案，向模型嵌入在多种修改下仍保持持久的触发数据，同时不损害正常图像生成能力。该工作面向模型所有者的版权保护需求，为T2I模型提供可靠的溯源手段。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking in text-to-image generation models",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.40031v1",
+      "source": "arxiv",
+      "title": "WARP: A Unified Benchmark for Invisible Image Watermarking -- Robustness and Protection Against Attacks",
+      "abstract": "Digital image watermarking is increasingly critical in media contexts, as emerging regulations and industry practices require marking AI-generated content and ensuring traceable sources to prevent manipulation or misuse. Recent advances in invisible watermarking methods highlight the need to update existing benchmarking practices to reflect current techniques and evaluation criteria.   We address this by introducing WARP -- a unified framework and benchmark for evaluating the robustness of invisible watermarks. WARP incorporates 32 recent classical, deep, and generative watermarking methods, as well as 34 different erasing techniques, ranging from traditional distortions to more sophisticated adversarial, purification, and re-embedding attacks. It provides standardized, reproducible, and easily scalable protocols for evaluating perceptual quality, watermark readability, and attack resilience.   Using WARP, we extensively evaluate current invisible watermarking techniques, collecting the largest robustness benchmark in the field. Results identify the most robust approaches under both distortion and adversarial conditions, and reveal consistent relationships between watermarking methods and the attack strategies most effective against them. Our experiments also highlight that some of the watermarking methods considered are highly vulnerable to reembedding, even if they are robust to standard distortions. The code is made available at https://github.com/ispras/wibe.",
+      "authors": [
+        "Khaled Abud",
+        "Aleksey Yakushev",
+        "Aleksandr Akimenkov",
+        "Irina Serzhenko",
+        "Kirill Aistov",
+        "Egor Kovalev",
+        "Dmitry Obydenkov",
+        "Sergey Lavrushkin",
+        "Anastasia Antsiferova",
+        "Dmitriy Vatolin",
+        "Yury Markin",
+        "Kirill Lukianov"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.MM"
+      ],
+      "published": "2026-09-30T16:03:02+00:00",
+      "link": "https://arxiv.org/pdf/2609.40031v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "unified benchmark for invisible watermarking robustness against erasing attacks",
+      "llm_evidence_cn": "不可见水印抗擦除攻击的鲁棒性统一基准",
+      "llm_evidence": "不可见水印抗擦除攻击的鲁棒性统一基准",
+      "canonical_evidence": "不可见水印抗擦除攻击的鲁棒性统一基准",
+      "llm_tldr_en": "The paper introduces WARP, a unified benchmark evaluating robustness of invisible image watermarks, incorporating 32 classical, deep and generative watermarking methods and 34 erasing techniques from distortions to adversarial attacks.",
+      "llm_tldr_cn": "随着监管要求对 AI 生成内容进行标记，不可见水印的鲁棒性评测亟需更新。本文提出 WARP，一个统一的不可见图像水印鲁棒性基准，集成 32 种经典、深度与生成式水印方法以及 34 种擦除技术，涵盖传统失真到对抗与净化攻击。该基准系统比较了各类水印在多种攻击下的存活能力，揭示当前方法的脆弱环节。它为水印攻防研究与可追踪内容部署提供了标准化评测平台。",
+      "llm_tldr": "随着监管要求对 AI 生成内容进行标记，不可见水印的鲁棒性评测亟需更新。本文提出 WARP，一个统一的不可见图像水印鲁棒性基准，集成 32 种经典、深度与生成式水印方法以及 34 种擦除技术，涵盖传统失真到对抗与净化攻击。该基准系统比较了各类水印在多种攻击下的存活能力，揭示当前方法的脆弱环节。它为水印攻防研究与可追踪内容部署提供了标准化评测平台。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.02010v1",
+      "source": "arxiv",
+      "title": "Exploring Weaknesses of Generative Image Watermarks against Latent Frequency Masking",
+      "abstract": "Invisible watermarking has become a central tool for tracing AI-generated images, but its robustness against adaptive removal attacks remains an open security question. We introduce Latent Frequency Masking, an attack that erases watermark evidence by replacing selected Fourier coefficients in the latent representation of a watermarked image. The replacement can be sampled from Gaussian noise for efficiency or derived from diffusion regeneration for improved image preservation. We provide a theoretical distortion bound relating the change between the reconstructed adversarial image and the masked latent-frequency perturbation. We evaluate the proposed attack against six diffusion watermarking methods on images generated from DiffusionDB and MS-COCO prompts. Latent Frequency Masking removes or substantially weakens several watermarks while preserving perceptual quality and achieving favorable runtime compared with existing attacks. These results identify latent-frequency manipulation as a practical attack surface and highlight the need to include such attacks in robustness evaluations of generative image watermarking.",
+      "authors": [
+        "Kirill Aistov",
+        "Khaled Abud",
+        "Irina Serzhenko",
+        "Egor Kovalev",
+        "Aleksey Yakushev",
+        "Aleksandr Akimenkov",
+        "Dmitry Obydenkov",
+        "Yury Markin",
+        "Sergey Lavrushkin",
+        "Dmitriy Vatolin",
+        "Anastasia Antsiferova"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.MM"
+      ],
+      "published": "2026-10-01T16:36:29+00:00",
+      "link": "https://arxiv.org/pdf/2610.02010v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "adaptive removal attack erasing diffusion image watermark evidence in latent Fourier coefficients",
+      "llm_evidence_cn": "在潜空间傅里叶系数上擦除扩散图像水印的自适应去除攻击",
+      "llm_evidence": "在潜空间傅里叶系数上擦除扩散图像水印的自适应去除攻击",
+      "canonical_evidence": "在潜空间傅里叶系数上擦除扩散图像水印的自适应去除攻击",
+      "llm_tldr_en": "This paper introduces Latent Frequency Masking, an adaptive attack erasing invisible image watermark evidence by replacing selected Fourier coefficients in the latent representation, evaluated against six diffusion watermarking methods with a theoretical distortion bound.",
+      "llm_tldr_cn": "不可见水印已成为追踪AI生成图像的核心工具，但其抗自适应去除攻击的鲁棒性仍是未解的安全问题。作者提出潜在频率掩蔽攻击，通过替换水印图像潜表示中的选定傅里叶系数来擦除水印，替换值可采样自高斯噪声或用扩散重生成以更好保留图像，并给出重构失真的理论界。研究在DiffusionDB图像上对六种扩散水印方法进行评估，显示攻击能有效抹除水印证据。该工作揭示潜频域攻击的严重威胁，推动更鲁棒的水印设计。",
+      "llm_tldr": "不可见水印已成为追踪AI生成图像的核心工具，但其抗自适应去除攻击的鲁棒性仍是未解的安全问题。作者提出潜在频率掩蔽攻击，通过替换水印图像潜表示中的选定傅里叶系数来擦除水印，替换值可采样自高斯噪声或用扩散重生成以更好保留图像，并给出重构失真的理论界。研究在DiffusionDB图像上对六种扩散水印方法进行评估，显示攻击能有效抹除水印证据。该工作揭示潜频域攻击的严重威胁，推动更鲁棒的水印设计。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.00780v1",
+      "source": "arxiv",
+      "title": "Made to Measure: Designing Image Watermarks to Specification",
+      "abstract": "Image watermarking supports provenance and attribution by embedding verifiable identity information into images. Practical deployments, however, must jointly satisfy requirements for attack resistance, false-positive rate (FPR), image quality, and latency. Existing watermarking methods are robust to different classes of transformations, so combining complementary methods can provide broader protection than any single watermark. Such composition is challenging, as additional fragments increase distortion and decoding cost and must share the same FPR budget. Therefore, we propose **TAILOR**, a request-conditioned watermark composition framework with three stages: (1) *offline characterization* measures fragment recovery, distortion, and runtime as response curves over embedding strength; (2) *joint configuration selection* encodes the request as an SMT model over these curves and solves for the lowest-distortion composition of fragments, strengths, order, and geometric recovery; and (3) *live calibration* validates the selected configuration on the user's images and refines predictions that fail to transfer. Experimental results across 7,321 distinct requests spanning five scenarios and 20 attack settings show that **TAILOR** achieves **96.21%** scenario-averaged request satisfaction with a mean PSNR of **41.02 dB**, outperforming existing methods in robustness while achieving consistently better image quality. Code is available at [https://github.com/aaFrostnova/Tailor](https://github.com/aaFrostnova/Tailor).",
+      "authors": [
+        "Mingzhe Li",
+        "Yuefeng Peng",
+        "Kejing Xia",
+        "Pranav Jeyakumar",
+        "Ruolan Leslie Famularo",
+        "Shiqing Ma"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-30T22:17:04+00:00",
+      "link": "https://arxiv.org/pdf/2610.00780v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "composing robust image watermarks to meet attack resistance and FPR specifications",
+      "llm_evidence_cn": "组合鲁棒图像水印以满足抗攻击与误报率指标",
+      "llm_evidence": "组合鲁棒图像水印以满足抗攻击与误报率指标",
+      "canonical_evidence": "组合鲁棒图像水印以满足抗攻击与误报率指标",
+      "llm_tldr_en": "The paper proposes TAILOR, a request-conditioned watermark composition framework that offline characterizes fragment recovery, distortion and runtime, then composes complementary watermarks to meet attack resistance, FPR, quality and latency specs.",
+      "llm_tldr_cn": "图像水印需同时满足抗攻击、低误报率、画质与时延等要求，单一水印难以兼顾，而简单叠加会增大失真与解码成本并共享误报预算。本文提出 TAILOR，一个按请求条件化组合水印的框架：先离线刻画各水印片段的恢复率、失真与运行时响应曲线，再据此组合互补方法。实验表明该方法能在给定误报率预算下提供更广的变换鲁棒性覆盖。该工作为可定制、可部署的鲁棒水印设计提供了系统化方案。",
+      "llm_tldr": "图像水印需同时满足抗攻击、低误报率、画质与时延等要求，单一水印难以兼顾，而简单叠加会增大失真与解码成本并共享误报预算。本文提出 TAILOR，一个按请求条件化组合水印的框架：先离线刻画各水印片段的恢复率、失真与运行时响应曲线，再据此组合互补方法。实验表明该方法能在给定误报率预算下提供更广的变换鲁棒性覆盖。该工作为可定制、可部署的鲁棒水印设计提供了系统化方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.35881v1",
+      "source": "arxiv",
+      "title": "GenoTrace: Inheritable Watermarks for Genome Foundation Model Distillation",
+      "abstract": "Can a genome model retain a detectable record of the synthetic sequences used to train it? We study watermark inheritance through distillation with GenoTrace, a codon-aware extension of green-list watermarking. Two token-level factors modulate the teacher's generation bias using codon position and organism-specific codon usage. The resulting sequences train a smaller student, whose outputs are audited without an active watermark processor. In a three-seed GenomeOcean-500M-to-100M experiment, the joint configuration achieves a mean audit score of 17.88 and 94.5% detection at a fixed threshold. It retains 49.0% detection after key-aware token substitution, compared with 0% for the available single-seed plain-watermark comparator, and 47.0% after combined mechanism-targeted nucleotide edits. Additional experiments establish inherited signal across five organism-conditioned datasets and teacher-student size ratios up to 40. Component ablations and computational sequence-quality assays reveal distinct operating points for detection strength and coding coverage. GenoTrace provides a practical token-level construction and an empirical account of how genomic structure shapes inherited watermark signals. The findings concern shared-tokenizer distillation and the tested editing procedures, with calibration and biological utility treated as separate evaluation requirements.",
+      "authors": [
+        "Guang Yang",
+        "Fengchen Liu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG",
+        "q-bio.GN"
+      ],
+      "published": "2026-09-27T00:15:38+00:00",
+      "link": "https://arxiv.org/pdf/2609.35881v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "inheritable watermark enabling attribution of genome foundation models after distillation",
+      "llm_evidence_cn": "可继承水印实现基因组基础模型蒸馏后的溯源归属",
+      "llm_evidence": "可继承水印实现基因组基础模型蒸馏后的溯源归属",
+      "canonical_evidence": "可继承水印实现基因组基础模型蒸馏后的溯源归属",
+      "llm_tldr_en": "GenoTrace extends green-list watermarking to codons so a teacher genome model bias is inherited by distilled students, reaching 94.5 percent detection and retaining 49 percent after key-aware substitution versus 0 percent for plain watermarks.",
+      "llm_tldr_cn": "基因组基础模型经蒸馏后，训练数据是否留下可检测记录往往未知，现有水印难以跨模型继承。作者提出GenoTrace，把green-list水印扩展到密码子层面，用密码子位置与物种密码子偏好调制教师模型的生成偏置，使学生输出可被审计。三seed的GenomeOcean-500M到100M蒸馏实验中，联合配置平均审计分17.88、检测率94.5%，密钥替换后仍保留49%检测，而普通水印为0%。该工作证明水印可在蒸馏中继承，为基因组模型的数据溯源提供可行方案。",
+      "llm_tldr": "基因组基础模型经蒸馏后，训练数据是否留下可检测记录往往未知，现有水印难以跨模型继承。作者提出GenoTrace，把green-list水印扩展到密码子层面，用密码子位置与物种密码子偏好调制教师模型的生成偏置，使学生输出可被审计。三seed的GenomeOcean-500M到100M蒸馏实验中，联合配置平均审计分17.88、检测率94.5%，密钥替换后仍保留49%检测，而普通水印为0%。该工作证明水印可在蒸馏中继承，为基因组模型的数据溯源提供可行方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.36372v1",
+      "source": "arxiv",
+      "title": "TTMark: Pairwise Distortion-Free Watermarking Beyond Single-Token Entropy",
+      "abstract": "Distortion-free watermarking enables reliable attribution of machine-generated text while preserving output distribution. However, existing methods operate independently on each generated token, making their detection capability fundamentally constrained by the entropy of the next-token distribution. We present Tandem Token WaterMark (TTMARK), a general pairwise watermarking framework that extends distortion-free watermarking from individual tokens to adjacent token pairs. By watermarking the joint distribution of consecutive tokens, TTMARK enlarges the effective watermarking alphabet from V to $V^2$, allowing the detector to exploit both token entropy and conditional entropy while preserving distortion-freeness over the joint distribution. We further introduce a branch-isolating concatenated tandem generation algorithm that efficiently constructs the joint distribution in a single forward pass. Theoretically, we show that pairwise watermarking achieves better expected detection strength in low-entropy regimes. Extensive experiments across multiple language models, datasets, and three representative distortion-free watermarking schemes demonstrate that TTMARK consistently improves detectability without degrading generation quality, while also improving robustness to edits and substantially enhancing localized watermark detection.",
+      "authors": [
+        "Ruibo Chen",
+        "Zhengmian Hu",
+        "Donghang Lu",
+        "Xuehao Cui",
+        "Georgios Milis",
+        "Yihan Wu",
+        "Jian Du",
+        "Heng Huang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL"
+      ],
+      "published": "2026-09-28T23:04:53+00:00",
+      "link": "https://arxiv.org/pdf/2609.36372v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "pairwise distortion-free watermarking for machine-generated text attribution",
+      "llm_evidence_cn": "面向机器生成文本溯源的成对无失真水印",
+      "llm_evidence": "面向机器生成文本溯源的成对无失真水印",
+      "canonical_evidence": "面向机器生成文本溯源的成对无失真水印",
+      "llm_tldr_en": "TTMARK extends distortion-free text watermarking from single tokens to adjacent token pairs, enlarging the effective alphabet from V to V squared so the detector exploits both token and conditional entropy while preserving the output distribution.",
+      "llm_tldr_cn": "现有无失真文本水印逐token独立嵌入，检测能力被下一token分布的熵所限制。作者提出TTMark成对水印框架，对相邻token的联合分布加水印，把有效水印字母表从V扩大到V²，使检测器同时利用token熵与条件熵，并保持联合分布的无失真性。该框架为机器生成文本的可信归属提供了更强且分布保真的水印方案。",
+      "llm_tldr": "现有无失真文本水印逐token独立嵌入，检测能力被下一token分布的熵所限制。作者提出TTMark成对水印框架，对相邻token的联合分布加水印，把有效水印字母表从V扩大到V²，使检测器同时利用token熵与条件熵，并保持联合分布的无失真性。该框架为机器生成文本的可信归属提供了更强且分布保真的水印方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.39623v1",
+      "source": "arxiv",
+      "title": "Semantic Watermarking for Malicious Image Manipulation Detection",
+      "abstract": "The proliferation of high-fidelity generative editing models has made it possible to inject violent or sexual content into otherwise ordinary images while preserving visual plausibility, with concrete consequences for public discourse and vulnerable populations. We propose a robust semantic watermarking framework that reframes the watermark as a recoverable semantic reference rather than an opaque identifier. Our framework combines a $β$-VAE-based binary watermark (CLIP-VAE) with explicit channel-aware training---random bit-flip noise is injected during training so that the decoder learns graceful degradation under the noisy watermarking channel. As a downstream application, a lightweight module SDA-Net uses the recovered semantic embedding to expose not only whether but in which semantic direction an image has been altered. In a 5-way comparison against representative binary hashing baselines (SimHash, ITQ, HashNet, and their robust-MLP variants), CLIP-VAE achieves the highest reconstruction cosine similarity to the original CLIP embedding under realistic InstructPix2Pix bit-error rates, and uniquely supports direction-of-drift detection---a forensic complement to existing content-moderation pipelines.",
+      "authors": [
+        "Yoonseo Kim",
+        "Seungwoo Baek",
+        "Junyoung Park"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-09-30T12:33:19+00:00",
+      "link": "https://arxiv.org/pdf/2609.39623v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "robust semantic watermarking against noise",
+      "llm_evidence_cn": "抗噪的鲁棒语义水印",
+      "llm_evidence": "抗噪的鲁棒语义水印",
+      "canonical_evidence": "抗噪的鲁棒语义水印",
+      "llm_tldr_en": "A robust semantic watermarking framework reframes the watermark as a recoverable semantic reference, using a CLIP-VAE binary watermark and channel-aware training to resist manipulation.",
+      "llm_tldr_cn": "高保真生成编辑模型可向普通图像注入暴力或色情内容，威胁公共话语与弱势群体。本文提出鲁棒语义水印框架，把水印重构为可恢复的语义参考而非不透明标识，结合基于β-VAE的二值水印与信道感知训练，注入随机比特翻转噪声使解码器具备退化鲁棒性。下游SDA-Net利用恢复的语义嵌入检测恶意篡改。该框架提升了水印在噪声信道下的鲁棒性并服务于篡改取证。",
+      "llm_tldr": "高保真生成编辑模型可向普通图像注入暴力或色情内容，威胁公共话语与弱势群体。本文提出鲁棒语义水印框架，把水印重构为可恢复的语义参考而非不透明标识，结合基于β-VAE的二值水印与信道感知训练，注入随机比特翻转噪声使解码器具备退化鲁棒性。下游SDA-Net利用恢复的语义嵌入检测恶意篡改。该框架提升了水印在噪声信道下的鲁棒性并服务于篡改取证。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.37218v1",
+      "source": "arxiv",
+      "title": "Beyond Semantic Narrowing: Robust and Efficient LLM Watermarking with Hamming Neighborhoods",
+      "abstract": "Semantic watermarking improves robustness against watermark removal attacks by embedding detectable signals into sentence-level representations. However, existing watermarking methods typically impose watermark-specific semantic preferences on generated sentences without explicitly accounting for the highly non-uniform and context-dependent semantic preference of LLM generation. When these two preferences are poorly aligned, many natural continuations become incompatible with the watermark, causing semantic narrowing: reduced semantic freedom, increased resampling cost, and potential degradation on tasks with strict semantic requirements. To alleviate this problem, we propose HammingMark, which uses the semantic hash of the preceding sentence as a dynamic center and accepts candidates whose hashes fall within its Hamming neighborhood. Defining watermark validity over a Hamming neighborhood in compact hash space retains a larger fraction of naturally likely semantic continuations. The coarse many-to-one hash mapping further allows diverse semantic realizations to remain watermark-valid. Experiments on C4 and BookSum show that HammingMark achieves strong robustness, high detectability, and near-unwatermarked generation quality, requiring only 2.2 sampled candidates per accepted sentence,a 72.8% reduction compared with the most sampling-efficient existing method. On more complex tasks with strict semantic constraints, HammingMark achieves the highest detection rates with the highest or tied-highest ROUGE-L scores, demonstrating its effectiveness in balancing watermark detectability and generation quality under constrained generation settings.",
+      "authors": [
+        "Zewen Sun",
+        "Tongyang Zhao",
+        "Liyao Xiang",
+        "Mingxuan Ma",
+        "Lingzhe Wang",
+        "Zhiyuan Li"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-09-29T10:34:13+00:00",
+      "link": "https://arxiv.org/pdf/2609.37218v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "robust LLM watermarking against removal attacks with semantic hashing",
+      "llm_evidence_cn": "利用语义哈希实现抗去除攻击的鲁棒LLM水印",
+      "llm_evidence": "利用语义哈希实现抗去除攻击的鲁棒LLM水印",
+      "canonical_evidence": "利用语义哈希实现抗去除攻击的鲁棒LLM水印",
+      "llm_tldr_en": "Semantic LLM watermarking can narrow generation semantics; HammingMark uses semantic hashes of preceding context to embed robust, efficient watermarks while preserving semantic freedom.",
+      "llm_tldr_cn": "语义水印通过在句级表示中嵌入信号来提升抗去除攻击的鲁棒性，但会强加与水印相关的语义偏好，导致语义收窄与重采样开销上升。本文提出HammingMark，利用前文语义哈希来嵌入水印，使其与模型自身语义偏好更好对齐。实验表明该方法在保持鲁棒与高效的同时缓解了语义收窄问题。",
+      "llm_tldr": "语义水印通过在句级表示中嵌入信号来提升抗去除攻击的鲁棒性，但会强加与水印相关的语义偏好，导致语义收窄与重采样开销上升。本文提出HammingMark，利用前文语义哈希来嵌入水印，使其与模型自身语义偏好更好对齐。实验表明该方法在保持鲁棒与高效的同时缓解了语义收窄问题。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.37310v1",
+      "source": "arxiv",
+      "title": "AutoMark: Enabling Autoresearch to Discover Better LLM Watermarks",
+      "abstract": "With LLM watermarking being deployed commercially and now required by regulations, improving its reliability and effectiveness has become crucial. Yet, recent progress in the field of LLM watermarking has increasingly been driven by improving details of existing methods, an effort fundamentally limited by the pace of human researchers. In this work, we enable for the first time the autonomous discovery of new distortion-free state-of-the-art watermarking schemes. To enable this, we (i) establish strict criteria to ensure that watermarks are reliable (e.g., they do not have an unexpectedly high false positive rate), (ii) propose rigorous statistical tests to automatically evaluate whether a watermarking scheme satisfies our criteria, and (iii) design an evaluation suite to rank watermarks along three key dimensions: detectability, quality, and robustness. By running our framework with 3 frontier models (GPT-6 Astra, Opus 5, Gemini-3.8 Flash), we discover over 50 different watermarking schemes, including several that outperform prior works along all key dimensions. We complement this by a manual study of the discovered schemes, distilling the key ideas into smaller components, and individually studying the impact of each component across dimensions (detectability, quality, robustness) to better understand how the proposed schemes operate. Importantly, we find that the agents, on top of improving existing ideas, also discover fundamentally new ideas (e.g., aligning watermark scores with random per-request direction). Overall, our work establishes the first steps of fully autonomous watermarking research, enabling the discovery of more reliable and effective watermarks. Our code is available at https://github.com/eth-sri/automark, and a blogpost to visualize our results at https://www.sri.inf.ethz.ch/blog/automark.",
+      "authors": [
+        "Thibaud Gloaguen",
+        "Robin Staab",
+        "Martin Vechev"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-09-29T11:45:47+00:00",
+      "link": "https://arxiv.org/pdf/2609.37310v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Automated discovery of LLM watermarking schemes, relevant watermarking research",
+      "llm_evidence_cn": "自动发现LLM水印方案，属于水印研究",
+      "llm_evidence": "自动发现LLM水印方案，属于水印研究",
+      "canonical_evidence": "自动发现LLM水印方案，属于水印研究",
+      "llm_tldr_en": "LLM watermarking progress is limited by manual human iteration. AutoMark enables autonomous discovery of distortion-free state-of-the-art watermarking schemes via strict reliability criteria, rigorous statistical tests and an automated search pipeline.",
+      "llm_tldr_cn": "随着LLM水印进入商业部署并被法规要求，提升其可靠性与有效性日益关键，但进展多依赖人工改进现有方法。本文首次实现水印方案的自主发现，先建立严格标准确保水印可靠（如控制虚警率），再提出自动评估水印方案是否满足标准的统计检验，并设计自动搜索流程。该工作为自动化发现无失真、最先进的水印方案开辟了新路径。",
+      "llm_tldr": "随着LLM水印进入商业部署并被法规要求，提升其可靠性与有效性日益关键，但进展多依赖人工改进现有方法。本文首次实现水印方案的自主发现，先建立严格标准确保水印可靠（如控制虚警率），再提出自动评估水印方案是否满足标准的统计检验，并设计自动搜索流程。该工作为自动化发现无失真、最先进的水印方案开辟了新路径。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking techniques for diffusion models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.38722v1",
+      "source": "arxiv",
+      "title": "Anchor-ECC: Local Integrity Checking for Watermarked LLM Outputs via Error-Correcting Codes",
+      "abstract": "LLM watermarking has become an effective approach to distinguishing AI-generated text from human-written text by embedding detectable patterns during generation. However, a small post-generation edit may change the meaning of the text without removing its overall watermark signal, creating a risk that the modified content is still attributed to the original model. We propose Anchor-ECC, which incorporates the error-correcting code (ECC) constraints and explicit boundary anchors into the watermark structure and pairs them with a dynamic-programming decoder to detect and localize post-generation edits. Across Qwen3-8B, Mistral-7B-Instruct-v0.3, and OPT-125M, the approximate-hard setting achieves about 99.7% block-level true positive rate (TPR) with at most 7.6% false alarm rate (FAR) for edit detection under mixed insertions, deletions, and substitutions, while preserving the distinction between watermarked outputs and unwatermarked text. Additional quality experiments identify lower-perplexity configurations that retain strong edit-detection performance. Together, these results extend LLM watermarking from source identification to local integrity verification while supporting configurable trade-offs between detection reliability and generation quality.",
+      "authors": [
+        "Zewei Deng",
+        "Muhammad Siddeek",
+        "Liyan Xie",
+        "Mohamed Seif",
+        "Mengdi Wang",
+        "H. Vincent Poor",
+        "Andrea Goldsmith"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL"
+      ],
+      "published": "2026-09-30T00:56:24+00:00",
+      "link": "https://arxiv.org/pdf/2609.38722v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "LLM watermark with error-correcting codes for integrity checking",
+      "llm_evidence_cn": "基于纠错码的水印完整性校验",
+      "llm_evidence": "基于纠错码的水印完整性校验",
+      "canonical_evidence": "基于纠错码的水印完整性校验",
+      "llm_tldr_en": "LLM watermarks can survive small edits that change meaning, wrongly attributing modified text to the source model. Anchor-ECC embeds error-correcting-code constraints and boundary anchors with a dynamic-programming decoder to detect and localize edits, reaching about 99.7 percent block-level true positives on three LLMs.",
+      "llm_tldr_cn": "大语言模型水印通过生成时嵌入可检测模式来区分AI与人类文本，但生成后的微小编辑可能在保留整体水印信号的同时改变语义，导致被篡改内容仍被错误归因于原模型。本文提出Anchor-ECC，将纠错码约束与显式边界锚点融入水印结构，并配合动态规划解码器检测和定位生成后编辑。在Qwen3-8B、Mistral-7B与OPT-125M上，近似困难设置下块级真阳性率约达99.7%。该方法使水印不仅可用于溯源，还能提供局部完整性校验。",
+      "llm_tldr": "大语言模型水印通过生成时嵌入可检测模式来区分AI与人类文本，但生成后的微小编辑可能在保留整体水印信号的同时改变语义，导致被篡改内容仍被错误归因于原模型。本文提出Anchor-ECC，将纠错码约束与显式边界锚点融入水印结构，并配合动态规划解码器检测和定位生成后编辑。在Qwen3-8B、Mistral-7B与OPT-125M上，近似困难设置下块级真阳性率约达99.7%。该方法使水印不仅可用于溯源，还能提供局部完整性校验。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Cryptographic approaches to watermarking",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.39414v1",
+      "source": "arxiv",
+      "title": "SEW: Style-Encoded Watermarking of LLM-Generated Code",
+      "abstract": "Code watermarking supports provenance tracking for code generated by LLMs. Modifying token selection to embed watermarks as an LLM generates code can create a trade-off between detectability and functional correctness. Other methods instead watermark completed code using predefined transformations or trained neural models. Recurring patterns can make watermark choices predictable across programs, while treating patterns common in unwatermarked code as watermark evidence can cause false detections. We therefore introduce SEW, which embeds and detects watermarks in already generated code through three components: (i) code style rules collected from style guides and transformation rules, with style choices determined by a secret key and each program's structural context; (ii) style-preference calibration, which evaluates watermark evidence using style probabilities estimated from human-written code; and (iii) context-aware style aggregation, which combines evidence from structurally matching locations assigned the same code style choice, preventing repeated applications of that choice from inflating watermark evidence. On CodeContests across three LLMs and three programming languages, SEW achieves a mean relative improvement of 12.44% in TPR@FPR5% over the baselines and is robust to four non-LLM code-editing attacks, with only a 0.94% mean relative decrease. Our code is available at https://github.com/suhanmen/SEW.",
+      "authors": [
+        "Soohan Lim",
+        "Hyundong Jin",
+        "Yo-Sub Han"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-09-30T09:53:51+00:00",
+      "link": "https://arxiv.org/pdf/2609.39414v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "style-encoded watermarking of LLM-generated code for provenance",
+      "llm_evidence_cn": "面向溯源的LLM生成代码风格编码水印",
+      "llm_evidence": "面向溯源的LLM生成代码风格编码水印",
+      "canonical_evidence": "面向溯源的LLM生成代码风格编码水印",
+      "llm_tldr_en": "Code watermarking must balance detectability and correctness; SEW embeds and detects watermarks in already generated code using style rules keyed by structure and a secret key.",
+      "llm_tldr_cn": "LLM生成代码的水印用于溯源追踪，但在生成时修改token选择会损害功能正确性，而事后水印又易被预测或误检。本文提出SEW，通过由密钥与程序结构上下文决定的代码风格规则，在已生成代码中嵌入并检测水印。该方法兼顾可检测性与代码正确性，为代码溯源提供更可靠手段。",
+      "llm_tldr": "LLM生成代码的水印用于溯源追踪，但在生成时修改token选择会损害功能正确性，而事后水印又易被预测或误检。本文提出SEW，通过由密钥与程序结构上下文决定的代码风格规则，在已生成代码中嵌入并检测水印。该方法兼顾可检测性与代码正确性，为代码溯源提供更可靠手段。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Fingerprinting techniques for generative models",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

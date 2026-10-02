@@ -1,0 +1,1210 @@
+Title: Beyond Semantic Narrowing: Robust and Efficient LLM Watermarking with Hamming Neighborhoods
+
+URL Source: https://arxiv.org/pdf/2609.37218v1
+
+Published Time: Wed, 30 Sep 2026 01:58:24 GMT
+
+Number of Pages: 31
+
+Markdown Content:
+# Beyond Semantic Narrowing: Robust and Efficient LLM Watermarking with Hamming Neighborhoods 
+
+## Zewen Sun 1,2 Tongyang Zhao 3 Liyao Xiang 1,2* 
+
+## Mingxuan Ma 1 Lingzhe Wang 1 Zhiyuan Li 1
+
+> 1
+
+Shanghai Jiao Tong University 
+
+> 2
+
+Shanghai Innovation Institute 
+
+> 3
+
+Northwest Polytechnical University, Xi’an 
+
+zwsun@sjtu.edu.cn zhaotongyang@mail.nwpu.edu.cn xiangliyao08@sjtu.edu.cn ru.jiang@sjtu.edu.cn wanglingzhe@sjtu.edu.cn willmaths@sjtu.edu.cn 
+
+Abstract 
+
+Semantic watermarking improves robustness against watermark removal attacks by embedding de-tectable signals into sentence-level representations. However, existing watermarking methods typically impose watermark-specific semantic preferences on generated sentences without explicitly account-ing for the highly non-uniform and context-dependent semantic preference of LLM generation. When these two preferences are poorly aligned, many natural continuations become incompatible with the watermark, causing semantic narrowing : reduced semantic freedom, increased resampling cost, and potential degradation on tasks with strict semantic requirements. To alleviate this problem, we propose 
+
+HammingMark , which uses the semantic hash of the preceding sentence as a dynamic center and accepts candidates whose hashes fall within its Hamming neighborhood. Defining watermark validity over a Hamming neighborhood in compact hash space retains a larger fraction of naturally likely semantic continuations. The coarse many-to-one hash mapping further allows diverse semantic realizations to remain watermark-valid. Experiments on C4 and BookSum show that HammingMark achieves strong robustness, high detectability, and near-unwatermarked generation quality, requiring only 2.2 sampled candidates per accepted sentence—a 72.8% reduction compared with the most sampling-efficient ex-isting method. On more complex tasks with strict semantic constraints, HammingMark achieves the highest detection rates with the highest or tied-highest ROUGE-L scores, demonstrating its effective-ness in balancing watermark detectability and generation quality under constrained generation settings. 
+
+## 1 Introduction 
+
+Large language models (LLMs) have demonstrated remarkable capabilities in generating fluent and coher-ent text, which simultaneously raises growing concerns about content provenance, misuse, and copyright protection (Liang et al., 2026; Xu et al., 2025; Casper et al., 2026; Yang et al., 2025). Text watermarking provides a promising solution by embedding statistically detectable signals into model-generated con-tent without altering its intended functionality (Kirchenbauer et al., 2023; Dathathri et al., 2024; Liu et al., 2026). However, conventional token-level watermarking methods encode such signals by manip-ulating token distributions and are therefore vulnerable to paraphrasing, synonym substitution, and other semantic-preserving attacks (Lu et al., 2024; Hu et al., 2024; Sun et al., 2026). Semantic-level watermark-ing has recently emerged as a more robust alternative against semantic-preserving attacks by shifting the sentence, rather than the token distributions (Liu et al., 2024; Hou et al., 2024a; Ren et al., 2024), hence is more attractive to reliable provenance verification of LLM-generated text. Despite their improved robustness, existing semantic watermarking methods inevitably experience se-mantic narrowing : they typically sample multiple candidate sentences until finding one that falls into 
+
+> *Corresponding author.
+
+1arXiv:2609.37218v1 [cs.CR] 29 Sep 2026 a predefined semantic subspace. For example, bucket-based methods require the generated sentence to fall into a designated semantic region (Hou et al., 2024a;b), while similarity-based methods constrain its embedding to a predefined similarity interval (Dabiriaghdam & Wang, 2025; Zhang et al., 2025). Multi-dimensional semantic partitioning methods similarly favor sentences located in watermark-specific regions of the embedding space (Huo et al., 2026). Although implemented differently, these methods impose a watermark-specific semantic preference that may not align with the model’s natural genera-tion preference. Poor alignment can reject otherwise plausible, high-probability continuations, leading to inefficient, repeated sampling and potential semantic distortion. This problem is particularly severe in constrained tasks, where the set of acceptable continuations is already limited. Our core observation is that the natural next-sentence generation is typically not uniformly distributed over the semantic space, but puts much weights on a context-dependent set of plausible semantic continuations (Meister et al., 2023; Farquhar et al., 2024; Aichberger et al., 2025). Previous semantic watermarking methods typically predefine a randomly positioned semantic subspace as the watermark-valid region, without considering whether this subspace aligns with the context-dependent semantic space favored by natural next-sentence generation. Motivated by this principle, we propose HammingMark , which uses the semantics of the preceding sentence to dynamically determine which next-sentence candidates are compatible with the watermark. Rather than steering generation toward a fixed, context-independent semantic region, HammingMark adapts the watermark constraint to the local context already established by the generated text, making it more likely to preserve continuations that the model naturally prefers. Within this context-aligned design, watermark selectivity operates on coarse semantic hash codes, whose many-to-one mapping weakens the coupling between watermark validity and specific semantic content. The constraint thus remains selec-tive without prescribing a single semantic direction, allowing multiple semantically distinct continuations to remain valid and preserving flexibility for discourse changes such as elaboration, contrast, and topic shifts. Our contributions are threefold: 1) A unified analysis of semantic narrowing. We provide the first sys-tematic analysis of semantic narrowing , a common limitation of existing semantic watermarking methods. 2) A local-context-aligned semantic acceptance constraint for watermark embedding. We propose 
+
+HammingMark , which centers the Hamming acceptance neighborhood on the semantic code of the pre-ceding sentence, allowing the watermark constraint to better align with naturally plausible continuations while preserving semantic flexibility. 3) High-fidelity, efficient, and robust semantic watermarking. 
+
+Experiments on open-ended and constrained generation tasks show that HammingMark maintains strong detectability and robustness while substantially reducing semantic restriction and resampling overhead, requiring only 2.2 sampled candidates per accepted sentence—a 72.8% reduction compared with the most sampling-efficient existing method. 
+
+## 2 Related Work 
+
+SemStamp (Hou et al., 2024a) partitions the semantic space using locality-sensitive hashing, while K-SemStamp (Hou et al., 2024b) uses clustering-based regions. Both restrict generation to selected valid regions without accounting for the nonuniform, context-dependent distribution of natural continuations. These regions may therefore exclude much of the probability mass assigned to plausible continuations, causing semantic narrowing through misalignment with natural generation. SimMark (Dabiriaghdam & Wang, 2025) considers inter-sentence relations but requires consecutive sentences to satisfy a predefined similarity interval. However, natural discourse does not maintain a uniform similarity range: contrast, elaboration, and topic shifts may require continuations outside this interval, which the constraint conse-quently rejects. This interval-based criterion can also be sensitive to paraphrasing, as changes to both sentences may shift their measured similarity across the acceptance boundary even when their meanings are largely preserved. PMark (Huo et al., 2026) introduces a proxy-function-based framework with multi-channel constraints. Its online variant offers strong theoretical guarantees through a distortion-free construction, but its sub-stantial verification cost and demanding requirements for generator access, reproducible inference, and sentence-position alignment severely limit its practical applicability. Specifically, verification requires 2(a) EXISTING METHODS 
+
+Semantic Narrowing 
+
+> ✓✓
+> watermark strength
+> semantic freedom decreases
+> (b) OUR FRAMEWORK
+
+Realized-Sentence-Centered Hamming Neighborhoods                                  
+
+> 1 Semantic encoding 2 Random projection
+> z(s t-1 )∈Rd
+> RK∈R8×d
+> h(s t-1 )10100110
+> h = sign(R K· z)
+> St(2) 10101110 6/8 ✓
+> random matrix
+> St(1) 10110000 5/8 ×
+> Sentence S i
+> i = t-1 or current resample
+> Frozen SBERT semantic encoder
+> z(s i)
+> dense embedding z(s) ∈Rd
+> 4 Accepted transitions accumulate as edge evidence
+> M2≥ T M3≥ T M4≥ T
+> h1
+> h2
+> h3
+> h4
+> ...
+> Edge Vote Sedge = 1/(n−1) Σ 1[M t≥ T] Global Bits Sglobal = 1/[m(n−1)] Σ M t
+> Entire semantic space
+> 、
+> Watermark-valid semantic region LLM-sampled candidates
+> Uneven Semantic Distribution of Samples
+> 3 Shoulder sampling and semantic coverage
+> Natural match distribution q t(k) Selected code region
+> Mt≥ T
+> 10100110 11100110 10110111
+> ⋮
+> Broader semantic coverage
+> Semantic preimage
+> Ours Baseline
+> 012345678
+> T = 6
+> Shoulder sampling
+> Matching bits k
+> Frequency
+> Schematic cutaway Multiple admissible semantic regions
+
+Figure 1: Overview of HammingMark. (a) Existing semantic watermarks may cause semantic narrow-ing when predefined watermark regions poorly overlap with natural generation. (b) HammingMark uses transition-centered Hamming neighborhoods for better alignment with natural generation, while coarse many-to-one hashing preserves diverse semantic transitions. repeated sentence-level generation to reconstruct channel-wise medians, whose estimates may shift when prompts, context, or inference settings differ. Moreover, the strict sentence–key alignment requirement can render detection infeasible when sentence truncation or missing prompts disrupt this correspon-dence. A detailed discussion is provided in Appendix A. Its offline variant replaces dynamically esti-mated channel-wise medians with a fixed zero prior, eliminating generator queries but losing the exact distortion-free guarantee. Rather than rejecting candidates against an acceptance threshold, it selects from a sampled pool the candidate with the highest agreement with prescribed channel-wise random signs. The random projection matrix and target signs jointly impose fixed preferences in semantic space, concentrat-ing selection probability on candidates favored by these preferences. Consequently, naturally plausible but lower-scoring continuations are systematically disadvantaged, inducing semantic narrowing even without explicit rejection sampling. HammingMark defines watermark validity through a Hamming neighborhood centered on the preceding sentence’s hash code, aligning the constraint with continuations naturally favored by the local context. Meanwhile, the coarse many-to-one mapping weakens the coupling between watermark validity and spe-cific semantic content, allowing semantically distinct continuations to satisfy the same code-level con-straint. Together, these mechanisms reduce semantic narrowing while preserving flexibility for contrast, elaboration, and topic shifts. A detailed analysis of semantic narrowing across methods is provided in Appendix B and C. 
+
+## 3 Method 
+
+3.1 Semantic Narrowing under Watermark Constraints 
+
+We characterize semantic narrowing in terms of the natural probability mass excluded by a watermark constraint. At generation step t, let ct denote the preceding context, and let St ∼ Pt(· | ct) denote a semantic continuation drawn from the context-dependent natural generation distribution. Here, Pt(· | ct) captures the distribution of semantic continuations that the underlying language model would naturally produce given ct. Let Wt denote the set of semantic continuations that satisfy the watermark constraint at step t.We define the natural acceptance mass of the watermark constraint as 
+
+αt = Pr 
+
+St∼Pt(·| ct) [St ∈ Wt] . (1) The quantity αt measures how much probability mass of the natural generation distribution remains com-patible with the watermark constraint. Correspondingly, the excluded natural probability mass is 1 − αt,3which quantifies the degree of semantic narrowing induced by the watermark. A smaller αt indicates poorer alignment between the watermark constraint and the natural distribution, causing more naturally likely continuations to be excluded. 
+
+3.2 HammingMark: Adaptive Hamming-Neighborhood Acceptance 
+
+We construct a context-dependent semantic acceptance rule based on transitions between compact hash codes. For each sentence St, we obtain a semantic embedding et = F (St) ∈ Rd and project it using a fixed random-hyperplane matrix R ∈ Rm×d. The resulting semantic hash is 
+
+ht = H(et) = 1[Re t ≥ 0] , ht ∈ { 0, 1}m. (2) Random-hyperplane hashing preserves angular locality in probability: semantically similar embeddings are more likely to produce matching hash bits, providing a discrete but locality-sensitive representation of sentence semantics. A detailed analysis of this locality-preserving property is provided in Appendix D. Given the preceding code ht−1, we define the number of matching bits between two consecutive semantic hashes as Match( ht−1, h t) = m − dH (ht−1, h t), where dH (·, ·) denotes Hamming distance. Hamming-Mark accepts the current sentence when 
+
+Match( ht−1, h t) ≥ T ⇐⇒ dH (ht−1, h t) ≤ r, r = m − T. (3) Accordingly, the valid next codes form the Hamming neighborhood 
+
+Br (ht−1) = {h ∈ { 0, 1}m : dH (h, h t−1) ≤ r} . (4) Under the general formulation in Section 3.1, the natural acceptance mass of HammingMark is 
+
+αHM  
+
+> t
+
+= Pr  
+
+> St∼Pt(·| ct)
+
+[H(F (St)) ∈ B r (ht−1)] . (5) During watermark generation, a candidate sentence St is accepted if Match( ht−1, h t) ≥ T and is resam-pled otherwise. Thus, αHM  
+
+> t
+
+directly measures the natural probability mass retained by the HammingMark acceptance constraint. The preceding hash ht−1 has two roles. First, it determines the center of the current Hamming acceptance constraint, making the watermark rule dependent on the realized preceding semantics rather than on an in-dependently specified target. Second, it serves as one endpoint of the inter-sentence relation statistic used by the detector, so that the same pairwise semantic relation governs both watermark insertion and verifi-cation. HammingMark still performs semantic selection by rejecting candidates that violate equation 3; its advantage lies in how the acceptance constraint is placed and represented. 
+
+3.3 Why HammingMark Alleviates Semantic Narrowing 
+
+Under the formulation in Section 3.1, HammingMark alleviates semantic narrowing through two com-plementary mechanisms. First, the realized-sentence-centered Hamming constraint exploits the semantic continuity of natural sentence transitions through context-aligned shoulder sampling. Second, the coarse many-to-one hash representation allows semantically different continuations to remain valid under the same acceptance constraint. 
+
+Context-aligned shoulder sampling. As described in Section 3.2, HammingMark centers its accep-tance constraint on the semantic hash of the preceding sentence. The key observation is that natural adjacent sentences typically exhibit semantic continuity, and random-hyperplane hashing preserves this locality in probability. For a naturally sampled continuation St, define the natural match distribution and the corresponding HammingMark acceptance mass as 
+
+qt(k) = Pr 
+
+> St∼Pt(·| ct)
+
+Match  ht−1, H (F (St))  = k , αHM  
+
+> t
+
+=
+
+> m
+
+X
+
+> k=T
+
+qt(k). (6) 4To characterize this distribution, let et−1 and et be normalized sentence embeddings with cosine similarity 
+
+ρ = e⊤
+
+> t−1
+
+et. Under random-hyperplane hashing, 
+
+Match( ht−1, h t) | ρ ∼ Binomial 
+
+
+
+m, 1 − arccos( ρ)
+
+π
+
+
+
+. (7) Therefore, Pr[Match( ht−1, h t) ≥ T | ρ] increases monotonically with semantic similarity. Since natural adjacent sentences already tend to exhibit semantic continuity, their match distribution is biased toward moderate or high values. HammingMark thus performs a mild shoulder sampling over this existing dis-tribution rather than directing generation toward an unrelated semantic target. Importantly, this shoulder truncation operates in the discrete code space rather than imposing a hard cutoff in the underlying seman-tic space. For example, with m = 8 and T = 6 , candidates producing four, five, or six matching bits are already relatively close in hash similarity. Selecting candidates with six or more matching bits therefore intro-duces a local preference along an existing natural transition tendency, rather than imposing a qualitatively different semantic direction. 
+
+Semantic diversity under coarse hashing. High natural acceptance alone does not guarantee that watermark-valid continuations are semantically diverse. HammingMark additionally exploits the many-to-one nature of compact semantic hashing. The mapping H : Z → { 0, 1}m compresses a high-dimensional semantic representation into a short binary code, so multiple distinct semantic representa-tions may map to the same hash code. For two normalized semantic representations z and z′ with angular distance θ, random-hyperplane hash-ing gives 
+
+dH (H(z), H (z′)) ∼ Binomial 
+
+
+
+m, θπ
+
+
+
+, (8) and therefore 
+
+Pr[ dH (H(z), H (z′)) ≤ r] = 
+
+> r
+
+X
+
+> j=0
+
+mj
+
+  θπ
+
+j 
+
+1 − θπ
+
+m−j
+
+. (9) Semantic proximity increases the probability of nearby hash codes, but the converse need not hold for a short code. Since the compact hash provides only a sparse and coarse representation of the underlying semantic space, a higher bit match does not necessarily imply greater semantic similarity than a lower bit match. Importantly, equation 9 shows that even when two semantic representations are less similar, there can still be a nonzero probability that their hash codes fall within the same Hamming neighborhood. Therefore, although HammingMark performs shoulder sampling in the hash space, it does not explicitly filter out continuations solely because they have lower semantic similarity. Since the mapping is many-to-one, semantically different continuations may share the same code or map to different codes that are simultaneously accepted by the Hamming constraint. Watermark validity therefore does not correspond to a single semantic realization or direction. This flexibility is particularly useful for contrast, elaboration, topic shifts, and the introduction of new information, where a continuation may differ substantially from the preceding sentence while still satisfying the watermark rule. Appendix E provides a formal analysis of this many-to-one property. Together, these two mechanisms address complementary sources of semantic restriction. Context-aligned shoulder sampling makes watermark selection follow an existing tendency of natural semantic transitions rather than imposing an unrelated semantic target, while coarse many-to-one hashing preserves semantic diversity among watermark-valid continuations. 
+
+3.4 Sequence-Level Detection 
+
+Given a text containing n sentences S1, . . . , S n, the detector recovers their semantic hashes and adjacent matching scores as 
+
+ht = H(F (St)) , Mt = Match( ht−1, h t), t = 2 , . . . , n. (10) 5We use two complementary sequence-level statistics. 
+
+Edge Vote. Each adjacent sentence pair is treated as one transition unit. A transition casts a valid vote when Mt ≥ T , and the final score is 
+
+Sedge = 1
+
+n − 1
+
+> n
+
+X
+
+> t=2
+
+1[Mt ≥ T ]. (11) 
+
+Global Bits. Instead of binarizing each transition, Global Bits aggregates all matching bits, 
+
+Sglobal = 1
+
+m(n − 1) 
+
+> n
+
+X
+
+> t=2
+
+Mt. (12) It therefore retains partial evidence from transitions that no longer exceed T after semantic-preserving perturbations. For either detector d ∈ { edge , global }, a text is classified as watermarked when Sd > τ d, where τd is calibrated from unwatermarked text at the target false-positive rate. Detection requires only the fixed semantic encoder and projection matrix, without access to the generation model. 
+
+## 4 Experiments 
+
+We organize our evaluation around the following research questions. RQ1 (Detectability): Can Ham-mingMark be reliably distinguished from unwatermarked text across datasets and language models? RQ2 (Robustness): Does the watermark remain detectable after local edits, sentence-level paraphrasing, and document-level rewriting? RQ3 (Text quality): How well does HammingMark preserve the quality of generated text? RQ4 (Sampling efficiency and semantic overlap): How well does the watermark-valid region overlap with naturally preferred continuations, and how does this affect rejection-sampling efficiency? RQ5 (Complex tasks): Does HammingMark remain effective on conditional, long-form generation tasks? RQ6 (Semantic sampling visualization): How do different semantic watermarking methods constrain naturally sampled candidate continuations in the semantic space? 
+
+4.1 RQ1–RQ3: Detectability, Robustness, and Quality 
+
+HammingMark maintains near-perfect clean-text detection across all model–dataset settings, with 
+
+TPR@1% of 0.97 –1.00 and AUROC of 0.99 –1.00 . Edge Vote is particularly effective on clean text because it directly measures whether each transition satisfies the embedding rule. Under paraphrasing and rewriting, Global Bits is generally more robust, achieving TPR@1% of 0.82 –
+
+0.97 across all settings. Unlike Edge Vote, which discards a transition once it falls below the matching threshold, Global Bits retains partial evidence from modified transitions by aggregating all matching bits. Therefore, Edge Vote is preferable for ordinary clean-text verification, whereas Global Bits is better suited to attacked text. HammingMark also preserves generation quality, with PPL differing from unwatermarked generation by at most 0.30 across all settings. This advantage follows from the relational Hamming-ball constraint: instead of forcing each sentence into a fixed semantic region, HammingMark retains a large set of ad-missible semantic realizations. The model can therefore continue exploring plausible continuations and select content appropriate to the context while embedding a detectable transition-level signal. 
+
+4.2 RQ4: Sampling Efficiency and Natural Acceptance 
+
+As shown in Table 2, HammingMark requires only 2.2 sampled candidates and 41.58 generated tokens for each accepted sentence. Compared with SimMark, the most efficient baseline, HammingMark reduces the number of sampled candidates by approximately 72.8% and token consumption by 77.7%. 6Table 1: Clean detectability, robustness, and generation quality on C4 and BookSum. Each detection entry reports TPR@1% /TPR@5% /AUROC .
+
+Method Clean Parrot Pegasus DIPPER API PPL ↓
+
+Mistral-7B (Jiang et al., 2023) on C4 (Raffel et al., 2020) 
+
+No watermark – – – – – 4.51 KGW (Kirchenbauer et al., 2023) 1.00/1.00/1.00 0.59/0.72/0.90 0.51/0.63/0.89 0.43/0.49/0.84 0.31/0.39/0.80 8.00 SynthID (Dathathri et al., 2024) 1.00/1.00/1.00 0.32/0.45/0.82 0.23/0.42/0.80 0.35/0.40/0.80 0.24/0.38/0.79 4.52 
+
+MorphMark (Wang et al., 2025) 0.99/1.00/1.00 0.54/0.60/0.88 0.47/0.55/0.84 0.51/0.55/0.86 0.53/0.64/0.89 6.62 SIR (Liu et al., 2024) 0.98/1.00/1.00 0.51/0.63/0.91 0.56/0.60/0.90 0.44/0.57/0.84 0.38/0.46/0.82 8.35 K-SemStamp (Hou et al., 2024b) 0.83/0.88/0.98 0.43/0.58/0.86 0.46/0.65/0.89 0.66/0.87/0.95 0.31/0.40/0.80 10.78 SemStamp (Hou et al., 2024a) 0.82/0.87/0.97 0.56/0.77/0.91 0.79/0.90/0.97 0.76/0.94/0.98 0.32/0.48/0.84 9.36 SimMark (Dabiriaghdam & Wang, 2025) 0.71/0.82/0.95 0.28/0.43/0.82 0.35/0.51/0.84 0.23/0.41/0.80 0.25/0.36/0.78 8.34 PMark (Huo et al., 2026) 0.99/0.99/1.00 0.94/0.97/0.99 0.89/0.91/0.98 0.75/0.85/0.97 0.91/0.93/0.98 5.13 HammingMark (Edge Vote) 0.99/1.00/1.00 0.92/0.96/0.99 0.85/0.98/0.99 0.89/0.97/0.99 0.90/0.93/0.98 4.61 HammingMark (Global Bits) 0.98/1.00/1.00 0.94 /0.99 /1.00 0.91 /1.00 /0.99 0.93 /0.98 /0.99 0.94 /0.97 /0.99 4.61 
+
+Mistral-7B on BookSum (Kry´ sci´ nski et al., 2022) 
+
+No watermark – – – – – 6.20 KGW 1.00 /1.00 /1.00 0.34/0.43/0.86 0.40/0.45/0.82 0.35/0.41/0.81 0.16/0.23/0.64 10.14 SynthID 1.00 /1.00 /1.00 0.15/0.21/0.69 0.10/0.16/0.60 0.11/0.19/0.62 0.13/0.18/0.60 6.57 MorphMark 1.00 /1.00 /1.00 0.45/0.52/0.83 0.31/0.37/0.79 0.42/0.55/0.81 0.22/0.27/0.65 9.33 SIR 1.00 /1.00 /1.00 0.54/0.61/0.85 0.47/0.63/0.87 0.52/0.61/0.83 0.14/0.25/0.65 12.49 K-SemStamp 0.79/0.91/0.98 0.51/0.64/0.88 0.56/0.69/0.90 0.70/0.86/0.94 0.16/0.27/0.69 15.72 SemStamp 0.88/0.93/0.98 0.67/0.71/0.90 0.71/0.78/0.90 0.82/0.91/0.97 0.20/0.35/0.71 14.98 SimMark 0.77/0.86/0.96 0.29/0.52/0.81 0.44/0.58/0.84 0.21/0.43/0.80 0.14/0.21/0.62 14.25 PMark 0.97/0.99/0.99 0.96 /0.98 /0.99 0.79/0.91/0.98 0.78/0.93/0.98 0.71/0.84/0.94 8.26 HammingMark (Edge Vote) 1.00 /1.00 /1.00 0.91/0.94/0.99 0.86/0.95/0.99 0.91/0.94/0.98 0.88/0.92/0.98 6.40 
+
+HammingMark (Global Bits) 1.00 /1.00 /1.00 0.93/0.95/ 0.99 0.90 /0.99 /0.99 0.91 /0.94 /0.99 0.92 /0.95 /0.99 6.40 
+
+Qwen2.5-7B (Yang et al., 2024) on C4 
+
+No watermark – – – – – 5.52 KGW 0.99 /1.00 /1.00 0.08/0.13/0.66 0.08/0.11/0.67 0.06/0.12/0.61 0.02/0.08/0.49 7.29 SynthID 0.99 /1.00 /1.00 0.06/0.10/0.50 0.02/0.04/0.47 0.03/0.06/0.48 0.02/0.06/0.48 5.30 
+
+MorphMark 0.98/1.00/1.00 0.04/0.20/0.65 0.06/0.17/0.64 0.02/0.21/0.64 0.03/0.11/0.53 5.63 SIR 0.97/1.00/1.00 0.55/0.59/0.89 0.62/0.68/0.92 0.41/0.58/0.85 0.34/0.40/0.79 7.08 K-SemStamp 0.78/0.93/0.95 0.42/0.65/0.86 0.49/0.73/0.89 0.66/0.90/0.95 0.17/0.29/0.77 11.67 SemStamp 0.85/0.88/0.97 0.59/0.82/0.91 0.61/0.83/0.95 0.74/0.96/0.97 0.24/0.37/0.82 9.46 SimMark 0.72/0.81/0.94 0.27/0.50/0.82 0.38/0.52/0.86 0.29/0.41/0.78 0.31/0.46/0.83 8.11 PMark 0.99/1.00/0.99 0.96/0.98/0.99 0.85/0.91/0.96 0.91/0.94/0.97 0.83/0.89/0.98 6.32 HammingMark (Edge Vote) 0.98/0.99/0.99 0.93/0.94/0.98 0.89 /0.93 /0.98 0.92/0.94/0.98 0.94/0.98/0.99 5.38 HammingMark (Global Bits) 0.98/0.99/0.99 0.97 /0.98 /0.99 0.89 /0.93 /0.98 0.94 /0.95 /0.99 0.95 /0.98 /0.99 5.38 
+
+Qwen2.5-7B on BookSum 
+
+No watermark – – – – – 4.45 KGW 0.99 /1.00 /1.00 0.05/0.13/0.65 0.05/0.19/0.62 0.02/0.12/0.62 0.03/0.12/0.53 8.46 SynthID 0.99 /1.00 /1.00 0.03/0.08/0.54 0.05/0.12/0.56 0.00/0.09/0.55 0.01/0.08/0.51 4.63 
+
+MorphMark 0.97/0.99/1.00 0.02/0.05/0.57 0.02/0.07/0.55 0.02/0.06/0.56 0.01/0.09/0.51 7.31 SIR 0.95/0.98/0.99 0.54/0.63/0.84 0.60/0.67/0.91 0.46/0.66/0.85 0.10/0.23/0.72 9.76 K-SemStamp 0.82/0.91/0.96 0.44/0.70/0.88 0.53/0.61/0.84 0.68/0.75/0.90 0.14/0.28/0.75 10.30 SemStamp 0.87/0.90/0.97 0.57/0.84/0.92 0.45/0.71/0.89 0.70/0.78/0.91 0.17/0.33/0.76 11.49 SimMark 0.71/0.85/0.93 0.31/0.43/0.80 0.36/0.54/0.83 0.24/0.40/0.81 0.13/0.21/0.72 10.28 PMark 0.95/0.99/0.99 0.92 /0.98 /0.99 0.74/0.92/0.96 0.78/0.89/0.97 0.78/0.85/0.96 6.39 HammingMark (Edge Vote) 0.99 /1.00 /1.00 0.87/0.93/0.98 0.83/0.89/0.97 0.82/0.92/0.97 0.89/0.94/0.98 4.75 HammingMark (Global Bits) 0.97/0.99/1.00 0.93/0.95/0.99 0.84 /0.91 /0.97 0.82 /0.94 /0.98 0.91 /0.94 /0.98 4.75 
+
+To examine the source of this sampling efficiency, we estimate the natural acceptance mass defined in Section 3.1. For each of 100 prompts, we independently sample 300 candidate continuations from the unwatermarked model before applying any watermark constraint. These candidates are therefore samples from the context-dependent natural generation distribution Pt(· | ct). We then apply each watermarking rule to the sampled candidates and measure the fraction that would be accepted without resampling. 7Table 2: Sampling efficiency and estimated natural acceptance on C4. Lower sampling cost and higher natural acceptance are better. Random Code uses the same code-space coverage as HammingMark (37 /256 ) but selects valid codes uniformly at random. Method SimMark SemStamp K-SemStamp PMark Random Code HammingMark Samples / sent. ↓ 8.1 99.3 13.3 64.0 14.7 2.2                
+
+> Tokens / sent. ↓186.7 1694.4 246.9 1185.8 273.1 41.58
+> Natural acceptance b¯α↑0.34 0.04 0.13 /0.15 0.58
+
+Table 3: Performance on complex generation tasks on Mistral-7B. Detection results are reported as TPR@1%, TPR@5%, and AUROC. Method ELI5 (Fan et al., 2019) Multi-News (Fabbri et al., 2019) @1 ↑ @5 ↑ AUC ↑ Rouge-L ↑ @1 ↑ @5 ↑ AUC ↑ Rouge-L ↑
+
+No watermark – – – 0.34 – – – 0.36 KGW 0.78 0.89 0.97 0.29 0.21 0.49 0.86 0.31 SynthID 0.43 0.67 0.92 0.31 0.08 0.17 0.64 0.36 
+
+MorphMark 0.49 0.64 0.90 0.29 0.26 0.41 0.88 0.35 SIR 0.63 0.75 0.93 0.28 0.21 0.36 0.85 0.34 SemStamp 0.22 0.36 0.82 0.31 0.03 0.19 0.64 0.35 K-SemStamp 0.13 0.24 0.71 0.32 0.03 0.16 0.64 0.33 SimMark 0.26 0.41 0.84 0.31 0.06 0.11 0.62 0.34 PMark 0.85 0.91 0.98 0.29 0.86 0.92 0.99 0.32 HammingMark 0.95 0.95 0.99 0.33 0.91 1.00 0.99 0.36 
+
+For a given context ct, we estimate the natural acceptance mass by 
+
+ˆαt = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1
+
+h
+
+S(i) 
+
+> t
+
+∈ Wt
+
+i
+
+, S(i) 
+
+> t
+
+∼ Pt(· | ct). (13) where N = 300 is the number of independently sampled natural candidates. We report b¯α, obtained by averaging ˆαt across the 100 evaluation prompts. Thus, the values reported in Table 2 are direct Monte Carlo estimates of the natural probability mass retained by each watermark constraint. A larger natural acceptance mass means that a greater fraction of continuations produced by the unwatermarked model already satisfies the watermark rule. This quantity is directly related to rejection-sampling cost: when natural candidates are accepted more frequently, fewer candidates need to be sampled before obtaining a watermark-valid continuation. HammingMark achieves an estimated natural acceptance of 0.58, mean-ing that approximately 58% of naturally sampled continuations satisfy its watermark constraint without additional semantic redirection. This is consistent with its substantially lower sampling cost. We further evaluate the loss of semantic diversity induced by each method in Appendix F and G, complementing the natural acceptance analysis with a direct assessment of diversity preservation. 
+
+4.3 RQ5: Performance on Complex Generation Tasks 
+
+As shown in Table 3, HammingMark achieves TPR@1% of 0.95 on ELI5 and 0.91 on MultiNews while preserving the highest or tied-highest ROUGE-L. These tasks strongly constrain generation semantics, concentrating the natural distribution Pt(· | ct) on task-consistent continuations and leaving little room for semantic redirection. Poorly aligned watermark constraints can therefore reject many high-probability candidates, yielding a small natural acceptance mass αt and frequent resampling. HammingMark mit-igates this issue through mild shoulder sampling around the realized semantic transition. Semantically coherent continuations are more likely to have high hash similarity, while the many-to-one hash map-ping allows multiple semantic realizations to satisfy the same Hamming constraint. This preserves more natural probability mass, helping maintain task fidelity while accumulating a detectable watermark signal. 8UMAP-1 UMAP-2 
+
+> (a) KSEMSTAMP resampling dimensionality reduction
+> Candidate region KSEMSTAMP region Previous sentence
+> Previous sentence KSEMSTAMP region Candidate region
+> Acceptance: 2/300 = 0.7%
+> UMAP-1 UMAP-2
+> (b) PMark resampling dimensionality reduction
+> Candidate region PMark region Previous sentence
+> Previous sentence PMark region Candidate region
+> Acceptance: 31/300 = 10.3%
+> UMAP-1 UMAP-2
+> (c) HammingMark resampling dimensionality reduction
+> Candidate region HammingMark region Previous sentence
+> Previous sentence HammingMark region Candidate region
+> Acceptance: 99/300 = 33.0%
+
+Figure 2: Visualization of natural candidates accepted by different watermark constraints. UMAP projection of 300 independently sampled continuations from the unwatermarked model for a representa-tive challenging prompt. All methods are compared under matched watermark effectiveness. For offline PMark, we highlight candidates matching all key-specified channel signs under the zero-median prior. Highlighted points denote candidates accepted by the watermark constraint. 
+
+4.4 RQ6: Visualizing Natural Acceptance under Semantic Constraints 
+
+To provide an intuitive candidate-level view of natural acceptance, we independently sample 300 contin-uations from the unwatermarked model for a representative challenging prompt and project their sentence embeddings into two dimensions with UMAP. For each method, candidates satisfying its watermark con-straint are highlighted within the same natural sample set. The highlighted fraction thus gives a prompt-level Monte Carlo estimate of the natural acceptance mass. As shown in Figure 2, K-SemStamp accepts only 2 of the 300 natural candidates, while PMark accepts 31 and HammingMark accepts 99. Thus, for this prompt, HammingMark retains a substantially larger fraction of the continuations that the unwatermarked model naturally produces. The highlighted Ham-mingMark candidates are also distributed across multiple parts of the projected sample cloud, illustrating that watermark-valid candidates are not confined to a single local semantic realization. This visualization complements the aggregate natural-acceptance results in Table 2. Importantly, the UMAP geometry is used only for qualitative illustration: semantic narrowing is quantified by the fraction of natural probabil-ity mass retained by the watermark constraint, rather than by the geometric area occupied by highlighted points in the two-dimensional projection. 
+
+4.5 Ablation Study Effect of constraint placement. We examine whether HammingMark’s higher natural acceptance is due simply to the number of valid hash codes or to how these codes are placed. With m = 8 and T = 6 , HammingMark accepts P2
+
+j=0 
+
+ 8
+
+j
+
+ = 37 of the 256 possible hash codes. As a control, we construct a Random Code baseline that also accepts 37 codes, but selects them uniformly at random and independently of the preceding sentence. All other components and evaluation settings remain unchanged. As shown in Table 2, Random Code achieves a natural acceptance of 0.15 , whereas HammingMark reaches 0.58 , despite identical code-space coverage. For a random set A of 37 codes, each code is included with probability 37 /256 . Therefore, for any natural hash distribution pt(h),
+
+EA [αt(A)] = X
+
+h
+
+pt(h) Pr 
+
+A [h ∈ A ] = 37 256 ≈ 0.1445 . (14) The observed value of 0.15 is close to this random-set expectation. In contrast, HammingMark places the same number of valid codes around the preceding sentence hash. Combined with the locality-preserving property of random-hyperplane hashing, this transition-centered placement makes the constraint better aligned with natural semantic transitions. The large gap between 
+
+0.15 and 0.58 therefore shows that natural acceptance depends strongly on constraint placement rather than code-space coverage alone. 95 Limitations 
+
+HammingMark depends on the quality of the semantic encoder and sentence segmentation; unstable embeddings or ambiguous sentence boundaries may alter hash codes and reduce detection reliability. Although HammingMark substantially improves sampling efficiency, it remains a rejection-sampling method and may incur additional cost under highly restrictive contexts or strict matching thresholds. 
+
+## 6 Conclusion 
+
+This work identifies semantic narrowing as the misalignment between watermark constraints and nat-urally preferred generation. We propose HammingMark , a realized-sentence-centered semantic water-marking method that reduces this mismatch through context-aligned Hamming acceptance while preserv-ing semantic flexibility. Across open-ended and constrained generation tasks, HammingMark achieves strong detectability and robustness with near-unwatermarked quality and low sampling cost. 
+
+AI use statement 
+
+In this work, generative AI tools were used to assist with language polishing, manuscript drafting and revision, formatting, and literature search. All AI-assisted outputs, including retrieved information and suggested text, were critically reviewed, verified, and revised by the authors. The authors take full re-sponsibility for the accuracy, integrity, and final content of the paper. We take responsibility for the final content of this work, including any text or artifacts produced with the aid of generative AI. 
+
+Ethics statement 
+
+This work does not involve human-subject studies or the collection of personally identifiable or sensitive information. Our experiments are conducted using publicly available or appropriately licensed data and standard evaluation protocols. We do not intend the proposed methods to facilitate harmful, discrimina-tory, privacy-invasive, or otherwise unethical applications. Nevertheless, as with many machine learning methods, the proposed approach may inherit biases or limitations from the data and models on which it relies, and we encourage careful evaluation before deployment in safety- or socially sensitive settings. We have made our best effort to ensure research integrity, appropriate attribution, and compliance with relevant ethical and legal requirements. The authors declare no conflicts of interest that would affect the presentation or interpretation of the results. 
+
+Reproducibility statement 
+
+We have made efforts to ensure the reproducibility of our results. The appendix provides the complete experimental setup and all details necessary to reproduce our experiments, including implementation de-tails, evaluation configurations, hyperparameter settings, data processing procedures, and other relevant experimental specifications. We also provide additional results and analyses where appropriate to facil-itate verification of the reported findings. Together, these materials are intended to enable independent reproduction of the main results presented in this work. The source code will be made publicly available upon acceptance of the paper. 
+
+## References 
+
+Lukas Aichberger, Kajetan Schweighofer, Mykyta Ielanskyi, and Sepp Hochreiter. Improving uncertainty estimation through semantically diverse language generation. In International Conference on Learning Representations , volume 2025, pp. 74479–74503, 2025. Stephen Casper, Kyle O’Brien, Shayne Longpre, Elizabeth Seger, Kevin Klyman, Rishi Bommasani, Aniruddha Nrusimha, Ilia Shumailov, S¨ oren Mindermann, Steven Basart, et al. Open technical prob-lems in open-weight ai model risk management. arXiv preprint arXiv:2608.07514 , 2026. 10 Amirhossein Dabiriaghdam and Lele Wang. Simmark: A robust sentence-level similarity-based water-marking algorithm for large language models. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , pp. 30773–30794, 2025. Prithiviraj Damodaran. Parrot: Paraphrase generation for nlu., 2021. Sumanth Dathathri, Abigail See, Sumedh Ghaisas, Po-Sen Huang, Rob McAdam, Johannes Welbl, Van-dana Bachani, Alex Kaskasoli, Robert Stanforth, Tatiana Matejovicova, et al. Scalable watermarking for identifying large language model outputs. Nature , 634(8035):818–823, 2024. Alexander Richard Fabbri, Irene Li, Tianwei She, Suyi Li, and Dragomir Radev. Multi-news: A large-scale multi-document summarization dataset and abstractive hierarchical model. In Proceedings of the 57th annual meeting of the association for computational linguistics , pp. 1074–1084, 2019. Angela Fan, Yacine Jernite, Ethan Perez, David Grangier, Jason Weston, and Michael Auli. Eli5: Long form question answering. In Proceedings of the 57th annual meeting of the association for computa-tional linguistics , pp. 3558–3567, 2019. Sebastian Farquhar, Jannik Kossen, Lorenz Kuhn, and Yarin Gal. Detecting hallucinations in large lan-guage models using semantic entropy. Nature , 630(8017):625–630, 2024. Abe Hou, Jingyu Zhang, Tianxing He, Yichen Wang, Yung-Sung Chuang, Hongwei Wang, Lingfeng Shen, Benjamin Van Durme, Daniel Khashabi, and Yulia Tsvetkov. Semstamp: A semantic watermark with paraphrastic robustness for text generation. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 4067–4082, 2024a. Abe Hou, Jingyu Zhang, Yichen Wang, Daniel Khashabi, and Tianxing He. k-semstamp: A clustering-based semantic watermark for detection of machine-generated text. In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 1706–1715, 2024b. Zhengmian Hu, Lichang Chen, Xidong Wu, Yihan Wu, Hongyang Zhang, and Heng Huang. Unbiased watermark for large language models. In International Conference on Learning Representations , vol-ume 2024, pp. 45408–45436, 2024. Jiahao Huo, Shuliang Liu, Bin Wang, Junyan Zhang, Yibo Yan, Aiwei Liu, Xuming Hu, and Mingxun Zhou. Pmark: Towards robust and distortion-free semantic-level watermarking with channel con-straints. In International Conference on Learning Representations , volume 2026, pp. 27100–27126, 2026. Albert Q. Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris Bamford, Devendra Singh Chaplot, Diego de las Casas, Florian Bressand, Gianna Lengyel, Guillaume Lample, Lucile Saulnier, L´ elio Renard Lavaud, Marie-Anne Lachaux, Pierre Stock, Teven Le Scao, Thibaut Lavril, Thomas Wang, Tim-oth´ ee Lacroix, and William El Sayed. Mistral 7b, 2023. URL https://arxiv.org/abs/2310. 06825 .John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A water-mark for large language models. In International conference on machine learning , pp. 17061–17084. PMLR, 2023. Kalpesh Krishna, Yixiao Song, Marzena Karpinska, John Wieting, and Mohit Iyyer. Paraphrasing evades detectors of ai-generated text, but retrieval is an effective defense. Advances in neural information processing systems , 36:27469–27500, 2023. Wojciech Kry´ sci´ nski, Nazneen Rajani, Divyansh Agarwal, Caiming Xiong, and Dragomir Radev. Book-sum: A collection of datasets for long-form narrative summarization. In Findings of the association for computational linguistics: EMNLP 2022 , pp. 6536–6558, 2022. 11 Yuqing Liang, Jiancheng Xiao, Wensheng Gan, and Philip S Yu. Watermarking techniques for large language models: A survey. Artificial Intelligence Review , 59(2):74, 2026. Aiwei Liu, Leyi Pan, Xuming Hu, Shiao Meng, and Lijie Wen. A semantic invariant robust watermark for large language models. In International Conference on Learning Representations , volume 2024, pp. 6499–6519, 2024. Shuliang Liu, Xingyu Li, Hongyi Liu, Dong Fang, Yibo Yan, Bingchen Duan, Qi Zheng, Lingfeng Su, and Xuming Hu. Distilling the thought, watermarking the answer: A principle semantic guided watermark for large reasoning models. arXiv preprint arXiv:2601.05144 , 2026. Yijian Lu, Aiwei Liu, Dianzhi Yu, Jingjing Li, and Irwin King. An entropy-based text watermarking detection method. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 11724–11735, 2024. Clara Meister, Tiago Pimentel, Gian Wiher, and Ryan Cotterell. Locally typical sampling. Transactions of the Association for Computational Linguistics , 11:102–121, 2023. Leyi Pan, Aiwei Liu, Zhiwei He, Zitian Gao, Xuandong Zhao, Yijian Lu, Binglin Zhou, Shuliang Liu, Xuming Hu, Lijie Wen, et al. Markllm: An open-source toolkit for llm watermarking. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: System Demonstrations ,pp. 61–71, 2024. Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu. Exploring the limits of transfer learning with a unified text-to-text transformer. Journal of machine learning research , 21(140):1–67, 2020. Jie Ren, Han Xu, Yiding Liu, Yingqian Cui, Shuaiqiang Wang, Dawei Yin, and Jiliang Tang. A robust semantics-based watermark for large language model against paraphrasing. In Findings of the Associ-ation for Computational Linguistics: NAACL 2024 , pp. 613–625, 2024. Zewen Sun, Qian Jiang, Siyuan Sheng, and Liyao Xiang. Watermoe: Expert-routing-based watermarking for high fidelity and efficiency. arXiv preprint arXiv:2607.13099 , 2026. Zongqi Wang, Tianle Gu, Baoyuan Wu, and Yujiu Yang. Morphmark: Flexible adaptive watermarking for large language models. In Proceedings of the 63rd Annual Meeting of the Association for Compu-tational Linguistics (Volume 1: Long Papers) , pp. 4842–4860, 2025. Anyi Xu, Bangcai Lin, Bing Xue, Bingxuan Wang, Bingzheng Xu, Bochao Wu, Bowei Zhang, Chaofan Lin, Chen Dong, Chenchen Ling, et al. Deepseek-v4: Towards highly efficient million-token context intelligence. arXiv preprint arXiv:2606.19348 , 2026. Zhenhua Xu, Xubin Yue, Zhebo Wang, Haobo Zhang, Qichen Liu, Xixiang Zhao, Jingxuan Zhang, Wen-jun Zeng, Wengpeng Xing, Dezhang Kong, et al. Copyright protection for large language models: A survey of methods, challenges, and trends. arXiv preprint arXiv:2508.11548 , 2025. An Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, Huan Lin, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin Yang, Jiaxi Yang, Jingren Zhou, Junyang Lin, Kai Dang, Keming Lu, Keqin Bao, Kexin Yang, Le Yu, Mei Li, Mingfeng Xue, Pei Zhang, Qin Zhu, Rui Men, Runji Lin, Tianhao Li, Tingyu Xia, Xingzhang Ren, Xuancheng Ren, Yang Fan, Yang Su, Yichang Zhang, Yu Wan, Yuqiong Liu, Zeyu Cui, Zhenru Zhang, and Zihan Qiu. Qwen2.5 technical report. CoRR , abs/2412.15115, 2024. doi: 10.48550/ARXIV.2412. 15115. URL https://doi.org/10.48550/arXiv.2412.15115 .Zhiguang Yang, Gejian Zhao, and Hanzhou Wu. Watermarking for large language models: A survey. 
+
+Mathematics , 13(9):1420, 2025. Jingqing Zhang, Yao Zhao, Mohammad Saleh, and Peter Liu. Pegasus: Pre-training with extracted gap-sentences for abstractive summarization. In International conference on machine learning , pp. 11328– 11339. PMLR, 2020. 12 Junyan Zhang, Shuliang Liu, Aiwei Liu, Yubo Gao, Jungang Li, Xiaojie Gu, and Xuming Hu. Cohemark: A novel sentence-level watermark for enhanced text quality. arXiv preprint arXiv:2504.17309 , 2025. 
+
+## A Practical Limitations of Online PMark 
+
+PMark (Huo et al., 2026) makes an important theoretical contribution to semantic watermarking by intro-ducing a proxy-function framework with a distortion-free online construction. At each generation step, it samples candidate sentences and recursively partitions them into equally sized subsets using channel-wise empirical medians. Under the prescribed random channel decisions and balanced partitioning, each sampled candidate has the same marginal selection probability. Averaging over these decisions and can-didate sampling therefore recovers the original next-sentence distribution. This provides a principled foundation for semantic watermarking. However, this generation-side guarantee does not by itself ensure inexpensive, reproducible, or context-independent verification. 
+
+Generator-dependent verification and computational cost. Online PMark requires the detector to resample N candidate continuations for each sentence under its preceding context and estimate channel-wise medians from these samples. For D documents containing L sentences each, this entails approxi-mately DLN sentence generations, in addition to semantic encoding and evidence aggregation. Verifica-tion therefore requires access to the original generator or a sufficiently faithful generation service, making large-scale screening costly and limiting deployment by independent verifiers. Hosting the generator also introduces substantial memory and inference requirements; relying on a remote service instead introduces availability, latency, and version-control dependencies. 
+
+Sensitivity to changes in the generation distribution. The published detector uses fresh samples rather than requiring exact replay of the original candidate pool. Consequently, a change in the sampling seed alone does not invalidate the distortion-free generation guarantee. Nevertheless, reliable median recon-struction depends on reproducing the relevant conditional generation distribution. Model updates or fine-tuning, changes in prompt formatting or decoding settings, and numerical differences that affect sampling can alter this distribution and its proxy medians. Even under unchanged settings, finite-sample estimation introduces discrepancies between generation and detection. PMark uses soft counting to mitigate such discrepancies, but this mechanism does not guarantee invariance to systematic changes in the generator or its inference configuration. 
+
+Key reuse and repeated-query limitations. PMark explicitly acknowledges in its Appendix D that its predefined, position-indexed random seeds leave n-shot undetectability unresolved, and restricts its guarantee to single-shot distortion-freeness (Huo et al., 2026). Specifically, averaging over random wa-termark decisions recovers the natural next-sentence distribution, but this does not establish that repeated responses under a reused key follow the joint distribution of independent unwatermarked samples. When the same prompt is queried repeatedly with the same key sequence, the corresponding channel preferences are repeatedly imposed rather than independently randomized across responses. Consequently, the single-shot guarantee does not ensure preservation of natural output variability in repeated-query settings. This is an acknowledged limitation of the construction: PMark leaves dynamic semantic-level seed generation for addressing this issue to future work. 
+
+Dependence on prompts and sentence–key alignment. For sentence st, the online detector recon-structs medians from the conditional distribution 
+
+PM (· | π, s 1, . . . , s t−1),
+
+while evaluating watermark evidence with the corresponding position-indexed channel keys and pre-scribed proxy directions. This requires both the appropriate preceding context and the correct sentence 13 index. When a circulated text contains only the generated response, the original prompt is unavailable, preventing faithful reconstruction of the conditioning context. Even when prompt text is included, an unmarked prompt–response boundary leaves the starting key index ambiguous. Prefix truncation or sen-tence insertion and deletion can further change the available context and shift subsequent sentence–key correspondence. These operations can occur through ordinary quotation or editing, without substantial semantic rewriting. The published detection procedure provides no explicit mechanism for recovering missing context or resynchronizing unknown sentence offsets. Searching over possible offsets would add computational cost and require appropriate false-positive calibration, while still not restoring missing conditioning information. Overall, online PMark offers a valuable theoretical construction, but its practical verification remains tightly coupled to the generator, conditioning context, and sentence indexing used during generation. These dependencies substantially limit its suitability for scalable detection of independently circulated text. 
+
+## B Semantic Narrowing and Watermark Effectiveness 
+
+Natural acceptance mass. Fix a generation context ct and let z denote a normalized sentence embed-ding with natural distribution pt(z) = p(z | ct). For a rejection-sampling watermark, let at(z) ∈ { 0, 1}
+
+be its acceptance rule under a fixed key and context. Define 
+
+αt =
+
+Z
+
+pt(z)at(z) dz, Nt = 1 − αt. (15) Integrals are understood with respect to the embedding distribution, including discrete distributions. The excluded natural probability mass Nt is an operational measure of semantic narrowing; it is not the propor-tional decrease in semantic diversity, entropy, or generation quality. For αt > 0, ideal rejection sampling with unlimited budget induces 
+
+pWM  
+
+> t
+
+(z) = pt(z)at(z)
+
+αt
+
+. (16) We initially omit robustness margins and fallback, and introduce a finite budget below. Each method may use a different encoder and thus a different embedding distribution. Geometric reference calculations therefore cannot replace comparisons on common candidate texts from shared contexts. 
+
+B.1 Semantic Narrowing in Partition- and Similarity-Based Methods SemStamp and K-SemStamp. SemStamp (Hou et al., 2024a) partitions embeddings using random hyperplane hashing, whereas K-SemStamp (Hou et al., 2024b) uses clustering. Both select valid partitions pseudorandomly. Ignoring margins, let C1, . . . , C K be the partitions and Gt the valid index set. Then 
+
+pt,j =
+
+Z
+
+> Cj
+
+pt(z) dz, αt = X
+
+> j∈Gt
+
+pt,j , Nt = 1 − X
+
+> j∈Gt
+
+pt,j . (17) Their default valid-partition ratio is γ = 0 .25 ; SemStamp uses three hash bits (eight codes), and K-SemStamp uses eight clusters. If partitions have equal natural mass, then αt = γ = 0 .25 and Nt = 0 .75 .Without equal masses, an ideal uniform random choice of γK valid partitions still gives EG[αt] = γ.Neither statement implies that a particular fixed valid set covers this mass. In particular, a uniform angle relative to the preceding sentence does not establish equal partition masses. Natural continuations can concentrate in a few partitions. A valid set that misses these partitions may have very low acceptance mass, whereas one that includes them may have high mass. Increasing the number of valid partitions increases expected coverage under uniform selection, but need not yield appropriate partial coverage in every context. Nonuniformity does not necessarily reduce acceptance; the concern is context-dependent misalignment and uneven coverage. 14 Cosine-SimMark. For the cosine-similarity variant of SimMark (Dabiriaghdam & Wang, 2025), write 
+
+θ = arccos( z⊤
+
+> t−1
+
+z) and let ft(θ) be its context-dependent density. Omitting fallback, an accepted cosine interval [a, b ] ⊆ [−1, 1] gives 
+
+αSim  
+
+> t
+
+=
+
+Z arccos a 
+
+> arccos b
+
+ft(θ) dθ. (18) Under the reference model θ ∼ Uniform(0 , π ),
+
+αSim unif = arccos a − arccos bπ ≈ 3.68% , N Sim unif ≈ 96 .32% , (19) using the reported main-experiment interval [0 .68 , 0.76] . A uniform angle is neither uniform cosine sim-ilarity nor a uniform distribution on a high-dimensional sphere. These values are reference calculations, not measured semantic losses. A fixed interval may miss the dominant mass in some contexts; actual acceptance can be above or below the reference value. The formula concerns angles in the normalized representation used for cosine scoring; it does not directly describe Euclidean-SimMark or angles before a PCA transformation. 
+
+B.2 Semantic Narrowing under Hamming-Neighborhood Acceptance Fixed-key acceptance. For a fixed projection matrix R, HammingMark accepts according to 
+
+aHM  
+
+> t
+
+(z) = I[Match( HR(zt−1), H R(z)) ≥ T ] , αHM  
+
+> t
+
+=
+
+Z
+
+pt(z)aHM  
+
+> t
+
+(z) dz, (20) with N HM  
+
+> t
+
+= 1 − αHM  
+
+> t
+
+. For m = 8 , T = 6 , the accepted fraction of binary codes is 
+
+γcode =
+
+ 86
+
+ +  87
+
+ +  88
+
+
+
+28 = 37 256 ≈ 14 .45% . (21) This counts codes, whereas αHM  
+
+> t
+
+weights them by natural generation probability. Thus 37 /256 is neither the actual acceptance mass nor, in general, the detection null hit probability. 
+
+Random-projection reference. Hold the context, preceding embedding, and natural candidate distri-bution fixed independently of the projection draw. For independent isotropic random hyperplanes and a fixed pair at angle θ,
+
+M | θ ∼ Binomial( m, 1 − θ/π ), AHM (θ) = Pr  
+
+> R
+
+(M ≥ T | θ). (22) Consequently, 
+
+ER[αHM  
+
+> t
+
+] = 
+
+Z π
+
+> 0
+
+ft(θ)AHM (θ) dθ. (23) For a uniform angle and 1 ≤ T ≤ m, substituting u = 1 − θ/π yields 
+
+ER[αHM unif ] = 
+
+> m
+
+X
+
+> k=T
+
+mk
+
+ Z 10
+
+uk(1 − u)m−k du (24) 
+
+=
+
+> m
+
+X
+
+> k=T
+
+1
+
+m + 1 = m − T + 1 
+
+m + 1 . (25) Hence m = 8 , T = 6 gives mean acceptance 1/3 and mean excluded mass 2/3. These are averages over random projections, not exact rates for every fixed matrix. They also cannot be multiplied as independent probabilities along a sequence generated with one shared key; generated contexts may themselves depend on that key. 15 Table 4: Idealized reference calculations, with margins omitted. The rows use different assumptions and averaging operations; they explain mechanisms rather than rank performance on one real generation distribution.                     
+
+> Method Reference assumption Accepted Excluded SemStamp Equal partition masses 25% 75%
+> K-SemStamp Equal partition masses 25% 75%
+> Cosine-SimMark Uniform angle; [a, b ] = [0 .68 ,0.76] 3.68% 96 .32%
+> Random Code Uniform selection of 37 codes; set average 14 .45% 85 .55%
+> HammingMark Uniform angle; projection average 33 .33% 66 .67%
+
+Table 5: Relaxed-constraint comparison.                     
+
+> Method Setting Candidates/sentence TPR@1% FPR SemStamp γ= 0 .52.9 6% K-SemStamp γ= 0 .53.1 9% SimMark [a, b ] = [0 .40 ,0.90] 1.6 7% HammingMark m= 8 , T = 6 2.2 100%
+
+Random Code control and reference comparison. In the same eight-bit code space, independently select a uniform subset G of exactly 37 valid codes. For any fixed natural code distribution, 
+
+EG[αRandom  
+
+> t
+
+] = X
+
+> h∈{ 0,1}8
+
+Pr  
+
+> t
+
+(HR(z) = h) Pr  
+
+> G
+
+(h ∈ G) = 37 256 . (26) Compared with the HammingMark uniform-angle reference, this demonstrates that equal numbers of valid codes can carry different natural candidate mass because of how those codes are arranged. 
+
+Nonuniform natural continuations. equation 23 returns the analysis to the context-dependent angu-lar distribution. Centering acceptance on the preceding hash is intended to align valid candidates with locally plausible continuations. A short hash neither uniquely specifies a continuous semantic realiza-tion nor imposes a deterministic cosine-similarity cutoff. Although many-to-one hashing also occurs in SemStamp, HammingMark further organizes valid codes as a neighborhood of the preceding code. These mechanisms aim to reduce misalignment, without guaranteeing higher acceptance or moderate coverage in every context. Claims of reduced narrowing should therefore be supported by measured acceptance on common context-specific candidate pools, together with independent semantic evaluations of what those accepted candidates preserve. 
+
+B.3 Effectiveness Beyond Enlarging the Acceptance Set Relaxing baseline constraints. A natural question is whether existing methods can match Hamming-Mark’s sampling efficiency simply by enlarging their acceptance sets. To examine this possibility, we increase the valid-partition ratio of SemStamp and K-SemStamp and widen the acceptance interval of SimMark, targeting comparable numbers of sampled candidates per output sentence. A controlled com-parison holds the generator, dataset, generation length, and sampling budget fixed, and separately cali-brates each modified detector at 1% FPR using data disjoint from the test set. 
+
+Acceptance mass and selection signal. Enlarging an acceptance set increases its natural probability mass, but does not necessarily preserve its ability to distinguish watermarked outputs from natural text. The relevant quantities are not only the nominal valid fraction γ and mean acceptance mass, but also how the context-specific acceptance mass αt is distributed. When αt is close to zero, finite-budget generation frequently fails to find a valid candidate. When αt is close to one, natural candidates already satisfy the 16 rule, leaving little additional selection signal. Intermediate coverage can support both successful sampling and an increase over the natural hit rate. This distinction is particularly relevant when natural continuations concentrate in a few semantic parti-tions. For fixed partition masses pt, 1, . . . , p t,K , uniformly selecting exactly γK valid partitions gives 
+
+EG[αt] = γ, Var G(αt) = γ(1 − γ) K P 
+
+> j
+
+p2 
+
+> t,j
+
+− 1
+
+K − 1 , (27) where K > 1 and γK is an integer. Equal partition masses yield αt = γ for every valid set. In contrast, if one partition carries all natural mass, acceptance is either zero or one, depending on whether that partition is selected. Thus, increasing the nominal valid fraction need not produce moderate coverage in individual contexts. This random-set calculation identifies a possible source of uneven coverage; actual variation across contexts must be measured. 
+
+Why enlarging the acceptance set is insufficient. The effectiveness of a watermark depends not only on the size of its acceptance set, but also on how this set overlaps with the natural next-sentence dis-tribution. Natural continuations can concentrate in a few context-dependent semantic directions. For SemStamp and K-SemStamp, pseudorandomly selecting more valid partitions does not ensure that these partitions provide appropriate partial coverage of such continuations. Likewise, widening SimMark’s fixed similarity interval does not ensure suitable coverage across different contexts. This mismatch can leave many contexts with little useful watermark signal. When the valid set covers al-most all natural probability mass, unwatermarked candidates already satisfy the constraint, so watermark selection adds little evidence. Conversely, when it covers very little natural mass, valid candidates are difficult to obtain, and fallback can weaken watermark embedding. Enlarging the nominal acceptance set may therefore improve sampling efficiency without ensuring that individual contexts contribute discrimi-native evidence. This does not imply that larger acceptance sets necessarily impair detection; the issue is their alignment with context-dependent natural generation. 
+
+Implications for HammingMark. HammingMark organizes valid codes around the preceding sen-tence’s hash, rather than selecting them pseudorandomly or prescribing a fixed continuous-similarity interval. This design aims to retain naturally plausible continuations while preserving a selective bit-matching constraint, allowing more contexts to contribute watermark evidence. Its intended advantage is therefore not simply a larger acceptance mass, but a more contextually aligned arrangement of valid candidates. Uneven contextual coverage offers a possible explanation for the detection degradation of relaxed baselines, although establishing this mechanism requires measuring their context-specific accep-tance masses. 
+
+## C Semantic Narrowing in Offline PMark 
+
+We analyze the semantic restriction induced by the offline variant of PMark. Our analysis does not assume that natural semantic candidates are uniformly distributed across watermark partitions, nor does it require independence or balance among different proxy channels. Instead, we directly examine the candidate-selection mechanism used by offline PMark. 
+
+Offline watermark partition. Let π denote the current generation context and 
+
+Pπ (s) = PM (s | π)
+
+the natural next-sentence distribution. Given b proxy directions {vj }bj=1 , offline PMark uses the fixed threshold zero and assigns each sentence a binary semantic representation 
+
+g(s) = ( I[F1(s) > 0] , . . . , I[Fb(s) > 0]) ,
+
+17 where 
+
+Fj (s) = ⟨vj , T (s)⟩.
+
+For a fixed watermark seed r, let Er (s) denote the watermark evidence assigned to sentence s. A larger 
+
+Er (s) indicates that the sentence satisfies more of the prescribed watermark constraints. Offline PMark first independently samples a candidate set 
+
+W = {X1, . . . , X N }, Xi
+
+> i.i.d.
+
+∼ Pπ ,
+
+and then retains only candidates with the maximum watermark evidence: 
+
+B(W, r ) = 
+
+
+
+Xi ∈ W : Er (Xi) = max   
+
+> Xj∈W
+
+Er (Xj )
+
+
+
+.
+
+The final sentence is sampled from B(W, r ).
+
+Candidate-level semantic restriction. For every sampled candidate set, 
+
+B(W, r ) ⊆ W. 
+
+Moreover, 
+
+B(W, r ) ⊊ W
+
+whenever the candidates in W do not all have identical watermark evidence. Therefore, whenever multiple watermark-evidence levels occur in the natural candidate set, every candidate below the maximum level is excluded from final selection. Importantly, this exclusion is not determined by the likelihood or semantic preference of the base model. Two candidates that are both plausible under Pπ may receive different watermark evidence solely because they fall into different regions induced by the fixed proxy partitions. Consequently, offline PMark removes part of the naturally sampled semantic alternatives whenever their watermark evidence is lower than that of another candidate in the same candidate pool. 
+
+Distribution-level concentration. The same effect can be characterized without making any assump-tion on how natural semantic probability mass is distributed among the partitions. Let 
+
+Z = Er (S), S ∼ Pπ ,
+
+denote the watermark evidence of a naturally sampled sentence, and define its cumulative distribution 
+
+Fr (k) = Pr 
+
+> S∼Pπ
+
+[Er (S) ≤ k] .
+
+Let Y be the sentence selected by offline PMark and 
+
+Z⋆ = Er (Y ).
+
+Since PMark selects a candidate with the maximum watermark evidence among N independent samples, 
+
+Z⋆ = max  
+
+> 1≤i≤N
+
+Er (Xi).
+
+Therefore, 
+
+Pr( Z⋆ ≤ k) = Pr ( Er (X1) ≤ k, . . . , E r (XN ) ≤ k) = Fr (k)N .
+
+For N > 1,
+
+Fr (k)N ≤ Fr (k),
+
+with strict inequality whenever 
+
+0 < F r (k) < 1.
+
+Equivalently, 
+
+Pr( Z⋆ > k ) ≥ Pr( Z > k ).
+
+Thus, the distribution induced by offline PMark is systematically shifted toward semantic regions with higher watermark evidence. 18 Semantic narrowing. This concentration constitutes semantic narrowing at the candidate-selection level. The base model initially provides multiple semantic alternatives according to Pπ , whereas of-fline PMark ranks these alternatives according to an additional watermark-specific criterion and removes all candidates below the maximal evidence level within each candidate pool. The result does not rely on any particular amount of natural probability mass occupying a watermark partition. As long as the watermark evidence is non-constant over naturally plausible continuations, i.e., 
+
+∃ sa, s b ∈ supp( Pπ ) such that Er (sa)̸ = Er (sb),
+
+maximum-evidence selection assigns different selection preferences to these semantic alternatives. For 
+
+N > 1, this preference is amplified through best-of-N selection, progressively concentrating generation toward watermark-preferred semantic regions. Therefore, the reduced rejection-sampling cost of offline PMark should not be interpreted as the absence of semantic restriction. Offline PMark replaces explicit rejection with maximum-evidence selection: can-didates are generated from the natural distribution, but only the watermark-preferred subset is eligible for final selection. This preserves sampling efficiency while still inducing semantic narrowing. 
+
+## D Locality and Perturbation Stability of Semantic Hashes 
+
+This section formalizes the locality property used by HammingMark. Let e, e ′ ∈ Sd−1 be two normal-ized SBERT embeddings, let R = [ r⊤ 
+
+> 1
+
+; . . . ; r⊤
+
+> m
+
+] ∈ Rm×d, where the rows are independently sampled from a spherically symmetric continuous distribution (e.g., rj ∼ N (0 , I d)), and define the j-th random-hyperplane hash bit as 
+
+Hj (e) = 1[r⊤ 
+
+> j
+
+e ≥ 0] . (28) Write ρ = e⊤e′ and θ = arccos( ρ) ∈ [0 , π ].
+
+Proposition 1 (angular locality). For every hash bit, 
+
+Pr  
+
+> R
+
+[Hj (e)̸ = Hj (e′)] = θπ , Pr  
+
+> R
+
+[Hj (e) = Hj (e′)] = 1 − θπ . (29) Consequently, 
+
+dH (H(e), H (e′)) ∼ Binomial 
+
+
+
+m, θπ
+
+
+
+, ER
+
+ dH (H(e), H (e′)) 
+
+m
+
+
+
+= θπ . (30) 
+
+Proof. By rotational invariance, only the two-dimensional plane spanned by e and e′ matters. A hyper-plane separates the two vectors exactly when its normal falls in the angular wedge between them. The measure of this wedge is θ/π . Independence of the rows of R then gives equation 30. equation 30 states that semantic closeness is preserved in probability rather than deterministically. A standard Hoeffding bound also gives 
+
+Pr 
+
+> R
+
+ dH (H(e), H (e′)) 
+
+m − θπ ≥ ε
+
+
+
+≤ 2 exp( −2mε 2). (31) Thus, smaller angular distance yields fewer expected bit flips, while a longer hash concentrates more tightly around this expectation. 
+
+Corollary 1 (stability under a meaning-preserving edit). Suppose an edit changes a sentence embed-ding from e to ee, with δ = arccos( e⊤ee). Then 
+
+Pr  
+
+> R
+
+[H(e) = H(ee)] = 
+
+
+
+1 − δπ
+
+m
+
+, (32) 
+
+Pr  
+
+> R
+
+[dH (H(e), H (ee)) ≤ b] = 
+
+> b
+
+X
+
+> j=0
+
+mj
+
+  δπ
+
+j 
+
+1 − δπ
+
+m−j
+
+. (33) 19 Moreover, for two original codes ht−1, h t and their edited versions eht−1, eht,
+
+Match( ht−1, h t) − Match( eht−1, eht) ≤ dH (ht−1, eht−1)+ dH (ht, eht). (34) This follows from Match( a, b ) = m − dH (a, b ) and the triangle inequality for Hamming distance. In par-ticular, a transition satisfying Match( ht−1, h t) ≥ T + γ remains valid whenever the two edited sentences jointly flip at most γ bits. This margin argument connects angular locality to robustness of the transition statistic used by HammingMark. The probability in the results above is over the random construction of R. Once R is fixed, an adversarially chosen embedding can lie close to a hyperplane, so no deterministic collision guarantee is claimed. 
+
+## E Semantic Diversity within a Hamming Neighborhood 
+
+For a code h ∈ { 0, 1}m, define its normalized semantic preimage by 
+
+C(h) = {e ∈ Sd−1 : H(e) = h}. (35) Because m ≪ d, H is highly non-injective. The following construction shows that this is not merely a counting argument. 
+
+Proposition 2 (large angular diameter of a hash cell). Assume dim ker( R) ≥ 2 and take a unit vector 
+
+e whose projections Re are all nonzero. There exists a unit vector v ∈ ker( R) ∩ e⊥. For any τ ≥ 0,define 
+
+e+(τ ) = e + τ v 
+
+√1 + τ 2 , e−(τ ) = e − τ v 
+
+√1 + τ 2 . (36) Then 
+
+H(e+(τ )) = H(e) = H(e−(τ )) (37) for every finite τ , while 
+
+e+(τ )⊤e−(τ ) = 1 − τ 2
+
+1 + τ 2 −→ − 1 as τ → ∞ . (38) 
+
+Proof. The dimension assumption guarantees a nonzero vector in ker( R) ∩ e⊥. Since Rv = 0,
+
+Re +(τ ) = Re −(τ ) = Re/ √1 + τ 2. The positive normalization factor does not change any projection sign, proving equation 37. equation 38 follows by direct calculation. □
+
+For a Gaussian random projection with m < d , R has full row rank almost surely, so dim ker( R) = d−m.In our setting, d = 768 and m = 8 , leaving a 760 -dimensional null space. Moreover, full row rank makes 
+
+R : Rd → Rm surjective; hence every strict sign pattern is realizable in the ambient embedding space. Given a preceding code ht−1 and radius r = m − T , the complete admissible semantic set is 
+
+AT (ht−1) = H−1(Br (ht−1)) = [ 
+
+> h∈B r(ht−1)
+
+C(h), (39) where 
+
+|B r (ht−1)| =
+
+> r
+
+X
+
+> j=0
+
+mj
+
+
+
+. (40) With m = 8 and T = 6 , r = 2 and the acceptance set contains 1 + 8 + 28 = 37 different hash cells. Each cell contains a continuous family of ambient semantic vectors, so the accepted set can cover distinct semantic directions even though all its codes remain close to ht−1.Proposition 2 concerns the geometry of the ambient SBERT representation space and does not imply that every constructed vector corresponds to a realizable natural-language sentence. We therefore interpret it 20 Table 6: Distribution of watermark-valid candidates across eight semantic clusters.                                                       
+
+> Method C1 C2 C3 C4 C5 C6 C7 C8 Total SemStamp 100000001K-SemStamp 110000002SimMark 7540000016 PMark 10 864300031 HammingMark 24 20 17 15 12 74099
+
+only as a geometric explanation for why short semantic hashes need not define a narrow region in repre-sentation space. Our empirical results provide complementary, aggregate evidence: among independently sampled natural continuations, HammingMark accepts a substantially broader subset than the compared semantic watermarking methods, as illustrated in Fig. 2 and reflected by the higher natural-candidate ac-ceptance rate. These observations are consistent with, but do not by themselves prove, greater semantic diversity on the natural-language manifold. 
+
+## F Semantic Coverage of Watermark-Valid Candidates 
+
+To further examine whether higher acceptance corresponds to broader semantic preservation, we sample 300 natural candidate continuations from the same prompt. To avoid evaluating semantic coverage di-rectly in the representation space used by HammingMark for watermark generation and detection, we en-code these candidates using the frozen sentence-transformers/all-mpnet-base-v2 evalua-tion model and cluster their normalized embeddings into K = 8 semantic regions, matching the partition granularity used in SemStamp and K-SemStamp. We then apply each watermarking method’s original constraint and encoder to the same candidate pool and examine the distribution of watermark-valid candi-dates across the externally constructed semantic clusters. The external evaluation encoder is used only for constructing the clusters and does not participate in candidate acceptance for any watermarking method. As shown in Table 6, existing watermark constraints retain candidates from only a limited number of semantic regions. In contrast, HammingMark accepts candidates spanning seven of the eight clusters. Notably, even several low-frequency semantic modes remain accessible. This indicates that Hamming-Mark does not merely increase the number of watermark-valid candidates, but preserves a broader portion of the semantic modes present in natural generation, providing more direct evidence of alleviated semantic narrowing. 
+
+## G Semantic Diversity under Fixed Contexts 
+
+Natural acceptance measures how much probability mass of the original generation distribution remains compatible with a watermark constraint, but it does not directly characterize whether the resulting con-tinuations remain semantically diverse. We therefore evaluate semantic diversity under fixed contexts. Using the same 100 prompts as in the natural-acceptance experiment, we independently generate 300 next-sentence continuations for each method from the same context. To avoid measuring diversity directly in the representation space used by HammingMark for watermark generation and detection, we use a separate, frozen sentence-embedding model, 
+
+sentence-transformers/all-mpnet-base-v2 , solely as the evaluation encoder. This check-point is not used by any watermarking method during generation or detection. Let 
+
+zi = Eeval (Si)
+
+∥Eeval (Si)∥2
+
+denote the normalized evaluation embedding of continuation Si, where Eeval is all-mpnet-base-v2 .We define pairwise semantic diversity as 
+
+Dpair = 2
+
+N (N − 1) 
+
+X
+
+> 1≤i<j ≤N
+
+ 1 − z⊤ 
+
+> i
+
+zj
+
+ , (41) 21 Table 7: Semantic diversity under fixed contexts. Each method independently generates 300 continua-tions for each of 100 prompts. Higher values indicate greater semantic diversity. Method Pairwise diversity ↑ Diversity retention ↑
+
+No watermark 0.284 1.000 SimMark 0.224 0.789 SemStamp 0.142 0.500 K-SemStamp 0.158 0.556 PMark 0.201 0.708 Random Code 0.184 0.648 HammingMark 0.269 0.947 
+
+where N = 300 . A larger value indicates that repeated generations span a broader range of semantic realizations according to the held-out evaluation encoder. We further report the diversity retention ratio 
+
+Rdiv = DWM pair 
+
+DNoWM pair 
+
+, (42) which measures the fraction of unwatermarked semantic diversity preserved after watermarking under the same evaluation metric. As shown in Table 7, semantic watermarking generally reduces the diversity of continuations generated from the same context, but the degree of reduction differs substantially across methods. SemStamp and K-SemStamp exhibit the strongest concentration, retaining only 50 .0% and 55 .6% of the semantic diversity of unwatermarked generation. This is consistent with their region-based acceptance mechanisms, which restrict generation to designated portions of the semantic space. SimMark retains more diversity, but still reduces the pairwise distance from 0.284 to 0.224 . PMark similarly shows a noticeable reduction, retaining approximately 70 .8% of the unwatermarked diversity. In contrast, HammingMark achieves a pairwise diversity of 0.269 , corresponding to 94 .7% diversity re-tention and remaining close to unwatermarked generation according to the held-out evaluation encoder. This result complements the natural-acceptance analysis: a high acceptance mass alone could still arise if the accepted continuations were concentrated around a small number of similar semantic realizations, whereas the present results show that HammingMark also preserves substantial variation among inde-pendently generated continuations. This provides additional evidence that the realized-sentence-centered Hamming constraint preserves not only more natural probability mass, but also a broader range of seman-tic alternatives. The comparison with Random Code further isolates the effect of constraint placement. Although Random Code uses the same code-space coverage as HammingMark, it retains only 64 .8% of the unwatermarked diversity. Thus, the advantage of HammingMark cannot be explained solely by admitting a larger set of hash codes. Rather, centering the Hamming neighborhood on the realized preceding sentence allows the admissible region to better follow the local semantic structure of natural generation, while the coarse many-to-one hash mapping leaves multiple semantic realizations simultaneously valid. 
+
+## H Deriving the Matching Threshold from Natural Generation 
+
+This section explains how the matching threshold T is determined by the natural matching behavior of unwatermarked generation and the desired watermark strength. We first derive an exact rule that holds for an arbitrary natural match-count distribution. We then obtain a compact approximation in terms of the hash length m and the natural expected number of matching bits, and finally instantiate the result for our default setting m = 8 .22 H.1 Exact Threshold from the Natural Match Distribution 
+
+Consider one sentence-generation step and condition on the realized context π. To simplify notation, we omit the sentence-step index throughout this section. Let 
+
+P (S | π)
+
+denote the base-model distribution over the next candidate sentence before watermarking, and let hprev ∈{0, 1}m be the semantic hash of the preceding sentence. For a candidate sentence S, define its number of matching hash bits with the preceding sentence as 
+
+M (S) = Match ( hprev , H (F (S))) ∈ { 0, . . . , m }. (43) When S ∼ P (· | π), M is therefore a discrete random variable describing the matching behavior that arises naturally before any watermark constraint is applied. For a threshold T , HammingMark accepts a candidate if 
+
+M (S) ≥ T. 
+
+The probability that an unwatermarked candidate already satisfies this condition is 
+
+a(T ) = Pr  
+
+> S∼P(·| π)
+
+[M (S) ≥ T ]. (44) This quantity is central to the threshold selection: it measures how much of the natural next-sentence probability mass remains admissible under the watermark constraint. Assuming rejection sampling continues until an admissible candidate is found, the distribution of the accepted sentence is simply the base distribution conditioned on M (S) ≥ T :
+
+QT (S | π) = P (S | π) 1[M (S) ≥ T ]
+
+a(T ) . (45) For every sentence in the accepted region, 
+
+QT (S | π)
+
+P (S | π) = 1
+
+a(T ) .
+
+Hence the KL divergence from the natural distribution is 
+
+DKL (QT ∥P ) = X 
+
+> S:M(S)≥T
+
+QT (S | π) log QT (S | π)
+
+P (S | π)= X 
+
+> S:M(S)≥T
+
+QT (S | π) log 1
+
+a(T )= log 1
+
+a(T ) = − log a(T ). (46) 
+
+Distributional watermark strength. We characterize the per-transition watermark strength through the distributional bias introduced by enforcing the watermark acceptance event. Specifically, under a fixed context π, we define 
+
+λ(T ; π) ≜ 1ln 2 DKL (QT (· | π)∥P (· | π)) = − log 2 aπ (T ), (47) where 
+
+aπ (T ) = Pr  
+
+> S∼P(·| π)
+
+[M (S) ≥ T ]
+
+23 is the probability that a naturally generated candidate already satisfies the watermark constraint. Intuitively, λ(T ; π) measures how unlikely the enforced watermark event is under natural generation. A smaller natural acceptance probability corresponds to a stronger watermark-specific selection bias and, in general, provides stronger per-transition evidence for distinguishing watermarked from unwatermarked generation. We therefore use λ as a distributional proxy for watermark strength , rather than as a direct measure of sequence-level detection performance, which also depends on factors such as text length, dependence across transitions, the detector statistic, and possible perturbations. In particular, λ(T ; π) = 1 bit corresponds to an acceptance event with natural probability 1/2. More generally, requiring at least λ0 bits of distributional watermark strength is equivalent to 
+
+λ(T ; π) ≥ λ0 ⇐⇒ aπ (T ) ≤ 2−λ0 . (48) This relation directly yields a threshold-selection rule. Since 
+
+aπ (T + 1) = aπ (T ) − Pr[ M = T | π] ≤ aπ (T ),
+
+the natural acceptance probability is non-increasing in T , and consequently λ(T ; π) = − log 2 aπ (T )
+
+is non-decreasing in T . Under ideal rejection sampling, each independent candidate is accepted with probability aπ (T ), so the expected number of sampled candidates required for one accepted sentence is 
+
+E[NT | π] = 1
+
+aπ (T ) . (49) Thus, increasing T generally induces a stronger watermark-specific distributional bias, but also rejects more natural probability mass and increases the expected sampling cost. Accordingly, among all thresholds that achieve at least λ0 bits of distributional watermark strength, the least restrictive choice is 
+
+T ⋆ = min T ∈ { 0, . . . , m } : Pr[ M ≥ T | π] ≤ 2−λ0 . (50) This choice satisfies the desired distributional-strength requirement while maximizing the retained natural acceptance probability, or equivalently minimizing the expected rejection-sampling cost. equation 50 is exact for the idealized unlimited-budget rejection-sampling procedure and makes no para-metric assumption about the natural distribution of M . In practice, T ⋆ can therefore be estimated directly from the empirical match-count distribution of unwatermarked continuations. 
+
+H.2 Estimating the Matching Threshold from Natural Statistics 
+
+The natural match-count distribution depends on both the semantic relation between adjacent sentences and the fixed random projection used by the watermark key. Therefore, we do not assume that the marginal distribution of M follows an exact parametric form. Instead, we use a simple moment-matched distribu-tion only to obtain an interpretable estimate of the threshold scale. Let 
+
+μ = E[M ]
+
+denote the mean number of matching bits observed from naturally generated sentence pairs. Since M ∈{0, . . . , m }, we summarize the average bit-wise matching level by 
+
+¯p = μm .
+
+We then introduce the following moment-matched proxy: 
+
+fM ∼ Binomial 
+
+
+
+m, μm
+
+
+
+. (51) 24 This approximation matches the empirical mean, E[ fM ] = μ, while ignoring the heterogeneity of semantic similarities across contexts. It is used only for estimating a reasonable operating threshold rather than for characterizing the exact natural match-count distribution. Under this approximation, the estimated natural acceptance probability for threshold T is 
+
+ea(T ) = Pr[ fM ≥ T ] = 
+
+> m
+
+X
+
+> k=T
+
+mk
+
+  μm
+
+k 
+
+1 − μm
+
+m−k
+
+. (52) Following the definition of watermark strength in the previous section, we define the corresponding esti-mated strength as 
+
+eλ(T ) = − log 2 ea(T ). (53) Here, eλ(T ) should be interpreted only as an estimate of the distributional strength associated with the selected threshold. The actual strength remains determined by the true natural acceptance probability 
+
+a(T ) = Pr[ M ≥ T ].For a desired strength level λ0, the same approximation provides a direct estimate of the required matching threshold. Let 
+
+Fm,p (k) = Pr[ X ≤ k], X ∼ Binomial( m, p ),
+
+and define the discrete quantile 
+
+F −1
+
+> m,p
+
+(u) = min {k : Fm,p (k) ≥ u}.
+
+Since 
+
+Pr[ fM ≥ T ] = 1 − Fm,μ/m (T − 1) ,
+
+the estimated threshold is bT (m, μ, λ 0) = 1 + F −1
+
+> m,μ/m
+
+ 1 − 2−λ0  . (54) equation 54 provides a convenient mapping from the observed natural matching level μ and a desired watermark strength λ0 to an estimated threshold. It should not be interpreted as an exact solution for the true generation distribution, since natural sentence pairs may exhibit substantial variation in semantic similarity and hence a non-binomial marginal distribution of M .For additional intuition, applying a normal approximation to. equation 51 gives 
+
+fM ≈ N 
+
+
+
+μ, μ 
+
+
+
+1 − μm
+
+ 
+
+.
+
+With a continuity correction, this yields the rough closed-form estimate 
+
+bT ≈
+
+
+
+μ +
+
+r
+
+μ
+
+
+
+1 − μm
+
+
+
+Φ−1  1 − 2−λ0  + 12
+
+
+
+, (55) where Φ−1 is the inverse standard-normal CDF. We use this expression only for interpretation; all numer-ical estimates below are computed from the binomial tail in equation 52. 
+
+H.3 Estimated Operating Point for the Default Configuration 
+
+We next apply the above approximation to the default HammingMark configuration. We use a semantic hash length of 
+
+m = 8 ,
+
+and natural unwatermarked sentence pairs exhibit an average match count of approximately 
+
+μ ≈ 4.8.
+
+25 The moment-matched proxy is therefore 
+
+fM ∼ Binomial(8 , 0.60) . (56) We use λ0 = 1 bit as a convenient reference strength. Under the definition 
+
+λ = − log 2 a, 
+
+one bit corresponds to an acceptance event whose natural probability is approximately one half. Substi-tuting λ0 = 1 into equation 54 gives 
+
+bT = 1 + F −18,0.60 (0 .5) = 6 . (57) The same result can be seen directly from the estimated upper-tail probabilities: 
+
+ea(5) = Pr[ fM ≥ 5] ≈ 0.5941 , (58) 
+
+ea(6) = Pr[ fM ≥ 6] ≈ 0.3154 . (59) The corresponding estimated watermark strengths are 
+
+eλ(5) = − log 2(0 .5941) ≈ 0.75 bits , (60) 
+
+eλ(6) = − log 2(0 .3154) ≈ 1.66 bits . (61) Thus, under the moment-matched approximation, the one-bit reference point lies between T = 5 and 
+
+T = 6 , making T = 6 a natural estimated operating point for m = 8 . This estimate also has a simple interpretation through equation 55. When λ0 = 1 ,
+
+Φ−1(1 − 2−1) = Φ −1(0 .5) = 0 ,
+
+and the approximate threshold reduces to 
+
+bT ≈
+
+
+
+μ + 12
+
+
+
+.
+
+For μ = 4 .8, this again gives bT ≈ ⌈ 5.3⌉ = 6 .
+
+We emphasize that these calculations are intended only to estimate the appropriate threshold scale. The true natural match-count distribution is context dependent and need not follow the moment-matched bi-nomial proxy. Accordingly, the values ea(T ) and eλ(T ) above should not be interpreted as measured acceptance rates or exact watermark strengths. Empirical acceptance and detection performance are eval-uated separately in the experiments. The analysis here only provides an intuitive explanation for why a threshold around T = 6 is a reasonable default for an 8-bit semantic hash. 
+
+Finite-budget implementation. The analysis above characterizes the idealized rejection-sampling pro-cedure that continues until a valid candidate is obtained. In practice, we impose a finite resampling budget for computational efficiency. Therefore, Eqs. (39)–(44) should be interpreted as the exact characterization of the unlimited-budget procedure, while our implementation provides a finite-budget approximation to it. 
+
+Empirical fallback frequency. In our implementation, the maximum resampling budget is B = 16 .When no candidate satisfies the watermark constraint within this budget, the last sampled candidate is retained. We additionally measure the empirical fallback rate as 
+
+rfb = #{sentence steps exhausting all B attempts }
+
+#{generated sentence steps } .
+
+Whenever fallback does not occur, the finite-budget procedure coincides with the ideal rejection-sampling procedure analyzed above. Across all evaluated settings, fallback occurs in only 0.6% –2.7% of sentence steps, as shown in Table 8. Thus, the ideal conditional-distribution analysis provides a close description of the generation procedure for the large majority of sentence steps. 26 Table 8: Empirical fallback rates under the maximum resampling budget B = 16 .Dataset Generator Fallback rate (%) C4 Mistral-7B 1.3 BookSum Mistral-7B 0.8 C4 Qwen2.5-7B 1.2 BookSum Qwen2.5-7B 0.6 ELI5 Mistral-7B 2.3 Multi-News Mistral-7B 2.7 Table 9: Effect of semantic hash length on clean detection and attack robustness. Each entry reports TPR@1%/TPR@5%/AUROC.                     
+
+> MTClean Parrot DIPPER 430.76/0.86/0.97 0.75/0.86/0.97 0.74/0.83/0.96 860.98/1.00/1.00 0.94/0.99/1.00 0.93/0.98/0.99
+> 16 12 0.98/1.00/1.00 0.78/0.87/0.98 0.73/0.81/0.96 32 24 0.99/1.00/1.00 0.63/0.73/0.90 0.64/0.74/0.91
+
+## I Effect of Semantic Hash Length 
+
+We study the effect of the semantic hash length M by evaluating M ∈ { 4, 8, 16 , 32 } on C4 with Mistral-7B. For all settings, we fix the required matching ratio to 0.75 , giving thresholds T ∈ { 3, 6, 12 , 24 },respectively. All other generation and detection settings remain unchanged. Robustness is evaluated under Parrot and DIPPER rewriting attacks. As shown in Table 9, M = 4 provides insufficient discriminative resolution: with only four bits, un-watermarked transitions can also frequently satisfy the 3/4 matching requirement, resulting in substan-tial overlap between watermarked and unwatermarked scores even without attacks. For example, un-der an independent balanced-bit approximation, the probability of matching at least three bits is already 
+
+5/16 = 31 .25% .Increasing M improves hash resolution but gradually reduces robustness under Parrot and DIPPER. Longer hashes provide a more precise estimate of semantic similarity and therefore reduce the quanti-zation slack of short codes. After paraphrasing perturbs the sentence embeddings, more hyperplane signs may change, making transitions near the 0.75 boundary less likely to remain valid. Overall, M = 8 
+
+achieves the best balance between clean detectability and tolerance to meaning-preserving perturbations. 
+
+## J Reproducibility Details 
+
+Tasks and models. We evaluate HammingMark on C4 and BookSum for open-ended generation, using Mistral-7B-Instruct and Qwen2.5-7B-Instruct as generators. We further evaluate Multi-News summariza-tion and ELI5 long-form question answering as more constrained generation tasks. 
+
+Baselines and configuration. We compare HammingMark with token-level methods (KGW, SynthID, MorphMark, and SIR) and sentence-level semantic watermarks (SemStamp, K-SemStamp, SimMark, and PMark). HammingMark uses an m = 8 -bit semantic hash and accepts a transition when at least T = 6 
+
+bits match. 
+
+Evaluation protocol. For KGW, SynthID, MorphMark, SIR, SemStamp, and K-SemStamp, we fol-low their respective configurations in MarkLLM (Pan et al., 2024) without modification, including all algorithm-specific hyperparameters and, where applicable, sentence-sampling procedures, resampling budgets, and fallback strategies when no valid candidate is found. For PMark, we evaluate the offline 27 variant using its default parameter settings. For SimMark, we use the default parameter settings reported in its original paper. For detection, we calibrate the threshold τd(α) separately for each method and evaluation dataset at a target false-positive rate α. Specifically, for each dataset, we randomly sample 500 examples disjoint from its test set to construct the calibration set. All methods use the same calibration examples and threshold-selection procedure, with method-specific thresholds determined from their respective detection scores. Each calibrated threshold is then fixed and applied to the corresponding test set. We report 
+
+TPR@1% , TPR@5% , and AUROC on both clean and attacked texts. Robustness is evaluated under Parrot (Damodaran, 2021) and Pegasus paraphrasing (Zhang et al., 2020), DIPPER rewriting (Krishna et al., 2023), and API-based rewriting with DeepSeek-V4-Pro (Xu et al., 2026). We adopt dataset-specific detection threshold calibration to ensure a controlled comparison across meth-ods at the same target false-positive rate. Nevertheless, a fixed threshold would simplify deployment when representative calibration data are unavailable. Empirically, for the Global Bits detector evaluated on clean text, the calibrated sequence-level thresholds across the evaluated datasets remain within 5% of 0.75 in relative terms. Under a common measure of relative threshold variation, HammingMark exhibits the smallest cross-dataset variation among the compared methods, whereas KGW-family detectors exhibit variations exceeding 30%. These observations support the stability of the Global Bits detection threshold across the evaluated clean-text datasets. Its concentration around 0.75 is also consistent with the gener-ation rule, which requires at least six matching bits out of eight for each accepted transition. Together, these results suggest that 0.75 is a reasonable default decision threshold for Global Bits in compara-ble clean-text settings. However, the generation acceptance condition and the sequence-level detection threshold serve different purposes: their numerical proximity does not guarantee that a fixed threshold will maintain the target false-positive rate on unseen distributions. We therefore retain dataset-specific calibration for the reported comparisons and regard 0.75 as an empirically motivated deployment default whose false-positive rate should be validated in the intended setting. 
+
+Datasets and generation. We randomly select 500 samples from C4 and BookSum, respectively, and 100 samples from ELI5 and Multi-News. The target generation length is set to 200 tokens for all tasks. Unless otherwise specified, all decoding parameters follow the default configurations provided by Mark-LLM. Sentence boundaries are identified using the NLTK sentence tokenizer integrated into MarkLLM. 
+
+HammingMark implementation. HammingMark uses the SBERT encoder released with the Sem-Stamp implementation. The default hash length and matching threshold are m = 8 and T = 6 , re-spectively. The random projection matrix is initialized from the corresponding experimental seed. The maximum number of resampling attempts is set to 16. If no candidate satisfies the watermark constraint within this budget, the latest candidate is used as a fallback and remains included in subsequent watermark detection. 
+
+Calibration, randomness, and hardware. Detection thresholds and attack configurations follow the standardized MarkLLM evaluation pipeline and are kept consistent across all baselines. Reported results are averaged over three random seeds, with detection rates varying by less than one percentage point across runs. All experiments are conducted on a single NVIDIA H200 GPU. 
+
+## K Effect of the Matching Threshold 
+
+We further study the effect of the matching threshold T while fixing the semantic hash length to m =8. We evaluate T ∈ { 5, 6, 7} on C4 with Mistral-7B using the Global Bits detector. The results are summarized in Table 10. The matching threshold directly controls the strength of the transition-level watermark constraint. When 
+
+T = 5 , the acceptance condition is relatively weak: a large fraction of naturally generated transitions al-ready satisfy the watermark rule. This substantially reduces the sampling cost to only 1.3 candidates per 28 Table 10: Effect of the matching threshold T on C4 with Mistral-7B using the Global Bits detector. Detection results are reported as TPR@1% / TPR@5% / AUROC. Lower sampling cost is better. 
+
+T Clean Parrot DIPPER PPL ↓ Samples / sent. ↓
+
+5 0.71 / 0.83 / 0.95 0.32 / 0.56 / 0.81 0.27 / 0.40 / 0.74 4.61 1.3 6 0.98 / 1.00 / 1.00 0.94 / 0.99 / 1.00 0.93 / 0.98 / 0.99 4.61 2.2 7 0.98 / 1.00 / 1.00 0.98 / 0.99 / 1.00 0.98 / 0.99 / 1.00 5.33 6.4 Table 11: Cross-key detection on C4 with Mistral-7B. Watermarked text is generated using R⋆. TPR is measured at a target FPR of 1% .Detection key TPR@1% ↑
+
+Correct key R⋆ 0.99 Independent wrong key R′ 0.08 accepted sentence and leaves generation quality nearly unchanged. However, because the accepted transi-tions are less distinguishable from those occurring naturally in unwatermarked text, both clean detection and robustness under paraphrasing and rewriting decrease. Increasing the threshold to T = 7 has the opposite effect. The stricter matching requirement makes ac-cepted transitions more strongly biased toward the watermark condition. Clean-text detection remains comparable to T = 6 , while robustness under both Parrot and DIPPER improves. However, this stronger constraint considerably reduces the natural acceptance probability, increasing the average sampling cost from 2.2 to 6.4 candidates per accepted sentence. We also observe a substantially larger change in per-plexity relative to the unwatermarked generation, indicating that the stronger filtering perturbs the original generation distribution more noticeably. Overall, T = 6 provides the best empirical trade-off among watermark strength, robustness, generation fidelity, and sampling efficiency. A smaller threshold admits too many naturally occurring transitions and therefore provides insufficient watermark separation, whereas a larger threshold produces a stronger and more robust watermark at the cost of substantially more restrictive sampling. These results are consistent with our use of T = 6 as the default configuration throughout the main experiments. 
+
+## L Cross-Key Detection and Key Specificity 
+
+Motivation and setup. HammingMark uses a randomly initialized projection matrix as part of the watermark key. We examine whether the detection signal is specific to the matrix used during generation. Watermarked text is generated on C4 with Mistral-7B using the default configuration ( m = 8 , T = 6 ) and a secret projection matrix R⋆. During detection, we compare the correct key R⋆ with an independently sampled wrong key R′̸ = R⋆. Unwatermarked generations are used as negatives, and the detection threshold is calibrated at a target false-positive rate of 1% .
+
+Results. As shown in Table 11, replacing the generation key with an independent projection matrix reduces TPR@1% from 0.99 to 0.08 . The resulting 91 -percentage-point gap indicates that the dominant watermark signal is strongly specific to the secret projection matrix used during generation. The non-zero wrong-key detection rate nevertheless suggests a weaker key-independent effect. 
+
+Discussion. The cross-key results provide strong evidence that HammingMark’s detection signal is highly key-specific. Replacing the correct projection matrix R⋆ with an independently sampled matrix 
+
+R′ reduces TPR@1% from 0.99 to 0.08 , corresponding to a 91 -percentage-point drop. This large degra-dation indicates that high detection performance cannot be explained primarily by a generic increase in inter-sentence semantic continuity. 29 A small residual signal under the wrong key is nevertheless expected. Because HammingMark cen-ters its acceptance region on the preceding sentence, it introduces a mild preference for semantically coherent transitions. Such transitions may exhibit above-random hash agreement under multiple random-hyperplane projections, allowing an independent matrix R′ to capture a limited key-independent com-ponent of the signal. However, R′ does not reproduce the specific hyperplane partition or the bit-level Hamming constraints imposed during generation under R⋆. Only the correct detector evaluates each tran-sition in the same secret projection geometry that governed candidate acceptance, allowing key-specific evidence to accumulate consistently across the sequence. The substantial gap between correct-key and wrong-key detection therefore shows that, while generic semantic continuity contributes modestly, the dominant detection signal is tied to the secret projection matrix. Finally, the wrong-key TPR should not be interpreted as a false-positive rate, because the evaluated samples are genuinely watermarked texts rather than unwatermarked negatives. 
+
+## M Comparison with Continuous Similarity-Based Acceptance 
+
+To determine whether the improvement of HammingMark arises merely from using the preceding sentence as a relational reference or from the discrete Hamming neighborhood itself, we construct a continuous-similarity baseline. This baseline uses the same SBERT semantic encoder as HammingMark and directly computes the cosine similarity between a candidate sentence and its preceding sentence. A candidate is accepted when its similarity exceeds a predefined threshold and is otherwise resampled. This design is conceptually related to inter-sentence similarity-based watermarking methods such as Sim-Mark, since both select candidates directly according to their relations in a continuous semantic space. It therefore provides a controlled comparison between continuous similarity constraints and Hamming-code-based acceptance. We use the same 100 prompts as in the natural-acceptance experiment and set the cosine-similarity thresh-old to 0.63 . This produces an average natural acceptance rate of approximately 0.58 , matching that of HammingMark. Despite accepting a similar fraction of natural candidates, the continuous baseline achieves only 0.68 TPR@1%, 0.76 TPR@5%, and 0.93 AUROC on clean text, substantially below Ham-mingMark. Its fallback rate also increases from 1.3% for HammingMark to 7.5% .These results reveal two limitations of direct continuous-similarity acceptance. First, naturally generated adjacent sentences already tend to be locally coherent and semantically similar. Consequently, a substan-tial fraction of unwatermarked transitions also exceeds the cosine threshold. When inter-sentence simi-larity is used directly as the watermark signal, the score distributions of watermarked and unwatermarked texts remain relatively close, limiting clean-text detectability. This illustrates a fundamental trade-off for continuous similarity-based methods: increasing the threshold may strengthen the watermark signal, but it also imposes a more restrictive semantic constraint and increases the sampling cost. Second, the average natural acceptance rate does not capture variation across contexts. Although most adjacent sentences can readily satisfy the threshold of 0.63 because of local semantic continuity, some valid discourse transitions naturally exhibit lower cosine similarity. Examples include contrast, topic shifts, the introduction of new facts, and transitions from background information to a conclusion. In such contexts, a hard continuous threshold may repeatedly reject otherwise appropriate candidates, eventually exhausting the sampling budget and triggering fallback. Thus, two methods with the same average natural acceptance rate can have substantially different numbers of low-acceptance contexts. The considerably higher fallback rate of the continuous baseline is consistent with this context-dependent effect. Because a fallback candidate is not guaranteed to satisfy the watermark constraint, these events further reduce the consistency of the accumulated sequence-level signal. HammingMark alleviates these limitations by defining its acceptance neighborhood in a compact semantic hash space. Semantically similar sentences are more likely to receive similar hash codes, but Hamming agreement is not a deterministic hard cutoff on continuous cosine similarity. Owing to the coarse, many-to-one nature of a short semantic hash, candidates with different continuous similarity values may share the same or neighboring hash codes. As a result, some candidates with relatively low cosine similarity but valid discourse functions can still satisfy the Hamming constraint. Unlike a direct similarity threshold, 30 the resulting acceptance region does not correspond to a single interval in the continuous semantic space. This quantization slack leaves more flexibility for contrast, information introduction, and topic transitions. The discrete representation also provides more stable sequence-level evidence. HammingMark accumu-lates agreement over multiple projected bits, and the Global Bits detector retains partial evidence even when a modified transition no longer satisfies the complete generation threshold. In contrast, the contin-uous baseline relies primarily on generic inter-sentence similarity that is already present in natural text, making its detection signal more likely to overlap with the unwatermarked distribution. The random pro-jection matrix additionally makes the HammingMark signal key-specific, whereas raw cosine similarity mainly captures key-independent semantic coherence. Overall, this experiment shows that the advantage of HammingMark cannot be attributed solely to using the preceding sentence as the semantic reference. Even after matching the average natural acceptance rate, direct continuous similarity acceptance produces weaker detection and a substantially higher fallback rate. Compared with similarity-based selection mechanisms related to SimMark, the short Hamming representation provides a less rigid quantized acceptance region, more stable sampling behavior across contexts, and key-specific evidence that can be accumulated at the sequence level. 31

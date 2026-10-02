@@ -1,0 +1,3525 @@
+Title: AutoMark: Enabling Autoresearch to Discover Better LLM Watermarks
+
+URL Source: https://arxiv.org/pdf/2609.37310v1
+
+Published Time: Wed, 30 Sep 2026 01:38:43 GMT
+
+Number of Pages: 52
+
+Markdown Content:
+Preprint 
+
+# AUTO MARK : E NABLING AUTORESEARCH TO 
+
+# DISCOVER BETTER LLM W ATERMARKS 
+
+Thibaud Gloaguen, Robin Staab, Martin Vechev 
+
+ETH Zurich 
+
+> thibaud.gloaguen@inf.ethz.ch
+
+## ABSTRACT 
+
+With LLM watermarking being deployed commercially and now required by regulations, improving its reliability and effectiveness has become crucial. Yet, recent progress in the field of LLM watermarking has increasingly been driven by improving details of existing methods, an effort fundamentally limited by the pace of human researchers. In this work, we enable for the first time the autonomous discovery of new distortion-free state-of-the-art watermarking schemes. To enable this, we (i) establish strict criteria to ensure that watermarks are reliable (e.g., they do not have an unexpectedly high false positive rate), (ii) propose rigorous statistical tests to automatically evaluate whether a watermarking scheme satisfies our criteria, and (iii) design an evaluation suite to rank watermarks along three key dimensions: detectability, quality, and robustness. By running our framework with 3 frontier models (GPT-6 Astra, Opus 5, Gemini-3.8 Flash), we discover over 50 different watermarking schemes, including several that outperform prior works along all key dimensions. We complement this by a manual study of the discovered schemes, distilling the key ideas into smaller components, and individually studying the impact of each component across dimensions (detectability, quality, robustness) to better understand how the proposed schemes operate. Importantly, we find that the agents, on top of improving existing ideas, also discover fundamentally new ideas (e.g., aligning watermark scores with random per-request direction). Overall, our work establishes the first steps of fully autonomous watermarking research, enabling the discovery of more reliable and effective watermarks. Our code is available here, and a blogpost to visualize our results here. 
+
+## 1 INTRODUCTION 
+
+Large Language Model (LLM) watermarking, which embeds a signal invisible to humans in model outputs, has emerged as the standard for tracing AI-generated text: regulators mandate it (European Parliament and Council of the European Union, 2024), and major providers deploy it (Dathathri et al., 2024; Anthropic, 2026). This makes research on new watermarking schemes crucial as they have to be reliable enough to prevent false accusations and robust enough to prevent evasion across real-world deployments. Recent progress has been steady but limited with improvements mostly driven by refining existing designs, e.g., with entropy weighting (Lee et al., 2024), or key switching (Sander et al., 2026), and the pace of iteration capped by that of human researchers. Autonomous research agents are thus a natural and promising direction for further accelerating LLM watermarking research. 
+
+Autoresearch Autoresearch systems let agents propose, implement, and evaluate ideas in a loop (Romera-Paredes et al., 2024; Novikov et al., 2025), and have already led to scientific break-throughs (OpenAI, 2026). Fields with readily verifiable outputs, such as mathematics with Lean-generated proofs, are especially well suited to this approach. Watermarking can also benefit from autoresearch, but its evaluation requires more care: useful properties such as detectability, robustness, and quality trade off, so improvement on a single metric need not represent a better watermark. Also, agents may exploit gaps in the evaluation harness (i.e., reward hacking), e.g., artificially in-flating detectability/robustness by increasing the rate of falsely flagged human texts. A separate concern is that agents may produce results faster than humans can understand them, especially when their explanations are poor, making the resulting solutions difficult to trust. In this work, we show 1arXiv:2609.37310v1 [cs.CR] 29 Sep 2026 Preprint 
+
+> Sandbox
+> Agent
+> Resources
+
+> GPU 
+
+ Web    
+
+> iWatermark library
+> AAR SynthID TextSeal Prior runs
+
+M Local verification and evaluation                   
+
+> Verification
+> 8Distortion-free
+> ¶Sound over key
+> øSound given a key
+> Evaluation
+> ÛDetectability
+> xRobustness
+> ⋆Quality
+> Submits Fails New agent Pass New agent
+> Watermarks
+> 1ConcordMark
+> 2RotationFirst
+> 3VeroMark
+> · · ·
+> TextSeal SynthID DeltaMark AAR
+> Evaluated watermarks
+> New watermark components
+> ²Human analysis GPT-6 Astra Opus 5
+> jUnit
+> ºSeeding
+> þScore
+> ¡Transform
+> ÛDetector
+> Held-out evaluation
+> Del. Sub. Trsl. Para. ∆PPL
+> ∆SB-2
+> ∆SB-3 ConcordMark RotationFirst SynthID TextSeal
+
+Figure 1: Overview of our work. In an isolated sandbox, an agent iterates on a watermarking scheme. Submissions are first verified and, upon passing, evaluated and added to a leaderboard. We then manually decompose the discovered schemes into 5 components and ablate them for insights. Lastly, we evaluate two selected schemes on a held-out test set and find that they outperform prior methods. that autoresearch, when carefully executed with an adequate harness and methodology, discovers watermarks that are trustworthy, explainable, and Pareto-superior to existing watermarking schemes. 
+
+This work: autoresearch for LLM watermarks To enable autoresearch for watermarking, we mathematically formalize what makes a watermark valid (Sec. 3.2) using two criteria: soundness in expectation over the private key, and, given a fixed text distribution, the probability of sampling a key that leads to false flags should be small. Given these criteria, we design our autoresearch harness illustrated in Figure 1. An agent is fully isolated in an environment and discovers new watermarking schemes (left). It can submit its scheme to a private verification pipeline (middle) that (i) tests whether the proposed scheme violates our criteria (using tailored tests we designed in Sec. 3.3), and, upon passing, (ii) evaluates the schemes along three key axes (detectability, robustness, and quality). Running our harness on three state-of-the-art agents, GPT-6 A STRA , O PUS 5, and G EMINI -3.8 FLASH , we generated over 50 schemes, with some outperforming prior work on all our evaluated axes. To understand the key insights of these schemes, we manually classify them all into five atomic components (Figure 1, right) and ablate their individual effects (Sec. 4.2 and App. A). We also select two schemes, ConcordMark and RotationFirst, that we evaluate on a held-out evaluation set (Sec. 4.3). We find that ConcordMark achieve state-of-the-art robustness and is Pareto-superior to all evaluated prior work, whereas RotationFirst has performance similar to prior work at much higher text quality. 
+
+Main contributions Our main contributions are: • We formalize the criteria for reliable watermarking, and design statistical tests that automati-cally detect violations (Sec. 3.2 and Sec. 3.3). • We build an autoresearch harness for LLM watermarking around this verification (Sec. 3.4). • We show that agents running our harness push the Pareto frontier of LLM watermarks, with two new schemes that outperform prior work on a held-out evaluation (Sec. 4.1 and Sec. 4.3). • We distill the agents’ schemes into 39 new components, ablate each of them, and identify fundamentally new watermarking ideas (Sec. 4.2). 
+
+## 2 RELATED WORK 
+
+LLM watermarking LLM watermarks modify the sampling procedure of an LLM to embed a (key-dependent) signal, that a later statistical test can detect. Red-Green watermarks (Kirchenbauer et al., 2023) achieve this by distorting the next-token distribution through a pseudo-random green token bias. In contrast, recent schemes, including all in this work, are distortion-free, i.e., they preserve the next-token distribution in expectation over the key. AAR (Aaronson, 2023) uses the Gumbel-max 2Preprint trick, KTH (Kuditipudi et al., 2024) inverse-transform sampling, DiPMark and MCMark (Wu et al., 2024; Chen et al., 2025) reweight the distribution based on score-rankings, and SynthID (Dathathri et al., 2024), deployed in production, uses tournament sampling. Most recently, TextSeal (Sander et al., 2026) extends Gumbel-max sampling with dual-key generation and entropy-weighted detection. 
+
+Watermark properties Beyond detectability, benchmarks and toolkits (Piet et al., 2025; Tu et al., 2024; Pan et al., 2024) evaluate watermarks along several, often competing, properties. Robustness 
+
+measures whether the watermark remains detectable after the text is edited, e.g., by word substitutions, translation, or paraphrasing (Kirchenbauer et al., 2024; Kuditipudi et al., 2024). Quality measures the impact of the watermark on the generated text, e.g., on perplexity or downstream tasks (Tu et al., 2024). Distortion-free schemes preserve the distribution of each generation, but, as a repeated context always yields the same scores, they reduce output diversity across generations (Gloaguen et al., 2026) which noticeably affects quality. Security measures whether an adversary can learn the watermark rules to spoof or scrub it (Jovanovi´ c et al., 2024), and is outside the scope of this work. Lastly, 
+
+reliability requires the false positive rate of the detector to be controlled, e.g., Fernandez et al. (2023) show that the z-tests used in early works underestimate the false positive rate, and propose exact tests with de-duplication of repeated (context, token) pairs. Yet, in prior works, these guarantees hold only in expectation over the private key: a specific deployed key can still exhibit a high false positive rate. 
+
+Autoresearch Program search systems (Romera-Paredes et al., 2024; Novikov et al., 2025; Lange et al., 2026) let LLMs iteratively propose programs scored by an automatic evaluator, leading to new results in verifiable domains such as algorithm design and mathematics (OpenAI, 2026). Other works automate the entire research loop, from generating ideas to writing papers (Lu et al., 2026), discovering new training objectives (Lu et al., 2024), or improving LLM training (Karpathy, 2026), and benchmarks measure the research capabilities of agents (Chan et al., 2025; Wijk et al., 2025). Yet, all require a strict evaluator as otherwise agents may exploit loopholes, e.g., by modifying tests instead of solving the task (Zhong et al., 2026). To our knowledge, we are the first to propose an automated pipeline to verify and evaluate watermarks, enabling autoresearch for LLM watermarking. 
+
+## 3 METHOD 
+
+In this section, we introduce the necessary background on LLM watermarking (Sec. 3.1), explain our design for automatically verifying watermarking schemes (Sec. 3.3), and finally detail our autoresearch framework (Sec. 3.4). 3.1 PRELIMINARIES ON LLM W ATERMARKS 
+
+In this part, we describe the four key components of most watermarking algorithms. 
+
+Mathematical description Let Σ be the finite vocabulary, and let ω ∈ Σ∗ be a finite sequence of tokens. At each step t of autoregressive generation, the LLM returns pt ∈ ∆(Σ) , the conditional probability distribution of the next token given ω<t . Without a watermark, the next token is sampled according to pt. With a watermark, we assume the existence of a sequence (Uat ) of pseudo-random vectors in [0 , 1] |Σ| whose entries Uat,v are i.i.d. uniform variables seeded by the context hash at,and a watermark function f : [0 , 1] |Σ| × ∆(Σ) → ∆(Σ) that transforms the next-token probability distribution pt into a watermarked probability distribution f ( ˜Uat , p t). We refer to f as the logits transformation and (Uat ) as the watermark score , where ( ˜Uat ) are i.i.d. uniform variables derived from (Uat ) and in most cases ˜Uat = Uat . We give concrete examples in App. D.4. The next token 
+
+ωt, sampled according to f ( ˜Uat , p t), will be correlated with the sequence (Uat ).For detection, given any text ω ∈ Σ∗, we recover the corresponding scores Uat,ω t at retained positions 
+
+t ∈ D, with N := |D|, after deduplicating repeated (seed, token) pairs. By assumption, under the null hypothesis (i.e., the text was generated without knowledge of the watermark), the retained scores 
+
+Uat,ω t are i.i.d. uniform random variables, whereas when the watermark is used, they are not. We can therefore build a statistic and a corresponding statistical test to detect the watermark, i.e., a detector .3Preprint 
+
+Additional requirements Furthermore, we require the watermark to be distortion-free, 
+
+∀p ∈ ∆(Σ) , E ˜U [f ( ˜U , p )] = p. (1) This property ensures that a watermark has minimal impact on quality: with perfect randomness, the quality of the watermarked model is indistinguishable from its base model. Yet, in practice, as we explain below we can still observe mild quality degradation within distortion-free watermarks. 
+
+Practical considerations In practice, the sequence (Uat ) needs to be computed from the sequence of tokens ω so that it can be recovered at detection time. A typical way to derive (Uat ) is to use a hash of the preceding tokens and a private watermark key ξ to obtain a seed at for a pseudorandom number generator (App. G). The resulting scores Uat,v remain approximately i.i.d. across distinct (seed, token) pairs and can be derived directly from the text given the private key. We refer to this as 
+
+context seeding . Seeding creates some practical problems: in case of a repeated (seed, token) pair, the watermark scores are no longer i.i.d., making detection unsound under the null. For a single request, we use a cache mechanism: if a (seed, token) pair is repeated we no longer apply the watermark. For repeated requests however, we cannot apply this cache as in the limit, the watermark is no longer applied. This lack of i.i.d. has also direct implications for the distortion-free property (Equation (1)) which in practice is therefore also violated across a larger corpus with repeated tokens. Hence, even for theoretically distortion-free schemes, we have to measure their impact on quality. 3.2 WHAT DEFINES A VALID WATERMARKING SCHEME 
+
+To automatically verify watermarking scheme validity at scale, we first need to formally define what makes a watermarking scheme valid. In particular, we identify two key criteria: soundness over the key and soundness given a key . Though our definitions build upon prior work, we find in App. C that several existing schemes fail our more stringent validity checks. In App. B, we further motivate our criteria by observing the failure modes of schemes designed by autoresearch without these safeguards. 
+
+Soundness over the key Soundness over the key is the property that, in expectation over the watermarking key ξ, the detector is a valid statistical test. Formally we require, 
+
+∀ω ∈ Σ∗, ∀α ∈ [0 , 1] , Pr  
+
+> ξ
+
+[Pξ (ω) ≤ α] ≤ α, (2) where Pξ (ω) is the p-value returned by the detector. Most prior watermarking schemes satisfy this property, which distinguishes statistical watermarks from zero-shot LLM-text detectors. However, this property alone does not guarantee that the watermarking scheme is reliable. For instance, consider a deliberately naive watermarking scheme: using the private key ξ, we randomly partition the vocabulary into a hundred classes and declare a text watermarked if its last token lies in the first class. Averaged over the key, this occurs with probability at most 1/100 , so the scheme satisfies Equation (2). Yet its FPR can be high for a specific key: if, for some ξ, "." lies in the first class, most human texts will be classified as watermarked. Thus, while Equation (2) bounds the FPR in expectation over the private key, it does not ensure a well-behaved FPR for each fixed key. 
+
+Soundness given a key We therefore introduce a novel second requirement for watermarking schemes: soundness given a key. Ideally, we want to require that for a human text distribution and a p-value threshold α, the false positive rate is bounded by α. This is arguably impractical as it would require precisely specifying the human text distribution, which, e.g., noticeably differs between languages. Instead, we move the randomness to the key: we require that, for every distribution H0
+
+over texts, the probability of sampling a key whose FPR on H0 exceeds α is at most β.
+
+∀H 0 ∈ ∆(Σ ∗), ∀α ∈ [0 , 1] , Pr 
+
+> ξ
+
+ Pr 
+
+> Ω∼H 0
+
+[Pξ (Ω) ≤ α] > α  ≤ β. (3) For β = 5% , if a watermarking scheme satisfies Equation (3), then for any fixed human text distribution, the probability of sampling a key for which the detector is not well calibrated (on that distribution) is at most 5%. Interestingly, as we show in App. I, a scheme satisfying Equation (3) can be derived from a scheme satisfying Equation (2) at the cost of its power: The same scheme with its p-value multiplied by 1/β also satisfies Equation (3) (while still satisfying Equation (2)). 4Preprint 3.3 AUTOMATIC VERIFICATION 
+
+Now we describe how we automatically test whether a proposed watermarking scheme violates our criteria (Sec. 3.2). To this end, we design three statistical tests to test whether a scheme is distortion-free (Equation (1)), sound over the key (Equation (2)), and sound given a key (Equation (3)). 1. Distortion-freeness (Algorithm 1): for given unwatermarked next-token distributions, we average the watermarked distributions over independently sampled private keys and test whether it signif-icantly differs from the original. We check both individual probability shifts and smaller shifts spread across tokens, using independent samples to identify and test a potential bias direction. If either test detects a significant deviation after multiple testing corrections, the scheme is rejected. 2. Soundness over the key (Algorithm 2): for a given set of non-watermarked texts, the test verifies for independently sampled private keys whether the empirical false positive rate is abnormally high. If it is, it means that the scheme likely does not satisfy Equation (2) and thus is rejected. 3. Soundness given a key (Algorithm 3): for independently sampled private keys, we sample a separate set of non-watermarked texts (human or LLM-generated) per key and screen for an abnormally high empirical false positive rate. We then test whether too many keys screen positive, accounting for both the allowed fraction β of bad keys and the probability that a sound key screens positive. If they do, the scheme likely violates Equation (3) and is rejected. 3.4 A F RAMEWORK FOR WATERMARK AUTORESEARCH 
+
+Next, we describe our harness designed around three components: a dedicated vLLM watermarking library, a coding agent environment, and the automatic verification & evaluation pipeline (Sec. 3.3). 
+
+Research harness We illustrate the autoresearch loop in Figure 1. Our watermarking library is designed around four primary components: the context seeding, the watermark score, the logits transformation, and the detector, following the formalization described in Sec. 3.1. A watermark is an implementation of all 4 components. We defer additional design choices to App. E. The research environment is initialized with the watermarking library and the baseline evaluations. The agent is tasked with proposing a watermarking algorithm that outperforms prior schemes in several key aspects: raw detectability and robustness to several attacks (e.g., word substitution, word deletion, paraphrasing, and backtranslation) while remaining distortion-free and statistically sound. We detail the initial prompt in App. J.1. We also give the agent a public configuration specifying how to evaluate and verify the proposed scheme. Once the agent completes its task, its proposed scheme is automatically evaluated (with a private configuration), and the evaluation results are added to the environment alongside the baselines. Then, a new agent takes over with access to all prior results and code modifications. The loop continues indefinitely. Inside the environment, the agent has full access to the Internet (e.g., it can download third-party libraries or read papers), a dedicated GPU, and API keys for third-party AI providers (primarily for experimenting with paraphrasing attacks). To stimulate the agent even more, we run a two-phase setup. The first agent is told it has 4 available submissions to the private evaluation before being shut down: this allows it to set up its environment, and adjust in case of unexpected failures. Then, after the initial 4 submissions, subsequent agents are told they only have 1 submission left. We found in App. E.2 that this combined setup led to more creative solutions from the agents and less hyperparameter tuning. 
+
+## 4 EVALUATION 
+
+In this section, we analyze the results of running our autoresearch framework across state-of-the-art agents. In Sec. 4.1 we analyze the trajectories of the agents during the autoresearch loop, while in Sec. 4.2 we break down the schemes proposed by the agents into individual categories and assess which metrics they impact. Lastly, in Sec. 4.3, we select two watermarking algorithms from the autoresearch runs that outperform prior work on our evaluated metrics. 
+
+Experimental setup We compare against the most popular prior and deployed schemes: AAR, SynthID, and TextSeal. Our private grader measures detectability and robustness as the TPR@1%FPR 5Preprint 1 8 16 # of submissions 45 60 75 TPR@1%FPR (%)  →
+
+> 41.0% 56.0% 57.7%
+> 57.8% 62.8% 69.3% 85.7%
+
+Paraphrasing 1 8 16 # of submissions 0612 18 Distance (%)  →
+
+> 6.8% Gemini high
+> 6.6% (AAR) 4.7% TextSeal
+> 4.2% Astra low
+> 3.8% (SynthID)
+> 3.7% Opus 5 2.2% Astra xhigh
+
+Quality 1
+
+Figure 2: Submission history for each agent along two evaluated axes: robustness to paraphrasing and quality. Each dot corresponds to a submission and the solid lines are the best value so far. The baselines are in italic, and a parenthesis means the baseline fails our verification. on 1000 LLAMA -3.1-8B 200 to 300 tokens long replies to ELI5 (Fan et al., 2019) prompts, on clean text and under four attacks: word deletion, synonym substitution, back-translation, and paraphrasing. For quality, we measure the distance to the unwatermarked model in perplexity, and in diversity (Self-BLEU) across 100 replies to the same 10 prompts, and, as these metrics are highly correlated, sometimes average them into a single quality metric (see App. K for un-aggregated results). Each metric is the worst over 5 watermark keys to mitigate across-key variance. We defer details to App. D. Visualizations of our evaluation results are available in our blogpost. 4.1 AUTORESEARCH TRAJECTORIES 
+
+We first focus on how the metrics evolved over the number of submissions to the evaluation harness. 
+
+Research agents and settings We use four different research agents: three frontier models GPT-6 ASTRA (xhigh), GPT-6 A STRA (low), O PUS 5, and a state-of-the-art efficient model G EMINI -3.8 FLASH (high). We let each agent run until its submissionbudget was exhausted. Using standard API prices, the research-agent costs are $357.08 for GPT-6 A STRA (xhigh), $123.29 for GPT-6 A STRA 
+
+(low), $435.96 for O PUS 5, and $13.81 for G EMINI -3.8 F LASH (high). 
+
+Main results Figure 2 shows the evolution of robustness to paraphrasing and of the watermark quality for different agents, with the baselines for comparison, for a total of 52 watermark schemes being evaluated. We find that all tested agents manage to improve their submissions over time, outperforming baselines in most cases. For two baselines (AAR and SynthID), the evaluated configurations do not pass our soundness given a key check: as we show in App. C this means that their robustness is slightly inflated. Moreover, only the submissions from GPT-6 A STRA (both low and xhigh) are provably sound given a key. In contrast, submissions from O PUS 5, G EMINI -3.8 FLASH and the TextSeal baseline configuration satisfy the property only empirically (i.e., they do not fail our check). This means that the p-values of GPT-6 A STRA are overly conservative, and, as we find in App. C, calibrating them to simply pass our empirical check increases the paraphrasing TPR of their best submission by 13 –15 percentage points, reaching robustness similar to that of O PUS 5. 
+
+Research dynamics The research processes of GPT-6 A STRA and O PUS 5 were similar, proposing a range of novel and creative watermarking ideas (App. A). Their first submissions mostly consisted of tweaks to the TextSeal baseline and attempts to correlate both the private verification and evaluation results with their local evaluation set-up. Both GPT-6 A STRA agents then decided to submit only schemes that are provably sound given a key by multiplying their p-values by 1/β (Sec. 3.2) whereas OPUS 5 opted for empirical calibration on its public verification evaluation, which in practice turned out to correlate well with the private verification. Lastly, G EMINI -3.8 F LASH was significantly 6Preprint  
+
+> Unit
+> Token ∗
+> Lexical group
+> Context seeding
+> Fixed-length ∗
+> Unordered Adaptive length Global + local Global first use Anchored Suffix cascade Tally & ladder Last important Interleaved
+> Score
+> Prelude Gaussian copula Tail indicator Private sampling Channels Channel variants Gaussian direction Spherical Wheel
+> Logits transform
+> Gumbel race ∗
+> BandRace PoolRace MomentBridge QuantileRace TransportRace QuotaTransport ResidualRace Content gate Interleaved gate
+> Detection
+> Gamma/Gaussian Clustering/excess Quantile Weighted Gamma Position evidence Gaussian χ2
+> Resultant + caps Anchor distance Predictive Gamma Circle search Quantile + wheel
+
+Figure 3: Atomic components extracted from the agents’ watermarking schemes. Colors indicate the family ( Fresh race , Private geometry , Skeleton ) where components of the same family are interchangeable, and white components are compatible with every family. Skeleton schemes reuse the fresh-race scores and detectors (green edge). Components marked ∗ come from prior work. less creative. All its submissions consisted of hyperparameter tuning of the TextSeal watermark to improve the metrics and did not result in any new ideas. 4.2 BREAKDOWN OF THE AGENT RESEARCH DIRECTIONS 
+
+Next, we manually go through the schemes proposed by all agents, decompose them into five components (the four components from Sec. 3.1 and the watermark unit , a generalization introduced by the agents), and evaluate the impact of each component on watermark properties. We summarize the decomposition in Figure 3, and provide a detailed explanation of each component in App. A. 
+
+Watermark unit Most watermarks operate at the token level: each token is pseudo-randomly scored and the watermark modifies the logits according to both the score and the model probability distribution (Sec. 3.1). We find that the agents proposed to generalize this idea: let G : Σ → N be a mapping from the token space to a set of equivalence classes. In any watermark algorithm, one can replace a token v with its class G(v) and, given the next-token probability distribution pt ∈ ∆(Σ) ,define the probability of each class g ∈ G (Σ) as Pr[ g] = P 
+
+> v∈Σ
+
+pt(v)1{G (v) = g}. If the watermark decides to sample a class g, the actual token is then sampled according to the residual probability 
+
+∀v ∈ Σ, Pr[ v | g] = 1{G (v) = g} pt(v)
+
+P 
+
+> v′∈Σ
+
+pt(v′)1{G (v′) = g} . (4) For instance, using a Lexical group as G naturally increases the scheme robustness but slighly lowers quality: if tokens from the same lexical group are swapped, the context remains unchanged. 94 96 98 Quality (Inv. distance to unwatermarked) →
+
+50 60 70 Robustness (Average TPR@1%FPR)  →
+
+TextSeal Copula 1
+
+Figure 4: Robustness-quality for TextSeal dual key routing and Gaussian copula .Robustness is the average of all 4 attacks’ TPR@1%FPR. 
+
+Context seeding For context seeding, agents explore the trade-off alluded to in Kirchenbauer et al. (2024): increasing the context size lowers the robustness but im-proves the quality. Also, for small contexts, because of deduplication during detection (to guarantee soundness over the key (Sec. 3.1)), lowering the context size may also hurt detectability. Historically, prior works have converged on hashing the tuple of the candidate token and the k preceding tokens ( Fixed-length in Figure 3). Agents iterated upon this idea along three main axes. The first idea is that tokens should not be treated equally: less frequent tokens should be dynamically assigned a lower k. This increases robustness without impacting quality significantly (because the distortion-free guaran-tee ensures that quality degrades only when contexts are repeated across texts). The second idea is to dynamically increase the context size: the first time we use a tuple as a context, it is of size 1. The next time we are about to use the same tuple, we increase the context size until the context has not been seen yet. This keeps the robustness benefits of short contexts without lowering the detectability. The third axis is more creative: assign tokens to categories, and when sampling a 7Preprint Table 1: Evaluation of selected agent schemes. Each cell reports English / Chinese results. We bold 
+
+all results that outperform the best baseline, and highlight the best result in each column.                                                                                                                                                       
+
+> Robustness TPR@1 ↑Quality deviation (%) ↓
+> Scheme Clean TPR@1 ↑Deletion Substitution Back-trans. Paraphrase ∆PPL ∆SB-2 ∆SB-3
+> Llama-3.1-8B
+> AAR 93 / 89 7 / 16 8 / 22 66 / 17 57 / 42 3.1 / 3.0 8.3 / 6.5 20 / 15 SynthID 95 / 90 12 / 25 10 / 31 84 / 24 71 / 53 3.0 / 1.0 3.5 / 3.3 9.3 / 8.0 TextSeal (high) 95 / 91 15 / 31 12 / 38 78 / 28 66 / 56 2.9 / 4.4 3.8 / 3.6 9.3 / 8.7 ConcordMark (low) 94 / 89 30 /54 42 /62 86 /37 75 /65 0.8 / 1.8 2.2 /2.7 5.1 /5.7
+> ConcordMark (high) 96 /91 34 /61 48 /69 89 /55 82 /77 0.8 / 1.8 2.2 /2.7 5.1 /5.7
+> RotationFirst 91 / 89 53 /60 40 /62 79 / 37 69 / 61 0.5 /0.6 0.9 /1.2 2.1 /2.6 Qwen3.8-27B
+> AAR 95 / 84 4 / 6 5 / 11 50 / 15 61 / 65 2.1 / 1.6 8.7 / 7.4 18 / 16 SynthID 97 / 88 6 / 10 7 / 16 60 / 21 68 / 72 5.9 / 1.6 3.7 / 4.0 8.5 / 9.0 TextSeal (high) 97 / 88 7 / 10 8 / 17 65 / 26 70 / 74 2.7 / 1.2 3.3 / 3.4 7.5 / 7.5 ConcordMark (low) 96 / 85 16 /23 21 /34 71 /29 74 / 72 2.2 / 0.8 1.5 /2.0 3.3 /4.1
+> ConcordMark (high) 98 /90 20 /31 25 /43 81 /47 83 /82 2.2 / 0.8 1.5 /2.0 3.3 /4.1
+> RotationFirst 86 / 81 25 /24 16 /35 54 / 22 57 / 64 2.2 / 0.9 0.3 /0.7 0.7 /1.6
+
+token from a given category, use a fixed-window context over the previous tokens from that category only. This increases robustness: edits in one category do not change the context for other categories. 
+
+Score The score refers to the pseudo-random variable used by the logits transformation. For instance, with Red-Green watermarks, the scores are the colors of the tokens. Without loss of generality, as in Sec. 3.1, we refer to the seeded watermark score as Ut ∼ U ([0 , 1]) |Σ| and the final score used in the logits transformation as ˜Ut. With different score designs, the agents tried to increase the quality while minimizing the impact on detectability. To do that, they consistently add a small amount of true randomness to the watermark. This is conceptually similar to the approaches by Sander et al. (2026); Dathathri et al. (2024) which also add true randomness to the watermark sampling to improve quality. Yet, we find that agents explore concepts that substantially differ from prior works. With the Gaussian copula , they propose sampling random Gaussian noise ηt ∼ N (0 , I |Σ|)
+
+and applying the following transformation 
+
+˜Ut = Φ( ρΦ−1(Ut) + p1 − ρ2ηt), (5) where ρ ∈ [0 , 1] is a scheme parameter that trades off detectability for quality (in the limit, ρ = 0 has no watermark). In Figure 4, we compare this approach to TextSeal’s random key switching (keeping all other watermarking components fixed) and find that it is strictly better: it outperforms TextSeal along all evaluated dimensions. With Channels , we use a finite pool of private keys and for each request randomly decide which key to use. Detection is run with every key and uses the Bonferroni correction. Private geometries are more complex, and we explain them further in App. A. −5 0 5 10 Quality   
+
+> (93%)
+> Del.
+> (56%)
+> Sub.
+> (67%)
+> Trsl.
+> (97%)
+> Para.
+> (64%)
+> −6.6 +8.0 +6.7 +1.6 +7.2 +1.1 +6.3 +4.4 +1.8 +3.4
+> ρ= 1
+> ρ= 0 .95
+> 1
+
+Figure 5: ResidualRace standalone or with Gaussian copula ρ = 0 .95 to match its quality with the Gumbel race .
+
+Logits transformation For logits transformations, most proposed schemes settle on Gumbel-max sam-pling ( Gumbel race ) from Aaronson (2023): as proven in Gloaguen et al. (2026), it maximizes watermark de-tectability. Yet, we find that the agents commonly pro-pose a Gumbel-max sampling extension via residual clocks ( ResidualRace ). Given a context seed at, let Uat
+
+be the uniform watermark score. The first time at is visited, we initialize residual clocks Rat = − log Uat ;otherwise, we use previously computed scores. Then we sample the next token according to the exponential race: 
+
+τt = min 
+
+> u
+
+Rat (u)
+
+pt(u) , u∗ = arg min 
+
+> u
+
+Rat (u)
+
+pt(u) ,Rat (u) ← Rat (u) − τtpt(u).
+
+(6) 8Preprint and replace the winning token’s score with a fresh exponential random variable: Rat (u∗) ∼ Exp(1) .In Figure 5, we compare ResidualRace against the Gumbel race , keeping all other components fixed. ResidualRace improves robustness against every attack at a slight cost to quality. Yet, adding   
+
+> Gaussian copula
+
+noise to the initial clocks recovers the quality of the Gumbel race while retaining most of the robustness gains. We find that most other logits transforms proposed by agents are designed to only increase the quality of the schemes at the expense of detectability. As we show in App. A this generally offer worse trade-offs than e.g., using the Gaussian copula .−2 0 2Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+> +0.6 +0.1 +0.2
+> −0.6 +1.3 +1.5
+> −0.1 +0.0
+
+0 5 10 15 
+
+> −0.1 +3.7 +1.7 +7.8 +2.8 +6.7 +2.3 +8.5 +1.5 +3.8 +1.8 +4.1 +3.7 +9.9 +2.5 +12.5
+> No forward pass Clustering Excess Forward pass Entropy weighting Weighted Gamma Position evidence + Weighting
+
+1
+
+Figure 6: Comparison of detector variants without forward pass (left) and with forward pass (right). 
+
+Detection Most agents initially converged in-dependently on the Gamma detector. Let ω ∈ Σ∗
+
+be a sequence of tokens and Ut(ωt) the corre-sponding uniform watermark score at position 
+
+t. Then we have 
+
+SGamma (ω) = 
+
+> |ω|
+
+X
+
+> t=1
+
+− log(1 − Ut(ωt)) (7) which follows a Gamma (|ω|, 1) distribution un-der the null. As we show in Figure 6 (left), they further improve it with Clustering and Excess 
+
+thresholding. Lastly, using a model forward pass during detection to estimate the model proba-bilities can further improve detectability by a significant margin over entropy weighting , a prior method that also relies on a forward pass during detection (Figure 6, right). For Private geometries , which use a different class of de-tectors, we defer their full evaluation to App. A. 4.3 INDEPENDENT EVALUATION OF THE BEST DIRECTIONS 
+
+Next, we highlight two state-of-the-art schemes proposed by the agents that outperform prior works: ConcordMark as a robust watermarking scheme, and RotationFirst as a scheme with a strong quality focus. We give an in-depth description of both schemes and provide additional evaluation in App. H. 
+
+Experimental setup To mitigate overfitting due to the autoresearch process, we use a different evaluation protocol detailed in App. D.5. Notably, we generate 1000 replies to English prompts, and 
+
+1000 replies to Chinese prompts from WildChat (Zhao et al., 2024a), use D EEP SEEK -V4 F LASH 
+
+for backtranslation and paraphrasing, and evaluate replies generated by both L LAMA -3.1-8B and QWEN 3.8-27B. Lastly, we pool the results over 5 watermarking seeds and report the worst result. For consistency with the baselines, we do not apply the soundness given a key correction (Sec. 3.2). 
+
+Main results Table 1 compares the two selected agent schemes with the three baselines. We bold the results from the agent schemes that are better than the best baseline, and highlight the best results of each column in green. Each cell reports the metrics on English text (left) and Chinese text (right). For each scheme, high means the detector requires a model forward pass. We see that ConcordMark (high) is Pareto better than all the baselines: on almost all metrics, it outperforms the best baseline. RotationFirst significantly outperforms all schemes on all quality metrics: its diversity is very close to the unwatermarked model. At the same time, it keeps relatively strong detection and robustness metrics making this scheme very suitable for model providers that desire strong watermarking with the smallest impact on quality. Importantly, for both agent schemes, the results from the autoresearch evaluation (Figure 2) transfer to new settings with different prompts and attackers. This suggests that autoresearch, with adequate verification, is a reliable method for improving watermarking schemes. 
+
+## 5 CONCLUSION AND LIMITATIONS 
+
+In this work, we enable for the first time autoresearch for LLM watermarking with rigorous validity criteria (Sec. 3.2), statistical tests to verify them (Sec. 3.3), and a tailored harness (Sec. 3.4). We show 9Preprint that frontier agents go beyond hyperparameter tuning to introduce novel ideas (Sec. 4.2), with two of their schemes, ConcordMark and RotationFirst, outperforming prior work on held-out data (Sec. 4.3). 
+
+Limitations In autoresearch, the key challenge is to build powerful verification that agents can’t exploit, and that faithfully transcribes the desired property (i.e., in our case a watermark that is robust and with controlled false positives given a key). For watermarking, there are many desirable properties we did not include in this work e.g., security, radioactivity, applicability to open-weights setting, or extension to the multibit setting. We believe that, future research, should not focus on establishing new schemes but rather on how to build verifier and evaluation for those properties. LLM U SAGE 
+
+The goal of this work is to enable coding agents to discover novel and better watermarking schemes: hence, all the new watermark proposals in this work have been designed by fully autonomous coding agents. Yet, organizing the schemes into individual components and understanding their impact on watermark properties have required significant manual efforts. Notably, all ablation evaluations of the components have been designed by humans and executed with AI-assistance. The autoresearch harness used in this work has been coded with AI-assistance. The main paper has been written by hand, with AI-assistance for polishing the writing and the visuals. The proofs have been LLM-generated, then proofread and edited by humans. ETHICS STATEMENT 
+
+This paper enables autonomous agents to discover new LLM watermarking schemes, which we believe has a positive societal impact: better watermarks support the provenance, auditing, and mitigation of large-scale misuse of AI-generated text. While our verification tests screen for schemes with unsound false positive rates (Sec. 3.3), LLM watermarks should not be used as sole evidence in high-stakes decisions. We also acknowledge that publicly disclosing new schemes, along with a detailled component-level analysis, may facilitate targeted attacks on them. Yet we argue that the benefits of advancing research in this area clearly outweigh the risks. REPRODUCIBILITY STATEMENT 
+
+Our autoresearch harness is described in Sec. 3.4, and all details of the verification, the evaluation, the research agents (including their versions and reasoning efforts), and the baselines are given in App. D, with the full agent prompt in App. J. We fully specify the agent-generated components in App. A and the two selected schemes, ConcordMark and RotationFirst, in App. H. We also release our code, including the harness, the watermarking library, each agent final environment, a standalone implementation of all described components, and a standalone optimized implementation for ConcordMark and RotationFirst. 10 Preprint 
+
+## REFERENCES 
+
+Scott Aaronson. Watermarking of large language models. Talk at the Simons Institute for the Theory of Computing, August 2023. URL https://simons.berkeley.edu/talks/ scott-aaronson-ut-austin-openai-2023-08-17 .Anthropic. How Claude’s text watermark works. Anthropic News, August 2026. URL https: //www.anthropic.com/news/claude-text-watermark .Dara Bahri and John Wieting. A watermark for black-box language models. Transactions on Machine Learning Research , 2026. URL https://arxiv.org/abs/2410.02099 .Jun Shern Chan, Neil Chowdhury, Oliver Jaffe, James Aung, Dane Sherburn, Evan Mays, Giulio Starace, Kevin Liu, Leon Maksin, Tejal Patwardhan, Lilian Weng, and Aleksander M ˛ adry. MLE-bench: Evaluating machine learning agents on machine learning engineering. In The Thirteenth International Conference on Learning Representations , 2025. URL https://openreview.net/ forum?id=6s5uXNWGIh .Ruibo Chen, Yihan Wu, Junfeng Guo, and Heng Huang. Improved unbiased watermark for large language models. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 20587–20601, Vienna, Austria, July 2025. Association for Computational Linguistics. doi: 10.18653/v1/2025.acl-long.1005. URL https://aclanthology. org/2025.acl-long.1005/ .Sumanth Dathathri, Abigail See, Sumedh Ghaisas, Po-Sen Huang, Rob McAdam, Johannes Welbl, Vandana Bachani, Alex Kaskasoli, Robert Stanforth, Tatiana Matejovicova, Jamie Hayes, Nidhi Vyas, Majd Al Merey, Jonah Brown-Cohen, Rudy Bunel, Borja Balle, Taylan Cemgil, Zahra Ahmed, Kitty Stacpoole, Ilia Shumailov, Ciprian Baetu, Sven Gowal, Demis Hassabis, and Pushmeet Kohli. Scalable watermarking for identifying large language model outputs. Nature , 634 (8035):818–823, October 2024. doi: 10.1038/s41586-024-08025-4. URL https://doi.org/10. 1038/s41586-024-08025-4 .Robert B. Davies. Hypothesis testing when a nuisance parameter is present only under the alternative. 
+
+Biometrika , 74(1):33–43, 1987. doi: 10.1093/biomet/74.1.33. European Parliament and Council of the European Union. Regulation (EU) 2024/1689 of the european parliament and of the council of 13 june 2024 laying down harmonised rules on artificial intelligence and amending regulations (EC) no 300/2008, (EU) no 167/2013, (EU) no 168/2013, (EU) 2018/858, (EU) 2018/1139 and (EU) 2019/2144 and directives 2014/90/EU, (EU) 2016/797 and (EU) 2020/1828 (Artificial Intelligence Act). Official Journal of the European Union, June 2024. URL https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng .Angela Fan, Yacine Jernite, Ethan Perez, David Grangier, Jason Weston, and Michael Auli. ELI5: Long form question answering. In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , pp. 3558–3567, Florence, Italy, July 2019. Association for Computa-tional Linguistics. doi: 10.18653/v1/P19-1346. URL https://aclanthology.org/P19-1346/ .Pierre Fernandez, Antoine Chaffin, Karim Tit, Vivien Chappelier, and Teddy Furon. Three bricks to consolidate watermarks for large language models. In 2023 IEEE International Workshop on Information Forensics and Security (WIFS) , pp. 1–6. IEEE, December 2023. doi: 10.1109/ WIFS58808.2023.10374576. URL https://doi.org/10.1109/WIFS58808.2023.10374576 .Thibaud Gloaguen, Robin Staab, Nikola Jovanovi´ c, and Martin Vechev. A unified framework for LLM watermarks. arXiv preprint arXiv:2602.06754 , February 2026. doi: 10.48550/arXiv.2602.06754. URL https://arxiv.org/abs/2602.06754 .Nikola Jovanovi´ c, Robin Staab, and Martin Vechev. Watermark stealing in large language models. In 
+
+Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pp. 22570–22593. PMLR, 2024. URL https://proceedings. mlr.press/v235/jovanovic24a.html .Andrej Karpathy. autoresearch: AI agents running research on single-GPU nanochat training auto-matically. GitHub repository, March 2026. URL https://github.com/karpathy/autoresearch .11 Preprint John Kirchenbauer, Jonas Geiping, Yuxin Wen, Jonathan Katz, Ian Miers, and Tom Goldstein. A watermark for large language models. In Proceedings of the 40th International Conference on Machine Learning , volume 202 of Proceedings of Machine Learning Research , pp. 17061–17084. PMLR, 2023. URL https://proceedings.mlr.press/v202/kirchenbauer23a.html .John Kirchenbauer, Jonas Geiping, Yuxin Wen, Manli Shu, Khalid Saifullah, Kezhi Kong, Kasun Fernando, Aniruddha Saha, Micah Goldblum, and Tom Goldstein. On the reliability of watermarks for large language models. In The Twelfth International Conference on Learning Representations ,pp. 49660–49704, 2024. URL https://openreview.net/forum?id=DEJIDCmWOz .Rohith Kuditipudi, John Thickstun, Tatsunori Hashimoto, and Percy Liang. Robust distortion-free watermarks for language models. Transactions on Machine Learning Research , 2024. URL 
+
+> https://openreview.net/forum?id=FpaCL1MO2C
+
+.Robert Tjarko Lange, Yuki Imajuku, and Edoardo Cetin. ShinkaEvolve: Towards open-ended and sample-efficient program evolution. In The Fourteenth International Conference on Learning Representations , 2026. URL https://arxiv.org/abs/2509.19349 .Taehyun Lee, Seokhee Hong, Jaewoo Ahn, Ilgee Hong, Hwaran Lee, Sangdoo Yun, Jamin Shin, and Gunhee Kim. Who wrote this code? watermarking for code generation. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) ,pp. 4890–4911, Bangkok, Thailand, August 2024. Association for Computational Linguistics. doi: 10.18653/v1/2024.acl-long.268. URL https://aclanthology.org/2024.acl-long.268/ .Chris Lu, Samuel Holt, Claudio Fanconi, Alex J. Chan, Jakob Foerster, Mihaela van der Schaar, and Robert Tjarko Lange. Discovering preference optimization algorithms with and for large language models. In Advances in Neural Information Processing Systems , volume 37, 2024. URL 
+
+> https://arxiv.org/abs/2406.08414
+
+.Chris Lu, Cong Lu, Robert Tjarko Lange, Yutaro Yamada, Shengran Hu, Jakob Foerster, David Ha, and Jeff Clune. Towards end-to-end automation of AI research. Nature , 651:914–919, March 2026. doi: 10.1038/s41586-026-10265-5. URL https://doi.org/10.1038/s41586-026-10265-5 .Alexander Novikov, Ngân V˜ u, Marvin Eisenberger, Emilien Dupont, Po-Sen Huang, Adam Zsolt Wag-ner, Sergey Shirobokov, Borislav Kozlovskii, Francisco J. R. Ruiz, Abbas Mehrabian, M. Pawan Kumar, Abigail See, Swarat Chaudhuri, George Holland, Alex Davies, Sebastian Nowozin, Push-meet Kohli, and Matej Balog. Alphaevolve: A coding agent for scientific and algorithmic discovery. 
+
+arXiv preprint arXiv:2506.13131 , 2025. OpenAI. Finite time blowup for the euler equation, September 2026. URL https://cdn.openai. com/pdf/315b36cd-ec98-4023-8342-93345194ece1/euler.pdf . Accessed: 2026-09-22. Leyi Pan, Aiwei Liu, Zhiwei He, Zitian Gao, Xuandong Zhao, Yijian Lu, Binglin Zhou, Shuliang Liu, Xuming Hu, Lijie Wen, Irwin King, and Philip S. Yu. MarkLLM: An open-source toolkit for LLM watermarking. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , pp. 61–71, Miami, Florida, USA, November 2024. Association for Computational Linguistics. doi: 10.18653/v1/2024.emnlp-demo.7. URL 
+
+> https://aclanthology.org/2024.emnlp-demo.7/
+
+.Julien Piet, Chawin Sitawarin, Vivian Fang, Norman Mu, and David Wagner. Mark my words: Analyzing and evaluating language model watermarks. In 2025 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML) , pp. 68–91. IEEE, April 2025. doi: 10.1109/SaTML64287. 2025.00012. URL https://doi.org/10.1109/SaTML64287.2025.00012 .Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J. Liu. Exploring the limits of transfer learning with a unified text-to-text transformer. Journal of Machine Learning Research , 21(140):1–67, 2020. Bernardino Romera-Paredes, Mohammadamin Barekatain, Alexander Novikov, Matej Balog, M. Pawan Kumar, Emilien Dupont, Francisco J. R. Ruiz, Jordan S. Ellenberg, Pengming Wang, Omar Fawzi, Pushmeet Kohli, and Alhussein Fawzi. Mathematical discoveries from program search with large language models. Nature , 625(7995):468–475, 2024. doi: 10.1038/s41586-023-06924-6. URL https://doi.org/10.1038/s41586-023-06924-6 .12 Preprint John K. Salmon, Mark A. Moraes, Ron O. Dror, and David E. Shaw. Parallel random numbers: As easy as 1, 2, 3. In Proceedings of the 2011 International Conference for High Performance Computing, Networking, Storage and Analysis , SC ’11, pp. 1–12. ACM, November 2011. doi: 10.1145/2063384.2063405. URL https://doi.org/10.1145/2063384.2063405 .Tom Sander, Hongyan Chang, Tomáš Souˇ cek, Tuan Tran, Valeriu Lacatusu, Sylvestre-Alvise Rebuffi, Alexandre Mourachko, Surya Parimi, Christophe Ropers, Rashel Moritz, Vanessa Stark, Hady Elsahar, and Pierre Fernandez. TextSeal: A localized LLM watermark for provenance & distillation protection. arXiv preprint arXiv:2605.12456 , May 2026. doi: 10.48550/arXiv.2605.12456. URL 
+
+> https://arxiv.org/abs/2605.12456
+
+.Shangqing Tu, Yuliang Sun, Yushi Bai, Jifan Yu, Lei Hou, and Juanzi Li. WaterBench: Towards holistic evaluation of watermarks for large language models. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 1517–1542, Bangkok, Thailand, August 2024. Association for Computational Linguistics. doi: 10.18653/v1/ 2024.acl-long.83. URL https://aclanthology.org/2024.acl-long.83/ .Hjalmar Wijk, Tao Roa Lin, Joel Becker, Sami Jawhar, Neev Parikh, Thomas Broadley, Lawrence Chan, Michael Chen, Joshua M. Clymer, Jai Dhyani, Elena Ericheva, Katharyn Garcia, Brian Goodrich, Nikola Jurkovic, Megan Kinniment, Aron Lajko, Seraphina Nix, Lucas Jun Koba Sato, William Saunders, Maksym Taran, Ben West, and Elizabeth Barnes. RE-bench: Evaluating frontier AI R&D capabilities of language model agents against human experts. In Proceedings of the 42nd International Conference on Machine Learning , volume 267 of Proceedings of Machine Learning Research , pp. 66772–66832. PMLR, 2025. URL https://proceedings.mlr.press/ v267/wijk25a.html .Yihan Wu, Zhengmian Hu, Junfeng Guo, Hongyang Zhang, and Heng Huang. A resilient and accessible distribution-preserving watermark for large language models. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pp. 53443–53470. PMLR, 2024. URL https://proceedings.mlr.press/v235/wu24h. html .Wenting Zhao, Xiang Ren, Jack Hessel, Claire Cardie, Yejin Choi, and Yuntian Deng. Wildchat: 1m chatGPT interaction logs in the wild. In The Twelfth International Conference on Learning Representations , 2024a. URL https://openreview.net/forum?id=Bl8u7ZRlbM .Xuandong Zhao, Prabhanjan Ananth, Lei Li, and Yu-Xiang Wang. Provable robust watermarking for AI-generated text. In International Conference on Learning Representations , volume 2024, pp. 43738–43772, 2024b. URL https://proceedings.iclr.cc/paper_files/paper/2024/file/ beae9ed5316bcc48e616754c06c11875-Paper-Conference.pdf .Ziqian Zhong, Aditi Raghunathan, and Nicholas Carlini. ImpossibleBench: Measuring LLMs’ propensity of exploiting test cases. In The Fourteenth International Conference on Learning Representations , 2026. URL https://arxiv.org/abs/2510.20270 .13 Preprint 
+
+## A BREAKDOWN OF ALL GENERATED COMPONENTS 
+
+In this section, we explain each of the watermarking components proposed by the research agents and visualized in Figure 3. In App. A.1, we explain in depth the decomposition of watermarks in 5 components (watermark unit, context seeding, scores, logits transformation, and detectors), and detail the notation used throughout. In the remaining subsections, we follow the architecture of Figure 3 and go through each component one by one: the watermark unit (App. A.2), context seeding (App. A.3), the watermark score (App. A.4), the logits transformation (App. A.5), and detection (App. A.6). A.1 PRELIMINARIES AND NOTATION 
+
+Four components We decompose a watermarking scheme into the four components introduced in Sec. 3.1, with the additional concept of watermark unit. 1. Watermark unit is the component on which the watermark is applied: in prior works, it is usually tokens, but agents also proposed to apply watermarks on equivalence classes of tokens. 2. Context seeding hashes the previously generated tokens into a seed that is used, along with the watermark private key, to pseudo-randomly sample the watermarking scores. 3. The watermark score is the pseudo-random score that can be combined with true randomness before being used by the logits transformation. At detection, only the pseudo-random score can be recovered and not the true randomness. 4. The logits transformation combines the score with the model’s next-token distribution to pick the next token, in a way that is distortion-free (Equation (1)). 5. The detector recomputes the pseudo-random scores of a candidate text, aggregates them into a statistic, and returns a p-value. 
+
+Notation Let Σ be the vocabulary and ω ∈ Σ∗ a text, with ωt its tth token and pt ∈ ∆(Σ) the model’s next-token distribution given ω<t . A grouping G : Σ → N maps tokens to units. We write 
+
+u = G(v) for the group of a candidate token v and 
+
+Mt(u) := X
+
+> v∈Σ
+
+pt(v)1{G (v) = u} (8) for its mass under pt. Context seeding maps the context ct (a function of ω<t ) and the private key 
+
+ξ to a seed at. The seed is then used to pseudo-randomly sample a multivariate uniform random variable Uat,u ∼ U ([0 , 1]) for every token unit u. Because the watermark score may add true randomness that is not computable at detection, we use the notation ˜Uat,u for the watermark score mixed with true randomness (and thus used by the logits transformation). The logits transformation selects a group u∗ from ( ˜Uat , p t) and then samples the emitted token inside that group using the residual probability pt(v)/M t(u∗). At detection, the scheme reconstructs the set D of retained (seed, unit) pairs of ω (e.g., after de-duplication of repeated (at, u ) tuples as in Fernandez et al. (2023)), with N := |D|, aggregates them into a statistic S(ω), and reports a p-value P (ω). We write 
+
+Q(N, s ) := Pr[Gamma( N, 1) ≥ s] for the Gamma upper tail. 
+
+Experimental setup We ablate every component against a simple baseline AAR scheme: identity grouping, a two-token context, no private randomness in the score ( ˜U = U ), the Gumbel race , and the scalar Gamma detector of Sec. 4.2. For each ablation, we swap one component (e.g., the Gumbel race with the ResidualRace ) and report the difference in percentage points for our evaluation metrics (Sec. 4). Quality is one minus the average relative distance to the unwatermarked model in perplexity and both Self-BLEU scores. In the bar plots, positive values indicate an improvement, and values in parentheses give the reference quality or TPR@1%FPR. For ablating some component hyperparameters, we may sometime use a different reference (instead of the simple AAR baseline) and specify in the caption when the reference differs from the baseline. A.2 WATERMARK UNIT 
+
+Prior works (Aaronson, 2023; Kirchenbauer et al., 2023; Dathathri et al., 2024; Sander et al., 2026) used a single token as the watermark: G is the identity and Mt = pt.14 Preprint 0 5 10 Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
+−0.3 
+
+−1.8 +9.6 +1.1 +4.2 Lexical grouping 1
+
+Figure 7: Impact of Lexical group compared to identity grouping ( Token ). −50 −25 0 25 50 Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
+−17.0 +35.5 +3.4 
+
+−4.2 +3.2 
+
+−0.3 +0.6 
+
+−15.3 
+
+−7.5 
+
+−14.2 +2.0 
+
+−31.0 
+
+−24.2 
+
+−0.7 
+
+−11.7 
+
+k = 0 k = 1 k = 3 
+
+1
+
+Figure 8: Impact of context length k compared to the two-token baseline ( k = 2 ).   
+
+> Lexical group
+
+Agents replace tokens by classes of a public map G built from the tokenizer and WordNet 3.0: a token is decoded, stripped and lower-cased, and if what remains is an ASCII word of at least three characters it is mapped to the representative of its first WordNet synset. Hence synonyms share a class, which is what makes it robust to substitution: a replacement inside a class leaves both the seed and the observed "token" unchanged. Figure 7 confirms this intuition: Lexical group indeed significantly improves robustness to substitution, and slightly improves backtranslation and paraphrasing robustness as well. However, it significantly lowers deletion robustness, and slightly lowers quality. A.3 CONTEXT SEEDING 
+
+For context seeding, unlike some prior works (Kirchenbauer et al., 2023), we assume the hashing function is without collision: the hash of a context is unique. Because the set of possible contexts is finite, this assumption is achievable in practice. We defer the details of the hashing functions, as well as an analysis of the different hashing functions, to App. G. We also use a per-request watermark cache: if a seed at hashed from the context is repeated, the next token is sampled without watermarking. This is required to guarantee that each individual request is distortion-free.  
+
+> Fixed-length
+
+Prior work hashes the tuple of the k preceding tokens (Kirchenbauer et al., 2023; Sander et al., 2026). In particular, k = 0 is the unigram scheme of Zhao et al. (2024b). As we show in Figure 8, the context size k controls a robustness-quality trade-off: shorter contexts survive more edits but repeat more often which leads to correlation across a corpus of generated texts. Furthermore, at low context, i.e., k = 1 or k = 0 , because we need to de-duplicate (seed, token) pairs at detection, the lack of context diversity lowers the detectability and therefore can counteract the gain in robustness.  
+
+> Unordered
+
+It is the same as Fixed-length context seeding, except that it hashes the set of the k
+
+preceding tokens rather than their tuple (the candidate v is kept separate), so that a transposition of preceding tokens does not change the context. For k ≤ 1, it is identical to Fixed-length . As we show in Figure 9, for k = 2 and k = 3 this change barely affects robustness and slightly improves quality. The agents also proposed an unordered pair variant ( Pair in Table 6) that hashes the set 
+
+{ωt−1, v }, which includes the candidate token itself, rather than the tuple (ωt−1, v ). Compared to the core scheme, it significantly increases robustness but significantly lowers quality (Figure 9). 15 Preprint 0 20 40 Quality 
+
+> (93 / 95%)
+
+Del. 
+
+> (56 / 25%)
+
+Sub. 
+
+> (67 / 42%)
+
+Trsl. 
+
+> (97 / 96%)
+
+Para. 
+
+> (64 / 52%)
+
++0.4 +1.9 +1.7 +0.3 
+
+−1.6 +1.0 
+
+−3.0 +0.4 +0.5 
+
+−2.1 
+
+−8.7 +35.1 +24.6 +2.1 +17.8 Unordered 
+
+k = 2 k = 3 Pair 1
+
+Figure 9: Impact of Unordered context seeding relative to ordered contexts of the same length 
+
+k, and of the unordered pair relative to the core (k = 2 ). Parentheses give the ordered reference percentages for k = 2 / k = 3 , respectively. −20 0 20 40 Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
+−1.4 +17.1 +10.5 +1.4 +6.5 
+
+−10.1 +31.6 +8.8 
+
+−1.3 +6.4 
+
+−13.8 +33.8 +9.2 
+
+−0.3 +7.8 Adaptive length Global + local Global first use 1
+
+Figure 10: Impact of Adaptive length ,  
+
+> Global +local
+
+, and Global first use con-text seeding compared to the fixed two-token context simple baseline. 
+
+Adaptive and global length Rather than fixing k, these variants shorten the context for the tokens that are unlikely to repeat anyway, so that only the positions that need a long context pay for one. 1. Adaptive length : given a classifier rare : Σ → { 0, 1} (here that a token frequency in a fixed corpus is below 0.1% ), if the previous token is rare, hash only that token ( k = 1 ), otherwise hash the full two-token window. In Table 6, we also evaluate it with the Excess detector of App. A.6. 2. Global + local : fix a public set E ⊂ Σ of eligible tokens (the agents used as E the tokens that have a WordNet entry), use unigram (i.e., k = 0 ) if the candidate is in E, and a k-token context otherwise, with k = 2 unless stated otherwise. 3. Global first use refines it by applying unigram to a candidate in E only the first time it appears in the completion, and then uses a two-token context if it appears again. We show in Figure 10 that all those approaches significantly increase the robustness compared to the baseline, but both global variants also significantly degrade quality.  
+
+> Anchored
+
+Let E again be a public token set and let s be the distance from the current token back to the most recent token of E. If s ≤ Smax = 4 , use as context the tuple of that anchor token and the offset s. Otherwise, if s > S max skip the watermark. For the detector, at every token ωt it finds the closest previous anchor and sweeps all permitted distances s ∈ { 0, . . . , S max } adjusting the p-values with Bonferroni correction. Yet, as we show in Figure 11, while intuitively the slot search should buy robustness (editing tokens in between anchor tokens does not change the context), the search is too expensive and this scheme is worse than the baseline on every direction.   
+
+> Suffix cascade
+
+and Tally & ladder These approaches share the same goal: when a context has already been used in the completion, derive a new seed for it instead of skipping the position, so that a short context keeps its robustness without losing detectability. They only differ in how that new seed is built. 16 Preprint −40 −20 0Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
+−1.2 
+
+−17.8 
+
+−45.3 
+
+−26.0 
+
+−34.0 1
+
+Figure 11: Impact of Anchored context seeding with slot search at detection, compared to the baseline. −20 0 20 Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
+−5.6 +21.7 +18.7 +2.5 +11.9 
+
+−21.9 +19.2 +22.4 +2.0 +14.4 
+
+−23.0 +21.1 +13.8 +2.4 +10.2 Cascade Tally Ladder 1
+
+Figure 12: Impact of Suffix cascade , Tally ,and Ladder context seeding compared to a fixed two-token context. 1. Suffix cascade : try suffix lengths in increasing order and use the shortest one that has not already been used in this completion. If every allowed length has been used, skip the watermark. 2. Tally : keep a one-token suffix and hash the previous token, and the number of its earlier occur-rences, so that a repeated context yields a fresh seed. 3. Ladder generalizes both: count every suffix width 1 ≤ w ≤ K, select the shortest width whose count is below a threshold, and hash the width, the suffix, and the count. Counts are capped at 
+
+8192 , beyond which the position falls back to ordinary sampling due to the specifics of the hash function (App. G). Optionally, a floor forces a width of at least 2 when the previous token ID is below 200 (as in ConcordMark, App. H.1), as for most tokenizers low ID tokens tend to be very common (e.g., letters, numers, or punctuations). Unless stated otherwise, we use K = 4 , a threshold of 3, and the floor, and we report all four combinations of K ∈ { 3, 4} with and without the floor in Table 6. Ladder makes almost every position usable at a one- or two-token context, which is why the Ladder is used in ConcordMark (Sec. 4.3). As we find in Figure 12, the Suffix cascade indeed keeps most of the robustness of a short context, with a small quality cost, and unlike k = 1 it improves on all robustness metrics.   
+
+> Last important
+
+and Interleaved Those two schemes belong to the skeleton family (Figure 3). The skeleton family splits the vocabulary using a fixed important/filler tokens classifier and gives the two streams separate histories. 1. Last important ignores filler tokens when computing the context and uses the last important token as context, so that edits to filler tokens do not move the context of the next content word. 2. Interleaved uses when sampling an important token the last important token as context, and when sampling a filler token uses the last two previous filler tokens as context. Both context seedings must be changed together with their logits transformation which is why we defer the evaluation to App. A.5. A.4 WATERMARK SCORE 
+
+17 Preprint 94 96 98 100 010 20 30 40 50 TPR@1%FPR (%)  →
+
+Deletion 94 96 98 100 020 40 60 Substitution 94 96 98 100 010 20 30 40 50 60 Paraphrasing Quality (inv. distance to unwatermarked) →
+
+Copula Copula + filter Private sampling Channels Gaussian direction Bounded geometry Tail indicator Quantile / wheel 1
+
+Figure 14: Quality-robustness trade-offs for the different watermark scores. −2 0 2Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
++1.4 
+
+−2.2 +0.6 
+
+−0.9 
+
+−2.5 1
+
+Figure 13: Impact of the entropy Prelude .  
+
+> Prelude Prelude
+
+is the only component that can be composed with any other. It consists of sampling ordinarily at the start of the completion until the accu-mulated entropy H2(pt) = − log P 
+
+> v
+
+pt(v)2 of the first generated tokens reaches h nats, or after T to-kens, whichever comes first. In practice, agents use 
+
+h = 14 and T = 24 . For detection, we keep all tokens, including those of the prelude, as the detector cannot recompute the entropy without the model. We compare Prelude to the no-Prelude baseline and find in Figure 13 that it indeed improves quality with a mild robustness cost.     
+
+> Gaussian copula Gaussian copula
+
+draws a fresh private normal ηt,u ∼ N (0 , 1) at every position and sets ˜Ut,u = Φ( ρΦ−1(Uat,u ) + p1 − ρ2 ηt,u ). The goal is to inject true randomness into the watermark score to increase quality at the cost of detectability. At ρ = 0 the scheme is unwatermarked, at ρ = 1 it uses only the watermarked pseudo-random scores. As we show in Sec. 4.2, it is a more effective way of improving quality via true randomness than prior works. The Gaussian copula can be further refined with a common pair filter: we replace ρ with a function of the current context, ρt,u = ρ 1{(at, u ) /∈ F} , where F is the set of the 10 ,000 most frequent (seed, token) pairs of a public corpus (in this case, the first 20 ,000 texts of the public ELI5 corpus, counting each pair at most once per text). The goal is to further increase the quality with a better detectability trade-off. Yet, as we show in Figure 15, using the simpler ρ ∈ [0 , 1] is better in practice.   
+
+> Tail indicator
+
+For each unit u, set Bu = max(1 , ⌊1/ max( Mt(u), 2−40 )⌋) and bu = 1 − 1/B u,draw a private Vu ∼ U ([0 , 1]) , and let ˜Ut,u = bu + Vu/B u if Uat,u ≥ bu and buVu otherwise. The construction keeps ˜U uniform, so the scheme stays distortion-free, and the detector still reads the full 
+
+U . However, as we show in Figure 14, it has a significantly worse quality-robustness trade-off than e.g., the Gaussian copula .18 Preprint −5 0 5Quality 
+
+> (96%)
+
+Del. 
+
+> (51%)
+
+Sub. 
+
+> (60%)
+
+Trsl. 
+
+> (96%)
+
+Para. 
+
+> (60%)
+
++0.8 
+
+−1.0 +3.1 +0.3 
+
+−3.9 +1.3 
+
+−5.3 
+
+−1.9 +0.8 +0.3 
+
+L = 4 
+
+Latin Antithetic 
+
+−5 0 5Quality 
+
+> (98%)
+
+Del. 
+
+> (39%)
+
+Sub. 
+
+> (56%)
+
+Trsl. 
+
+> (96%)
+
+Para. 
+
+> (48%)
+
++1.2 +0.9 
+
+−4.8 
+
+−0.2 +2.1 +0.9 +0.9 
+
+−4.3 
+
+−2.0 +2.2 
+
+L = 16 
+
+Latin Stratified 1
+
+Figure 16: Impact of correlated Channel variants compared to L independent Channels , keeping the channel count and Bonferroni correction fixed. Parentheses give the independent-channel refer-ence percentages in each panel; bars show differences in percentage points. −10 −5 0 5Quality 
+
+> (98 / 97 / 93%)
+
+Del. 
+
+> (34 / 44 / 56%)
+
+Sub. 
+
+> (42 / 57 / 67%)
+
+Trsl. 
+
+> (89 / 94 / 97%)
+
+Para. 
+
+> (45 / 54 / 64%)
+
++0.4 
+
+−1.5 
+
+−2.7 +1.3 
+
+−1.6 +0.9 
+
+−0.6 
+
+−7.6 
+
+−0.3 
+
+−1.2 +0.8 +0.9 
+
+−2.7 +0.2 
+
+−1.1 Common-pair filter 
+
+ρ = 0 .8 ρ = 0 .9 ρ = 1 
+
+1
+
+Figure 15: Impact of common-pair filtering compared to the unfiltered Gaussian copula 
+
+at the same correlation ρ. Parentheses give the unfiltered reference percentages for ρ = 0 .8 /
+
+ρ = 0 .9 / ρ = 1 , respectively.   
+
+> Private sampling
+
+This is the naive idea: with probability r, ignore the watermark at this position and sample from pt and otherwise use the keyed sam-pler. However, as we show in Figure 14, it has a significantly worse quality-robustness trade-off than e.g., the Gaussian copula .  
+
+> Channels Channels
+
+maintain L independent keyed fields Uj,a,u and draw a single channel J ∼U{ 0, . . . , L − 1} per request, using ˜Ut,u = UJ,a t,u 
+
+throughout the completion. The goal is the same as the Gaussian copula , spending private randomness on quality, except that here the randomness is discrete: two requests that share a prompt and a context take different fields. The cost is paid at detection, where the detector runs all L fields and corrects its p-value by a Bonferroni factor L. However, as we show in Figure 14, that factor dominates quickly: quality sat-urates around L = 32 while the robustness to every attack keeps falling, so only small L are useful. For adjusting the p-values to account for the L tests, we can either use Bonferroni or Šidák Indeed, the L
+
+per-channel p-values are independent under the null, so the Šidák correction 1 − (1 − min j Pj )L is valid and strictly tighter than the Bonferroni factor L, and the submissions use both. Yet, we observe no difference in practice (Table 9).  
+
+> Channels
+
+can be further refined by correlating the L fields, so that the request-level choice costs less detectability. 1. Latin channels derive them from a single base uniform by rotation, Uj,a,u = ( Ua,u +j/L ) mod 1 .2. Antithetic channels work only for schemes that use normal scores X = Φ −1(Uj,a,u ), and pair each keyed normal X with −X.19 Preprint −30 −20 −10 0 10 Quality 
+
+> (95%)
+
+Del. 
+
+> (36%)
+
+Sub. 
+
+> (50%)
+
+Trsl. 
+
+> (95%)
+
+Para. 
+
+> (52%)
+
++3.6 
+
+−8.1 
+
+−8.5 
+
+−2.8 
+
+−5.9 +3.7 
+
+−14.9 
+
+−18.2 
+
+−5.8 
+
+−14.9 +4.3 
+
+−21.5 
+
+−25.5 
+
+−12.3 
+
+−20.4 
+
+d = 2 d = 4 d = 8 
+
+1
+
+Figure 17: Impact of the Gaussian direction 
+
+dimension d, compared to d = 1 .−40 −20 0Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
++5.5 
+
+−27.3 
+
+−25.7 
+
+−6.7 
+
+−20.9 +6.1 
+
+−25.7 
+
+−25.6 
+
+−6.3 
+
+−19.1 +5.6 
+
+−32.0 
+
+−32.5 
+
+−8.6 
+
+−25.5 +5.8 
+
+−30.8 
+
+−28.1 
+
+−7.5 
+
+−25.3 Signed sphere S2
+
+Unoriented axis Complex ray C3
+
+Rotation S3
+
+1
+
+Figure 18: Impact of the bounded Spherical 
+
+geometries compared to the baseline. 3. Stratified channels use a keyed permutation σa,u and keyed jitters, Uj,a,u = ( σa,u (j) + 
+
+υj,a,u )/L .All three keep the same detector and use only Bonferroni correction (Šidák is no longer valid due to the dependence between tests), so Figure 16 compares each against independent channels at the same L. Yet, none of the three is a reliable improvement: the differences are within a few points everywhere and change sign across attacks. We therefore suggest using the simpler version with independent keys, which also benefits from the more powerful Šidák correction.   
+
+> Gaussian direction
+
+This is the first of the private-geometry scores (Figure 3), and it generalizes  
+
+> Channels
+
+from a discrete choice to a continuous one. We use the context seed and watermark private key to sample a multivariate Gaussian Zat,u ∼ N (0 , I d), and per request we draw a private unit direction A ∈ Sd−1 once, used for the whole completion: 
+
+˜Uat,u = Φ( A · Zat,u ). (9) Hence, two different requests (even with the same prompt) will have different directions, hence different watermark scores and a higher diversity. As we show in Figure 17, increasing the dimension 
+
+d significantly improves the quality at the cost of detectability, and thus robustness.  
+
+> Spherical
+
+This is a similar idea to the Gaussian direction , but on compact spaces. 1. Signed sphere draws Zat,u ∼ U (S2) and A ∈ S2, with ˜Uat,u = (1 + A · Zat,u )/2.
+
+2. Unoriented axis draws Zat,u ∼ U (S2) and A ∈ S2, with ˜Uat,u = |A · Zat,u |.
+
+3. Complex ray draws Zat,u ∼ U (S3) and A unit vectors of C3 modulo phase with ˜Uat,u =
+
+|A∗Zat,u |2(2 − | A∗Zat,u |2).
+
+20 Preprint −50 0Quality 
+
+> (93%)
+
+Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
++5.7 
+
+−40.2 
+
+−46.2 
+
+−23.9 
+
+−35.2 +3.9 
+
+−23.1 
+
+−23.2 
+
+−4.1 
+
+−18.4 +6.1 
+
+−53.4 
+
+−61.1 
+
+−60.1 
+
+−55.8 +2.3 
+
+−52.4 
+
+−59.9 
+
+−53.0 
+
+−52.5 BandRace PoolRace MomentBridge QuantileRace 
+
+−50 0+6.6 
+
+−41.7 
+
+−40.9 
+
+−13.5 
+
+−33.3 +5.4 
+
+−33.5 
+
+−34.5 
+
+−9.7 
+
+−26.4 +5.1 
+
+−36.7 
+
+−36.6 
+
+−10.2 
+
+−27.2 +6.2 
+
+−34.3 
+
+−33.0 
+
+−9.2 
+
+−23.4 Transport K = 32 
+
+Transport K = 128 
+
+Quota K = 32 
+
+Quota K = 128 
+
+−50 0
+
+−5.6 +6.7 +5.8 +1.3 +6.0 +5.5 
+
+−2.2 
+
+−41.1 
+
+−13.2 
+
+−18.5 +4.1 
+
+−6.7 
+
+−25.1 
+
+−9.0 
+
+−16.6 ResidualRace Content gate Interleaved gate 1
+
+Figure 19: Impact of logits transformations compared to the Gumbel race baseline. 4. Rotation draws Zat,u ∼ U (S3) and A is a unit quaternion with ˜Uat,u = F (|A · Zat,u |), where 
+
+F (r) = 2 
+
+> π
+
+[arcsin r + r√1 − r2].Figure 18 evaluates all four (using their corresponding detectors) compared to the simple baseline. We find that they all trade off quality for detectability and that Rotation has the most favorable trade-offs. Because the Gaussian direction and the spherical geometries only change the score ˜U ,they can be combined with any logits transformation: in Table 7, we evaluate each of them both with the Gumbel race and with the ResidualRace (App. A.5).  
+
+> Wheel
+
+Draw a keyed offset Uat and a per-request random rotation φ ∼ U ([0 , 1]) , and feed ˜Uat,u =(Uat,u + φ) mod 1 to the QuantileRace transformation of App. A.5. It is the continuous limit of the  
+
+> Latin
+
+channels of Figure 16: the rotation φ is drawn from the continuous circle rather than from L
+
+evenly spaced angles. It requires the rotation-invariant detector of App. A.6. A.5 LOGITS TRANSFORMATION   
+
+> Gumbel race
+
+This is the transformation of Aaronson (2023), which we rewrite here with the group notation for clarity: 
+
+Gt,u = − log( − log ˜Ut,u ), u∗ = arg max  
+
+> u
+
+[log Mt(u) + Gt,u ] , (10) after which the token is drawn inside u∗ with the residual probability pt(v)/M t(u∗). By the Gumbel-max trick, u∗ has distribution Mt in expectation over the key, so the scheme is distortion-free. Equivalently, it is an exponential race: u∗ minimizes − log ˜Ut,u /M t(u). 
+
+> BandRace
+
+Partition the groups into bands whose masses differ by less than a factor of four, 
+
+Bt,b = {u : 4 b ≤ Mt, max /M t(u) < 4b+1 },
+
+21 Preprint pick a band randomly with probability equal to its total mass, and run the Gumbel race inside it. This increases quality as the choice of the band is truly random, but lowers the detectability (Figure 19).  
+
+> PoolRace
+
+It is the black-box equivalent of the Gumbel race (i.e., it is an approximation of the   
+
+> Gumbel race
+
+that does not require access to the logits), similar to what has been proposed in Bahri & Wieting (2026): draw K = 16 tokens Vi independently from pt, let Nu count the proposals in group 
+
+u, and pick 
+
+u∗ = arg min 
+
+> u:Nu>0
+
+− log ˜Ut,u 
+
+Nu
+
+. (11) As we see in Figure 19, this variant slightly improves quality because the candidates are drawn with true randomness, but hurts detectability.  
+
+> MomentBridge
+
+The closest equivalent to this scheme in the literature is SynthID (Dathathri et al., 2024), where the watermark distribution is refined iteratively using the watermark keyed scores. Let K ∈ N be a scheme parameter. Start with the weights w(0)  
+
+> u
+
+= Mt(u) and the fixed costs 
+
+cu = − log Mt(u). Let Xt,u = Φ −1( ˜Ut,u ) be the normal watermark score. For i = 1 , . . . , K ,sample random Gaussians ηi,u and compute: 
+
+zi,u = Xt,u 
+
+√K + ηi,u − 1
+
+K
+
+> K
+
+X
+
+> ℓ=1
+
+ηℓ,u .
+
+Let 
+
+¯ci = X
+
+> u
+
+w(i−1)  
+
+> u
+
+cu, ¯zi = X
+
+> u
+
+w(i−1)  
+
+> u
+
+zi,u ,
+
+we update the weights iteratively with 
+
+w(i) 
+
+> u
+
+= w(i−1) 
+
+> u
+
+
+
+1 + ri,u 
+
+Ai
+
+
+
+,
+
+where Ai = max u:w(i−1)   
+
+> u>0
+
+|ri,u |,
+
+bi =
+
+P 
+
+> u
+
+w(i−1)  
+
+> u
+
+(cu − ¯ci)( zi,u − ¯zi)
+
+P 
+
+> u
+
+w(i−1)  
+
+> u
+
+(cu − ¯ci)2 , and ri,u = zi,u − ¯zi − bi(cu − ¯ci).
+
+The next group is sampled randomly according to the w(K) distribution. Because of the true randomness in ηi,u , this logits transformation trades off quality for detectability. However, as we show in Figure 19, it achieves a relatively poor trade-off.  
+
+> QuantileRace
+
+It replaces the Gumbel race with inverse-CDF selection: order each group (or token) in the vocabulary according to a keyed pseudo-random permutation Rat,u with an interval of length 
+
+Mt(u), and emit the group whose interval contains the watermark score ˜Uat . See Figure 19.  
+
+> TransportRace
+
+and QuotaTransport This is the second black-box family, and the only one that couples the transformation to the Channels . Draw L tokens from the model, compute the keyed score Ej,a t,G(Vi) of every (channel, proposal) pair, and choose the permutation σ∗ maximizing P 
+
+> j
+
+Ej,a t,G(Vσ(j)). QuotaTransport stratifies the proposal pool before the same assignment, drawing one proposal from each of the L mass intervals (i + W )/L for a fresh W ∼ U ([0 , 1]) , so that the pool covers the distribution rather than concentrating on its mode. Both were evaluated at L ∈ { 32 , 128 }
+
+against the Gamma detector with Bonferroni correction. As we see in Figure 19, all four configurations substantially improve quality, but they are less robust than the Gumbel race . 
+
+> ResidualRace
+
+This is the extension of the Gumbel race described in Sec. 4.2. We keep one residual clock Rat,u per (context, group) pair, initialized at − log ˜Uat,u on first use. At each step, we sample the next token according to the exponential race: 
+
+τt = min 
+
+> u
+
+Rat,u 
+
+Mt(u) , u∗ = arg min 
+
+> u
+
+Rat,u 
+
+Mt(u) , Rat,u ← Rat,u − τtMt(u),
+
+22 Preprint −20 −10 0 10 Del. 
+
+> (56%)
+
+Sub. 
+
+> (67%)
+
+Trsl. 
+
+> (97%)
+
+Para. 
+
+> (64%)
+
+−16.2 
+
+−16.0 
+
+−2.3 
+
+−10.0 +0.6 +0.1 +0.2 
+
+−0.6 +1.3 +1.5 
+
+−0.1 +0.0 No forward pass Gaussian + Clustering + Excess threshold 
+
+−20 −10 0 10 +2.7 +6.6 +2.3 +8.6 +1.3 +3.3 +1.6 +4.2 +3.7 +9.4 +2.5 +12.4 Forward pass Weighted Gamma Position evidence + Weighting 1
+
+Figure 20: Comparison of scalar detectors without a model forward pass (left) and with a forward pass (right). Quality is omitted because changing the detector does not change generation. and replace the winning token’s score with a fresh exponential random variable: Rat,u ∗ ∼ Exp(1) .Because of the memorylessness property of the exponential, all losing residual exponentials are independent given the past, so the next winning probability is still Mt(u) even when a context recurs and its masses have changed. This is what makes it sound to re-use previous clocks in the exponential race when a context re-occurs (Proposition 5). As we show in Figure 19, it increases detectability at the cost of quality. Yet, as we have shown in Figure 5, adding Gaussian copula noise to the initial clocks recovers the quality cost while keeping the detectability gains.   
+
+> Content gate
+
+and Interleaved gate This is the skeleton family logits transformation, which relies on either the Last important or Interleaved context seeding. Let C be the important groups, and rt = P 
+
+> u∈C
+
+Mt(u). At each step, draw a fresh Bt ∼ Bernoulli( rt).1. The Content gate uses the Gumbel race within the important groups when Bt = 1 and samples conditionally from the fillers otherwise. 2. The Interleaved gate uses a Gumbel race inside whichever group the gate selects (e.g., either the important or filler group), seeding the Gumbel race with the corresponding group context. As we see in Figure 19, the Interleaved gate strictly outperforms the Content gate , though both show limited robustness. A.6 DETECTION 
+
+Scalar Gamma and Gaussian The Gamma detector sums exponential scores, 
+
+S(ω) = X
+
+> t∈D
+
+− log(1 − Uat,ω t ) ∼ Gamma( N, 1) .
+
+The Gaussian detector sums the normal scores instead, 
+
+S(ω) = N −1/2 X
+
+> t∈D
+
+Φ−1(Uat,ω t ) ∼ N (0 , 1) .
+
+Both detectors weight the evidence differently: unlike the Gaussian detector, the Gamma detector gives more weight to the tail of the distribution, i.e., to the tokens with very high watermarking scores. As we see in Figure 20, the global Gamma detector significantly outperforms the Gaussian detector without changing the generation algorithm. 23 Preprint 
+
+Gamma Clustering and Excess threshold Both detectors are refinements over the Gamma detector that group the evidence by context before aggregating. Let H(ω) be the set of unique contexts in ω
+
+and Da(ω) the distinct successors of context a, with ma = |Da(ω)|.1. Clustering calibrates each context separately, and then aggregates the calibrated values, 
+
+Sa(ω) = X
+
+> v∈Da(ω)
+
+− log(1 − Ua,v ),S(ω) = X
+
+> a∈H (ω)
+
+− log Q(ma, S a(ω)) ∼ Gamma( |H (ω)|, 1) ,
+
+so that a context with many successors cannot dominate the statistic on its own. Indeed, during generation, all successors of a given context take part in the same race, which means that two observations of the same race (i.e., context) carry less information than two observations of distinct races. Hence, even though the detection is sound as long as no (context, candidate) pair is repeated, it should account for this loss of information whenever a context is repeated. 2. Excess detection keeps only the part of each − log Q(ma, S a(ω)) above the Exp(1) median, 
+
+S(ω) = X
+
+> a
+
+max( − log Q(ma, S a(ω)) − log 2 , 0) ,
+
+which is zero with probability one half under the null and Exp(1) otherwise, giving the exact tail 
+
+RH (s) = PHb=1 
+
+ Hb
+
+2−H Q(b, s ) for H = |H| . This pushes the idea of the Gamma detector even further: only the tail of the distribution carries reliable watermarking signal. As we see in Figure 20, both approaches indeed slightly increase detection power without changing the generation algorithm.   
+
+> Weighted Gamma
+
+and Position evidence Those two detectors are additions on top of the Gamma 
+
+detector that require a model forward pass at detection, and hence are considerably more costly. Let 
+
+ˆpt be the estimated next-token distribution given ω<t .1. Weighted Gamma weights each exponential score by the observed token’s surprisal quantized to quarter-unit, 
+
+ηt = 1 + 14 round (4 min(max( − log ˆ pt(ωt), 0) , 2.5)) 
+
+and uses as a detection statistic 
+
+S(ω) = X
+
+> t∈D
+
+−ηt log(1 − Uat,ω t ).
+
+The intuition is that a high-entropy position is where the race had a real choice, so its score carries more information than a position where the model was nearly deterministic. 2. Position evidence goes further and reconstructs the race itself from the observed token’s log-probability and those of up to eight competitors. At position t, let Ct contain the retained competitors other than ωt. It then reconstructs the Gumbel race outcome: 
+
+αt,v = min 
+
+
+
+10 4, ˆpt(v)ˆpt(ωt)
+
+
+
+, λt = X
+
+> v∈Ct
+
+αt,v , Wt = 1Uat,v < U αt,v  
+
+> at,ω t
+
+for all v ∈ Ct ,
+
+where Wt indicates whether the observed token wins the reconstructed race. Its exact race-win tail is 
+
+Rt =
+
+
+
+1 − U 1+ λt
+
+> at,ω t
+
+1 + λt
+
+, Wt = 1 ,
+
+1 − Uat,ω t + U 1+ λt
+
+> at,ω t
+
+1 + λt
+
+, Wt = 0 .
+
+Under the null, Pr( Wt = 1 | Uat,ω t = u) = uλt and Rt ∼ Uniform(0 , 1) (Proposition 7). When no competitor survives, λt = 0 and Wt = 1 , giving Rt = 1 − Uat,ω t . Keeping only the first 24 Preprint retained candidate for each context (i.e., deduplicating occurrences of the context), denoted by 
+
+Dpos , avoids reusing the same race and gives the statistic 
+
+S(ω) = X
+
+> t∈Dpos
+
+− log Rt ∼ Gamma( |Dpos |, 1) .
+
+It can also be combined with the weighted variant. As we have shown in Sec. 4.2, and see in Figure 20, the weighted Position evidence detector is significantly more powerful than the versions that do not require a forward pass.  
+
+> Quantile
+
+detector This is the detector matched to QuantileRace . Let Rat,u be the keyed ordering score and ˜Uat the keyed offset, it computes S(ω) = P 
+
+> (a,u )∈D
+
+cos(2 π(Rat,u − Uat )) and calibrates it by Monte Carlo, since the statistic has no closed-form null. −30 −20 −10 0 10 Quality 
+
+> (95%)
+
+Del. 
+
+> (4%)
+
+Sub. 
+
+> (7%)
+
+Trsl. 
+
+> (44%)
+
+Para. 
+
+> (12%)
+
++3.2 
+
+−3.2 
+
+−5.7 
+
+−25.1 
+
+−8.6 1
+
+Figure 21: Impact of the Wheel compared to  
+
+> QuantileRace
+
+with the Quantile detector.    
+
+> Quantile +wheel
+
+This is the rotation-invariant detector required by the Wheel . Form the angles 
+
+Aat,u = 2 π(( Rat,u − Uat ) mod 1) and their resul-tant S = ∥(P 
+
+> D
+
+cos Aat,u , P 
+
+> D
+
+sin Aat,u )∥, then re-port an e-value rather than a p-value. With κ =2plog(2000) /N , the quantity E = I0(κS )/I 0(κ)N
+
+has unit expectation under the null, so P =min(1 , 1/E) is valid. As we see in Figure 21, the  
+
+> Wheel
+
+slightly improves quality but almost entirely removes the robustness of QuantileRace .  
+
+> Predictive Gamma
+
+This variant of the Gamma detec-tor applies to all the private-geometry scores. Enumerate the retained pairs in D as (ai, u i)Ni=1 and write Zi = Zai,u i . Let A0, . . . , A K−1 be a fixed public dictionary of candidate geometries ( K = 128 
+
+for the Signed sphere and Unoriented axis , and K = 512 for Complex ray and Rotation ), with weights wi,j measuring how well Aj explains the scores observed before step i. Let Bi denote the estimate of A formed from the weights wi,j before observing Zi. Write ˜U (B, Z ) for the corresponding geometric score from App. A.4, evaluated with geometry B in place of A, and define 
+
+d(B, Z ) = 1 − ˜U (B, Z ). At step i, compute di = d(Bi, Z i).After scoring Zi, update and normalize the weights as wi+1 ,j ∝ wi,j d(Aj , Z i)−1/2, then compute 
+
+Bi+1 =
+
+PK−1 
+
+> j=0
+
+wi+1 ,j Aj
+
+PK−1 
+
+> j=0
+
+wi+1 ,j Aj
+
+, signed sphere ,
+
+eig max 
+
+
+
+> K−1
+
+X
+
+> j=0
+
+wi+1 ,j Aj A⊤
+
+> j
+
+ , unoriented axis or rotation ,
+
+eig max 
+
+
+
+> K−1
+
+X
+
+> j=0
+
+wi+1 ,j Aj A∗
+
+> j
+
+ , complex ray ,
+
+where eig max returns a unit eigenvector associated with the largest eigenvalue and ∗ denotes the conjugate transpose. Under the null, each fresh score Zi is independent of the earlier scores, and the matching geometric transform makes di uniform on [0 , 1] conditional on them. Thus, 
+
+S(ω) = 
+
+> N
+
+X
+
+> i=1
+
+− log di ∼ Gamma( N, 1) . (12) We prove this in Proposition 6. 25 Preprint −20 −10 0Del. 
+
+> (33%)
+
+Sub. 
+
+> (47%)
+
+Trsl. 
+
+> (96%)
+
+Para. 
+
+> (49%)
+
+−14.4 
+
+−20.3 
+
+−5.0 
+
+−12.2 
+
+−11.2 
+
+−15.7 
+
+−6.9 
+
+−12.1 
+
+−8.8 
+
+−12.0 
+
+−3.5 
+
+−8.6 
+
+−0.9 
+
+−4.1 
+
+−1.7 
+
+−5.2 Resultant length Spherical caps Length + caps Anchor distance 1
+
+Figure 22: Comparison of Signed sphere de-tectors on the same generated texts. Bars show the TPR@1%FPR difference to Predictive Gamma in percentage points. 0 10 20 Del. 
+
+> (36/28/21/15%)
+
+Sub. 
+
+> (50/41/31/24%)
+
+Trsl. 
+
+> (95/92/89/83%)
+
+Para. 
+
+> (52/46/37/31%)
+
++13.6 +15.0 +1.9 +9.6 +7.5 +7.9 +1.1 +5.3 +14.6 +14.0 +3.5 +10.4 +2.4 +3.3 
+
+−0.5 +2.6 +1.3 
+
+−0.1 
+
+−0.6 
+
+−0.4 
+
+d = 1 d = 2 d = 4 d = 8 
+
+Residual energy Circle search 1
+
+Figure 23: TPR differences to Gaussian norm 
+
+for each attack. Colors indicate dimension 
+
+d; solid bars show Residual energy and hatched bars show Circle search (d = 2 ). Parentheses give the Gaussian norm reference TPR@1%FPR for d = 1 /2/4/8, respectively.  
+
+> Resultant length
+
+, Spherical caps , and Anchor distance These detectors test whether the   
+
+> Signed sphere
+
+scores concentrate around a common direction, without knowing the private direction 
+
+A. As above, write Zi = Zai,u i for the scores associated with the N retained pairs in D.1. Resultant length measures the alignment of the scores through R = ∥PNi=1 Zi∥. Aligned scores produce a larger resultant, whereas scores pointing in different directions tend to cancel. The detector compares R with its null distribution for N independent uniform points on S2,making it the spherical analogue of the Gaussian norm detector below. 2. Spherical caps measures local concentration around m = min( N, 16) anchor scores. For each anchor Zj and area fraction q ∈ { 1/16 , 1/8, 1/4}, it counts Cj,q = P 
+
+> i̸=j
+
+1{Zj · Zi ≥ 1 − 2q}.Under the null, conditional on Zj , this count follows Bin( N −1, q ). The detector takes the smallest upper-tail p-value and applies a Bonferroni correction for the 3m anchor–cap combinations. 3. Anchor distance replaces cap membership with a continuous measure of alignment. For each anchor Zj , it computes Sj = P 
+
+> i̸=j
+
+− log((1 − Zj · Zi)/2) , so that scores closer to the anchor contribute more evidence. Under the null, conditional on Zj , the transformed inner products are independent uniforms, giving Sj ∼ Gamma( N − 1, 1) . Searching over all N anchors gives the corrected p-value P (ω) = min {1, N min j Q(N − 1, S j )}.Figure 22 compares these detectors to the Predictive Gamma detector. We find that the Predictive Gamma detector outperforms each of those geometry-specific detectors.  
+
+> Gaussian norm
+
+, Circle search , and Residual energy These detectors apply to the Gaussian direction scores. We write Zi = Zai,u i for the scores associated with the N retained pairs in D.26 Preprint Table 2: Evaluation of invalid agent schemes. Each TPR cell reports the result from the prior harness the scheme was designed in / from our current harness (App. D), whereas quality metrics only come from our current harness. Verified reports whether the scheme passes our current verification.                                              
+
+> Robustness TPR@1 ↑Quality deviation (%) ↓
+> Scheme Clean TPR@1 ↑Deletion Substitution Back-trans. Paraphrase ∆PPL ∆SB-2 ∆SB-3 Verified ConcordMark-v0 100 / 100 86 / 83 99 / 96 99 / 99 91 / 90 5.7 8.9 23 p
+> CathedralMark 100 / 100 100 / 85 100 / 97 100 / 98 99 / 91 9.6 9.2 23 p
+> OverlayMark 100 / 100 100 / 84 100 / 97 100 / 99 100 / 92 7.1 9.4 24 p
+> MeridianMark 99 / 98 88 / 88 62 / 74 94 / 93 77 / 78 65 23 60 p
+
+1. Gaussian norm : rather than searching for the private direction A, it integrates it out through the norm of the summed scores, 
+
+S(ω) = 1
+
+N
+
+X
+
+> i∈D
+
+Zi
+
+> 2
+
+∼ χ2
+
+> d
+
+. (13)   
+
+> Circle search
+
+and Residual energy extend this detector. 2. Circle search searches explicitly for the private direction A in dimension d = 2 . For each candidate direction B(θ) = (cos θ, sin θ), it computes the Gamma statistic 
+
+S(θ) = 
+
+> N
+
+X
+
+> i=1
+
+− log Φ( −B(θ) · Zi),T = max  
+
+> θ∈[0 ,2π)
+
+S(θ).
+
+Under the null, S(θ) ∼ Gamma( N, 1) for each fixed θ, but maximizing over directions requires a correction. The detector uses the continuous-search bound of Davies (1987) (App. I.5) 
+
+P0 = min {1, Q (N, T ) + 2 √πT f N (T )},
+
+where fN is the density of Gamma( N, 1) .3. Residual energy measures the dispersion of the scores around their mean, in addition to their alignment. Let ¯Z = N −1 PNi=1 Zi. The two statistics are 
+
+Smean = N ∥ ¯Z∥2,Sres =
+
+> N
+
+X
+
+> i=1
+
+∥Zi − ¯Z∥2.
+
+Under the null, they are independent, with Smean ∼ χ2 
+
+> d
+
+and Sres ∼ χ2 
+
+> d(N−1)
+
+. For N > 1, let 
+
+pmean and pres be their respective upper-tail p-values. The detector combines them through 
+
+S(ω) = − log pmean − log pres ∼ Gamma(2 , 1) under the null, giving P0 = Q(2 , S (ω)) . For 
+
+N = 1 , it uses only the Gaussian norm statistic. As we see in Figure 23, both extensions improve over Gaussian norm , with Circle search giving the largest gains at d = 2 , but the gains of Residual energy shrink as d grows and vanish at d = 8 .
+
+## B EXAMPLES OF INVALID AUTORESEARCH SCHEMES 
+
+In this section, we present 4 schemes that research agents designed using earlier iterations of our harness, whose verification was weaker than that described in Sec. 3.3. All four schemes appear to outperform prior work, yet they either exploit gaps in the evaluation process or have an abnormally high false positive rate. We re-evaluate them with our harness in Table 2: they show impressive robustness, but none passes our verification. Nevertheless, we believe that some of their ideas are interesting and could be explored in future work. 27 Preprint 
+
+Prior harnesses ConcordMark-v0, CathedralMark, OverlayMark, and MeridianMark come from a harness with neither private verification nor private evaluation (i.e., the agent could see the whole evaluation dataset). Furhtermore, the verifier only checked distortion-freeness and the false positive rate on 5,000 English C4 (Raffel et al., 2020) human texts, using a single fixed watermark key. In particular, it had no check for soundness over the key. Schemes that passed were then evaluated once using the watermark key set in their configuration, i.e., chosen by the agent. 
+
+ConcordMark-v0 Despite its name, ConcordMark-v0 is unrelated to ConcordMark (App. H.1); we simply kept the independently submitted names for both. Its generation is a Gumbel race with a one-token context (i.e., Fixed-length context seeding with k = 1 ). Its detector, however, combines two p-values: Pw, the rank of the statistic under the private key among 1023 decoy keys (i.e., a Monte Carlo estimate of the p-value), and Pc, a p-value derived from a zero-shot LLM-text classifier, specifically an n-gram classifier. The agent trained this classifier to separate its own watermarked texts (clean and attacked) from 2,500 human texts and calibrated it on 2,500 other human texts. A text is flagged as watermarked if Pw ≤ 0.002 or Pc ≤ 0.008 , so that, by the union bound, the false positive rate on human texts is at most 1% . This significantly improved the scheme’s robustness (Table 2). Yet, the classifier learned to recognize LLM-generated text in general rather than watermarked LLM-generated text, e.g., on unwatermarked replies from WildChat, it wrongly flags 31% of the texts as watermarked at a supposedly 1% FPR. This shows the importance of soundness over the key. Indeed, Pc does not depend on the key, so the scheme violates soundness over the key (Equation (2)) (a text flagged by the classifier is flagged under every key). 
+
+CathedralMark CathedralMark is a later scheme from the same run that keeps the detector of ConcordMark-v0 but also steers the generation toward its classifier. Depending on a keyed latent state, it either tilts the next-token distribution toward the tokens that increase the classifier score or applies a compensating tilt, so that, in expectation over the key, the next-token distribution remains pt.Hence, the scheme passes the distortion-freeness test but, like ConcordMark-v0, fails the soundness over the key check. Nonetheless, the idea of steering watermark generation toward easily detectable LLM patterns is particularly robust: it achieves more than 90% robustness to paraphrasing. 
+
+OverlayMark For OverlayMark, a scheme similar to CathedralMark, the agent carefully selected a watermark key that maximized TPR@1%FPR on the evaluation dataset because the evaluation was public. Hence, as shown in Table 2, it achieves 100% paraphrasing robustness in the original harness’s evaluation, but this falls to 92% in our updated harness, which varies the key (we take the worst TPR@1%FPR out of 5 random keys). 
+
+MeridianMark MeridianMark uses a Gumbel race seeded by the last 4 tokens mapped to 32 
+
+semantic clusters. Its detector combines an entropy-weighted Gamma statistic and a tail statistic, and computes a p-value by fitting a Cauchy distribution to the statistics of 1024 decoy keys. It then remaps the p-values: every p-value below 0.0066 is linearly mapped to [0 , 0.001] . The agent chose this threshold just below the fifth-smallest p-value of the public human texts ( 0.0069 ), and documented it explicitly in its submission: “ evaluate never measures human FPR [. . . ] exactly 4 humans fall under it (one-text margin)”. This shows that, if verification is public, the agent can exploit the metric to pass verification incorrectly. This is why our final harness uses private verification. 
+
+Takeaways Each of the above schemes exploits a gap in the harness: a human null corpus that does not cover LLM-generated text (ConcordMark-v0 and CathedralMark), a watermark key chosen by the agent (OverlayMark), or the ability to exploit public verification (MeridianMark). Our harness closes these gaps: our private verification corpus includes LLM-generated replies (App. D.1), we evaluate each scheme with 5 private keys and report the worst result (App. D.2), and our soundness over the key test only requires a single text on which the detector is miscalibrated over the key to reject a scheme, independently of how well the detector is calibrated on any specific human corpus. 
+
+## C STUDYING THE SOUNDNESS GIVEN A KEY 
+
+In this section, we investigate the effect of enforcing soundness given a key (Sec. 3.2). In Figure 2, we plotted the autoresearch trajectories of each agent independently, and as we explain they tackled 28 Preprint 1 8 16 # of submissions 20 40 60 80 Paraphrasing TPR (%)  →
+
+> 19 35 38
+> 45 62 70 75
+
+Guaranteed ( ×20 )1 8 16 # of submissions 
+
+> 41 56 58
+> 64 76 83 86
+
+Empirical 1 8 16 # of submissions 
+
+> (41) (56) 58
+> 64 76 83 86
+
+No correction       
+
+> Astra xhigh Astra low Gemini high Opus 5 TextSeal AAR SynthID
+
+1
+
+Figure 25: Paraphrasing robustness of the submissions of each agent under the three p-value cor-rections, where each dot corresponds to a submission and the solid lines are the best value so far. The baselines are in italic, and a parenthesis means the baseline fails our soundness given a key test without correction. soundness given a key differently which makes the comparison uneven. Namely, GPT-6 A STRA 
+
+multiplies its p-values by 1/β = 20 to be provably sound given a key, O PUS 5 applies smaller safety margins that it calibrated locally, and G EMINI -3.8 F LASH and the baselines apply none. For the baselines in particular, in the settings of Figure 2, neither AAR nor SynthID passes our verification of being sound given a key. 
+
+Experimental setup We rescore the submissions of the four agents from Figure 2 and the three baselines. For each scheme, we remove the explicit outer p-value multiplier chosen by the agent (if any), and keep the rest of the detector unchanged (e.g., the Bonferroni correction over Channels ) so it remains sound over the keys. We then evaluate three settings: • Guaranteed : we multiply the p-value by 1/β = 20 as in Equation (14). By Proposition 1, any scheme that is sound over the key becomes sound given a key. • Empirical : we multiply the p-value by the smallest multiplier κ ≥ 1 such that the scheme passes both soundness tests (Algorithms 2 and 3), with the same thresholds, sample sizes and significance levels as in Sec. 3.3. • No correction : we use the raw p-values ( κ = 1 ) and do not enforce the soundness given a key test. In all settings, the scheme must still be distortion-free and sound over the key. We then measure the paraphrasing TPR@1%FPR with the protocol of Sec. 4. 0.9 1.0 1.2 1.4 Smallest passing multiplier Astra xhigh Astra low Gemini high Opus 5 
+
+TextSeal AAR SynthID 
+
+1
+
+Figure 24: Smallest p-value multiplier pass-ing our soundness tests. 
+
+Baselines fail without correction In Figure 24, we show the smallest multiplier each scheme requires to pass our soundness tests. Among the baselines, only TextSeal passes without correction. With raw p-values, both AAR and SynthID fail the soundness given a key test. Similarly, 23 of the 52 agent submis-sions would fail without their outer multiplier. In fact, both GPT-6 A STRA (low) and O PUS 5 only started adding such multipliers after their first submissions were rejected by our soundness given a key test. 
+
+The guaranteed correction is overly conserva-tive Yet, the multiplier required in practice is much 29 Preprint smaller than 1/β : at most 1.08 for all but one submission. This is expected: if the watermark pseudo-random scores are diverse enough over a corpus given a fixed key, by soundness over the key the expected false-positive rate will converge to be below α which satisfies soundness given a key. This means that correcting with 1/β is overly conservative in many cases, costing significant power. This is why we opted to not correct the schemes in our main evaluation in Sec. 4.1 unless the agents did so in their submissions. 
+
+Impact on robustness We show in Figure 25 the paraphrasing robustness trajectories in each setting. The guaranteed correction costs on average 16 .3 percentage points of paraphrasing TPR compared to the empirical correction, whereas the empirical correction costs at most 2.5 percentage points compared to no correction. Importantly, the conclusions of Sec. 4.1 hold in all three settings: all agents improve over time and outperform all baselines, with O PUS 5 and GPT-6 A STRA (xhigh) reaching the highest robustness. In particular, in the empirical setting, the best GPT-6 A STRA (xhigh) submission reaches 83% paraphrasing TPR, compared to 70% in the guaranteed setting, closing most of the gap with O PUS 5 ( 86% ). 
+
+## D EXPERIMENTAL SETUP 
+
+In this section, we detail the experimental setup used in our evaluation (Sec. 4). Our harness distinguishes two configurations: the public configuration, which is given to the research agent and which it can run locally, and the private configuration, which is only used by the grader when the agent submits a scheme (Sec. 3.4). D.1 WATERMARK VERIFICATION 
+
+To verify each watermarking scheme, we run the three statistical tests from Sec. 3.3 on a corpus of non-watermarked texts. A scheme is valid only if it passes all three tests. 
+
+Corpora The public corpus consists of the answers of the ELI5 (Fan et al., 2019) dataset. The private corpus is a mixture where half of the texts come from WildChat (Zhao et al., 2024a) and the other half from Wikipedia articles, evenly split across 10 languages (English, German, French, Spanish, Chinese, Russian, Arabic, Hindi, Japanese, and Swahili). For WildChat, we take in each conversation the first assistant reply that has at least 512 tokens (i.e., non-watermarked LLM-generated text), across all 86 shards of W ILD CHAT -4.8M. For Wikipedia, we use the first shard of the 2023-11-01 dump of each language. In both corpora, we tokenize the texts with the L LAMA -3.1-8B-I NSTRUCT tokenizer, discard texts shorter than 512 tokens, and truncate the others to their first 512 tokens. Whenever a test samples texts from the corpus, it samples them from this mixture, according to the weights of each component. 
+
+Soundness tests For soundness over the key (Algorithm 2), we sample 200 fixed reference texts from the corpus and draw m keys per text, with m = 10 ,000 in the public configuration and 
+
+m = 20 ,000 in the private one. For soundness given a key (Algorithm 3), we draw 1000 keys and, for each key, sample 20 ,000 fresh texts from the corpus (with replacement). We set the allowed bad-key fraction to β = 5% with a single screening level of 1% . In the private configuration, both tests check the thresholds α ∈ { 0.001 , 0.01 , 0.05 }, whereas the public configuration only checks 
+
+α ∈ { 0.01 , 0.05 }. The two soundness tests share a significance level of 0.001 , split equally between them (i.e., δ = 0 .0005 in Algorithms 2 and 3). 
+
+Distortion-freeness test For distortion-freeness (Algorithm 1), we sample 4 texts from the corpus and use their first 128 tokens as contexts. We compute the next-token distributions of L LAMA -3.2-1B-I NSTRUCT (temperature 1, top-k 50 ) on each context, and average the watermarked distributions over 2048 keys, testing the 16 most likely tokens (and the remaining mass). We set the significance level to δ = 0 .001 . As in Algorithm 1, if the scheme leaves all 4 distributions unchanged, the test is inconclusive and the scheme is rejected. 30 Preprint Table 3: Research agents from Figure 2.                         
+
+> Agent Interface Version Reasoning Submissions GPT-6 A STRA (xhigh) Codex CLI 0.153.3 xhigh 14
+> GPT-6 A STRA (low) Codex CLI 0.153.3 low 11
+> OPUS 5Claude Code 2.1.231 high 16
+> GEMINI -3.8 F LASH (high) Antigravity CLI 1.1.25 high 11
+
+D.2 WATERMARK EVALUATION 
+
+The public and private evaluations share the same protocol, which we describe first, and differ in the watermark keys, prompts, and sampling seeds. 
+
+Generation We sample 1000 prompts from the questions of the train split of ELI5 (Fan et al., 2019), keeping only questions of more than 100 characters and removing duplicates. We generate the replies with L LAMA -3.1-8B-I NSTRUCT , prompting it with the raw question. We sample with temperature 1, top-k 50 , and top-p 1, and force replies of 200 to 300 tokens. 
+
+Detection and robustness To measure watermark strength (either before or after the attacks), we report the TPR@1%FPR, i.e., the fraction of the 1000 replies for which the p-value returned by the detector is below 0.01 . Because the verification (App. D.1) screens the p-values for soundness, we do not calibrate the threshold empirically. For robustness, we use four attacks. For 50% word deletion, each whitespace-separated word is deleted independently with probability 0.5. For 50% synonym substitution, we randomly replace half of the words (or all replaceable words if there are fewer) with a random WordNet synonym. For back-translation through French and paraphrasing, we use GPT-5.4-MINI (gpt-5.4-mini-2026-03-17 ) with the default sampling parameters of the OpenAI API and the prompts from App. J.2. 
+
+Quality To measure the impact on quality, we use three different metrics. We compute the perplexity of each of the 1000 replies with L LAMA -3.1-8B-I NSTRUCT , on the reply alone (i.e., not conditioned on the prompt), and average the perplexities over the replies. We also measure the diversity of replies to a single prompt: we sample 10 additional prompts from ELI5 and generate 100 replies for each prompt, following the protocol established in Gloaguen et al. (2026). For each reply, we compute the Self-BLEU (bigram and trigram) score on token IDs, using the 99 other replies to the same prompt as references, and average the scores over the 1000 replies. We then compare each quality metric to that of the unwatermarked model, evaluated with the same protocol. Then, we report the relative distance to the unwatermarked model (in percent), and, when we report an aggregated quality metric, we average the relative distances of the three metrics. 
+
+Public and private evaluation In the public configuration, the agent evaluates its scheme locally with its own watermark key, and the prompts are always the first 1000 (and 10 for diversity) ELI5 questions after shuffling the dataset with seed 0. In the private configuration, the grader evaluates each submission with 5 private watermark keys. For each key, the grader derives from the key the seeds used to shuffle ELI5 (separately for the detection and diversity prompts) and the generation seed, so that the private prompts differ from the public ones and across keys. The grader then reports, for each metric, the worst result over the 5 keys: the minimum TPR and the maximum distance to the unwatermarked model. Only the aggregated metrics and the verification verdicts are returned to the agent. The private evaluation runs in an isolated container. D.3 RESEARCH AGENTS 
+
+We summarize the research agents in Table 3. We run all agents with the prompt of App. J.1, in their own command-line interface and with subagents enabled. When an agent exits, the harness starts a new agent in the same container and Git checkout, and the loop stops once the submission budget is exhausted and all submissions are graded. 31 Preprint 
+
+Environment Each agent runs in a persistent Docker container with one NVIDIA RTX PRO 6000 Blackwell GPU (96 GB), 48 CPU cores, and full Internet access. The container holds the watermarking library (with the baselines of Sec. 3.4), the public configurations, and API keys for third-party AI providers (intended to be used for e.g., paraphrasing attacks). The grader runs in a separate container, which does not share any storage with the agent container, and on a different GPU. D.4 BASELINES 
+
+Here, we first detail how the three baselines (AAR, SynthID, and TextSeal) work using the notation from Sec. 3.1 and then go through their hyperparameters. Recall that ω ∈ Σ∗ is a sequence of tokens, 
+
+pt ∈ ∆(Σ) the conditional probability distribution of the next token given ω<t . We assume there exists a sequence (Uat ) of pseudo-random vectors in [0 , 1] |Σ| seeded by the context hash at whose entries are i.i.d. uniform variables. The watermark is defined by f : [0 , 1] |Σ| × ∆(Σ) → ∆(Σ) , and 
+
+S(ω) is the detector statistic. 
+
+AAR With AAR, the logits transformation is simply a Gumbel race, and the next token is sampled according to 
+
+ωt = arg max 
+
+> v∈Σ
+
+(− log( − log Uat,v ) + log pt(v)) .
+
+Because − log( − log( Uat,v )) are i.i.d. Gumbel random variables, using the Gumbel-max trick we can show that in expectation over Uat the next token ωt is sampled according to pt. For detection, we use the one-sided Kolmogorov-Smirnov test against the uniform null, with the statistic 
+
+S(ω) = max 
+
+> 1≤i≤N
+
+
+
+U(i) − i − 1
+
+N
+
+
+
+,
+
+where U(i) are the ordered scores (Uat,ω t ).
+
+SynthID With SynthID, the logits transformation corresponds to a repeated tournament sampling with L layers and C leaves. Instead of a single watermark score, SynthID uses L independent watermark scores U (1)  
+
+> at
+
+, . . . , U (L) 
+
+> at
+
+, one per layer, which it binarizes into g(l) 
+
+> at,v
+
+:= 1{U (l) 
+
+> at,v
+
+> 1/2}.Let p(l) 
+
+> t
+
+be the probability distribution at layer l with p(0)  
+
+> t
+
+:= pt. Then, at each layer we apply 
+
+p(l) 
+
+> t
+
+(v) = p(l−1)  
+
+> t
+
+(v) ·
+
+
+
+1 − (1 − M (l) 
+
+> t
+
+)C
+
+M (l)
+
+> t
+
+if g(l) 
+
+> at,v
+
+= 1 ,
+
+(1 − M (l) 
+
+> t
+
+)C−1 otherwise ,
+
+with M (l) 
+
+> t
+
+:= X
+
+> v∈Σ
+
+p(l−1)  
+
+> t
+
+(v) g(l) 
+
+> at,v
+
+,
+
+and the logits transformation is f (Uat , p t) := p(L) 
+
+> t
+
+. For detection, we use the weighted mean detector over the retained positions t ∈ D, with statistic 
+
+S(ω) = 1
+
+N
+
+X
+
+> t∈DL
+
+X
+
+> l=1
+
+wl g(l) 
+
+> at,ω t
+
+,
+
+where w1, . . . , w L ≥ 0 are layer weights summing to 1. Under the null hypothesis, the per-token scores P 
+
+> l
+
+wl g(l) 
+
+> at,ω t
+
+are i.i.d. with mean 1/2 and variance σ2 
+
+> w
+
+:= 14
+
+P 
+
+> l
+
+w2 
+
+> l
+
+. We thus use a normal approximation and return the p-value 1 − Φ
+
+√N (S(ω) − 1/2) /σ w
+
+
+
+, where Φ is the standard normal CDF. 
+
+TextSeal With TextSeal, the logits transformation is the same Gumbel race as AAR, but with two keys: a primary and a secondary key, yielding two watermark scores Uat and U ′ 
+
+> at
+
+. At each step, the watermark score used by the logits transformation is ˜Uat = U ′ 
+
+> at
+
+with probability λ and ˜Uat = Uat
+
+otherwise, where the choice is drawn with true randomness. For detection, we fuse the two scores of each retained position and use the weighted statistic 
+
+S(ω) = X
+
+> t∈D
+
+wt (−(1 − λ) log(1 − Uat,ω t ) − λ log(1 − U ′ 
+
+> at,ω t
+
+)) ,
+
+where the weights wt ∈ [wmin , w max ] increase linearly with the entropy Ht of the next-token distribution of an auxiliary LLM at position t, i.e., wt = wmin + ( wmax − wmin )( Ht −
+
+min t′ Ht′ )/(max t′ Ht′ − min t′ Ht′ ).32 Preprint 
+
+Watermark hyperparameters All three baselines seed their watermark with a hash of the 3
+
+preceding tokens and the private key, and do not apply the watermark when the context was already seen in the same request. All sample from the top-50 tokens. For AAR (Aaronson, 2023), we use the Gumbel-max sampling, and its detector, a one-sided Kolmogorov–Smirnov test on the de-duplicated Gumbel scores. For SynthID (Dathathri et al., 2024), we use the tournament sampling with 30 layers and 2 leaves, restricted to the top-50 tokens of the unwatermarked distribution, and the weighted mean detector (with weights decreasing linearly from 10 to 1 across layers) with a normal approximation. For TextSeal (Sander et al., 2026), we use a secondary key with probability λ = 0 .1, and weights between wmin = 0 .1 and wmax = 1 derived from the entropy of G EMMA -3-270M-IT .D.5 HELD -O UT EVALUATION 
+
+For the held-out evaluation of Sec. 4.3, we use a different protocol, which neither the agents nor our harness used. 
+
+Prompts We sample prompts from W ILD CHAT -4.8M (Zhao et al., 2024a) using its language labels, English and Chinese. We use the first user turn of conversations whose second turn is an assistant reply, remove duplicate prompts, and discard prompts longer than 3500 tokens. We keep a prompt only if its original WildChat reply has at least 200 tokens with both the L LAMA -3.1-8B-I NSTRUCT 
+
+and the Q WEN 3.8-27B tokenizers. We then take the first 1000 qualifying prompts of each language after shuffling the dataset shards with a fixed seed. The prompts are the same for all schemes, models, and keys. 
+
+Generation We generate the replies with L LAMA -3.1-8B-I NSTRUCT and Q WEN 3.8-27B (with thinking disabled), using their chat template with a single user message and no system prompt. We sample with temperature 1, top-k 50 , and top-p 1, and force replies of 200 to 300 tokens. 
+
+Metrics We report the TPR@1%FPR as in App. D.2. For word deletion and synonym substitution, we segment the English texts with a regular expression and the Chinese texts with Jieba. Deletion removes exactly half of the words, chosen at random, and substitution replaces half of the words with a random synonym from WordNet (English) or the Open Multilingual WordNet (Chinese); if fewer words are replaceable, we replace all of them. For back-translation and paraphrasing, we use DEEP SEEK -V4 F LASH with temperature 1, reasoning disabled, and the prompts of App. J.2. We compute the perplexity of the replies with the model that generated them, on the reply alone. For diversity, we use the first 10 prompts of each language and generate 100 replies per prompt, and compute the Self-BLEU scores as in App. D.2. We report the relative distance (in percent) to the unwatermarked model with the same model and language. We use 5 new watermark keys, different from all keys used in our harness, and report for each metric the worst result over the 5 keys. Lastly, for RotationFirst, we rebuild the Lexical group map for each tokenizer and extend it to Chinese tokens with the Open Multilingual WordNet. 
+
+## E OUR AUTORESEARCH HARNESS 
+
+In this section, we detail our watermarking library (App. E.1) and motivate the design of the research environment (App. E.2). E.1 OUR WATERMARKING LIBRARY 
+
+Library design We design our watermarking library around four primary components: the context seeding, the watermark score, the logits transformation, and the detector, following the formalization described in Sec. 3.1 and the work of Gloaguen et al. (2026). At generation time, the watermarking scheme is defined as a vLLM logit processor. It takes as input the list of tokens already generated and the next-token logits (i.e., the unnormalized next-token probability distribution) and returns the watermarked next-token logits. It is stateful per prompt but stateless across prompts (i.e., each prompt is treated independently). For detection, it takes as input a list of tokens and returns a p-value. This simple design, essentially a class with two methods, ensures that the proposed schemes can 33 Preprint be easily evaluated and, following Gloaguen et al. (2026), is expressive enough to represent most prior watermarking schemes. In fact, alongside the library boilerplate, we provide the research agents with implementations of the following watermarks: AAR (Aaronson, 2023), SynthID (Dathathri et al., 2024), DiPMark (Wu et al., 2024), TextSeal (Sander et al., 2026), MCMark (Chen et al., 2025), SWEET (Lee et al., 2024), KGW (Kirchenbauer et al., 2023), unigram (Zhao et al., 2024b), and the schemes from Gloaguen et al. (2026). Table 4: End-to-end generation throughput (tokens/s). Reference implementations use Transformers; our library uses vLLM with one or up to eight prompts per request.             
+
+> Scheme Reference Ours (1) Ours (8) SynthID 152 .3243 .5628 .2
+> AAR 194 .5303 .91,413 .3
+> TextSeal 186 .9298 .61,338 .7
+
+Throughput We compare our vLLM library with the reference implementations of AAR, SynthID, and TextSeal on NVIDIA RTX PRO 6000 Blackwell GPUs. For each scheme, we generate 128 tokens for each of 100 ELI5 prompts with L LAMA -3.2-1B-INSTRUCT , temperature 0.7, and top-p 1. Our runs and the SynthID reference use top-k 50 ; the AAR and TextSeal references expose no top-k option and sample from the full vocabulary. We exclude model loading and compute throughput as total generated to-kens divided by total generation time. Our unbatched generation is 1.56 –1.60 × faster than the references; batching eight prompts increases this to 4.12 –
+
+7.27 ×.E.2 RESEARCH ENVIRONMENT 
+
+Here, we motivate the two-phase submission budget of Sec. 3.4 with two runs from Table 5. We find that, when several submissions are available, agents mostly spend them on variants of a single scheme, whereas when a single submission is left, they explore distinct ideas locally before committing to one. 
+
+GPT-6 A STRA (low) In this run, the first agent was given all 11 submissions at once. It spent 10 of them in about four hours on FreshRace and 8 of its variants (FreshRace-lexical was submitted twice). Then, with a single submission left, the 8 subsequent agents implemented and evaluated locally 15 
+
+new schemes before submitting RenewalRace. Moreover, when we retrospectively submit the 15 
+
+unsubmitted schemes to our private grader, all of them pass our verification, i.e., they are not merely failed attempts. 
+
+OPUS 5 This run uses the two-phase budget. In the first phase, the agent spent its 4 submissions on a single scheme, TallyMark. After its first submission failed our soundness given a key test, it changed the context seeding (also rejected), then reverted this change and multiplied the p-values by 
+
+4, and finally resubmitted the same code with an updated description. In the second phase, where each agent has a single submission, all 12 submissions are distinct schemes, which significantly improve robustness. 
+
+## F STATISTICAL TESTS 
+
+In this section, we present the algorithmic description of the three statistical tests from Sec. 3.3. We prove in App. I.3 that each test rejects a valid scheme with probability at most δ. If a scheme is rejected, it means that with confidence 1 − δ it violates the property. If it is not rejected, as with every statistical tests, it means we can’t conclude whether the scheme violates the property. In practice, however we find that the tests are powerful e.g., in App. B they rejected all bad schemes and even rejected some of the baselines. 
+
+## G HASH FUNCTION AND PRNG 
+
+In this part, we explain the hash functions used by the agents to turn the context into a seed (i.e., an integer), and detail the PRNG algorithm we use in our library. 
+
+Hash functions As stated in App. A.3, we assume that the hashing function is without collision, i.e., two contexts that are different should return a different hash. In particular, prior works used weaker 34 Preprint 
+
+Algorithm 1 Testing distortion-freeness 
+
+Require: Watermark transform f , fixed contexts and next-token distributions (ω<t , p t)Nt=1 , N ≥ 1,keys per context m ≥ 2, head size 1 ≤ k ≤ | Σ|, significance level δ ∈ (0 , 1) .
+
+1: h ← ⌊ m/ 2⌋; a ← False 
+
+2: for t = 1 , . . . , N do 
+
+3: v1, . . . , v k ← the k most likely tokens under pt
+
+4: Gt(q) ← (q(v1), . . . , q (vk), 1 − Pkr=1 q(vr )) ▷ Pool remaining tokens 
+
+5: Draw m uniform independent keys and derive ζ(1)  
+
+> t
+
+, . . . , ζ (m) 
+
+> t
+
+at ω<t 
+
+6: p(j) 
+
+> t
+
+← f (ζ(j) 
+
+> t
+
+, p t); dj ← Gt(p(j) 
+
+> t
+
+) − Gt(pt) for j = 1 , . . . , m 
+
+7: a ← a ∨ (∃j : p(j)
+
+> t
+
+̸ = pt)
+
+8: ¯d ← m−1 Pmj=1 dj
+
+9: pcoord ← min {1, 2( k + 1) exp( −2m∥ ¯d∥2
+
+> ∞
+
+)}
+
+10: u ← sign( h−1 Phj=1 dj ) ▷ Learn a bias direction 
+
+11: b ← max {0, (m − h)−1 Pmj=h+1 u⊤dj } ▷ Test on held-out keys 
+
+12: psplit ← exp( −(m − h)b2/2) 
+
+13: qt ← min {1, 2 min( pcoord , p split )}
+
+14: end for 
+
+15: Q ← min {1, N min t qt} ▷ Bonferroni across contexts 
+
+16: if Q ≤ δ then 
+
+17: return Reject 
+
+18: end if 
+
+19: return No distortion detected if a, otherwise inconclusive 
+
+Algorithm 2 Testing soundness over the key 
+
+Require: Detector Pξ , nonempty corpus C = ( ω1, . . . , ω n), keys per text m ≥ 1, finite nonempty thresholds A ⊆ [0 , 1] , significance level δ ∈ (0 , 1) .
+
+1: η ←  1 − (1 − δ)1/n /|A| ▷ Corrected cutoff 
+
+2: R ← ∅ 
+
+3: for i = 1 , . . . , n do 
+
+4: Draw ξi
+
+> 1
+
+, . . . , ξ im uniformly and independently from the key space 
+
+5: Pi,j ← Pξij (ωi) for j = 1 , . . . , m 
+
+6: for α ∈ A do 
+
+7: Xi(α) ← Pmj=1 1{Pi,j ≤ α}
+
+8: qi(α) ← Pr Z∼Binomial( m,α )[Z ≥ Xi(α)] 
+
+9: if qi(α) ≤ η then 
+
+10: R ← R ∪ { (i, α )}
+
+11: end if 
+
+12: end for 
+
+13: end for 
+
+14: return R ▷ Reject the scheme if R̸ = ∅
+
+hash functions that had a high probability of collisions. We assume we have a tuple (x1, . . . , x k) ∈ Nk
+
+of integers (token IDs or lexical classes G(ωt)). All arithmetic is on unsigned 64-bit integers (i.e., modulo 264 ) unless stated otherwise, ⊕ is the bitwise XOR, and ≫ the right shift. 
+
+SplitMix64 hash: We chain the SplitMix64 finalizer m(x) = y2 ⊕ (y2 ≫ 31) , with y1 = ( x ⊕ (x ≫
+
+30)) · 0xbf58476d1ce4e5b9 and y2 = ( y1 ⊕ (y1 ≫ 27)) · 0x94d049bb133111eb . The context hash is 
+
+h0 = 0x243f6a8885a308d3 , hj = m hj−1 ⊕ m(xj + j), at = hk,
+
+where the offset +j makes the hash order-sensitive. The hash is not injective, but with 64 -bit outputs a collision among n contexts has probability at most n2/265 .
+
+Rotation first hash: packs the context injectively, so the no-collision assumption holds exactly. However, it is only valid for context sizes up to two. A context of length one is encoded as 35 Preprint 
+
+Algorithm 3 Testing soundness given a key 
+
+Require: Detector Pξ , human text distribution H0, number of keys d ≥ 1, texts per key n ≥ 1,allowed bad-key fraction β ∈ (0 , 1) , predeclared finite nonempty thresholds A ⊆ [0 , 1] and screening levels S ⊂ (0 , 1) , allocated significance level δ ∈ (0 , 1) . 
+
+> 1:
+
+T (s, p, c ) ← Pr Z∼Binomial( s,p )[Z ≥ c] ▷ Binomial upper tail  
+
+> 2:
+
+η ← δ/ (|A||S| ); R ← ∅  
+
+> 3:
+
+for j = 1 , . . . , d do  
+
+> 4:
+
+Draw a uniform key ξj and ωj
+
+> 1
+
+, . . . , ω jn ∼ H 0 ▷ All draws independent  
+
+> 5:
+
+Pj,t ← Pξj (ωjt ) for t = 1 , . . . , n  
+
+> 6:
+
+Xj (α) ← Pnt=1 1{Pj,t ≤ α} for α ∈ A  
+
+> 7:
+
+end for  
+
+> 8:
+
+for (α, γ ) ∈ A × S do  
+
+> 9:
+
+c ← min {k ∈ { 1, . . . , n + 1 } : T (n, α, k ) ≤ γ} 
+
+> 10:
+
+r ← T (n, α, c ); b ← β + (1 − β)r ▷ Null screening bound  
+
+> 11:
+
+B ← Pdj=1 1{Xj (α) ≥ c} ▷ Keys screening positive  
+
+> 12:
+
+q ← T (d, b, B ) 
+
+> 13:
+
+if q ≤ η then  
+
+> 14:
+
+R ← R ∪ { (α, γ )} 
+
+> 15:
+
+end if  
+
+> 16:
+
+end for  
+
+> 17:
+
+return R ▷ Reject the scheme if R̸ = ∅
+
+at = x1 + 1 , and one of length two as at = 2 41 + 2 20 x1 + x2, which is injective for vocabularies below 220 .
+
+Rolling polynomial hash: a rolling polynomial hash with a counter. This is the hash used with Ladder 
+
+context seeding (App. A.3). Given the lexical classes gt = G(ωt), a context of width w ≤ 4 ending at t is hashed as 
+
+Kw =
+
+w−1X
+
+> i=0
+
+gt−i φ w−1−i
+
+⊕ (w · 0x2545F4914F6CDD1D ), φ = 0x9E3779B97F4A7C15 ,
+
+where the XOR with a width-dependent constant separates contexts of different lengths. Let n be the number of earlier occurrences of Kw in the text, and w⋆ the width selected by the ladder. The seed is then 
+
+at = fmix 64 
+
+ 8192 Kw⋆ + n/232 ,
+
+where fmix 64 is the MurmurHash3 finalizer and 8192 is the maximum tally, so that repeated contexts with different counts get different seeds. Unlike the two previous hashes, the seed has only 32 bits and collides after roughly 216 distinct contexts. 
+
+PRNG Given a seed at, a candidate token v, and the 64-bit private key ξ, the PRNG returns the score Uat,v ∈ [0 , 1) . We require it to be stateless, i.e., Uat,v depends only on (ξ, a t, v ), so that the detector recovers exactly the scores used at generation. 
+
+Philox: this is the PRNG we implemented as part of our library and used for all baselines. It uses the counter-based Philox4x32-10 block cipher (Salmon et al., 2011), which maps a 128-bit counter and a 64-bit key to 4 pseudorandom 32-bit words (y0, y 1, y 2, y 3). With A a bijective 32-bit avalanche ( x 7 → x ⊕ (x ≫ 16) , multiply by 0x7FEB352D , x ⊕ (x ≫ 15) , multiply by 0x846CA68B ,
+
+x ⊕ (x ≫ 16) ), the score is 
+
+(y0, . . . , y 3) = Philox ξ
+
+ A(v), A (at), 0, 0, Uat,v = ⌊y0/29⌋ 2−23 ,
+
+where the avalanche disperses adjacent token IDs before Philox, and 23 bits fill the float32 mantissa. Independent Channels c use the candidate v + 2 18 c, which never collides with a real token ID. 
+
+High-precision Philox: similar to Philox, but the 64-bit seed and the token are packed injectively into the counter: 
+
+(y0, . . . , y 3) = Philox ξ
+
+ v, a t mod 2 32 , ⌊at/232 ⌋, 0xC0C0A123 
+
+,Uat,v =  226 ⌊y0/26⌋ + ⌊y1/26⌋ 2−52 + 2 −53 .
+
+36 Preprint Since the counter is injective in (at, v ), distinct (seed, token) pairs always map to distinct Philox counters, hence to pseudorandomly independent scores. When several scores are needed per (seed, token) pair (e.g., the three coordinates for RotationFirst), the seed is replaced by 26at + d, reserving the low 6 bits for the index d.
+
+SplitMix64 PRF: reuses the SplitMix64 finalizer m from the SplitMix64 hash , with the domain-separation constants c1 = 0xa4093822299f31d0 and c2 = 0x082efa98ec4e6c89 :
+
+s = m at ⊕ m(ξ ⊕ c1), s′ = m s ⊕ m(v ⊕ c2), Uat,v =  ⌊s′/212 ⌋ + 12
+
+ 2−52 ,
+
+where 52 bits fill the float64 mantissa, and the midpoint + 12 keeps Uat,v ∈ (0 , 1) so that Φ−1(Uat,v )
+
+is always finite. Independent Channels c use the key ξ ⊕ (c · 0x9e3779b97f4a7c15 ).
+
+## H CONCORD MARK AND ROTATION FIRST 
+
+We describe the schemes used in Sec. 4.3. For low and high variants, the generation is shared and only the detector differs. H.1 CONCORD MARK 
+
+Key components We describe precisely the ConcordMark generation algorithm in Algorithm 4, and both detector variants in Algorithms 5 and 6. ConcordMark uses Lexical group only for context seeding. Let G : Σ → N be the corresponding lexical map. Given a word, its spelling is first normalized and then gets attributed a synonym class of at most eight members (using WordNet). It then uses Ladder context seeding starting at width 1, or width 2 when the last mapped token ID is below 200 . For the hash function, it uses the rolling polynomial hash (App. G). For the watermark score, it uses both Prelude with a cap of 14 nats of entropy or 24 tokens and 6
+
+independent Channels . It uses the Gumbel race as a logits transformation. For detection, the low variant uses the Excess Gamma detection and the high variant the weighted Position evidence .
+
+Algorithm 4 ConcordMark generation 
+
+Require: Keys ξ0, . . . , ξ 5, model distributions pt, lexical map G, completion length T .1: Sample J ∼ U{ 0, . . . , 5} ▷ Use channel J, keyed by ξJ , throughout 2: ω ← () ; B ← 0; U ← ∅ 
+
+3: for t = 1 , . . . , T do 
+
+4: if t ≤ 24 and B < 14 then 
+
+5: Sample ωt ∼ pt using private randomness 6: B ← B − log P 
+
+> v
+
+pt(v)2 ▷ Prelude collision entropy 7: else 
+
+8: z1: t−1 ← (G(ω1), . . . , G(ωt−1)) ; m ← min(4 , t − 1) 
+
+9: ℓ ← 1; if zt−1 < 200 , set ℓ ← min(2 , m )
+
+10: for w = ℓ, . . . , m do 
+
+11: W ← zt−w:t−1 ▷ Suffix of width w
+
+12: nt ← |{ i : w ≤ i < t − 1, z i−w+1: i = W }| ▷ Count earlier occurrences 13: If nt < 4 or w = m, set ct ← (w, W, n t), at ← h(ct) and break ▷ Context and seed 14: end for 
+
+15: if nt ≥ 8192 or at ∈ U then 
+
+16: Sample ωt ∼ pt using private randomness 17: else 
+
+18: U ← U ∪ { at}
+
+19: ˜Ut,v ← UJ,a t,v for each v with pt(v) > 0
+
+20: ωt ← arg min v:pt(v)>0{− log ˜Ut,v /p t(v)} ▷ Token-level exponential race 21: end if 
+
+22: end if 
+
+23: Append ωt to ω
+
+24: end for 
+
+25: return ω
+
+37 Preprint 
+
+Algorithm 5 ConcordMark (low) detection 
+
+Require: Keys ξ0, . . . , ξ 5, completion ω, lexical map G.1: D ← ∅ ; U ← ∅ 
+
+2: for t = 2 , . . . , |ω| do 
+
+3: Reconstruct the ladder seed at and count nt from G(ω<t ) as in Algorithm 4 4: If nt < 8192 and (at, ω t) /∈ U , set D ← D ∪ { t} and U ← U ∪ { (at, ω t)}
+
+5: end for 
+
+6: If D = ∅, return 1
+
+7: H(ω) ← { at : t ∈ D}; H ← |H (ω)|
+
+8: Da(ω) ← { ωt : t ∈ D, a t = a}; ma ← | Da(ω)| for each a ∈ H (ω)
+
+9: for j = 0 , . . . , 5 do 
+
+10: for a ∈ H (ω) do 
+
+11: Sj,a (ω) ← P 
+
+> v∈Da(ω)
+
+− log(1 − Uj,a,v )
+
+12: Zj,a ← − log Q(ma, S j,a (ω)) ▷ Calibrate each context with its Gamma tail 13: end for 
+
+14: Sj (ω) ← P 
+
+> a∈H (ω)
+
+max {Zj,a − log 2 , 0} ▷ Keep evidence above the median 15: Pj ← 1
+
+16: if Sj (ω) > H/ 2 then 
+
+17: θ ← (3 − p1 + 4 H/S j (ω)) /2
+
+18: Pj ← exp {H log[(1 − θ/ 2) /(1 − θ)] − θS j (ω)} ▷ Chernoff bound 19: If Pj < 0.1, set Pj ← PHb=1 
+
+ Hb
+
+2−H Q(b, S j (ω)) ▷ Exact excess tail RH
+
+20: end if 
+
+21: end for 
+
+22: return P (ω) = 1 − (1 − min j Pj )6 ▷ Šidák correction over channels 
+
+Algorithm 6 ConcordMark (high) detection 
+
+Require: Keys ξ0, . . . , ξ 5, completion ω, lexical map G, auxiliary model distributions ˆpt.1: Reconstruct at and the retained positions D as in Algorithm 5 2: If D = ∅, return 1
+
+3: for t ∈ D do 
+
+4: ηt ← 1 + 14 round(4 min {max {− log ˆ pt(ωt), 0}, 2.5})
+
+5: Ct ← { eight most probable tokens under ˆpt} \ { ωt}
+
+6: αt,v ← min {10 4, ˆpt(v)/ˆpt(ωt)} for each v ∈ Ct
+
+7: Ct ← { v ∈ Ct : αt,v ≥ 10 −3}; λt ← P 
+
+> v∈Ct
+
+αt,v 
+
+8: If λt > 8, set Ct ← ∅ and λt ← 0 ▷ Discard an unreliable reconstructed race 9: end for 
+
+10: for j = 0 , . . . , 5 do 
+
+11: for t ∈ D do 
+
+12: Wj,t ← 1{Uj,a t,v < U αt,v  
+
+> j,a t,ω t
+
+for all v ∈ Ct}
+
+13: if Wj,t = 1 then ▷ The observed token wins the reconstructed race 14: Rj,t ← (1 − U 1+ λt 
+
+> j,a t,ω t
+
+)/(1 + λt)
+
+15: else 
+
+16: Rj,t ← 1 − Uj,a t,ω t + U 1+ λt 
+
+> j,a t,ω t
+
+/(1 + λt)
+
+17: end if 
+
+18: end for 
+
+19: Sj (ω) ← P 
+
+> t∈D
+
+−ηt log Rj,t ▷ Weighted position evidence 20: end for 
+
+21: s ← max j Sj (ω)
+
+22: if all weights equal some η then 
+
+23: q ← Q(|D|, s/η ) ▷ Exact Gamma upper tail 24: else 
+
+25: q ← Lugannani–Rice approximation to Pr[ P 
+
+> t∈D
+
+ηtEt ≥ s], for independent Et ∼ Exp(1) 
+
+26: end if 
+
+27: return P (ω) = min {1, 1.02[1 − (1 − q)6]} ▷ Channel correction and tail safety factor 
+
+H.2 ROTATION FIRST 
+
+Key components We describe precisely the RotationFirst generation algorithm and its detector in Algorithms 7 and 8. RotationFirst uses Lexical group throughout the scheme. Let G : Σ → N
+
+be the corresponding lexical map. Each token is decoded, stripped of surrounding whitespace, and 38 Preprint lowercased. If the resulting word appears in WordNet, it is assigned to the synonym class given by its first WordNet synset. Let E be the set of the resulting synonym classes. Tokens sharing this synset are grouped together, whereas all other tokens remain in singleton classes. It then uses Global first use context seeding with the rotation first hash (App. G). For a class c, it uses address (0 , c ) if it has not been used before and c ∈ E , and otherwise uses (G(ωt−1) + 1 , c ).For the watermark score, it uses a private geometry approach, namely the Rotation spherical geometry ( Spherical ). For each request, sample randomly a uniform quaternion A. Then, at each step draw a uniform keyed Zat,u ∈ S3 and derive the score: 
+
+˜Uat,u = F (|A · Zat,u |),
+
+where F (r) = 2
+
+> π
+
+ arcsin r + r√1 − r2. Then for detection, it uses the corresponding Predictive Gamma detector. 
+
+Algorithm 7 RotationFirst generation 
+
+Require: Key ξ, model distributions pt, grouping G, eligible classes E, completion length T .1: Sample A ∼ U (S3) ▷ Private rotation shared throughout the completion 2: F (r) ← 2 
+
+> π
+
+(arcsin r + r√1 − r2)
+
+3: ω ← () ; A ← ∅ ; U ← ∅ ▷ Emitted classes and initialized clocks 4: for t = 1 , . . . , T do 
+
+5: Mt(u) ← P 
+
+> v:G(v)= u
+
+pt(v) for each class u
+
+6: bt ← G (ωt−1) + 1 if t > 1, otherwise bt ← 0
+
+7: for each class u with Mt(u) > 0 do 
+
+8: ct(u) ← 0 if u ∈ E \ A , otherwise ct(u) ← bt; at(u) ← h(ct(u)) 
+
+9: if (at(u), u ) /∈ U then 
+
+10: if bt̸ = 0 or u ∈ E then 
+
+11: Recover Zat(u),u ∈ S3 using key ξ
+
+12: ˜Uat(u),u ← F (|A · Zat(u),u |)
+
+13: Rat(u),u ← − log ˜Uat(u),u 
+
+14: else 
+
+15: Sample Rat(u),u ∼ Exp(1) privately 16: end if 
+
+17: U ← U ∪ { (at(u), u )}
+
+18: end if 
+
+19: end for 
+
+20: u∗ ← arg min u:Mt(u)>0 Rat(u),u /M t(u); τt ← Rat(u∗),u ∗ /M t(u∗)
+
+21: Rat(u),u ← max {0, R at(u),u − τtMt(u)} for each u with Mt(u) > 0
+
+22: Sample Rat(u∗),u ∗ ∼ Exp(1) privately ▷ Refresh the winning clock 23: Sample ωt from {v : G(v) = u∗} with probabilities pt(v)/M t(u∗)
+
+24: A ← A ∪ { u∗}; append ωt to ω
+
+25: end for 
+
+26: return ω
+
+39 Preprint 
+
+Algorithm 8 RotationFirst detection 
+
+Require: Key ξ, completion ω, grouping G, eligible classes E, public unit quaternions A0, . . . , A 511 .1: D ← () ; A ← ∅ ; U ← ∅ 
+
+2: for t = 1 , . . . , |ω| do 
+
+3: ut ← G (ωt)
+
+4: bt ← G (ωt−1) + 1 if t > 1, otherwise bt ← 0
+
+5: ct ← 0 if ut ∈ E \ A , otherwise ct ← bt; at ← h(ct)
+
+6: If (t > 1 or ut ∈ E ) and (at, u t) /∈ U , append (at, u t) to D and set U ← U ∪ { (at, u t)}
+
+7: A ← A ∪ { ut}
+
+8: end for 
+
+9: N ← | D|; if N ≤ 1, return 1
+
+10: Enumerate D as (ai, u i)Ni=1 in text order 11: F (r) ← 2 
+
+> π
+
+(arcsin r + r√1 − r2); d(B, Z ) ← 1 − F (|B · Z|)
+
+12: B1 ← A0; w1,j ← 1/512 for j = 0 , . . . , 511 ; S(ω) ← 0
+
+13: for i = 1 , . . . , N do 
+
+14: Recover Zi = Zai,u i ∈ S3 using key ξ
+
+15: S(ω) ← S(ω) − log d(Bi, Z i) ▷ Score before updating the predicted rotation 16: wi+1 ,j ← wi,j d(Aj , Z i)−1/2 for j = 0 , . . . , 511 
+
+17: Normalize wi+1 ,j ← wi+1 ,j / P511  
+
+> k=0
+
+wi+1 ,k 
+
+18: Bi+1 ← eig max (P511  
+
+> j=0
+
+wi+1 ,j Aj A⊤ 
+
+> j
+
+) ▷ Unit eigenvector for the largest eigenvalue 19: end for 
+
+20: return P (ω) = Q(N, S (ω)) ▷ Predictive Gamma upper tail 
+
+H.3 ADDITIONAL EVALUATION 
+
+Here, we complete the evaluation from Sec. 4.3 with additional plots (Figure 26). Namely, we plot the TPR as a function of the significance level α, from 10 −6 to 10 −1, for clean detection and paraphrasing. At each α, the TPR is the fraction of samples with p-value below α. As in the main evaluation, we report the minimum TPR across the five watermarking seeds. 40 Preprint 0.0 0.5 1.0 Llama-3.1-8B, English TPR Clean Paraphrasing 0.0 0.5 1.0 Llama-3.1-8B, Chinese TPR 0.0 0.5 1.0 Qwen3.8-27B, English TPR 
+
+10 −6 10 −4 10 −2
+
+α
+
+0.0 0.5 1.0 Qwen3.8-27B, Chinese TPR 
+
+10 −6 10 −4 10 −2
+
+α
+
+AAR SynthID TextSeal ConcordMark (low) ConcordMark (high) RotationFirst 1
+
+Figure 26: TPR as a function of the significance level α, with 1k samples per model and language generated from WildChat prompts. Left is clean detection and right after paraphrasing. 
+
+Results Across models, languages, and significance levels, these curves confirm the conclusions of Sec. 4.3. ConcordMark (high) provides the strongest detection, and especially after paraphrasing. ConcordMark (low) also retains a strong paraphrasing robustness while being more efficient at detection, as it does not require a forward pass. RotationFirst is less robust than ConcordMark, as expected as it focuses mainly on quality, yet remains comparable to the baselines. 
+
+## I PROOFS 
+
+In this section, we prove the theoretical claims made throughout the paper. In App. I.1, we state our assumptions and two lemmas used in the rest of the section. In App. I.2, we prove that a detector that 41 Preprint is sound over the key can be turned into a detector that is sound given a key (Sec. 3.2). In App. I.3, we prove that the three statistical tests of Sec. 3.3 are valid. In App. I.4, we prove that ResidualRace 
+
+is distortion-free (App. A.5). Lastly, in App. I.5, we derive the null distribution of the Predictive Gamma and Position evidence detectors (App. A.6). For all other mathematical results, we consider the proof sufficiently trivial and do not derive them here. I.1 PRELIMINARIES 
+
+Setup Let Ξ be the key space, and let ξ be drawn from Ξ as in Equation (2). For every text ω ∈ Σ∗,the detector returns a p-value Pξ (ω) ∈ [0 , 1] , and we assume that (ξ, ω ) 7 → Pξ (ω) is measurable (which holds trivially for a finite key space). Human texts are written without knowledge of the private key: for any human text distribution H0, the text Ω ∼ H 0 is independent of ξ. As in Sec. 3.1, we model the PRNG as ideal: the seed at is a function of the context only, and, over a uniformly drawn key, the scores of distinct (seed, unit) pairs are independent, with Ua,u ∼ U ([0 , 1]) (and Za,u 
+
+distributed according to its geometry for private-geometry scores). We also assume that the hash function has no collision (App. G). Finally, we write T (s, p, c ) := Pr Z∼Binomial( s,p )[Z ≥ c] for the binomial upper tail, as in Algorithm 3. 
+
+Lemma 1. Let X be a real random variable and φ : R → [0 , ∞) a continuous nonincreasing function such that Pr[ X ≥ s] ≤ φ(s) for all s ∈ R. Then min {1, φ (X)} is a valid p-value, i.e., 
+
+Pr[min {1, φ (X)} ≤ x] ≤ x for all x ∈ [0 , 1] .Proof. The case x = 1 is trivial, and the case x = 0 follows from the case x > 0, since 
+
+Pr[min {1, φ (X)} ≤ 0] ≤ Pr[min {1, φ (X)} ≤ x] for every x > 0. Let x ∈ (0 , 1) and 
+
+I := {s ∈ R : φ(s) ≤ x}. If I = ∅, the event is empty. Otherwise, I is an interval un-bounded above, and it is bounded below, since otherwise Pr[ X ≥ s] ≤ x < 1 for all s, which contradicts Pr[ X ≥ s] → 1 as s → −∞ . Let s∗ := inf I. By continuity, φ(s∗) ≤ x, and since 
+
+{φ(X) ≤ x} ⊆ { X ≥ s∗},
+
+Pr[min {1, φ (X)} ≤ x] ≤ Pr[ X ≥ s∗] ≤ φ(s∗) ≤ x. 
+
+Lemma 2. Let X be a sum of s independent Bernoulli random variables with parameters at most 
+
+p ∈ [0 , 1] . Then Pr[ X ≥ c] ≤ T (s, p, c ) for all c ∈ N, and Pr[ T (s, p, X ) ≤ η] ≤ η for all η ∈ [0 , 1] .Proof. Let p1, . . . , p s ≤ p be the Bernoulli parameters and V1, . . . , V s i.i.d. uniform random variables on [0 , 1] . Then X has the same distribution as P 
+
+> i
+
+1{Vi ≤ pi} ≤ P 
+
+> i
+
+1{Vi ≤ p} ∼ Binomial( s, p ),which gives the first claim. For the second claim, since c 7 → T (s, p, c ) is nonincreasing and 
+
+T (s, p, s + 1) = 0 , let c∗ := min {c ∈ { 0, . . . , s + 1 } : T (s, p, c ) ≤ η}. Then {T (s, p, X ) ≤ η} =
+
+{X ≥ c∗}, and by the first claim, Pr[ X ≥ c∗] ≤ T (s, p, c ∗) ≤ η.I.2 SOUNDNESS GIVEN A KEY 
+
+We prove the claim of Sec. 3.2: multiplying by 1/β the p-value of a detector that is sound over the key (Equation (2)) gives a detector that is sound given a key (Equation (3)). 
+
+Proposition 1. Let β ∈ (0 , 1] and let Pξ be a detector that satisfies Equation (2) . Define the calibrated detector 
+
+P βξ (ω) := min 
+
+
+
+1, Pξ (ω)
+
+β
+
+
+
+. (14) 
+
+Then P βξ satisfies Equation (2) , and for every human text distribution H0 and every α ∈ [0 , 1] ,
+
+Pr 
+
+> ξ
+
+
+
+Pr 
+
+> Ω∼H 0
+
+[P βξ (Ω) ≤ α] > α 
+
+
+
+≤ β, 
+
+i.e., P βξ also satisfies Equation (3) .Proof. We first relate the rejection regions of both detectors. For α ∈ [0 , 1) , since min {1, x } ≤ α < 1
+
+holds if and only if x ≤ α, we have for every key ξ and text ωP βξ (ω) ≤ α ⇐⇒ Pξ (ω) ≤ αβ. (15) 42 Preprint For α = 1 , both properties hold trivially, as all probabilities are bounded by 1. We therefore assume 
+
+α ∈ [0 , 1) in the rest of the proof. 
+
+Soundness over the key. Let ω ∈ Σ∗. By Equation (15) and Equation (2) applied at the threshold 
+
+αβ ∈ [0 , 1] ,
+
+Pr  
+
+> ξ
+
+[P βξ (ω) ≤ α] = Pr  
+
+> ξ
+
+[Pξ (ω) ≤ αβ ] ≤ αβ ≤ α. 
+
+Soundness given a key. Let H0 be a human text distribution, and define for each key the false positive rate 
+
+g(ξ) := Pr 
+
+> Ω∼H 0
+
+[P βξ (Ω) ≤ α] = Pr 
+
+> Ω∼H 0
+
+[Pξ (Ω) ≤ αβ ],
+
+where the equality follows from Equation (15). Because Ω is independent of ξ, Fubini’s theorem allows us to swap the two expectations, and applying Equation (2) to each fixed text gives 
+
+Eξ [g(ξ)] = Pr 
+
+> ξ, Ω
+
+[Pξ (Ω) ≤ αβ ] = EΩ∼H 0
+
+
+
+Pr  
+
+> ξ
+
+[Pξ (Ω) ≤ αβ ]
+
+
+
+≤ αβ. 
+
+If α = 0 , then g ≥ 0 and Eξ [g(ξ)] ≤ 0, so g(ξ) = 0 almost surely and Pr ξ [g(ξ) > 0] = 0 ≤ β.Otherwise, α > 0 and Markov’s inequality gives 
+
+Pr  
+
+> ξ
+
+[g(ξ) > α ] ≤ Eξ [g(ξ)] 
+
+α ≤ αβ α = β, 
+
+which concludes the proof. I.3 VALIDITY OF THE VERIFICATION TESTS 
+
+We prove that each of the three tests of Sec. 3.3 wrongly rejects a valid scheme with probability at most its significance level δ.
+
+Proposition 2. Let f be a distortion-free logits transformation (Equation (1) ). For each context t, let 
+
+v1, . . . , v k be the k most likely tokens under pt and let 
+
+Gt(q) := 
+
+
+
+q(v1), . . . , q (vk), 1 −
+
+> k
+
+X
+
+> r=1
+
+q(vr )
+
+
+
+map a distribution q ∈ ∆(Σ) to a probability vector over the head tokens and the pooled remaining tokens. For m independent keys, let dj := Gt(f (ζ(j) 
+
+> t
+
+, p t)) − Gt(pt), ¯d their mean, h := ⌊m/ 2⌋,
+
+u := sign( h−1 Phj=1 dj ) and b := max {0, (m − h)−1 Pmj=h+1 u⊤dj }. Algorithm 1 combines the p-values 
+
+pcoord := min {1, 2( k + 1) exp( −2m∥ ¯d∥2
+
+> ∞
+
+)} and psplit := exp( −(m − h)b2/2) 
+
+into qt := min {1, 2 min( pcoord , p split )}, and rejects f if Q := min {1, N min t qt} ≤ δ. Then Algo-rithm 1 rejects f with probability at most δ.Proof. Fix a context t. Because the m keys are drawn independently, the scores ζ(1)  
+
+> t
+
+, . . . , ζ (m) 
+
+> t
+
+are i.i.d., and by Equation (1), the differences d1, . . . , d m are i.i.d. with E[dj ] = Gt(E[f (ζ(j) 
+
+> t
+
+, p t)]) −
+
+Gt(pt) = 0 , as Gt is affine. 
+
+Coordinate test. Each coordinate of Gt(q) lies in [0 , 1] for every q ∈ ∆(Σ) , so each coordinate of dj lies in an interval of length 1. By Hoeffding’s inequality and a union bound over the k + 1 
+
+coordinates, Pr[ ∥ ¯d∥∞ ≥ s] ≤ 2( k + 1) exp( −2ms 2) for all s ≥ 0. Hence, by Lemma 1 with 
+
+φ(s) = 2( k + 1) exp( −2ms 2), pcoord is a valid p-value. 
+
+Split test. The direction u only depends on d1, . . . , d h, so conditional on u, the variables Yj := 
+
+u⊤dj for j > h are i.i.d. with mean zero. Since Gt(q) and Gt(pt) are probability vectors and 
+
+u ∈ [−1, 1] k+1 , u⊤Gt(q) ∈ [−1, 1] and hence Yj lies in an interval of length 2. By Hoeffding’s inequality, Pr[ b ≥ s | u] ≤ exp( −(m − h)s2/2) for all s > 0, where m − h ≥ 1 as m ≥ 2. Hence, by Lemma 1 with φ(s) = exp( −(m − h)s2/2) , psplit is a valid p-value conditional on u, and thus unconditionally. 
+
+Combination. By a union bound over both tests, Pr[ qt ≤ x] ≤ Pr[ pcoord ≤ x/ 2] + Pr[ psplit ≤
+
+x/ 2] ≤ x. By a union bound over the N contexts, Pr[ Q ≤ δ] ≤ PNt=1 Pr[ qt ≤ δ/N ] ≤ δ.43 Preprint 
+
+Proposition 3. Let Pξ be a detector that is sound over the key (Equation (2) ), i.e., 
+
+∀ω ∈ Σ∗, ∀α ∈ [0 , 1] , Pr  
+
+> ξ
+
+[Pξ (ω) ≤ α] ≤ α. 
+
+Given a corpus C = ( ω1, . . . , ω n), thresholds A and m independent keys ξi
+
+> 1
+
+, . . . , ξ im per text, Algorithm 2 counts the false positives Xi(α) := Pmj=1 1{Pξij (ωi) ≤ α}, and rejects Pξ if qi(α) := 
+
+T (m, α, X i(α)) ≤ η := (1 − (1 − δ)1/n )/|A| for some text ωi and threshold α ∈ A . Then, for every corpus C, Algorithm 2 rejects Pξ with probability at most δ.Proof. Fix a text ωi and a threshold α ∈ A . Because the keys ξi
+
+> 1
+
+, . . . , ξ im are i.i.d., Xi(α) is a sum of m i.i.d. Bernoulli random variables with parameter Pr ξ [Pξ (ωi) ≤ α] ≤ α by soundness over the key. Hence, by Lemma 2, Pr[ qi(α) ≤ η] ≤ η, and by a union bound over the thresholds, the event 
+
+Ei := {∃ α ∈ A : qi(α) ≤ η} has probability at most |A| η = 1 − (1 − δ)1/n . The events E1, . . . , E n
+
+depend on disjoint sets of independent keys, so they are independent, and 
+
+Pr[ R̸ = ∅] = 1 −
+
+> n
+
+Y
+
+> i=1
+
+(1 − Pr[ Ei]) ≤ 1 − (1 − δ) = δ. 
+
+Proposition 4. Let Pξ be a detector that is sound given a key (Equation (3) ) for the human text distribution H0, the fraction β, and the thresholds A, i.e., 
+
+∀α ∈ A , Pr  
+
+> ξ
+
+[ Pr 
+
+> Ω∼H 0
+
+[Pξ (Ω) ≤ α] > α ] ≤ β. 
+
+Algorithm 3 draws d independent keys ξj and, for each key, n independent texts ωj
+
+> 1
+
+, . . . , ω jn ∼ H 0,and counts the false positives Xj (α) := Pnt=1 1{Pξj (ωjt ) ≤ α}. For each threshold α ∈ A and screening level γ in a predeclared finite set S ⊂ (0 , 1) , a key screens positive if Xj (α) ≥ c, where 
+
+c := min {k ∈ { 1, . . . , n + 1 } : T (n, α, k ) ≤ γ} is the smallest count that is significant at level γ
+
+for a key with false positive rate α. Let r := T (n, α, c ), b := β + (1 − β)r, and B the number of keys that screen positive. Algorithm 3 rejects Pξ if q := T (d, b, B ) ≤ η := δ/ (|A||S| ) for some 
+
+(α, γ ) ∈ A × S . Then Algorithm 3 rejects Pξ with probability at most δ.Proof. Fix (α, γ ) ∈ A × S , and note that c, r and b are deterministic. For a key ξ, let g(ξ) := Pr Ω∼H 0 [Pξ (Ω) ≤ α] be its false positive rate, and say that ξ is bad if g(ξ) > α . Given ξj , the texts 
+
+ωj
+
+> 1
+
+, . . . , ω jn are i.i.d., so Xj (α) ∼ Binomial( n, g (ξj )) . If ξj is not bad, g(ξj ) ≤ α, and Lemma 2 gives Pr[ Xj (α) ≥ c | ξj ] ≤ T (n, α, c ) = r. As a key is bad with probability π ≤ β by soundness given a key, 
+
+Pr[ Xj (α) ≥ c] ≤ π + (1 − π)r = r + π(1 − r) ≤ β + (1 − β)r = b. 
+
+Since all draws are independent across keys, B is a sum of d independent Bernoulli random variables with parameters at most b, and by Lemma 2, Pr[ q ≤ η] ≤ η. By a union bound over A × S ,
+
+Pr[ R̸ = ∅] ≤ |A||S| η = δ.I.4 DISTORTION -F REENESS OF RESIDUAL CLOCKS 
+
+We prove that ResidualRace (Equation (6)) is distortion-free even when a context is repeated within a request, whereas the Gumbel race requires the per-request cache for that (App. A.3). The proof relies on the following classical property of exponential races. 
+
+Lemma 3. Let E1, . . . , E K be i.i.d. Exp(1) random variables and m1, . . . , m K > 0 with P 
+
+> k
+
+mk =1. Let τ := min k Ek/m k and κ := arg min k Ek/m k. Then Pr[ κ = k] = mk, and conditional on 
+
+(τ, κ ), the residuals (Ej − τ m j )j̸ =κ are i.i.d. Exp(1) .Proof. Since Ek/m k has density mke−mk s, for all k, s ≥ 0 and xj ≥ 0,
+
+Pr[ κ = k, τ ∈ ds, E j −sm j > x j ∀j̸ = k] = mke−mk s ds Y 
+
+> j̸=k
+
+e−(sm j +xj ) = mk ·e−s ds·Y 
+
+> j̸=k
+
+e−xj .
+
+The density factorizes, so κ, τ and the residuals are independent with the claimed distributions. 44 Preprint 
+
+Proposition 5. Assume that the initial scores ˜Ua,u of distinct (seed, unit) pairs are i.i.d. uniform. Then, for ResidualRace , Pr[ ωt = v | ω<t ] = pt(v) for every step t and token v ∈ Σ, even if the seed 
+
+at has already been used in the request. Proof. Let Ft be the information generated by ω≤t and the race outcomes (τs, u s)s≤t. We show by induction the invariant: conditional on Ft, the current clocks Ra,u of all (seed, unit) pairs are i.i.d. Exp(1) , where we identify a clock that is not yet initialized with its initial value − log ˜Ua,u . At 
+
+t = 0 , this holds because − log ˜Ua,u ∼ Exp(1) .Assume the invariant holds at t − 1. Given Ft−1, the distribution pt, the masses Mt and the seed 
+
+at are fixed, and the race of Equation (6) is an exponential race over the i.i.d. Exp(1) clocks Rat,u 
+
+with weights Mt(u). By Lemma 3, Pr[ ut = u | F t−1] = Mt(u), and since the token is then sampled inside ut with private randomness, 
+
+Pr[ ωt = v | F t−1] = Mt(G(v)) · pt(v)
+
+Mt(G(v)) = pt(v).
+
+Because pt is a function of ω<t , taking the expectation given ω<t proves the claim at step t. For the invariant, by Lemma 3, conditional on Ft−1 and (τt, u t), the updated losing clocks Rat,u − τtMt(u)
+
+are i.i.d. Exp(1) . The winning clock is replaced by a fresh Exp(1) , and all other clocks (other seeds, or units with Mt(u) = 0 ) are unchanged and independent of the race. The token ωt only depends on independent private randomness, so the invariant holds at t.I.5 VALIDITY OF THE DETECTORS 
+
+We derive the null distribution of the detectors of App. A.6 whose validity is not immediate. Through-out, the text ω is fixed and the randomness is over the key only, so that an exact null distribution implies Equation (2). 
+
+Proposition 6. Assume that, for every fixed geometry B and every score Z drawn according to its ge-ometry, d(B, Z ) ∼ U ([0 , 1]) . Then, for every text ω, the Predictive Gamma statistic of Equation (12) 
+
+satisfies S(ω) ∼ Gamma( N, 1) .Proof. The retained pairs D only depend on ω, so N is fixed and, by the ideal PRNG assumption, 
+
+Z1, . . . , Z N are i.i.d. The estimate Bi is computed from A0, . . . , A K−1 and Z1, . . . , Z i−1 only, and Zi is independent of (Z1, . . . , Z i−1). Hence, conditional on Z1, . . . , Z i−1, Bi is fixed and 
+
+di = d(Bi, Z i) ∼ U ([0 , 1]) . Since d1, . . . , d i−1 are functions of Z1, . . . , Z i−1, di is independent of 
+
+(d1, . . . , d i−1), and by induction d1, . . . , d N are i.i.d. uniform. Thus, the − log di are i.i.d. Exp(1) 
+
+and S(ω) ∼ Gamma( N, 1) .
+
+Proposition 7. Assume that ˆpt only depends on ω<t . Then, for every text ω, the variables 
+
+(Rt)t∈Dpos of the Position evidence detector are i.i.d. uniform on [0 , 1] . In particular, 
+
+S(ω) ∼ Gamma( |Dpos |, 1) , and the weighted statistic P 
+
+> t∈Dpos
+
+−ηt log Rt has the distribution of P 
+
+> t∈Dpos
+
+ηtEt for i.i.d. Et ∼ Exp(1) .Proof. Since ˆpt only depends on ω<t , the competitors Ct, the exponents αt,v , λt and the weights 
+
+ηt are fixed. The seeds at for t ∈ Dpos are distinct and ωt /∈ Ct, so all scores Uat,ω t and Uat,v for 
+
+v ∈ Ct are distinct (seed, token) pairs, and are therefore independent and uniform. In particular, each 
+
+Rt is a function of its own disjoint set of scores, so the Rt are independent, and it remains to show that each Rt is uniform. Fix t and write U := Uat,ω t , λ := λt and W := Wt. Given U = u, the competitors are independent, so Pr[ W = 1 | U = u] = Q 
+
+> v∈Ct
+
+Pr[ Uat,v < u αt,v ] = uλ. Let Y := W + U , which ranks every winning outcome above every losing one, and then by the value of U . Y has a continuous distribution, and its survival function is, for W = 1 and for W = 0 respectively, 
+
+Pr[ Y ′ ≥ 1 + u] = 
+
+Z 1
+
+> u
+
+xλ dx = 1 − u1+ λ
+
+1 + λ ,
+
+Pr[ Y ′ ≥ u] = 11 + λ +
+
+Z 1
+
+> u
+
+(1 − xλ) d x = 1 − u + u1+ λ
+
+1 + λ ,
+
+45 Preprint where Y ′ is an independent copy of Y . Hence Rt = Pr[ Y ′ ≥ Y | Y ], and by the probability integral transform, Rt ∼ U ([0 , 1]) .
+
+## J PROMPTS 
+
+In this section, we provide the prompt given to the research agent (App. J.1) and the prompts used for the back-translation and paraphrasing attacks during evaluation (App. J.2). J.1 AGENT PROMPT 
+
+The following prompt is given to the autonomous research agent. 
+
+> Watermark design prompt
+
+Your goal is to design a new distortion-free watermarking scheme in the lm-wm-tools library that significantly outperforms prior work across all key dimensions: detectability, robustness, and diversity. For diversity and PPL, the goal is to be as close as possible to the corresponding unwatermarked values (the leaderboard ranks based on the distance to the unwatermarked values). You should focus on new experimental ideas and reason mathematically about watermarking to make genuine breakthroughs rather than tweaking hyperparameters. Also, a constraint of the challenge is to focus only on distortion-free schemes. A key challenge of watermark development is to make sure that: • The scheme is distortion-free. • The scheme is robust to edits to the generated text. Each of your submissions should be accompanied by: • A proof that your scheme is distortion-free and well-calibrated. • A commit message. Before an official submission, use the lm-wm-tools verify and lm-wm-tools evaluate 
+
+commands to evaluate your proposed schemes. We provide public configuration but you are also welcome to use your owns. You have a limited number of official submissions (use   
+
+> wm-harness limit
+
+to see how many remain), so only evaluate schemes that you are confident (i) are sound and (ii) outperform prior work or submissions. Soundness, in particular, is a significant constraint: your scheme should satisfy the following properties as much as possible (reported results are for baselines verification). Let K be the watermark key, Σ the vocabulary, L the LLM probability distribution, LK the watermarked LLM probability distribution, and pK (ω) the detector p-value for text ω under key K.
+
+Distortion-free 
+
+∀ω ∈ Σ∗, EK [LK (ω)] = L(ω)
+
+Scheme Context 1 Context 2 Context 3 Context 4 Context 5 AAR 1 0.4194 0.5642 1 —SynthID 0.5092 0.6584 1 0.4254 1TextSeal 1 1 1 1 —
+
+Soundness over the key 
+
+∀ω ∈ Σ∗, ∀α ∈ [0 , 1] , Pr  
+
+> K
+
+[pK (ω) ≤ α] ≤ α
+
+46 Preprint Scheme Context 1 Context 2 Context 3 Context 4 Context 5 AAR 0.009677 0.02317 0.1124 0.2463 —SynthID 0.1516 0.4806 0.5053 1 0.9043 TextSeal 0.3678 1 1 1 —
+
+Soundness for a deployed key 
+
+∀K, Pr 
+
+> Ω∼H 0
+
+[pK (Ω) ≤ α] ≤ α
+
+Scheme Context 1 Context 2 Context 3 Context 4 Context 5 AAR 2.981e-82 4.811e-14 3.813e-05 0.07999 —SynthID 8.056e-122 9.575e-41 4.136e-09 6.433e-05 0.2573 TextSeal 5.265e-67 0.001826 1 1 —You are operating autonomously. 
+
+Official submissions 
+
+When you have a submission you like, submit it for private grading through the black-box  
+
+> wm-harness
+
+command:    
+
+> wm-harness evaluate configs/MyScheme.yaml wm-harness leaderboard
+
+Run wm-harness limit before submitting to see the run’s evaluation budget: limit , used ,and remaining (null means unlimited). Each new official evaluation job consumes one call, even if verification or grading fails. Duplicate requests do not consume another call; removing a queued job does not refund it. Stop submitting when no calls remain. The wm-harness leaderboard command shows you all prior evaluation results, and you should consider it trustworthy.   
+
+> wm-harness evaluate
+
+runs official verification first, then evaluates the same committed snapshot only if every check passes. One job covers both stages. Results include  
+
+> verification.all_passed
+
+and verification.checks ; rejected submissions have no evalua-tion metrics, and the CLI exits with code 2. By default, the command waits for both stages; use --no-wait to return the queued job immediately. Before calling wm-harness evaluate :1. Keep the working tree clean. 2. Commit the exact scheme, configuration, documentation, and required assets. 3. Submit the committed configuration path. The API grades an immutable archive of that commit and rejects dirty or uncommitted work. Use wm-harness status JOB_ID to inspect an asynchronous job. Status includes 
+
+> progress.stage
+
+, a readable progress.message , progress.updated_at (last stage or com-pleted grading pass), and progress.heartbeat_at (worker heartbeat every five seconds while running). Long model startup or grading passes can leave the stage unchanged. We automatically queue submissions, so it is better to wait until the submission is done: you can use wm-harness wait JOB_ID to wait indefinitely for one job, or add --timeout <seconds> to bound the wait (run this command in the foreground). It is okay to wait for long periods (e.g., a few hours) to save tokens; repeatedly waiting for only one minute is inefficient. You can also run wm-harness list to list all queued API queries along with their IDs. Use wm-harness remove JOB_ID to remove a job that is still queued. Running or completed jobs cannot be removed. Removed jobs disappear from the job list and can be submitted again. Be aware that official evaluation can take a few minutes to a few hours, depending on the scheme implementation. To help you, lm-wm-tools verify and lm-wm-tools evaluate are public subsets of the verification and evaluation stages run by wm-harness evaluate . You can use them locally to estimate whether your submission is worth evaluating on the private test. 47 Preprint API credentials for public paraphrasing evaluation are installed at /home/sandbox/secret.sh .Before running lm-wm-tools evaluate , load them in the same shell with set -a; source /home/sandbox/secret.sh; set +a so the CLI inherits the credentials. 
+
+Modifying lm-wm-tools 
+
+If you want to implement a scheme that does not fit well with the lm-wm-tools framework, you can modify the library more extensively. However, for the harness to work, your changes must remain compatible with the lm-wm-tools verify and lm-wm-tools evaluate commands. You should also make your watermark efficient and can change the library’s inner workings to achieve the required efficiency. 
+
+Do not finish while official jobs are pending 
+
+When you are done, do not produce your final answer while any official evaluation job is queued or running. Instead, run in the foreground:  
+
+> wm-harness wait
+
+It waits until the official queue is empty and then returns the results of every submitted job. Do not background it, replace it with a custom monitoring script, or end your turn while it is running. Inspect all returned results, act on them, improve rejected or underperforming candidates, submit them with wm-harness evaluate , and run wm-harness wait again if that creates more queued work. Only finish after the official queue is empty and you have checked the returned results. 
+
+Notes 
+
+The private configuration, datasets, seeds, raw reports, and grader filesystem are intentionally unavailable. Do not attempt to infer, access, or reproduce them: this would be considered cheating. J.2 ATTACK PROMPTS 
+
+Here, we detail the prompts we used for the back-translation and paraphrasing attacks. In the example below, <text> is replaced with the actual text to translate or paraphrase. For back-translation, the prompt is applied twice, once for translating to French and the other time to translate back into the original language. 
+
+> Back-translation prompt
+
+Translate the following text to {language} . Your reply should only contain the translated text. 
+
+> <text>
+> Paraphrasing prompt
+
+Please rewrite the following text and return only the rewritten text: <text> 
+
+## K FULL EXPERIMENTAL RESULTS 
+
+In this section, we report the full numerical results behind the figures of the paper. In App. K.1, we give the results of every scheme submitted during the autoresearch trajectories of Sec. 4.1, and in App. K.2, every configuration evaluated in the component ablation of App. A. K.1 AUTORESEARCH TRAJECTORIES 
+
+Table 5 reports the results of the three baselines and of the 52 submissions of the four research agents from Figure 2, in submission order. 48 Preprint Table 5: Full results of every submission of Figure 2, in submission order. Each TPR cell reports the guaranteed / empirical / no-correction settings of App. C (quality does not depend on the setting). Parentheses mark values without correction for schemes that then fail our soundness given a key test. Within each group, bold marks the best (unrounded) value of each column and setting. 
+
+Robustness TPR@1 ↑ Quality deviation (%) ↓
+
+# Scheme Clean TPR@1 ↑ Deletion Substitution Back-trans. Paraphrase ∆PPL ∆SB-2 ∆SB-3 
+
+Baselines 
+
+TextSeal 100 / 100 / 100 14 / 34 / 34 28 / 54 / 54 89 / 97 / 97 38 / 58 / 58 4.3 2.3 7.3 AAR 100 / 100 / (100) 4 / 19 / (19) 8 / 30 / (30) 76 / 92 / (92) 19 / 41 / (41) 3.9 3.9 12 SynthID 100 / 100 / (100) 9 / 30 / (30) 20 / 44 / (44) 88 / 95 / (95) 35 / 56 / (56) 2.5 2.0 7.1 GPT-6 A STRA (xhigh) 
+
+1 CascadeCopula 100 / 100 / (100) 60 / 79 / (80) 60 / 78 / (79) 95 / 99 / (99) 58 / 76 / (76) 2.3 3.9 10 2 LexicalCopula 100 / 100 / (100) 57 / 78 / (78) 69 / 83 / (84) 94 / 98 / (98) 63 / 78 / (79) 1.0 3.4 9.4 3 PortfolioRace 100 / 100 / 100 51 / 67 / 67 70 / 80 / 80 94 / 98 / 98 59 / 71 / 71 3.1 2.1 4.7 4 TailRace 99 / 100 / (100) 44 / 66 / (67) 55 / 73 / (73) 87 / 94 / (94) 50 / 70 / (70) 4.8 3.1 8.3 5 DirectionalRenewal 100 / 100 / 100 67 / 83 / 83 73 / 86 / 86 96 / 99 / 99 64 / 78 / 78 4.0 4.0 9.5 6 HaarCap 100 / 100 / 100 64 / 80 / 80 69 / 84 / 84 94 / 98 / 98 62 / 76 / 76 1.5 1.6 5.9 7 HaarGamma 100 / 100 / 100 67 / 80 / 80 74 / 84 / 84 96 / 98 / 98 66 / 76 / 76 1.5 2.3 6.7 8 HaarPredictive 100 / 100 / (100) 71 / 85 / (85) 77 / 88 / (88) 96 / 98 / (98) 68 / 80 / (80) 1.8 2.6 7.0 9 HaarGraph 100 / 100 / 100 72 / 86 / 86 77 / 88 / 88 96 / 98 / 98 69 / 82 / 82 3.2 2.0 5.5 10 HaarLexical 99 / 99 / (99) 83 / 92 / (92) 76 / 86 / (86) 92 / 97 / (97) 66 / 79 / (79) 2.1 2.0 5.4 11 HaarLexicalFirst 99 / 100 / (100) 84 / 91 / (91) 81 / 89 / (89) 94 / 98 / (98) 68 / 82 / (82) 2.4 2.2 5.7 12 ProjectiveFirst 99 / 100 / 100 81 / 91 / 91 75 / 86 / 86 93 / 97 / 97 64 / 78 / 78 1.7 1.9 4.2 13 AxialFirst 99 / 100 / (100) 83 / 92 / (92) 78 / 88 / (88) 95 / 98 / (98) 70 / 83 / (83) 3.1 2.3 5.7 14 RotationFirst 99 / 100 / 100 81 / 90 / 90 77 / 86 / 86 93 / 97 / 97 68 / 80 / 80 1.0 1.6 4.0 GPT-6 A STRA (low) 
+
+1 FreshRace 99 / 100 / (100) 13 / 34 / (35) 14 / 37 / (37) 74 / 90 / (90) 28 / 50 / (51) 7.2 1.9 7.1 2 FreshRace-selective 100 / 100 / (100) 26 / 52 / (53) 28 / 54 / (54) 89 / 96 / (96) 44 / 65 / (65) 3.9 3.8 12 3 FreshRace-deployment 100 / 100 / (100) 39 / 61 / (62) 43 / 69 / (69) 92 / 97 / (97) 53 / 72 / (72) 4.9 2.9 11 4 FreshRace-channels 100 / 100 / 100 38 / 60 / 60 46 / 65 / 65 94 / 98 / 98 55 / 71 / 71 8.8 2.2 8.0 5 FreshRace-adaptive-channels 100 / 100 / (100) 42 / 65 / (65) 44 / 66 / (67) 91 / 96 / (96) 53 / 70 / (70) 9.8 1.7 5.3 
+
+6 FreshRace-split 100 / 100 / (100) 58 / 75 / (75) 60 / 78 / (78) 96 / 98 / (98) 62 / 76 / (76) 8.0 3.3 9.5 7 FreshRace-antithetic-reservoir 100 / 100 / 100 49 / 67 / 67 50 / 68 / 68 93 / 97 / 97 53 / 68 / 68 5.4 1.9 5.3 8 FreshRace-balanced 100 / 100 / 100 40 / 60 / 60 50 / 67 / 67 94 / 97 / 97 55 / 70 / 70 7.4 2.8 9.0 9 FreshRace-lexical 100 / 100 / 100 51 / 71 / 71 64 / 81 / 81 95 / 98 / 98 59 / 75 / 75 7.3 2.4 7.4 10 FreshRace-lexical 100 / 100 / 100 51 / 69 / 69 66 / 81 / 81 95 / 98 / 98 59 / 74 / 74 5.2 2.6 7.7 11 RenewalRace 95 / 98 / (98) 80 / 90 / (91) 52 / 71 / (74) 82 / 92 / (92) 52 / 69 / (72) 4.7 3.2 5.8 
+
+OPUS 5
+
+1 TallyMark 100 / 100 / (100) 37 / 63 / (64) 57 / 77 / (78) 86 / 94 / (95) 44 / 63 / (64) 4.1 3.1 8.3 2 TallyMark 100 / 100 / (100) 32 / 57 / (57) 34 / 60 / (60) 87 / 95 / (95) 42 / 64 / (64) 3.1 1.7 7.4 3 TallyMark 100 / 100 / (100) 33 / 61 / (62) 60 / 80 / (81) 88 / 95 / (95) 47 / 67 / (67) 5.2 3.6 10 4 TallyMark 100 / 100 / (100) 36 / 64 / (64) 57 / 80 / (80) 88 / 97 / (97) 49 / 69 / (70) 2.8 3.4 9.2 5 ChoirMark 100 / 100 / (100) 57 / 75 / (75) 78 / 87 / (87) 96 / 99 / (99) 62 / 75 / (75) 5.8 14 34 6 CanonMark 100 / 100 / 100 43 / 59 / 59 66 / 78 / 78 93 / 96 / 96 51 / 64 / 64 4.2 2.6 4.3 7 LadderMark 100 / 100 / 100 51 / 66 / 66 67 / 78 / 78 95 / 98 / 98 56 / 68 / 68 3.8 2.7 4.6 8 PreludeMark 100 / 100 / (100) 73 / 88 / (88) 79 / 90 / (91) 98 / 99 / (99) 70 / 84 / (84) 9.0 5.8 18 9 ConsortMark 100 / 100 / (100) 65 / 79 / (79) 70 / 82 / (82) 97 / 99 / (99) 62 / 75 / (75) 5.7 1.6 5.1 10 SestetMark 100 / 100 / (100) 66 / 82 / (82) 78 / 86 / (86) 97 / 99 / (99) 67 / 78 / (78) 9.0 1.3 5.1 11 MotetMark 100 / 100 / (100) 66 / 82 / (82) 77 / 87 / (87) 97 / 99 / (99) 62 / 78 / (78) 7.2 1.6 5.8 12 CodaMark 100 / 100 / (100) 66 / 81 / (81) 77 / 86 / (86) 97 / 99 / (99) 65 / 79 / (79) 8.0 1.5 5.4 13 AccentMark 100 / 100 / 100 69 / 82 / 82 83 / 90 / 90 99 / 100 / 100 74 / 84 / 84 8.0 1.5 6.0 14 RowMark 100 / 100 / 100 67 / 84 / 84 82 / 91 / 91 99 / 100 / 100 74 / 86 / 86 6.3 1.6 5.8 15 UnisonMark 100 / 100 / 100 68 / 82 / 82 84 / 93 / 93 99 / 100 / 100 74 / 85 / 85 6.4 1.3 4.9 16 ConcordMark 100 / 100 / 100 65 / 79 / 79 89 / 94 / 94 99 / 100 / 100 75 / 84 / 84 5.5 1.2 4.3 GEMINI -3.8 F LASH (high) 
+
+1 OmniSeal 100 / 100 / 100 18 / 41 / 41 34 / 58 / 58 91 / 97 / 97 45 / 62 / 62 6.8 5.2 16 2 OmniSeal 100 / 100 / 100 16 / 40 / 40 34 / 57 / 57 93 / 98 / 98 44 / 64 / 64 7.4 5.0 15 3 OmniSeal 100 / 100 / 100 16 / 40 / 40 32 / 58 / 58 92 / 98 / 98 44 / 63 / 63 5.6 4.9 15 4 OmniSeal 100 / 100 / 100 16 / 40 / 40 35 / 61 / 61 92 / 97 / 97 42 / 64 / 64 6.9 5.3 16 5 OmniSeal-G0 100 / 100 / 100 14 / 37 / 37 32 / 58 / 58 90 / 96 / 96 41 / 63 / 63 7.6 4.9 15 6 OmniSeal-K40 100 / 100 / 100 15 / 37 / 37 31 / 58 / 58 91 / 97 / 97 38 / 59 / 59 11 5.7 17 7 OmniSeal-K45 100 / 100 / 100 16 / 40 / 40 34 / 58 / 58 92 / 98 / 98 42 / 62 / 62 9.1 5.3 16 8 OmniSeal-K35 100 / 100 / 100 13 / 36 / 36 29 / 56 / 56 92 / 98 / 98 38 / 60 / 60 14 6.0 17 9 OmniSeal-W05 100 / 100 / 100 17 / 39 / 39 31 / 57 / 57 92 / 98 / 98 41 / 61 / 61 5.1 5.1 16 10 OmniSeal-C4 100 / 100 / 100 5 / 16 / 16 14 / 34 / 34 85 / 94 / 94 25 / 45 / 45 6.1 3.7 11 
+
+11 OmniSeal-K30 100 / 100 / 100 12 / 32 / 32 26 / 53 / 53 92 / 98 / 98 38 / 60 / 60 18 7.0 19 
+
+Setup We use the private evaluation of Sec. 4: for each metric, we report the worst result over the 5
+
+watermark keys, each evaluated on 1000 replies. We evaluate every scheme under the three p-value corrections of App. C: guaranteed (p-values multiplied by 1/β = 20 ), empirical (smallest multiplier 
+
+κ ≥ 1 that passes our soundness tests, Figure 24), and no correction (κ = 1 ). As in App. C, we first remove the outer multiplier chosen by the agent (if any) and keep the rest of the detector unchanged. For each watermark key, all settings share the same generated replies and the same attacked texts: 49 Preprint Table 6: Watermark unit and context seeding (App. A.2 and A.3). Each cell reports identity grouping / Lexical group .
+
+Robustness TPR@1 ↑ Quality deviation (%) ↓
+
+Variant Clean TPR@1 ↑ Deletion Substitution Back-trans. Paraphrase ∆PPL ∆SB-2 ∆SB-3 Core (fixed k = 2 , Gumbel race , Gamma ) 100 / 100 56 / 54 67 / 76 97 / 98 64 / 68 0.1 / 1.1 4.5 / 4.6 16 / 16 
+
+Fixed-length 
+
+k = 0 100 / 99 92 / 88 70 / 61 93 / 90 67 / 60 30 / 32 12 / 13 29 / 31 
+
+k = 1 99 / 99 57 / 51 51 / 55 89 / 89 50 / 49 2.7 / 2.5 5.5 / 4.1 14 / 11 
+
+k = 3 100 / 100 25 / 25 42 / 60 96 / 97 52 / 54 0.9 / 0.4 3.1 / 2.1 11 / 8.1 
+
+Unordered 
+
+Pair {ωt−1, v } 100 / 100 91 / 90 91 / 94 99 / 99 82 / 85 0.2 / 0.0 13 / 12 34 / 32 
+
+k = 2 100 / 100 58 / 56 68 / 79 97 / 98 62 / 67 0.6 / 1.0 4.1 / 3.7 15 / 14 
+
+k = 3 100 / 100 22 / 21 43 / 56 97 / 97 50 / 51 0.0 / 0.9 2.5 / 2.2 9.5 / 8.0 
+
+Adaptive and global length   
+
+> Adaptive length
+
+100 / 100 73 / 70 77 / 79 98 / 98 71 / 71 2.3 / 1.9 5.7 / 5.4 17 / 16 + Excess detector 100 / – 72 / – 78 / – 98 / – 72 / – 1.0 / – 5.6 / – 17 / –    
+
+> Global +local
+
+100 / 100 88 / 85 76 / 77 96 / 96 70 / 69 16 / 18 10 / 9.2 25 / 23    
+
+> Global first use
+
+100 / 100 90 / 85 76 / 80 97 / 98 72 / 72 15 / 16 13 / 11 34 / 28 
+
+Anchored  
+
+> Anchored
+
+(Smax = 4 ) 96 / 95 38 / 35 21 / 33 71 / 72 30 / 28 3.0 / 1.0 5.6 / 3.9 16 / 12 
+
+Suffix cascade and counting   
+
+> Suffix cascade
+
+100 / 100 78 / 76 85 / 86 99 / 99 76 / 78 2.3 / 0.5 9.5 / 7.6 26 / 22  
+
+> Tally
+
+100 / 100 75 / 71 89 / 93 99 / 99 78 / 77 1.2 / 2.2 25 / 13 61 / 34  
+
+> Ladder
+
+K = 3 100 / 100 72 / 72 80 / 90 98 / 99 75 / 73 4.6 / 1.5 25 / 14 61 / 36  
+
+> Ladder
+
+K = 3 + floor 100 / 100 76 / 76 81 / 91 99 / 99 73 / 75 2.8 / 1.1 25 / 13 61 / 35  
+
+> Ladder
+
+K = 4 100 / 100 77 / 73 84 / 87 99 / 99 77 / 76 0.7 / 0.5 25 / 14 62 / 35  
+
+> Ladder
+
+K = 4 + floor 100 / 100 77 / 75 80 / 86 99 / 99 74 / 78 2.4 / 0.1 25 / 13 62 / 36 
+
+On Signed sphere + ResidualRace 
+
+Fixed-length k = 2 100 / 100 33 / 35 47 / 63 96 / 95 49 / 53 0.7 / 1.0 0.4 / 0.4 0.4 / 0.3 Fixed-length k = 1 100 / 100 75 / 75 74 / 81 98 / 97 72 / 71 0.5 / 0.1 0.3 / 0.7 2.1 / 0.3 Unordered pair 100 / 100 72 / 76 72 / 82 97 / 97 67 / 72 1.2 / 1.0 0.1 / 0.1 1.7 / 0.9    
+
+> Global +local
+
+(k = 1 ) 100 / 100 86 / 84 74 / 76 96 / 94 68 / 65 0.5 / 0.7 0.6 / 0.8 2.5 / 2.1    
+
+> Global first use
+
+(k = 1 ) 100 / 100 89 / 85 78 / 81 96 / 96 73 / 70 0.7 / 1.8 0.1 / 0.3 1.1 / 1.4 
+
+only the multiplier applied to the p-values changes. Hence, the quality columns do not depend on the setting. 
+
+Reading the table Each TPR cell reports the guaranteed / empirical / no-correction results, and the first column gives the submission index (i.e., the x-axis of Figure 2). Parentheses mark the results without correction of the schemes that then fail our soundness given a key test (i.e., whose empirical multiplier is above 1). Note that Figure 2 instead uses the multiplier chosen by each agent: 20 for GPT-6 A STRA (except for the first two submissions of the low variant), between 1 and 6 for O PUS 5, and none for G EMINI -3.8 F LASH and the baselines. Moreover, as we evaluate the settings on newly generated replies (with the same watermark keys), the results can differ by a few points from those of Figure 2. K.2 COMPONENT ABLATION 
+
+Tables 6–9 report all the configurations of the component ablation of App. A, following the same structure: watermark unit and context seeding, watermark score, logits transformation, and detection. 
+
+Setup We use the experimental setup of App. A.1: each configuration swaps one or a few compo-nents of the simple baseline scheme (identity grouping, Fixed-length context seeding with k = 2 ,
+
+˜U = U , the Gumbel race , and the Gamma detector). All configurations are evaluated on the private evaluation of Sec. 4 with a single watermark key, and their p-values are multiplied by 1/β = 20 so that they are sound given a key (Sec. 3.2). Unlike the bar plots of App. A, which show differences, we report absolute values with the same columns as Table 1: the TPR@1%FPR on clean text and under each attack, and the relative distance (in %) to the unwatermarked model in perplexity and bigram and trigram Self-BLEU. 
+
+Reading the tables Each cell reports the result with the identity grouping (left) and with the 
+
+Lexical group (App. A.2) (right), so that comparing the two sides of a cell gives the effect of the watermark unit on that configuration. The first row of each table is the baseline scheme, which every other configuration modifies. In Table 9, only the detector changes: each block rescores the exact 50 Preprint Table 7: Watermark score (App. A.4). Each cell reports identity grouping / Lexical group .
+
+Robustness TPR@1 ↑ Quality deviation (%) ↓
+
+Variant Clean TPR@1 ↑ Deletion Substitution Back-trans. Paraphrase ∆PPL ∆SB-2 ∆SB-3 Core (fixed k = 2 , Gumbel race , Gamma ) 100 / 100 56 / 54 67 / 76 97 / 98 64 / 68 0.1 / 1.1 4.5 / 4.6 16 / 16 
+
+> Prelude
+
+On the core 100 / 100 54 / 52 67 / 74 96 / 97 62 / 63 3.2 / 2.6 2.4 / 2.8 11 / 11 On Ladder K = 4 + floor 100 / 100 74 / 70 78 / 84 99 / 98 74 / 73 3.2 / 1.0 6.2 / 5.3 18 / 15  
+
+> Gaussian copula
+
+ρ = 0 .7 99 / 100 23 / 20 29 / 39 83 / 84 34 / 37 0.3 / 0.4 0.3 / 0.6 1.7 / 3.5 
+
+ρ = 0 .8 100 / 100 34 / 33 42 / 56 89 / 91 45 / 50 0.9 / 1.2 0.5 / 0.4 4.6 / 4.1 
+
+ρ = 0 .85 100 / 100 36 / 38 50 / 63 93 / 95 49 / 55 0.1 / 3.0 1.4 / 0.9 6.5 / 5.5 
+
+ρ = 0 .9 100 / 100 44 / 44 57 / 67 94 / 95 54 / 59 1.7 / 0.1 1.0 / 2.0 7.1 / 8.3 
+
+ρ = 0 .95 100 / 100 52 / 52 63 / 71 97 / 97 62 / 62 0.6 / 1.4 2.2 / 2.5 9.7 / 10   
+
+> Gaussian copula
+
++ common-pair filter 
+
+ρ = 0 .7 99 / 100 20 / 19 28 / 38 80 / 84 34 / 35 1.6 / 0.3 0.1 / 0.1 2.2 / 2.5 
+
+ρ = 0 .8 100 / 100 32 / 35 39 / 52 90 / 92 43 / 48 1.1 / 0.7 0.3 / 0.9 3.5 / 4.6 
+
+ρ = 0 .85 100 / 100 38 / 36 47 / 60 92 / 92 49 / 53 1.3 / 1.4 0.6 / 1.5 4.7 / 6.7 
+
+ρ = 0 .9 100 / 100 44 / 43 50 / 64 94 / 95 53 / 55 0.3 / 0.8 0.8 / 1.5 5.9 / 7.0 
+
+ρ = 0 .95 100 / 100 48 / 50 59 / 72 96 / 98 61 / 64 0.1 / 1.0 1.2 / 2.3 7.3 / 9.4 
+
+ρ = 1 100 / 100 57 / 56 64 / 75 97 / 98 63 / 68 2.4 / 1.6 3.3 / 4.0 13 / 14  
+
+> Private sampling
+
+r = 0 .1 100 / 100 47 / 45 58 / 67 95 / 97 57 / 62 0.9 / 1.3 2.2 / 2.6 9.7 / 10 
+
+r = 0 .2 100 / 100 42 / 38 52 / 62 93 / 93 49 / 57 2.5 / 1.6 1.1 / 1.5 6.6 / 7.1 
+
+r = 0 .3 99 / 99 30 / 30 39 / 52 87 / 89 44 / 48 4.0 / 3.5 0.6 / 0.9 4.6 / 5.1    
+
+> Tail indicator
+> Tail indicator
+
+99 / 99 27 / 26 42 / 48 84 / 86 39 / 42 2.2 / 1.3 0.3 / 0.7 4.0 / 4.6 
+
+Independent Channels 
+
+L = 4 100 / 100 51 / 47 60 / 71 96 / 97 60 / 61 2.0 / 1.4 2.3 / 1.9 8.1 / 6.9 
+
+L = 16 100 / 100 39 / 38 56 / 63 96 / 94 48 / 52 2.3 / 0.2 0.3 / 0.0 2.1 / 1.0 
+
+L = 32 100 / 100 36 / 34 48 / 62 94 / 95 46 / 50 0.0 / 1.1 0.5 / 0.3 0.4 / 0.2 
+
+L = 64 100 / 100 32 / 30 46 / 57 92 / 94 42 / 49 0.3 / 1.5 0.6 / 0.5 0.8 / 0.7 
+
+L = 128 100 / 100 29 / 28 41 / 57 91 / 92 42 / 48 0.8 / 0.4 0.4 / 0.6 0.7 / 1.3 
+
+Correlated Channels  
+
+> Latin
+
+L = 4 100 / 100 50 / 48 64 / 72 96 / 97 56 / 61 2.0 / 2.9 1.6 / 1.5 6.5 / 5.8  
+
+> Antithetic
+
+L = 4 100 / 100 46 / 43 58 / 70 97 / 95 60 / 59 0.3 / 0.4 1.6 / 0.6 6.6 / 4.3  
+
+> Latin
+
+L = 16 100 / 100 40 / 40 51 / 64 95 / 96 50 / 52 0.4 / 0.6 0.2 / 0.1 0.5 / 1.2  
+
+> Stratified
+
+L = 16 100 / 100 40 / 37 52 / 64 94 / 94 50 / 48 1.0 / 1.7 0.1 / 0.3 1.0 / 0.0   
+
+> Gaussian direction
+
++ Gumbel race 
+
+d = 1 100 / 100 36 / 37 50 / 59 95 / 95 52 / 53 1.4 / 0.5 2.8 / 2.4 11 / 9.0 
+
+d = 2 100 / 100 28 / 28 41 / 50 92 / 93 46 / 47 0.2 / 0.5 0.5 / 0.6 3.5 / 3.1 
+
+d = 4 100 / 100 21 / 18 31 / 44 89 / 90 37 / 38 2.3 / 1.4 0.8 / 0.5 0.6 / 0.3 
+
+d = 8 100 / 100 15 / 15 24 / 37 83 / 86 31 / 33 1.8 / 1.0 0.1 / 0.7 0.0 / 0.7   
+
+> Gaussian direction
+
++ ResidualRace 
+
+d = 1 100 / 100 44 / 43 58 / 72 97 / 98 55 / 62 1.5 / 2.1 5.4 / 3.6 18 / 13 
+
+d = 2 100 / 100 34 / 33 48 / 65 96 / 96 51 / 55 0.9 / 1.1 1.1 / 1.1 5.1 / 5.1 
+
+d = 4 100 / 100 29 / 27 39 / 53 94 / 95 45 / 50 0.2 / 0.8 0.2 / 0.3 1.3 / 0.7 
+
+d = 8 100 / 100 20 / 20 32 / 48 91 / 92 38 / 41 1.5 / 2.7 0.9 / 0.6 0.9 / 0.3  
+
+> Spherical
+
++ Gumbel race   
+
+> Signed sphere
+
+100 / 100 29 / 28 41 / 57 90 / 94 43 / 46 2.2 / 1.2 0.9 / 1.0 1.6 / 1.9   
+
+> Unoriented axis
+
+100 / 100 30 / 27 41 / 56 91 / 92 45 / 45 2.4 / 0.5 0.2 / 0.5 0.2 / 0.7   
+
+> Complex ray
+
+100 / 100 24 / 23 34 / 50 88 / 91 39 / 42 0.0 / 1.6 1.5 / 0.5 2.7 / 0.8  
+
+> Rotation
+
+100 / 100 25 / 24 39 / 51 89 / 91 39 / 45 1.1 / 2.1 0.9 / 1.1 1.5 / 2.3  
+
+> Spherical
+
++ ResidualRace   
+
+> Signed sphere
+
+100 / 100 33 / 35 47 / 63 96 / 95 49 / 53 0.7 / 1.0 0.4 / 0.4 0.4 / 0.3   
+
+> Unoriented axis
+
+100 / 100 34 / 33 48 / 62 94 / 95 46 / 53 3.3 / 0.1 0.6 / 0.7 1.1 / 1.1   
+
+> Complex ray
+
+100 / 100 29 / 28 44 / 56 93 / 94 45 / 48 0.4 / 0.0 1.1 / 1.0 2.1 / 1.7  
+
+> Rotation
+
+100 / 100 33 / 32 47 / 63 94 / 95 47 / 52 1.0 / 1.2 0.4 / 0.9 0.5 / 1.7 
+
+same generated texts, so the quality columns are those of the corresponding generation. A dash indicates a configuration that we only evaluated with the identity grouping. 51 Preprint Table 8: Logits transformation (App. A.5). Each cell reports identity grouping / Lexical group .
+
+Robustness TPR@1 ↑ Quality deviation (%) ↓
+
+Variant Clean TPR@1 ↑ Deletion Substitution Back-trans. Paraphrase ∆PPL ∆SB-2 ∆SB-3 Core (fixed k = 2 , Gumbel race , Gamma ) 100 / 100 56 / 54 67 / 76 97 / 98 64 / 68 0.1 / 1.1 4.5 / 4.6 16 / 16 
+
+Races with private randomness  
+
+> BandRace
+
+98 / 98 16 / 16 20 / 29 73 / 75 29 / 29 2.0 / 0.7 0.3 / 0.1 1.7 / 2.5  
+
+> PoolRace
+
+(K = 16 ) 100 / 100 33 / 27 44 / 50 93 / 92 46 / 52 3.2 / 0.2 0.8 / 1.0 5.3 / 5.6  
+
+> MomentBridge
+
+(K = 8 ) 88 / 88 3 / 4 6 / 7 37 / 36 8 / 11 1.9 / 1.2 0.5 / 0.8 0.2 / 0.7 
+
+Quantile  
+
+> QuantileRace
+
+93 / 91 4 / 5 7 / 12 44 / 46 12 / 13 1.4 / 0.3 2.6 / 1.6 10 / 7.5 + Wheel 85 / 86 0 / 0 1 / 2 19 / 21 3 / 4 2.7 / 0.8 0.5 / 0.7 1.3 / 1.4 
+
+Transport ( L = K independent channels)  
+
+> TransportRace
+
+K = 32 99 / 99 14 / 11 26 / 35 83 / 85 31 / 32 0.3 / 0.5 0.3 / 0.6 0.7 / 1.4  
+
+> TransportRace
+
+K = 128 100 / 100 23 / 20 32 / 48 87 / 88 38 / 40 1.8 / 0.9 0.8 / 1.2 2.1 / 2.5  
+
+> QuotaTransport
+
+K = 32 99 / 100 19 / 18 30 / 40 87 / 87 37 / 35 2.2 / 0.2 1.1 / 1.0 2.4 / 1.9  
+
+> QuotaTransport
+
+K = 128 100 / 100 22 / 20 34 / 48 88 / 90 41 / 39 0.3 / 0.3 0.6 / 1.4 1.4 / 2.8 
+
+Residual clocks  
+
+> ResidualRace
+
+100 / 100 63 / 63 72 / 82 98 / 99 70 / 74 1.5 / 0.9 9.0 / 6.3 27 / 21 
+
+Skeleton   
+
+> Last important
+
++ Content gate 99 / 98 54 / 47 26 / 30 84 / 80 46 / 44 0.5 / 0.6 1.0 / 0.1 3.0 / 1.0  
+
+> Interleaved
+
++ Interleaved gate 99 / 98 49 / 45 42 / 46 88 / 85 48 / 46 0.3 / 1.3 2.3 / 1.4 6.0 / 4.1 
+
+Table 9: Detection (App. A.6), on fixed generated texts: only the detector changes, so the quality is that of the generation. Each cell reports identity grouping / Lexical group .
+
+Robustness TPR@1 ↑ Quality deviation (%) ↓
+
+Variant Clean TPR@1 ↑ Deletion Substitution Back-trans. Paraphrase ∆PPL ∆SB-2 ∆SB-3 
+
+Core texts, no forward pass  
+
+> Gamma
+
+100 / 100 56 / 54 67 / 76 97 / 98 64 / 68 0.1 / 1.1 4.5 / 4.6 16 / 16  
+
+> Gaussian
+
+100 / 100 40 / 40 51 / 64 95 / 96 54 / 57 0.1 / 1.1 4.5 / 4.6 16 / 16  
+
+> Clustering
+
+100 / 100 57 / 55 67 / 77 97 / 98 64 / 68 0.1 / 1.1 4.5 / 4.6 16 / 16  
+
+> Excess
+
+100 / 100 57 / 55 68 / 77 97 / 98 64 / 68 0.1 / 1.1 4.5 / 4.6 16 / 16 
+
+Core texts, forward pass   
+
+> Weighted Gamma
+
+100 / 100 59 / 56 73 / 81 99 / 100 73 / 79 0.1 / 1.1 4.5 / 4.6 16 / 16   
+
+> Position evidence
+
+100 / 100 57 / 56 70 / 80 98 / 99 68 / 74 0.1 / 1.1 4.5 / 4.6 16 / 16 + weighting 100 / 100 60 / 60 76 / 85 99 / 100 76 / 82 0.1 / 1.1 4.5 / 4.6 16 / 16 
+
+Independent Channels 
+
+L = 4 , Bonferroni 100 / 100 51 / 47 60 / 71 96 / 97 60 / 61 2.0 / 1.4 2.3 / 1.9 8.1 / 6.9 
+
+L = 4 , Šidák 100 / 100 51 / 47 60 / 71 96 / 97 60 / 61 2.0 / 1.4 2.3 / 1.9 8.1 / 6.9 
+
+L = 16 , Bonferroni 100 / 100 39 / 38 56 / 63 96 / 94 48 / 52 2.3 / 0.2 0.3 / 0.0 2.1 / 1.0 
+
+L = 16 , Šidák 100 / 100 39 / 38 56 / 63 96 / 94 48 / 52 2.3 / 0.2 0.3 / 0.0 2.1 / 1.0 
+
+L = 32 , Bonferroni 100 / 100 36 / 34 48 / 62 94 / 95 46 / 50 0.0 / 1.1 0.5 / 0.3 0.4 / 0.2 
+
+L = 32 , Šidák 100 / 100 36 / 34 48 / 62 94 / 95 46 / 50 0.0 / 1.1 0.5 / 0.3 0.4 / 0.2 
+
+L = 64 , Bonferroni 100 / 100 32 / 30 46 / 57 92 / 94 42 / 49 0.3 / 1.5 0.6 / 0.5 0.8 / 0.7 
+
+L = 64 , Šidák 100 / 100 32 / 30 46 / 57 92 / 94 42 / 49 0.3 / 1.5 0.6 / 0.5 0.8 / 0.7 
+
+L = 128 , Bonferroni 100 / 100 29 / 28 41 / 57 91 / 92 42 / 48 0.8 / 0.4 0.4 / 0.6 0.7 / 1.3 
+
+L = 128 , Šidák 100 / 100 29 / 28 41 / 57 91 / 92 42 / 48 0.8 / 0.4 0.4 / 0.6 0.7 / 1.3   
+
+> Signed sphere
+
++ ResidualRace texts   
+
+> Predictive Gamma
+
+100 / 100 33 / 35 47 / 63 96 / 95 49 / 53 0.7 / 1.0 0.4 / 0.4 0.4 / 0.3   
+
+> Resultant length
+
+100 / 100 19 / 19 27 / 43 91 / 92 37 / 40 0.7 / 1.0 0.4 / 0.4 0.4 / 0.3   
+
+> Spherical caps
+
+100 / 100 22 / 24 31 / 50 89 / 91 37 / 40 0.7 / 1.0 0.4 / 0.4 0.4 / 0.3 Length + caps 100 / 100 24 / 26 35 / 53 92 / 93 40 / 44 0.7 / 1.0 0.4 / 0.4 0.4 / 0.3   
+
+> Anchor distance
+
+100 / 100 32 / 32 43 / 59 94 / 94 44 / 49 0.7 / 1.0 0.4 / 0.4 0.4 / 0.3   
+
+> Gaussian direction
+
++ Gumbel race texts   
+
+> Gaussian norm
+
+d = 1 100 / 100 36 / 37 50 / 59 95 / 95 52 / 53 1.4 / 0.5 2.8 / 2.4 11 / 9.0   
+
+> Residual energy
+
+d = 1 100 / 100 50 / 51 65 / 70 97 / 97 61 / 63 1.4 / 0.5 2.8 / 2.4 11 / 9.0   
+
+> Gaussian norm
+
+d = 2 100 / 100 28 / 28 41 / 50 92 / 93 46 / 47 0.2 / 0.5 0.5 / 0.6 3.5 / 3.1   
+
+> Residual energy
+
+d = 2 100 / 100 36 / 36 49 / 58 93 / 94 51 / 52 0.2 / 0.5 0.5 / 0.6 3.5 / 3.1   
+
+> Circle search
+
+d = 2 100 / 100 43 / 41 55 / 65 96 / 96 56 / 57 0.2 / 0.5 0.5 / 0.6 3.5 / 3.1   
+
+> Gaussian norm
+
+d = 4 100 / 100 21 / 18 31 / 44 89 / 90 37 / 38 2.3 / 1.4 0.8 / 0.5 0.6 / 0.3   
+
+> Residual energy
+
+d = 4 100 / 100 24 / 22 35 / 47 89 / 90 40 / 40 2.3 / 1.4 0.8 / 0.5 0.6 / 0.3   
+
+> Gaussian norm
+
+d = 8 100 / 100 15 / 15 24 / 37 83 / 86 31 / 33 1.8 / 1.0 0.1 / 0.7 0.0 / 0.7   
+
+> Residual energy
+
+d = 8 100 / 100 16 / 14 24 / 36 82 / 85 31 / 31 1.8 / 1.0 0.1 / 0.7 0.0 / 0.7 
+
+52
