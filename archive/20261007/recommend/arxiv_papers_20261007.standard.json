@@ -1,0 +1,264 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-07T23:49:35.756287+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 3,
+    "deep_cap": 6,
+    "deep_selected": 3,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2610.08178v1",
+      "source": "arxiv",
+      "title": "On the Intrinsic Limited Robustness of Latent-Based Watermarking",
+      "abstract": "Existing latent-based watermarking methods for diffusion models have overestimated their robustness to image distortions, including geometric transformations such as rotation, scaling, and translation (RST). Moreover, this paradigm of watermarking approaches may suffer from inherent limitations arising from the domain in which the watermark is embedded. In this paper, we provide the first theoretical analysis explaining why these methods lack invariance to perturbations. By relaxing the invariant relation, we derive a maximum perturbation bound that characterizes the relationship between pixel-space perturbations and their corresponding effects in latent space. In addition, we present the first analytical formulation that captures all components of practical detection mechanisms. Finally, we conduct experiments to validate the theoretical findings and the limitations of latent-based watermarking methods. Our theoretical and empirical results indicate that, under the current design paradigm, latent-based watermarking methods intrinsically exhibit limited robustness. We conclude by providing the analytical tool and design guidelines that future research could follow.",
+      "authors": [
+        "Cheng-Han Yeh",
+        "Kuan-chun Yu",
+        "Cheng-Chang Tsai",
+        "Chun-Shien Lu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CR"
+      ],
+      "published": "2026-10-06T11:29:50+00:00",
+      "link": "https://arxiv.org/pdf/2610.08178v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "theoretical robustness limits of latent-space diffusion watermarking",
+      "llm_evidence_cn": "潜在空间扩散水印的鲁棒性理论极限",
+      "llm_evidence": "潜在空间扩散水印的鲁棒性理论极限",
+      "canonical_evidence": "潜在空间扩散水印的鲁棒性理论极限",
+      "llm_tldr_en": "This paper gives the first theoretical analysis of why latent-based diffusion watermarking lacks invariance to image distortions, deriving a maximum perturbation bound linking pixel-space perturbations to latent-space effects and characterizing inherent robustness limits.",
+      "llm_tldr_cn": "现有面向扩散模型的潜在空间水印普遍高估了对旋转、缩放、平移等图像失真的鲁棒性，其水印嵌入域本身可能带来固有局限。本文首次从理论上解释这类方法为何缺乏扰动不变性：通过放松不变关系，推导出刻画像素空间扰动与其潜在空间影响的极大扰动界，并给出覆盖实际流程各环节的解析刻画。分析表明该类水印的鲁棒性存在内在上限，为水印设计与鲁棒性评估提供了理论依据。",
+      "llm_tldr": "现有面向扩散模型的潜在空间水印普遍高估了对旋转、缩放、平移等图像失真的鲁棒性，其水印嵌入域本身可能带来固有局限。本文首次从理论上解释这类方法为何缺乏扰动不变性：通过放松不变关系，推导出刻画像素空间扰动与其潜在空间影响的极大扰动界，并给出覆盖实际流程各环节的解析刻画。分析表明该类水印的鲁棒性存在内在上限，为水印设计与鲁棒性评估提供了理论依据。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.08137v1",
+      "source": "arxiv",
+      "title": "Rethinking Visual Provenance: Detection and Watermarking Across Direct Visual Generation and LLM-Driven Code Rendering",
+      "abstract": "AI systems create images and videos with image/video generation models or by writing code and graphics descriptions that are then rendered. These routes can produce similar visible artifacts but expose different representations, intervention points, and provenance evidence. We develop a production-centered framework that compares detection and watermarking across both routes. An explicit verification specification distinguishes passive inference, message recovery, and authenticated provenance. We organize image, video, source-code, and rendering-aware watermarks by production stage. We examine the different requirements of generated images and video, plots and SVG, programmable video, and agent-composed workflows. Documented Claude, OpenAI, and rendering-tool interfaces connect the framework to concrete systems. We pose ten scoped research questions on identifiability, observability, fair comparison across stages, recoverable payload, reconstruction, synchronization, composition, hybrid local contribution, and private production-event authentication. The result is a conceptual research agenda grounded in published methods, inspected interfaces, and elementary boundary examples. It reports no experiments and claims no new theorems; its appendix results are elementary calculations, and documentation and source inspection establish interfaces, not empirical robustness.",
+      "authors": [
+        "Zheng Gao",
+        "Xiaoyu Li",
+        "Zhicheng Bao",
+        "Yang Song",
+        "Jiaojiao Jiang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CV"
+      ],
+      "published": "2026-10-06T10:53:19+00:00",
+      "link": "https://arxiv.org/pdf/2610.08137v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "detection and watermarking for visual generation provenance",
+      "llm_evidence_cn": "面向视觉生成的检测与水印溯源",
+      "llm_evidence": "面向视觉生成的检测与水印溯源",
+      "canonical_evidence": "面向视觉生成的检测与水印溯源",
+      "llm_tldr_en": "This work builds a production-centered framework comparing detection and watermarking across direct visual generation and LLM-driven code rendering, organizing image, video, source-code and rendering-aware watermarks by production stage and verification type.",
+      "llm_tldr_cn": "AI系统既可直接用图像视频生成模型产出内容，也可通过编写代码与图形描述再渲染得到相似视觉结果，但两条路径的表示、干预点与来源证据并不相同。作者提出以生产流程为中心的框架，在两条路径上对比检测与水印，并给出区分被动推断、消息恢复与认证来源的验证规范。该工作按生产阶段组织图像、视频、源码与渲染感知水印，揭示了不同生成路线的溯源需求差异。",
+      "llm_tldr": "AI系统既可直接用图像视频生成模型产出内容，也可通过编写代码与图形描述再渲染得到相似视觉结果，但两条路径的表示、干预点与来源证据并不相同。作者提出以生产流程为中心的框架，在两条路径上对比检测与水印，并给出区分被动推断、消息恢复与认证来源的验证规范。该工作按生产阶段组织图像、视频、源码与渲染感知水印，揭示了不同生成路线的溯源需求差异。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking in text-to-image generation models",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.08316v1",
+      "source": "arxiv",
+      "title": "MARCO: The Radioactive Watermark for Protein Generative Models",
+      "abstract": "Protein Generative Models (PGMs) have revolutionized structural biology by enabling the design of complex 3D protein structures from sequence data. However, this breakthrough introduces a dual-use challenge, exposing high-value PGMs to economic risks like unauthorized model extraction and biosecurity threats such as biohazard synthesis. To mitigate these threats, we propose \\textbf{MARCO} (\\textsc{COnformation waterMARk}), the first radioactive watermarking framework specifically tailored for PGMs. MARCO establishes a Dual-Layer defense that simultaneously protects intellectual property and ensures the forensic traceability of potential biosecurity misuses. (i) To preserve efficiency, MARCO iteratively embeds watermarks during diffusion reverse denoising via an auxiliary encoder-decoder, allowing the original PGM parameters to remain frozen for broad compatibility. (ii) To preserve biophysical fidelity and maximize robustness, we employ specialized loss functions targeting $C_α$-atom pairwise distances and torsion angles ($ψ, φ$) within an adversarial training framework integrated with stochastic attack simulations. (iii) Crucially, MARCO exhibits ``radioactivity'' where the watermark automatically transfers to the outputs of any pirate models trained on the watermarked data, effectively countering model extraction attacks. Comprehensive experiments demonstrate that MARCO achieves superior fidelity and robustness while successfully validating watermark transferability.",
+      "authors": [
+        "Huajie Chen",
+        "Xin Guo",
+        "Yuchen Shi",
+        "Yuchen Zhong",
+        "Minhui Xue",
+        "Chi Liu",
+        "Congcong Zhu",
+        "Kun Gao",
+        "Minfeng Qi",
+        "Tianqing Zhu"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-10-06T13:18:22+00:00",
+      "link": "https://arxiv.org/pdf/2610.08316v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "watermark embedded during diffusion reverse denoising for generative models",
+      "llm_evidence_cn": "在扩散逆向去噪中嵌入的生成模型水印",
+      "llm_evidence": "在扩散逆向去噪中嵌入的生成模型水印",
+      "canonical_evidence": "在扩散逆向去噪中嵌入的生成模型水印",
+      "llm_tldr_en": "MARCO is the first radioactive watermarking framework for protein generative models, iteratively embedding watermarks during diffusion reverse denoising to jointly protect intellectual property and enable forensic traceability of misuse.",
+      "llm_tldr_cn": "蛋白质生成模型可依据序列设计复杂三维结构，但面临模型被未授权提取与生物安全滥用等双重风险。作者提出MARCO，首个面向蛋白质生成模型的放射性水印框架，在扩散逆向去噪过程中迭代嵌入水印，构建同时保护知识产权与支持取证追溯的双层防御。该框架在保持生成效率的同时赋予模型来源与滥用追踪能力，为高价值生物生成模型的安全治理提供了新手段。",
+      "llm_tldr": "蛋白质生成模型可依据序列设计复杂三维结构，但面临模型被未授权提取与生物安全滥用等双重风险。作者提出MARCO，首个面向蛋白质生成模型的放射性水印框架，在扩散逆向去噪过程中迭代嵌入水印，构建同时保护知识产权与支持取证追溯的双层防御。该框架在保持生成效率的同时赋予模型来源与滥用追踪能力，为高价值生物生成模型的安全治理提供了新手段。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Watermarking techniques for diffusion models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2610.08668v1",
+      "source": "arxiv",
+      "title": "Semantic Behavioral Watermarking: Paraphrase-Robust and Forgery-Resistant Provenance for LLM Agents",
+      "abstract": "Behavioral watermarking embeds an owner identifier in an LLM agent's high-level action choices, giving provenance without touching output tokens. Prior agent watermarks break in two ways. First, all three prior schemes bind the watermark to the exact action symbol, so renaming a tool desynchronizes decoding even when the observation is untouched; in AgentMark's own robustness test, paraphrasing the observation alone drops bit-recovery to 16.8%. Second, every prior agent watermark studies only removal: none asks whether an adversary can forge a trajectory that verifies as someone else's, a question answered affirmatively for text watermarks (Jovanović et al., 2024). We present Semantic Behavioral Watermarking (SBW): watermarking over semantic action clusters under history conditioning, with the public-cluster bin replaced by keyed collision-resistant binning whose fresh-bucket assignment is provably unpredictable in the random-oracle model. Across five agent models (3B-14B, four vendors) and three encoders the ordering holds on both benchmarks: on ToolBench (600 trajectories per model) detection under rewriting is 0.49-0.66 for cluster-level versus 0.05-0.17 for exact-symbol at a permutation-calibrated 1% FPR, at 72-83% choice agreement against 22-27% for logit biasing; on ALFWorld (100 episodes per model) it is 0.92-0.97 versus 0.00-0.01. Keyed binning takes adaptive forgery from 100% to the false-positive floor at the primary operating point (bge, r=64). We also mark the boundary that guarantee does not cover: when the adversary copies the victim's own steps, shuffled splicing is neutralized (0.000 on Qwen2.5-3B) but chained replay remains at 0.76-0.98 across the five models, reported as open. Paraphrase robustness costs about half of the per-step watermark capacity. Code is available at https://anonymous.4open.science/r/SBW-Agent-Watermark.",
+      "authors": [
+        "Suxin Ji",
+        "Hungtao Wan",
+        "Shaoxuan Chen",
+        "An Zhang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-10-06T16:50:42+00:00",
+      "link": "https://arxiv.org/pdf/2610.08668v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "paraphrase-robust and forgery-resistant watermarking",
+      "llm_evidence_cn": "抗复述、防伪造的水印",
+      "llm_evidence": "抗复述、防伪造的水印",
+      "canonical_evidence": "抗复述、防伪造的水印",
+      "llm_tldr_en": "Prior LLM agent watermarks bind to exact action symbols and break under paraphrasing, and none resist forgery. The paper proposes Semantic Behavioral Watermarking, embedding owner identifiers at the semantic level in agent action choices, achieving paraphrase-robust and forgery-resistant provenance.",
+      "llm_tldr_cn": "现有LLM智能体行为水印将水印绑定到精确动作符号，工具改名或观测复述即导致解码失同步，且从未考虑伪造问题。本文提出语义行为水印SBW，在智能体高层动作选择中嵌入语义级所有者标识，兼具抗复述与防伪造能力。实验显示该方法在复述与重命名下仍能可靠恢复水印位，并能抵御伪造轨迹攻击，为智能体溯源提供了更鲁棒的水印方案。",
+      "llm_tldr": "现有LLM智能体行为水印将水印绑定到精确动作符号，工具改名或观测复述即导致解码失同步，且从未考虑伪造问题。本文提出语义行为水印SBW，在智能体高层动作选择中嵌入语义级所有者标识，兼具抗复述与防伪造能力。实验显示该方法在复述与重命名下仍能可靠恢复水印位，并能抵御伪造轨迹攻击，为智能体溯源提供了更鲁棒的水印方案。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Robust watermarking algorithms against perturbations",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.39548v1",
+      "source": "arxiv",
+      "title": "Learning Normal Diffusion Dynamics for Backdoor Defense in Text-to-Image Models",
+      "abstract": "Backdoor attacks pose a serious threat to the secure deployment of text-to-image (T2I) diffusion models. Existing defenses typically detect backdoors from specific abnormal patterns in internal representations, which may limit their generalizability with the emergence of increasingly diverse attack mechanisms. In this paper, we study backdoor defense of T2I diffusion models from a transition-dynamics perspective. We observe that benign diffusion trajectories exhibit structured and timestep-dependent transition patterns from cross-attention, latent and noise spaces, whereas backdoor attacks tend to induce deviations from such normal evolution. Motivated by these observations, we propose Normal Diffusion Dynamics Learning (NDDL), a novel backdoor defense framework that learns the normal transition dynamics of diffusion trajectories utilizing only benign samples. NDDL constructs compact multi-space trajectory representations and trains a timestep-conditioned dynamics model to predict the diffusion evolution. In the inference phase, deviations between the observed and predicted transitions are exploited to quantify dynamics inconsistency for backdoor detection. NDDL further enables trigger localization without any prior knowledge of the embedded backdoor by performing substitution with low-semantic words. Extensive experiments for diverse backdoor attacks demonstrate the effectiveness and generalizability of our proposed NDDL.",
+      "authors": [
+        "Junjian Li",
+        "Xiaolong Liu",
+        "Peng Sun",
+        "Liantao Wu",
+        "Linghan Chen",
+        "Yudong Gao",
+        "Honglong Chen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.CR"
+      ],
+      "published": "2026-09-30T11:48:45+00:00",
+      "link": "https://arxiv.org/pdf/2609.39548v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Backdoor defense in text-to-image diffusion models via normal diffusion dynamics",
+      "llm_evidence_cn": "通过正常扩散动力学实现文本到图像扩散模型的后门防御",
+      "llm_evidence": "通过正常扩散动力学实现文本到图像扩散模型的后门防御",
+      "canonical_evidence": "通过正常扩散动力学实现文本到图像扩散模型的后门防御",
+      "llm_tldr_en": "Backdoor attacks threaten T2I diffusion models and existing defenses are not generalizable. NDDL learns normal timestep-dependent transition dynamics of cross-attention, latent and noise spaces to detect deviations caused by backdoors.",
+      "llm_tldr_cn": "后门攻击严重威胁文本到图像扩散模型的安全部署，而现有防御依赖特定异常模式，泛化性受限。本文从转移动力学视角出发，观察到良性扩散轨迹在交叉注意力、潜空间与噪声空间呈现结构化的时间步相关模式，而后门会使其偏离。据此提出NDDL学习正常扩散动力学以检测异常。该工作为T2I扩散模型的生成安全防御提供了可泛化的新思路。",
+      "llm_tldr": "后门攻击严重威胁文本到图像扩散模型的安全部署，而现有防御依赖特定异常模式，泛化性受限。本文从转移动力学视角出发，观察到良性扩散轨迹在交叉注意力、潜空间与噪声空间呈现结构化的时间步相关模式，而后门会使其偏离。据此提出NDDL学习正常扩散动力学以检测异常。该工作为T2I扩散模型的生成安全防御提供了可泛化的新思路。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.05453v1",
+      "source": "arxiv",
+      "title": "The Poisoned Conversation: Privacy-Leaking Watermarks in Unified Multimodal Models",
+      "abstract": "Multimodal models are increasingly shifting toward unified architectures that understand and generate text, images, and other modalities within a shared conversational context. This design enables fluid interaction across modalities, but it also changes the privacy threat model: Information revealed in one part of a conversation may remain accessible when the model later generates content in another modality. This risk is particularly concerning in settings where users rely on locally deployed models for privacy, assuming that sensitive interactions remain confined to their device. We introduce Privacy-Leaking Watermarks (PLWs): invisible, trigger-dependent watermarks that a malicious model provider can condition on prior chat history. With this adversarial intervention, the usual separation breaks: a sensitive keyword or semantic cue mentioned earlier in the conversation can cause a later, unrelated image to carry a hidden yet detectable watermark. PLWs pose a novel threat to users of unified multimodal models: A poisoned model can retain utility while covertly turning image generation into a channel for privacy leakage, even when deployed locally. Across 13 sensitive-attribute triggers and two model families, PLWs reach up to 100.0% TPR at 1% FPR. For example, across all tested conversational separations, OmniGen2 detects every prior disclosure of depression while falsely flagging only 1% of images generated without such a disclosure.",
+      "authors": [
+        "Tobias Braun",
+        "Jonas Henry Grebe",
+        "Emil Sivic",
+        "Patrick Mohr Gordillo",
+        "Hossein Shakibania",
+        "Marcus Rohrbach",
+        "Anna Rohrbach"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-10-04T18:53:31+00:00",
+      "link": "https://arxiv.org/pdf/2610.05453v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Privacy-leaking trigger-dependent watermarks in unified multimodal models",
+      "llm_evidence_cn": "统一多模态模型中泄漏隐私的触发式水印攻击",
+      "llm_evidence": "统一多模态模型中泄漏隐私的触发式水印攻击",
+      "canonical_evidence": "统一多模态模型中泄漏隐私的触发式水印攻击",
+      "llm_tldr_en": "Unified multimodal models share context across modalities, changing privacy threats. This work introduces privacy-leaking watermarks that a malicious provider conditions on chat history, revealing cross-modal information leakage.",
+      "llm_tldr_cn": "统一多模态模型在共享对话上下文中跨模态理解与生成，改变了隐私威胁模型：某模态披露的信息可能在另一模态生成时被利用。本文提出隐私泄漏水印（PLW），这是恶意模型提供方可基于历史对话触发的隐形水印，用于探测跨模态信息泄漏风险。该研究揭示了统一多模态架构下被忽视的隐私攻击面，为模型安全部署与防御提供了警示与参考。",
+      "llm_tldr": "统一多模态模型在共享对话上下文中跨模态理解与生成，改变了隐私威胁模型：某模态披露的信息可能在另一模态生成时被利用。本文提出隐私泄漏水印（PLW），这是恶意模型提供方可基于历史对话触发的隐形水印，用于探测跨模态信息泄漏风险。该研究揭示了统一多模态架构下被忽视的隐私攻击面，为模型安全部署与防御提供了警示与参考。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Papers on attacks and defenses in generative model watermarking",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
