@@ -1,0 +1,127 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-08T23:52:45.986394+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2610.09702v1",
+      "source": "arxiv",
+      "title": "Latent Watermarks under Generative Editing: A Benchmark and Analysis of Detection Survival",
+      "abstract": "Ordinary prompt-based editing can cause latent watermark detection to fail without explicitly targeting the watermark. We benchmark eight watermark methods against five editors across four generative backbones, four editing strengths, and five semantic categories, with edit-validity and threshold checks. Separating editing from seven subsequent distortions reveals that editing alone primarily distinguishes Tree-Ring, while added distortions expose a broader spectrum of detection survival. Sequential edits reveal a second hidden difference: score separation can decline while detection rates remain near their ceiling. Across methods, standardized clean score separation ($d'$) organizes composite-survival tiers, whereas spatial overlap adds little to predicting edit-only survival beyond clean detectability. Embedding-strength interventions in two methods link higher clean separation to higher post-edit separation. In HSTR, the margin contrast is positive, while the angular layout contrast at matched clean separation remains unresolved. Together, outcome decomposition and continuous separation expose differences hidden by aggregate TPR. Method tiers are stable under threshold recalibration at the main operating points and alternative composite weights. Clean $d'$ is thus a useful empirical diagnostic within this benchmark, with mixed transfer to unseen methods. Code and supporting artifacts are planned for a separate release.",
+      "authors": [
+        "Sung Ju Lee",
+        "Nam Ik Cho"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-10-07T09:01:05+00:00",
+      "link": "https://arxiv.org/pdf/2610.09702v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "benchmark of latent watermark detection survival under generative editing",
+      "llm_evidence_cn": "生成式编辑下潜在水印检测存活的基准",
+      "llm_evidence": "生成式编辑下潜在水印检测存活的基准",
+      "canonical_evidence": "生成式编辑下潜在水印检测存活的基准",
+      "llm_tldr_en": "Prompt-based editing can silently break latent watermark detection even without targeting the watermark. This paper benchmarks eight latent watermark methods against five editors across four backbones, editing strengths and semantic categories, separating editing from subsequent distortions and showing how score separation and detection survival degrade.",
+      "llm_tldr_cn": "普通提示词编辑可能在未针对水印的情况下使潜在水印检测失效，这一脆弱性此前缺乏系统评估。本文对八种潜在水印方法在五种编辑器、四种生成骨干、多种编辑强度与语义类别下进行基准测试，并将编辑与后续七种失真分离分析。结果发现编辑主要区分Tree-Ring，而叠加失真才暴露更广的检测存活差异，且检测率与分数分离度可不同步变化。该工作为潜在空间水印的鲁棒性评估提供了系统框架。",
+      "llm_tldr": "普通提示词编辑可能在未针对水印的情况下使潜在水印检测失效，这一脆弱性此前缺乏系统评估。本文对八种潜在水印方法在五种编辑器、四种生成骨干、多种编辑强度与语义类别下进行基准测试，并将编辑与后续七种失真分离分析。结果发现编辑主要区分Tree-Ring，而叠加失真才暴露更广的检测存活差异，且检测率与分数分离度可不同步变化。该工作为潜在空间水印的鲁棒性评估提供了系统框架。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Studies on latent space watermarking and inversion based detection",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2610.09755v1",
+      "source": "arxiv",
+      "title": "Diffusion-Generated Image Watermarking: A Two-Axis Taxonomy and Three Protocol-Bounded Case Studies",
+      "abstract": "Watermarking diffusion-generated images requires balancing provenance signals with image quality, robustness, and computational cost. This work organizes methods along two axes: insertion mechanism and primary signal-bearing representation, and formalizes a representative $z_T$-Fourier pipeline for verification and identification. We then use the taxonomy to structure three protocol-bounded case studies. The first examines associations among frequency integrity, detection, quality, and cropping behavior. The second revisits persistence under seed-linked and seed-independent editing and formulates a scoped Semantic Imprinting Hypothesis without claiming a localized carrier or causal mechanism. The third studies single-shot VAE-latent phase modulation, including its efficiency, regeneration robustness, and robustness--quality operating points. Finally, we separate four content-level attack families from model/pipeline adaptation, propose corresponding evaluation protocols and testable conjectures for parameter-tuning threats, and identify additional temporal extensions for video. These analyses do not establish a universal ranking; instead, they provide a framework for matched, protocol-aware comparisons of watermarking systems for diffusion-generated images.",
+      "authors": [
+        "Sung Ju Lee",
+        "Nam Ik Cho"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-10-07T09:42:46+00:00",
+      "link": "https://arxiv.org/pdf/2610.09755v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "taxonomy and case studies for diffusion-generated image watermarking",
+      "llm_evidence_cn": "扩散生成图像水印的分类体系与案例研究",
+      "llm_evidence": "扩散生成图像水印的分类体系与案例研究",
+      "canonical_evidence": "扩散生成图像水印的分类体系与案例研究",
+      "llm_tldr_en": "This paper addresses the need to balance provenance signals with image quality, robustness and cost in diffusion image watermarking by proposing a two-axis taxonomy and a formalized z_T-Fourier pipeline with three protocol-bounded case studies.",
+      "llm_tldr_cn": "扩散生成图像水印需要在溯源信号与图像质量、鲁棒性和计算成本之间取得平衡。本文沿插入机制与主信号承载表示两个轴组织现有方法，并形式化了一个代表性的z_T-傅里叶验证与识别流程。作者据此设计三个协议限定案例研究，分别考察频率完整性、检测、质量与裁剪的关系，重访种子相关与无关编辑下的持久性，并研究单次验证。该工作为扩散水印方法提供了系统的分类与实验框架。",
+      "llm_tldr": "扩散生成图像水印需要在溯源信号与图像质量、鲁棒性和计算成本之间取得平衡。本文沿插入机制与主信号承载表示两个轴组织现有方法，并形式化了一个代表性的z_T-傅里叶验证与识别流程。作者据此设计三个协议限定案例研究，分别考察频率完整性、检测、质量与裁剪的关系，重访种子相关与无关编辑下的持久性，并研究单次验证。该工作为扩散水印方法提供了系统的分类与实验框架。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "Research on watermarking methods for diffusion models and their robustness",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2610.09552v1",
+      "source": "arxiv",
+      "title": "Constitution-Guided Watermarking",
+      "abstract": "Watermarking enables language model providers to identify text generated by their models. However, its desired properties can conflict (\\ie~stronger watermark signals can degrade text quality), while designs that resist editing may also facilitate forgery. Providers address these trade-offs by choosing configurations that balance competing objectives or prioritize particular properties. Either approach imposes a shared operating point on requests with different requirements, potentially sacrificing quality where wording preservation matters or robustness where reliable attribution is essential. To allow flexible and adaptable designs, we introduce \\emph{Constitution-Guided Watermarking}, a framework that selects request-appropriate trade-offs from provider requirements, listed as natural-language principles. \\emph{Offline}, a pretrained reasoning agent examines constitutional rules alongside watermark implementations and iteratively refines rule-specific configurations using empirical feedback. \\emph{At deployment}, a separate monitor identifies applicable rules and retrieves the corresponding policy, including watermarking exemptions, without modifying the serving model. Furthermore, our framework supports offline parallel optimization and refinement of rule-specific configurations based on evolving provider requirements without affecting deployment, and binds each deployed configuration to its evaluation evidence, making deployment decisions auditable. In a proof-of-concept evaluation using KGW and a five-rule constitution, our framework selects configurations responsive to provider priorities and improves post-paraphrase detection on robustness-prioritized requests by up to $14$ percentage points over fixed configurations, while matching or exceeding all baselines in aggregate quality and clean detection at a nominal $0.1\\%$ false-positive rate.",
+      "authors": [
+        "Toluwani Aremu",
+        "Samuele Poppi",
+        "Nils Lukas"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-10-07T06:50:47+00:00",
+      "link": "https://arxiv.org/pdf/2610.09552v1",
+      "tags": [
+        "keyword:watermarking",
+        "query:watermarking"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "watermarking framework for language models with configurable trade-offs",
+      "llm_evidence_cn": "面向语言模型的可配置水印框架",
+      "llm_evidence": "面向语言模型的可配置水印框架",
+      "canonical_evidence": "面向语言模型的可配置水印框架",
+      "llm_tldr_en": "Constitution-Guided Watermarking is a framework that selects request-appropriate trade-offs between watermark strength, text quality, robustness and forgery resistance, avoiding a single shared operating point.",
+      "llm_tldr_cn": "现有语言模型水印需在信号强度、文本质量、抗编辑与防伪之间权衡，通常对所有权请求强加统一工作点，难以兼顾不同需求。本文提出Constitution-Guided Watermarking框架，依据提供方以自然语言列出的需求，为每个请求自适应选择合适的水印权衡配置。实验表明该框架能在措辞保留重要时维持质量、在可靠归属关键时保证鲁棒性，从而实现灵活可适配的水印设计，提升水印在多场景下的实用性与安全性。",
+      "llm_tldr": "现有语言模型水印需在信号强度、文本质量、抗编辑与防伪之间权衡，通常对所有权请求强加统一工作点，难以兼顾不同需求。本文提出Constitution-Guided Watermarking框架，依据提供方以自然语言列出的需求，为每个请求自适应选择合适的水印权衡配置。实验表明该框架能在措辞保留重要时维持质量、在可靠归属关键时保证鲁棒性，从而实现灵活可适配的水印设计，提升水印在多场景下的实用性与安全性。",
+      "llm_tags": [
+        "query:watermarking"
+      ],
+      "matched_query_tag": "query:watermarking",
+      "matched_query_text": "m",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

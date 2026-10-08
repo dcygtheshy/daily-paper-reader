@@ -6,42 +6,33 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-10-07
-- 运行时间：2026-10-07 23:54:08 UTC
+- 最新运行日期：2026-10-08
+- 运行时间：2026-10-08 23:57:02 UTC
 - 运行状态：成功
-- 本次总论文数：6
-- 精读区：3
-- 速读区：3
+- 本次总论文数：3
+- 精读区：2
+- 速读区：1
 
 ### 今日简报（AI）
-今天围绕AI水印与内容溯源读了6篇论文，精读锁定潜空间水印的鲁棒性边界与跨生成方式的视觉溯源检测。
+2026-10-08 日报完成 3 篇水印主题论文梳理，其中 2 篇精读、1 篇速读，精读均获 9.0 分。
 
-最值得看的是满分10.0的《On the Intrinsic Limited Robustness of Latent-Based Watermarking》，它揭示了潜空间水印存在难以突破的固有鲁棒性上限；其次是8.0分的《Rethinking Visual Provenance》，把检测与溯源从直接视觉生成延伸到了LLM驱动的代码渲染场景。
+最值得看的是两篇 9.0 分精读：一篇给出生成式编辑下水印检测存活的基准与分析，另一篇提出扩散生成图像水印的"两轴分类"并用三个协议约束案例验证。
 
-普通读者可记住"水印并非万能"这一提醒，对AI生成内容的鉴别多留一份交叉验证的习惯。
-- 详情：[/202610/07/README](/202610/07/README)
+普通读者可先读这两篇精读建立框架，再把 7.0 分的《Constitution-Guided Watermarking》当作速读补充。
+- 详情：[/202610/08/README](/202610/08/README)
 
 ### 精读区论文标签
-1. [On the Intrinsic Limited Robustness of Latent-Based Watermarking](/202610/07/2610.08178v1-on-the-intrinsic-limited-robustness-of-latent-based-watermarking)  
-   标签：评分：10.0/10、query:watermarking
-   evidence：潜在空间扩散水印的鲁棒性理论极限
-2. [Rethinking Visual Provenance: Detection and Watermarking Across Direct Visual Generation and LLM-Driven Code Rendering](/202610/07/2610.08137v1-rethinking-visual-provenance-detection-and-watermarking-across-direct-visual-generation-and-llm-driven-code-rendering)  
-   标签：评分：8.0/10、query:watermarking
-   evidence：面向视觉生成的检测与水印溯源
-3. [MARCO: The Radioactive Watermark for Protein Generative Models](/202610/07/2610.08316v1-marco-the-radioactive-watermark-for-protein-generative-models)  
-   标签：评分：8.0/10、query:watermarking
-   evidence：在扩散逆向去噪中嵌入的生成模型水印
+1. [Latent Watermarks under Generative Editing: A Benchmark and Analysis of Detection Survival](/202610/08/2610.09702v1-latent-watermarks-under-generative-editing-a-benchmark-and-analysis-of-detection-survival)  
+   标签：评分：9.0/10、query:watermarking
+   evidence：生成式编辑下潜在水印检测存活的基准
+2. [Diffusion-Generated Image Watermarking: A Two-Axis Taxonomy and Three Protocol-Bounded Case Studies](/202610/08/2610.09755v1-diffusion-generated-image-watermarking-a-two-axis-taxonomy-and-three-protocol-bounded-case-studies)  
+   标签：评分：9.0/10、query:watermarking
+   evidence：扩散生成图像水印的分类体系与案例研究
 
 ### 速读区论文标签
-1. [Semantic Behavioral Watermarking: Paraphrase-Robust and Forgery-Resistant Provenance for LLM Agents](/202610/07/2610.08668v1-semantic-behavioral-watermarking-paraphrase-robust-and-forgery-resistant-provenance-for-llm-agents)  
+1. [Constitution-Guided Watermarking](/202610/08/2610.09552v1-constitution-guided-watermarking)  
    标签：评分：7.0/10、query:watermarking
-   evidence：抗复述、防伪造的水印
-2. [Learning Normal Diffusion Dynamics for Backdoor Defense in Text-to-Image Models](/202610/07/2609.39548v1-learning-normal-diffusion-dynamics-for-backdoor-defense-in-text-to-image-models)  
-   标签：评分：6.0/10、query:watermarking
-   evidence：通过正常扩散动力学实现文本到图像扩散模型的后门防御
-3. [The Poisoned Conversation: Privacy-Leaking Watermarks in Unified Multimodal Models](/202610/07/2610.05453v1-the-poisoned-conversation-privacy-leaking-watermarks-in-unified-multimodal-models)  
-   标签：评分：6.0/10、query:watermarking
-   evidence：统一多模态模型中泄漏隐私的触发式水印攻击
+   evidence：面向语言模型的可配置水印框架
 
 
 <div class="dpr-home-promo-card">

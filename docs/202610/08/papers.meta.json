@@ -1,0 +1,54 @@
+{
+  "label": "2026-10-08",
+  "date": "2026-10-08",
+  "generated_at": "2026-10-08T23:57:08",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202610/08/2610.09702v1-latent-watermarks-under-generative-editing-a-benchmark-and-analysis-of-detection-survival",
+      "section": "deep",
+      "title_en": "Latent Watermarks under Generative Editing: A Benchmark and Analysis of Detection Survival",
+      "authors": "Sung Ju Lee, Nam Ik Cho",
+      "date": "2026-10-07",
+      "pdf": "https://arxiv.org/pdf/2610.09702v1",
+      "score": "9.0",
+      "evidence": "生成式编辑下潜在水印检测存活的基准",
+      "tldr": "普通提示编辑会无意中破坏潜在水印检测，本文构建基准，评估八种水印方法与五种编辑器在四种生成骨干、四种编辑强度、五类语义上的检测存活。通过将编辑与七种后续失真分离，并分析连续分数间隔 d'，揭示聚合 TPR 掩盖的方法差异。结果显示编辑主要区分 Tree-Ring，叠加失真才暴露更广存活谱；干净 d' 可组织复合存活层级，但向未见方法迁移有限。",
+      "tags": "query:watermarking",
+      "abstract_en": "Ordinary prompt-based editing can cause latent watermark detection to fail without explicitly targeting the watermark. We benchmark eight watermark methods against five editors across four generative backbones, four editing strengths, and five semantic categories, with edit-validity and threshold checks. Separating editing from seven subsequent distortions reveals that editing alone primarily distinguishes Tree-Ring, while added distortions expose a broader spectrum of detection survival. Sequential edits reveal a second hidden difference: score separation can decline while detection rates remain near their ceiling. Across methods, standardized clean score separation ($d'$) organizes composite-survival tiers, whereas spatial overlap adds little to predicting edit-only survival beyond clean detectability. Embedding-strength interventions in two methods link higher clean separation to higher post-edit separation. In HSTR, the margin contrast is positive, while the angular layout contrast at matched clean separation remains unresolved. Together, outcome decomposition and continuous separation expose differences hidden by aggregate TPR. Method tiers are stable under threshold recalibration at the main operating points and alternative composite weights. Clean $d'$ is thus a useful empirical diagnostic within this benchmark, with mixed transfer to unseen methods. Code and supporting artifacts are planned for a separate release.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/08/2610.09755v1-diffusion-generated-image-watermarking-a-two-axis-taxonomy-and-three-protocol-bounded-case-studies",
+      "section": "deep",
+      "title_en": "Diffusion-Generated Image Watermarking: A Two-Axis Taxonomy and Three Protocol-Bounded Case Studies",
+      "authors": "Sung Ju Lee, Nam Ik Cho",
+      "date": "2026-10-07",
+      "pdf": "https://arxiv.org/pdf/2610.09755v1",
+      "score": "9.0",
+      "evidence": "扩散生成图像水印的分类体系与案例研究",
+      "tldr": "扩散生成图像水印需在来源信号、画质、鲁棒性和算力间权衡。本文提出按插入机制与主要承载表示划分的双轴分类法，并形式化 z_T-Fourier 验证识别流程。基于此开展三项协议限定案例：频率完整性与检测/质量/裁剪关联；种子相关与独立编辑下的持久性及语义印记假说；单次 VAE 潜相位调制的效率与鲁棒性-质量操作点。还区分四类内容级攻击与模型/管线适配，给出评估协议和可检验猜想，为协议感知的匹配比较提供框架。",
+      "tags": "query:watermarking",
+      "abstract_en": "Watermarking diffusion-generated images requires balancing provenance signals with image quality, robustness, and computational cost. This work organizes methods along two axes: insertion mechanism and primary signal-bearing representation, and formalizes a representative $z_T$-Fourier pipeline for verification and identification. We then use the taxonomy to structure three protocol-bounded case studies. The first examines associations among frequency integrity, detection, quality, and cropping behavior. The second revisits persistence under seed-linked and seed-independent editing and formulates a scoped Semantic Imprinting Hypothesis without claiming a localized carrier or causal mechanism. The third studies single-shot VAE-latent phase modulation, including its efficiency, regeneration robustness, and robustness--quality operating points. Finally, we separate four content-level attack families from model/pipeline adaptation, propose corresponding evaluation protocols and testable conjectures for parameter-tuning threats, and identify additional temporal extensions for video. These analyses do not establish a universal ranking; instead, they provide a framework for matched, protocol-aware comparisons of watermarking systems for diffusion-generated images.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/08/2610.09552v1-constitution-guided-watermarking",
+      "section": "quick",
+      "title_en": "Constitution-Guided Watermarking",
+      "authors": "Toluwani Aremu, Samuele Poppi, Nils Lukas",
+      "date": "2026-10-07",
+      "pdf": "https://arxiv.org/pdf/2610.09552v1",
+      "score": "7.0",
+      "evidence": "面向语言模型的可配置水印框架",
+      "tldr": "水印需在文本质量、鲁棒性与防伪造间权衡，固定配置难适应不同请求。本文提出宪法引导水印框架，以自然语言规则描述提供者需求，离线用推理智能体迭代优化规则专属配置，部署时由监控器匹配规则并检索策略。在 KGW 与五规则宪法的概念验证中，该方法对鲁棒性优先请求将改写后检测率最多提升14个百分点，并保持总体质量与干净检测。贡献是让水印配置可按请求灵活调整、可审计且不干扰服务模型。",
+      "tags": "query:watermarking",
+      "abstract_en": "Watermarking enables language model providers to identify text generated by their models. However, its desired properties can conflict (\\ie~stronger watermark signals can degrade text quality), while designs that resist editing may also facilitate forgery. Providers address these trade-offs by choosing configurations that balance competing objectives or prioritize particular properties. Either approach imposes a shared operating point on requests with different requirements, potentially sacrificing quality where wording preservation matters or robustness where reliable attribution is essential. To allow flexible and adaptable designs, we introduce \\emph{Constitution-Guided Watermarking}, a framework that selects request-appropriate trade-offs from provider requirements, listed as natural-language principles. \\emph{Offline}, a pretrained reasoning agent examines constitutional rules alongside watermark implementations and iteratively refines rule-specific configurations using empirical feedback. \\emph{At deployment}, a separate monitor identifies applicable rules and retrieves the corresponding policy, including watermarking exemptions, without modifying the serving model. Furthermore, our framework supports offline parallel optimization and refinement of rule-specific configurations based on evolving provider requirements without affecting deployment, and binds each deployed configuration to its evaluation evidence, making deployment decisions auditable. In a proof-of-concept evaluation using KGW and a five-rule constitution, our framework selects configurations responsive to provider priorities and improves post-paraphrase detection on robustness-prioritized requests by up to $14$ percentage points over fixed configurations, while matching or exceeding all baselines in aggregate quality and clean detection at a nominal $0.1\\%$ false-positive rate.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
